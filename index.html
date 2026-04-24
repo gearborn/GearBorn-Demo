@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gearborn Drag Demo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <button class="brand" data-view="menu" aria-label="Gearborn home">
+          <span class="brand-mark">G</span>
+          <span>
+            <strong>GearBorn</strong>
+            <small>Engines Evolved</small>
+          </span>
+        </button>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-button active" data-view="menu" type="button">Menu</button>
+          <button class="nav-button" data-view="play" type="button">Race</button>
+          <button class="nav-button" data-view="garage" type="button">Garage</button>
+          <button class="nav-button" data-view="settings" type="button">Settings</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="view active" id="menu-view" aria-labelledby="menu-title">
+          <div class="main-menu">
+            <div class="menu-logo" aria-label="GearBorn Engines Evolved">
+              <img id="game-logo" src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn Engines Evolved" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+              <div class="logo-placeholder">
+                <span>GearBorn</span>
+                <strong>Engines Evolved</strong>
+              </div>
+            </div>
+            <div class="menu-actions" aria-label="Menu choices">
+              <button class="menu-button primary" data-view="play" type="button">Race</button>
+              <button class="menu-button" data-view="garage" type="button">Garage</button>
+              <button class="menu-button" data-view="settings" type="button">Settings</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="play-view" aria-labelledby="play-title">
+          <div class="race-panel">
+            <div class="setup">
+              <div class="section-heading">
+                <p>Race Setup</p>
+                <h1 id="play-title">Choose your Gearborn and line up.</h1>
+              </div>
+
+              <div class="field">
+                <label for="player-car">Your car</label>
+                <select id="player-car"></select>
+              </div>
+              <div class="selection-preview" id="player-preview">
+                <div class="selection-preview-art" id="player-preview-art"></div>
+                <div>
+                  <strong id="player-preview-name"></strong>
+                  <small id="player-preview-meta"></small>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Race distance</label>
+                <div class="segmented" id="distance-options" role="group" aria-label="Race distance"></div>
+              </div>
+
+              <div class="field">
+                <label>Opponent rank</label>
+                <div class="opponent-list" id="opponent-list"></div>
+              </div>
+              <div class="selection-preview" id="opponent-preview">
+                <div class="selection-preview-art" id="opponent-preview-art"></div>
+                <div>
+                  <strong id="opponent-preview-name"></strong>
+                  <small id="opponent-preview-meta"></small>
+                </div>
+              </div>
+
+              <div class="setup-actions">
+                <button class="primary" id="start-race" type="button">
+                  <span class="button-icon">▶</span>
+                  Start Race
+                </button>
+              </div>
+            </div>
+
+            <div class="track-shell">
+              <div class="hud">
+                <div>
+                  <span class="hud-label">Speed</span>
+                  <strong id="mph">0 MPH</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Gear</span>
+                  <strong id="gear">1</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Distance</span>
+                  <strong id="distance">0 m</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Shift</span>
+                  <strong id="shift-readout">Ready</strong>
+                </div>
+              </div>
+
+              <div class="tach">
+                <div class="tach-zone early"></div>
+                <div class="tach-zone good"></div>
+                <div class="tach-zone late"></div>
+                <div class="tach-fill" id="tach-fill"></div>
+                <div class="perfect-band"></div>
+              </div>
+
+              <div class="track" aria-label="Drag race track">
+                <div class="finish-line"></div>
+                <div class="lane">
+                  <span class="lane-label">YOU</span>
+                  <div class="car player-car" id="player-racer">
+                    <img class="car-image" id="player-racer-image" alt="">
+                    <span class="car-glow"></span>
+                    <span class="car-body"></span>
+                    <span class="wheel front"></span>
+                    <span class="wheel rear"></span>
+                  </div>
+                </div>
+                <div class="lane">
+                  <span class="lane-label">RIVAL</span>
+                  <div class="car rival-car" id="rival-racer">
+                    <img class="car-image" id="rival-racer-image" alt="">
+                    <span class="car-glow"></span>
+                    <span class="car-body"></span>
+                    <span class="wheel front"></span>
+                    <span class="wheel rear"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="race-message" id="race-message">
+                Pick an opponent and hit Start Race.
+              </div>
+
+              <button class="shift-button" id="shift-button" type="button">Shift</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="garage-view" aria-labelledby="garage-title">
+          <div class="section-heading">
+            <p>Garage</p>
+            <h1 id="garage-title">Your starting six Gearborn.</h1>
+          </div>
+          <div class="garage-grid" id="garage-grid"></div>
+        </section>
+
+        <section class="view" id="settings-view" aria-labelledby="settings-title">
+          <div class="settings-layout">
+            <div class="section-heading">
+              <p>Settings</p>
+              <h1 id="settings-title">Tune the demo feel.</h1>
+            </div>
+            <div class="settings-card">
+              <div class="field">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="normal">Normal</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="volume">Volume</label>
+                <input id="volume" type="range" min="0" max="100" value="45">
+              </div>
+              <div class="field">
+                <label for="shift-key">Shift key</label>
+                <input id="shift-key" type="text" maxlength="12" value="Space" aria-describedby="key-note">
+                <small id="key-note">Click the box, then press the key you want.</small>
+              </div>
+              <div class="danger-zone">
+                <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="reset-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+        <p class="modal-kicker danger-text">Delete Save Data</p>
+        <h2 id="reset-title">Are you sure you wish to delete your data?</h2>
+        <p>This is permanent.</p>
+        <div class="modal-actions">
+          <button class="danger-button" id="confirm-reset" type="button">Reset Racing Data</button>
+          <button class="ghost" id="cancel-reset" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="evolution-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title">
+        <div class="evolution-stage" id="evolution-stage"></div>
+        <p class="modal-kicker" id="evolution-kicker">Evolution Ready</p>
+        <h2 id="evolution-title"></h2>
+        <p id="evolution-copy"></p>
+        <div class="modal-actions">
+          <button class="primary" id="evolve-button" type="button">Evolve</button>
+          <button class="ghost" id="close-evolution" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
