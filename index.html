@@ -26,6 +26,7 @@
           <button class="nav-button" data-view="boss" type="button">Boss Challenge</button>
           <button class="nav-button" data-view="garage" type="button">Garage</button>
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
+          <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
           <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
       </header>
@@ -48,6 +49,7 @@
               <button class="menu-button primary" data-view="boss" type="button">Boss Challenge</button>
               <button class="menu-button" data-view="garage" type="button">Garage</button>
               <button class="menu-button" data-view="vindex" type="button">VINdex</button>
+              <button class="menu-button" data-view="profiles" type="button">Racer Profiles</button>
               <button class="menu-button" data-view="settings" type="button">Settings</button>
               <p class="creator-credit">Created by Corey Hanley</p>
             </div>
@@ -167,6 +169,24 @@
                 <p id="vindex-number"></p>
                 <h2 id="vindex-name"></h2>
                 <span id="vindex-line"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="profiles-view" aria-labelledby="profiles-title">
+          <div class="section-heading">
+            <p>Racer Profiles</p>
+            <h1 id="profiles-title">Meet the GearBorn racers.</h1>
+          </div>
+          <div class="profile-layout">
+            <div class="profile-list" id="profile-list"></div>
+            <div class="profile-detail">
+              <div class="profile-art" id="profile-art"></div>
+              <div class="profile-copy">
+                <h2 id="profile-name"></h2>
+                <p id="profile-meta"></p>
+                <span id="profile-bio"></span>
               </div>
             </div>
           </div>
@@ -311,6 +331,10 @@
                 <input id="shift-key" type="text" maxlength="12" value="Space" aria-describedby="key-note">
                 <small id="key-note">Click the box, then press the key you want.</small>
               </div>
+              <div class="field">
+                <label>Story tuner</label>
+                <div class="tuner-options" id="settings-tuner-options"></div>
+              </div>
               <div class="danger-zone">
                 <button class="god-button" id="god-mode" type="button">God Mode</button>
                 <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
@@ -329,6 +353,35 @@
         <p id="boss-modal-copy"></p>
         <div class="modal-actions">
           <button class="primary" id="continue-boss" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tuner-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="tuner-title">
+        <p class="modal-kicker">Choose Your Tuner</p>
+        <h2 id="tuner-title">Choose Your Tuner</h2>
+        <div class="tuner-options large" id="tuner-options"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="cutscene-modal" aria-hidden="true">
+      <div class="cutscene-modal" role="dialog" aria-modal="true" aria-labelledby="cutscene-title">
+        <p class="modal-kicker">Story Scene</p>
+        <h2 id="cutscene-title">Cut Scene Placeholder</h2>
+        <div class="cutscene-stage">
+          <div class="cutscene-character">
+            <div class="cutscene-portrait" id="cutscene-left-art"></div>
+            <div class="dialogue-box" id="cutscene-left-dialogue">Your tuner dialogue will appear here.</div>
+          </div>
+          <div class="cutscene-character">
+            <div class="cutscene-portrait" id="cutscene-right-art"></div>
+            <div class="dialogue-box" id="cutscene-right-dialogue">Boss dialogue will appear here.</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="primary" id="continue-cutscene" type="button">Continue</button>
+          <button class="ghost" id="skip-cutscene" type="button">Skip</button>
         </div>
       </div>
     </div>

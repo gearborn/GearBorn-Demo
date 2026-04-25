@@ -241,7 +241,32 @@ const vindexEntries = [
   ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unlock-rainbowlt-display.png"],
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/rival-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
+const tuners = [
+  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
+  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
+];
+const profileBios = {
+  "rev-rend": "A preacher of speed and salvation, with a collection to match. Rev-rend built his empire on one promise: give him your GearBorn, and he will lead you to greatness. Behind the gospel is a man who has lost sight of what he ever believed in.",
+  karen: "Precision. Control. Perfection. Karen runs Berlin like a system, and she is its architect. Every move is calculated, every race executed with ruthless efficiency. She does not just follow rules. She weaponizes them.",
+  samir: "Born into luxury. Raised without limits. Driving someone else's dream. Samir is surrounded by wealth but disconnected from reality. He jokes and plays the part, but underneath it all he is waiting for someone to beat him so he can choose his own path.",
+  thais: "An influencer with millions watching, and no one seeing the full picture. Every post and every move is strategy. People underestimate her. That is the point. On the track, she is ruthless. Off the track, she is untouchable.",
+  "jimmy-chin": "A legend of yesterday, still fighting to stay on screen. Jimmy built his name on charm, familiarity, and mass appeal. The world is changing, and Jimmy is not. He sticks to classic cars, classic lines, and classic tricks.",
+  "rip-lee": "A superstar on the track. A stranger to herself. Rip Lee is a full performance of pink wigs, flashing lights, and K-pop perfection. Off the track, she is Jia, quiet and uncertain. Racing is where she finally feels real.",
+  jabu: "A builder. A dreamer. A racer shaped by what he did not have. Jabu creates from scraps, turning discarded parts into something powerful and beautiful. He races to prove that vision matters more than resources.",
+  pallavi: "Grace in life. Fire on the track. Pallavi lives between honoring tradition and chasing her own ambitions. Behind the wheel, she is focused, fearless, and unstoppable.",
+  "racer-alpha": "No name. No past. Just speed. Racer Alpha is a myth made real, hidden behind a mirrored helmet that reveals nothing. No one knows where he came from. If you beat him, you earn the right to find out."
+};
+const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
+  id: boss.id,
+  name: boss.name,
+  image: boss.unmaskedPortrait || boss.portrait,
+  car: boss.car,
+  city: boss.track.city,
+  country: boss.track.country,
+  bio: profileBios[boss.id] || "Profile bio placeholder. Add the final lore from the Web Game Lore Doc."
+})));
 const saveKey = "gearborn-demo-save-v1";
+const tunerChoiceVersion = 1;
 
 const defaultState = {
   selectedCar: cars[0].id,
@@ -258,6 +283,12 @@ const defaultState = {
   selectedTimeCar: cars[0].id,
   selectedTimeTrack: storyTracks[0].id,
   selectedVindex: vindexEntries[0].number,
+  selectedProfile: racerProfiles[0].id,
+  racerAlphaUnmasked: false,
+  racerAlphaProfileView: "masked",
+  selectedTuner: null,
+  tunerChosen: false,
+  tunerChoiceVersion: 0,
   highestBossIndex: 0,
   selectedCampaign: 0,
   highestCampaignIndex: 0,
@@ -271,6 +302,7 @@ let race = null;
 let lastFrame = 0;
 let evolutionModal = null;
 let verticalRace = null;
+let pendingCutsceneStart = null;
 
 const el = {
   views: document.querySelectorAll(".view"),
@@ -313,6 +345,11 @@ const el = {
   vindexNumber: document.querySelector("#vindex-number"),
   vindexName: document.querySelector("#vindex-name"),
   vindexLine: document.querySelector("#vindex-line"),
+  profileList: document.querySelector("#profile-list"),
+  profileArt: document.querySelector("#profile-art"),
+  profileName: document.querySelector("#profile-name"),
+  profileMeta: document.querySelector("#profile-meta"),
+  profileBio: document.querySelector("#profile-bio"),
   playerPreviewArt: document.querySelector("#player-preview-art"),
   playerPreviewName: document.querySelector("#player-preview-name"),
   playerPreviewMeta: document.querySelector("#player-preview-meta"),
@@ -361,6 +398,17 @@ const el = {
   bossModalKicker: document.querySelector("#boss-modal-kicker"),
   bossModalCopy: document.querySelector("#boss-modal-copy"),
   continueBoss: document.querySelector("#continue-boss"),
+  tunerModal: document.querySelector("#tuner-modal"),
+  tunerOptions: document.querySelector("#tuner-options"),
+  settingsTunerOptions: document.querySelector("#settings-tuner-options"),
+  cutsceneModal: document.querySelector("#cutscene-modal"),
+  cutsceneTitle: document.querySelector("#cutscene-title"),
+  cutsceneLeftArt: document.querySelector("#cutscene-left-art"),
+  cutsceneRightArt: document.querySelector("#cutscene-right-art"),
+  cutsceneLeftDialogue: document.querySelector("#cutscene-left-dialogue"),
+  cutsceneRightDialogue: document.querySelector("#cutscene-right-dialogue"),
+  continueCutscene: document.querySelector("#continue-cutscene"),
+  skipCutscene: document.querySelector("#skip-cutscene"),
   unmaskModal: document.querySelector("#unmask-modal"),
   unmaskPortrait: document.querySelector("#unmask-portrait"),
   unmaskButton: document.querySelector("#unmask-button"),
@@ -425,6 +473,11 @@ function sanitizeState() {
   }
   if (!storyTracks.some((track) => track.id === state.selectedTimeTrack)) state.selectedTimeTrack = storyTracks[0].id;
   if (!vindexEntries.some((entry) => entry.number === state.selectedVindex)) state.selectedVindex = vindexEntries[0].number;
+  if (!racerProfiles.some((profile) => profile.id === state.selectedProfile)) state.selectedProfile = racerProfiles[0].id;
+  state.racerAlphaProfileView = state.racerAlphaProfileView === "unmasked" ? "unmasked" : "masked";
+  if (!state.racerAlphaUnmasked) state.racerAlphaProfileView = "masked";
+  if (state.selectedTuner && !tuners.some((tuner) => tuner.id === state.selectedTuner)) state.selectedTuner = null;
+  state.tunerChoiceVersion = state.tunerChoiceVersion || 0;
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
   cars.forEach((car) => {
@@ -532,6 +585,8 @@ function render() {
   renderBosses();
   renderTimeTargets();
   renderVindex();
+  renderProfiles();
+  renderTuners();
   renderDistanceOptions();
   renderOpponents();
   renderSelectionPreviews();
@@ -634,6 +689,54 @@ function renderVindex() {
   el.vindexLine.textContent = entry.line;
 }
 
+function characterMarkup(character) {
+  const initials = character.name.split(" ").map((part) => part[0]).join("").slice(0, 2);
+  return `
+    <div class="character-frame">
+      <img src="${character.image}" alt="${character.name}" onerror="this.parentElement.classList.add('placeholder'); this.remove();">
+      <span>${initials}</span>
+    </div>
+  `;
+}
+
+function renderProfiles() {
+  el.profileList.innerHTML = racerProfiles.map((profile) => `
+    <button class="vindex-button ${profile.id === state.selectedProfile ? "active" : ""}" type="button" data-profile="${profile.id}">
+      <span>${profile.car ? "Boss" : "Tuner"}</span>
+      <strong>${profile.name}</strong>
+    </button>
+  `).join("");
+  const profile = racerProfiles.find((item) => item.id === state.selectedProfile) || racerProfiles[0];
+  const displayProfile = profile.id === "racer-alpha" && state.racerAlphaProfileView !== "unmasked"
+    ? { ...profile, image: finalBoss.portrait }
+    : profile;
+  el.profileArt.innerHTML = characterMarkup(displayProfile) + racerAlphaProfileToggle(profile);
+  el.profileName.textContent = profile.name;
+  el.profileMeta.textContent = profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
+  el.profileBio.textContent = profile.bio;
+}
+
+function racerAlphaProfileToggle(profile) {
+  if (profile.id !== "racer-alpha" || !state.racerAlphaUnmasked) return "";
+  return `
+    <div class="profile-toggle" aria-label="Racer Alpha mask toggle">
+      <button class="${state.racerAlphaProfileView === "masked" ? "active" : ""}" type="button" data-alpha-view="masked">Masked</button>
+      <button class="${state.racerAlphaProfileView === "unmasked" ? "active" : ""}" type="button" data-alpha-view="unmasked">Unmasked</button>
+    </div>
+  `;
+}
+
+function renderTuners() {
+  const markup = tuners.map((tuner) => `
+    <button class="tuner-card ${state.selectedTuner === tuner.id ? "active" : ""}" type="button" data-tuner="${tuner.id}">
+      ${characterMarkup(tuner)}
+      <strong>${tuner.name}</strong>
+    </button>
+  `).join("");
+  el.tunerOptions.innerHTML = markup;
+  el.settingsTunerOptions.innerHTML = markup;
+}
+
 function renderDistanceOptions() {
   el.distanceOptions.innerHTML = distances.map((distance) => `
     <button type="button" class="${state.selectedDistance === distance.meters ? "active" : ""}" data-distance="${distance.meters}">
@@ -732,7 +835,7 @@ function lockedGarageCard(car) {
 function carMarkup(color) {
   const currentCar = cars.find((car) => car.color === color);
   const image = currentCar ? imageFor(currentEvolution(currentCar.id), "display") : "";
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${currentEvolution(currentCar.id).name}" onerror="this.closest('.car').classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${currentEvolution(currentCar.id).name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${color}">
@@ -1103,7 +1206,7 @@ function imageFor(entry, role) {
 
 function rankMarkup(rank, role = "display") {
   const image = imageFor(rank, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}" onerror="this.closest('.car').classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${rank.color}">
@@ -1117,7 +1220,7 @@ function rankMarkup(rank, role = "display") {
 }
 
 function displayMarkup(image, alt, color) {
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}" onerror="this.closest('.car').classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   return `
     <div class="car ${image ? "has-image" : ""}" style="--car-color:${color}">
       ${imageTag}
@@ -1133,7 +1236,7 @@ function carMarkupForEvolution(carId, evolutionIndex, role = "display") {
   const car = cars.find((item) => item.id === carId);
   const form = evolutionByIndex(carId, evolutionIndex);
   const image = imageFor(form, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}" onerror="this.closest('.car').classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${car.color}">
@@ -1211,6 +1314,11 @@ function showView(view) {
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
   document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === view));
   document.body.classList.toggle("mode-active", view !== "menu");
+  if (view === "story" && !storyTunerReady()) openTunerModal();
+}
+
+function storyTunerReady() {
+  return Boolean(state.tunerChosen && state.selectedTuner && state.tunerChoiceVersion >= tunerChoiceVersion);
 }
 
 function restoreEmbeddedCampaignRace() {
@@ -1248,7 +1356,20 @@ function completeCampaignLevel(index) {
 function startCampaignLevel() {
   const index = state.selectedCampaign;
   if (index > state.highestCampaignIndex) return;
+  if (!storyTunerReady()) {
+    openTunerModal();
+    return;
+  }
   const level = campaignLevels[index];
+  const runLevel = () => startCampaignRace(index, level);
+  if (shouldShowStoryCutscene(index, level)) {
+    openStoryCutscene(level, runLevel);
+    return;
+  }
+  runLevel();
+}
+
+function startCampaignRace(index, level) {
   if (level.type === "drag") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
@@ -1272,7 +1393,36 @@ function startCampaignLevel() {
   state.selectedBoss = boss.id;
   saveState();
   render();
-  openBossIntro({ mode: "campaign-boss", options: { campaignLevelIndex: index, boss }, boss, ignoreLock: true });
+  beginVerticalRace("campaign-boss", true, { campaignLevelIndex: index, boss });
+}
+
+function shouldShowStoryCutscene(index, level) {
+  return index === 0 || level.type === "boss";
+}
+
+function openStoryCutscene(level, startRaceCallback) {
+  pendingCutsceneStart = startRaceCallback;
+  const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
+  const boss = level.type === "boss" ? (level.final ? finalBoss : bosses[level.bossIndex]) : null;
+  const other = boss || { name: "Instructor", image: "assets/characters/instructor.png" };
+  el.cutsceneTitle.textContent = level.type === "boss" ? `${tuner.name} meets ${boss.name}` : "Story Intro Placeholder";
+  el.cutsceneLeftArt.innerHTML = characterMarkup(tuner);
+  el.cutsceneRightArt.innerHTML = characterMarkup(other);
+  el.cutsceneLeftDialogue.textContent = "Placeholder dialogue for your chosen tuner will appear here.";
+  el.cutsceneRightDialogue.textContent = level.type === "boss"
+    ? "Placeholder boss dialogue will appear here."
+    : "Placeholder instructor dialogue will appear here.";
+  el.cutsceneModal.classList.add("active");
+  el.cutsceneModal.setAttribute("aria-hidden", "false");
+  el.continueCutscene.focus();
+}
+
+function closeStoryCutsceneAndStart() {
+  el.cutsceneModal.classList.remove("active");
+  el.cutsceneModal.setAttribute("aria-hidden", "true");
+  const start = pendingCutsceneStart;
+  pendingCutsceneStart = null;
+  if (start) start();
 }
 
 function topDownImageForCar(carId) {
@@ -1326,6 +1476,9 @@ function showRacerAlphaUnmask() {
 }
 
 function unmaskRacerAlpha() {
+  state.racerAlphaUnmasked = true;
+  state.racerAlphaProfileView = "unmasked";
+  saveState();
   el.unmaskPortrait.innerHTML = `<img src="${finalBoss.unmaskedPortrait}" alt="Racer Alpha" onerror="this.remove()">`;
   el.unmaskCopy.textContent = "Racer Alpha has been unmasked.";
   el.unmaskButton.hidden = true;
@@ -1337,6 +1490,27 @@ function closeRacerAlphaUnmask() {
   el.unmaskModal.classList.remove("active");
   el.unmaskModal.setAttribute("aria-hidden", "true");
   if (verticalRace?.carId) showPendingEvolution(verticalRace.carId);
+}
+
+function openTunerModal() {
+  renderTuners();
+  el.tunerModal.classList.add("active");
+  el.tunerModal.setAttribute("aria-hidden", "false");
+}
+
+function closeTunerModal() {
+  el.tunerModal.classList.remove("active");
+  el.tunerModal.setAttribute("aria-hidden", "true");
+}
+
+function selectTuner(tunerId) {
+  if (!tuners.some((tuner) => tuner.id === tunerId)) return;
+  state.selectedTuner = tunerId;
+  state.tunerChosen = true;
+  state.tunerChoiceVersion = tunerChoiceVersion;
+  saveState();
+  closeTunerModal();
+  render();
 }
 
 function beginVerticalRace(mode, waitForStart = false, options = {}) {
@@ -1591,6 +1765,9 @@ function finishVerticalRace(playerWon) {
     const xp = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
     const xpResult = addXp(raceState.carId, xp);
     if (playerWon) {
+      if (raceState.bossData.id === "racer-alpha") {
+        state.racerAlphaUnmasked = true;
+      }
       const bossIndex = bossChallengeBosses.findIndex((boss) => boss.id === raceState.bossData.id);
       if (bossIndex === state.highestBossIndex && state.highestBossIndex < bossChallengeBosses.length - 1) {
         state.highestBossIndex += 1;
@@ -1619,7 +1796,7 @@ function finishVerticalRace(playerWon) {
   saveState();
   render();
   if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
-    if (playerWon && raceState.bossData.id === "racer-alpha") {
+    if (playerWon && raceState.mode === "boss" && raceState.bossData.id === "racer-alpha") {
       showRacerAlphaUnmask();
       return;
     }
@@ -1743,6 +1920,8 @@ el.continueBoss.addEventListener("click", () => {
 });
 el.unmaskButton.addEventListener("click", unmaskRacerAlpha);
 el.continueUnmask.addEventListener("click", closeRacerAlphaUnmask);
+el.continueCutscene.addEventListener("click", closeStoryCutsceneAndStart);
+el.skipCutscene.addEventListener("click", closeStoryCutsceneAndStart);
 el.startTimeTrial.addEventListener("click", () => beginVerticalRace("time", true));
 el.storyMapStart.addEventListener("click", startVerticalCountdown);
 el.timeMapStart.addEventListener("click", startVerticalCountdown);
@@ -1769,6 +1948,28 @@ el.vindexList.addEventListener("click", (event) => {
   state.selectedVindex = button.dataset.vindex;
   saveState();
   renderVindex();
+});
+
+el.profileList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-profile]");
+  if (!button) return;
+  state.selectedProfile = button.dataset.profile;
+  saveState();
+  renderProfiles();
+});
+
+el.profileArt.addEventListener("click", (event) => {
+  const alphaButton = event.target.closest("[data-alpha-view]");
+  if (!alphaButton) return;
+  state.racerAlphaProfileView = alphaButton.dataset.alphaView;
+  saveState();
+  renderProfiles();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-tuner]");
+  if (!button) return;
+  selectTuner(button.dataset.tuner);
 });
 
 el.garageGrid.addEventListener("click", (event) => {

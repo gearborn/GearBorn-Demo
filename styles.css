@@ -261,6 +261,84 @@ body.mode-active .main-menu-button {
   text-transform: uppercase;
 }
 
+.tuner-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tuner-options.large {
+  margin-top: 18px;
+}
+
+.tuner-card {
+  display: grid;
+  gap: 8px;
+  min-height: 180px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(34, 41, 54, 0.84);
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.tuner-card.active {
+  border-color: var(--green);
+  background: rgba(110, 231, 168, 0.14);
+  color: var(--green);
+}
+
+.tuner-card .character-frame {
+  min-height: 120px;
+}
+
+.tuner-card .character-frame img {
+  max-height: 140px;
+}
+
+.cutscene-modal {
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #171c24;
+  box-shadow: 0 28px 80px var(--shadow);
+  text-align: center;
+}
+
+.cutscene-stage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.cutscene-character {
+  display: grid;
+  gap: 12px;
+}
+
+.cutscene-portrait {
+  min-height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dialogue-box {
+  min-height: 92px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #111820;
+  color: var(--ink);
+  font-weight: 800;
+  text-align: left;
+}
+
 .campaign-layout {
   display: grid;
   grid-template-columns: minmax(260px, 420px) minmax(0, 1fr);
@@ -1077,13 +1155,15 @@ small {
   text-transform: uppercase;
 }
 
-.vindex-layout {
+.vindex-layout,
+.profile-layout {
   display: grid;
   grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
   gap: 18px;
 }
 
-.vindex-list {
+.vindex-list,
+.profile-list {
   max-height: 680px;
   overflow: auto;
   border: 1px solid var(--line);
@@ -1116,7 +1196,8 @@ small {
   font-weight: 900;
 }
 
-.vindex-detail {
+.vindex-detail,
+.profile-detail {
   min-height: 560px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1124,7 +1205,8 @@ small {
   box-shadow: 0 18px 46px var(--shadow);
 }
 
-.vindex-art {
+.vindex-art,
+.profile-art {
   position: relative;
   min-height: 380px;
   background:
@@ -1148,26 +1230,83 @@ small {
   height: 100%;
 }
 
-.vindex-copy {
+.vindex-copy,
+.profile-copy {
   padding: 22px;
 }
 
-.vindex-copy p {
+.vindex-copy p,
+.profile-copy p {
   margin: 0 0 6px;
   color: var(--gold);
   font-weight: 950;
 }
 
-.vindex-copy h2 {
+.vindex-copy h2,
+.profile-copy h2 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 4rem);
 }
 
-.vindex-copy span {
+.vindex-copy span,
+.profile-copy span {
   display: block;
   margin-top: 8px;
   color: var(--muted);
   font-weight: 850;
+}
+
+.character-frame {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+}
+
+.character-frame img {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.character-frame span {
+  display: none;
+}
+
+.character-frame.placeholder span {
+  display: grid;
+  width: 116px;
+  height: 116px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gold);
+  font-size: 2.2rem;
+  font-weight: 950;
+}
+
+.profile-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px 16px;
+}
+
+.profile-toggle button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.profile-toggle button.active {
+  border-color: var(--gold);
+  background: rgba(255, 200, 87, 0.16);
+  color: var(--gold);
 }
 
 .garage-card {
@@ -1418,6 +1557,7 @@ small {
   .race-panel,
   .vertical-mode,
   .vindex-layout,
+  .profile-layout,
   .campaign-layout {
     grid-template-columns: 1fr;
   }
@@ -1456,6 +1596,11 @@ small {
   }
 
   .garage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tuner-options,
+  .cutscene-stage {
     grid-template-columns: 1fr;
   }
 
