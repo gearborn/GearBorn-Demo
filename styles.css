@@ -1059,6 +1059,18 @@ small {
   gap: 16px;
 }
 
+.garage-status {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(110, 231, 168, 0.48);
+  border-radius: 8px;
+  background: rgba(110, 231, 168, 0.12);
+  color: var(--green);
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .vindex-layout {
   display: grid;
   grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
@@ -1276,16 +1288,34 @@ small {
   margin-top: 24px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
 }
 
+.god-button,
 .danger-button {
   min-height: 42px;
   width: 100%;
-  border: 1px solid rgba(242, 95, 92, 0.72);
   border-radius: 7px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.god-button {
+  border: 1px solid rgba(110, 231, 168, 0.7);
+  background: rgba(110, 231, 168, 0.14);
+  color: var(--green);
+}
+
+.danger-button {
+  border: 1px solid rgba(242, 95, 92, 0.72);
   background: rgba(242, 95, 92, 0.15);
   color: #ff8f8d;
-  font-weight: 950;
+}
+
+.god-button:hover {
+  background: rgba(110, 231, 168, 0.24);
+  color: #c9ffe1;
 }
 
 .danger-button:hover {

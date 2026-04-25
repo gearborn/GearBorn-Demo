@@ -322,6 +322,10 @@ const el = {
   opponentPreviewName: document.querySelector("#opponent-preview-name"),
   opponentPreviewMeta: document.querySelector("#opponent-preview-meta"),
   startRace: document.querySelector("#start-race"),
+  godMode: document.querySelector("#god-mode"),
+  godModal: document.querySelector("#god-modal"),
+  confirmGod: document.querySelector("#confirm-god"),
+  cancelGod: document.querySelector("#cancel-god"),
   resetProgress: document.querySelector("#reset-progress"),
   resetModal: document.querySelector("#reset-modal"),
   confirmReset: document.querySelector("#confirm-reset"),
@@ -338,6 +342,7 @@ const el = {
   raceMessage: document.querySelector("#race-message"),
   shiftButton: document.querySelector("#shift-button"),
   garageGrid: document.querySelector("#garage-grid"),
+  garageStatus: document.querySelector("#garage-status"),
   difficulty: document.querySelector("#difficulty"),
   volume: document.querySelector("#volume"),
   shiftKey: document.querySelector("#shift-key"),
@@ -405,6 +410,10 @@ function sanitizeState() {
   if (!ranks.some((rank) => rank.key === state.selectedRank)) {
     state.selectedRank = ranks[0].key;
   }
+  state.highestRankIndex = Math.min(state.highestRankIndex || 0, ranks.length - 1);
+  if (ranks.findIndex((rank) => rank.key === state.selectedRank) > state.highestRankIndex) {
+    state.selectedRank = ranks[state.highestRankIndex].key;
+  }
   if (!bossChallengeBosses.some((boss) => boss.id === state.selectedBoss)) state.selectedBoss = bossChallengeBosses[0].id;
   state.highestBossIndex = Math.min(state.highestBossIndex || 0, bossChallengeBosses.length - 1);
   state.highestCampaignIndex = Math.min(state.highestCampaignIndex || 0, campaignLevels.length - 1);
@@ -466,6 +475,15 @@ function allStarterFinalFormsUnlocked() {
     const progress = state.garage?.[carId];
     return progress && progress.evolution >= car.evolutions.length - 1;
   });
+}
+
+function garageGodModeActive() {
+  const rainbowlt = state.garage?.rainbowlt;
+  return Boolean(
+    state.unlockedCars?.rainbowlt &&
+    rainbowlt?.level >= maxCarLevel &&
+    rainbowlt?.evolution >= cars.find((car) => car.id === "rainbowlt").evolutions.length - 1
+  );
 }
 
 function unlockSecretCars() {
@@ -584,7 +602,7 @@ function renderBosses() {
       </button>
     `;
   }).join("");
-  const boss = bosses.find((item) => item.id === state.selectedBoss);
+  const boss = bossChallengeBosses.find((item) => item.id === state.selectedBoss) || bossChallengeBosses[0];
   el.storyLocation.textContent = `${boss.track.city}, ${boss.track.country}`;
   applyTrackMap(el.storyTrack, boss.track);
 }
@@ -652,6 +670,11 @@ function renderSelectionPreviews() {
 }
 
 function renderGarage() {
+  const godModeActive = garageGodModeActive();
+  el.garageStatus.hidden = !godModeActive;
+  el.garageStatus.textContent = godModeActive
+    ? "God Mode Active: Rainbowlt is Level 10 and evolved into Hornula1"
+    : "";
   el.garageGrid.innerHTML = cars.map((car) => {
     if (!isCarUnlocked(car.id)) {
       return lockedGarageCard(car);
@@ -660,6 +683,7 @@ function renderGarage() {
     const next = xpForNextLevel(progress.level);
     const maxed = progress.level >= maxCarLevel;
     const pct = maxed ? 100 : Math.min(100, (progress.xp / next) * 100);
+    const stats = carStats(car.id);
     return `
       <article class="garage-card">
         <div class="garage-art">
@@ -671,6 +695,10 @@ function renderGarage() {
           <div class="meta-row">
             <span>Level ${progress.level}</span>
             <span class="evolution">Evolution ${progress.evolution + 1}</span>
+          </div>
+          <div class="meta-row">
+            <span>Max Speed</span>
+            <span>${Math.round(stats.maxSpeed)} MPH</span>
           </div>
           <div class="xp-bar"><div class="xp-fill" style="width:${pct}%"></div></div>
           <div class="meta-row">
@@ -1012,6 +1040,47 @@ function resetRacingData() {
   render();
 }
 
+function openGodModal() {
+  el.godModal.classList.add("active");
+  el.godModal.setAttribute("aria-hidden", "false");
+  el.confirmGod.focus();
+}
+
+function closeGodModal() {
+  el.godModal.classList.remove("active");
+  el.godModal.setAttribute("aria-hidden", "true");
+}
+
+function activateGodMode() {
+  state.unlockedCars = { ...state.unlockedCars, rainbowlt: true };
+  cars.forEach((car) => {
+    state.garage[car.id] = {
+      level: maxCarLevel,
+      xp: 0,
+      evolution: car.evolutions.length - 1,
+      pendingEvolution: null
+    };
+  });
+  state.garage.rainbowlt = {
+    level: maxCarLevel,
+    xp: 0,
+    evolution: cars.find((car) => car.id === "rainbowlt").evolutions.length - 1,
+    pendingEvolution: null
+  };
+  state.highestRankIndex = ranks.length - 1;
+  state.highestBossIndex = bossChallengeBosses.length - 1;
+  state.highestCampaignIndex = campaignLevels.length - 1;
+  state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
+  state.selectedBoss = finalBoss.id;
+  saveState();
+  closeGodModal();
+  closeEvolutionModal();
+  render();
+  showView("garage");
+  el.raceMessage.className = "race-message win";
+  el.raceMessage.textContent = "God Mode activated. Rainbowlt is now Level 10 and evolved into Hornula1.";
+}
+
 function imageFor(entry, role) {
   if (!entry) return "";
   if (entry.images?.[role]) return entry.images[role];
@@ -1192,11 +1261,7 @@ function startCampaignLevel() {
   state.selectedBoss = boss.id;
   saveState();
   render();
-  if (boss.id === "racer-alpha") {
-    openBossIntro({ mode: "campaign-boss", options: { campaignLevelIndex: index, boss } });
-    return;
-  }
-  beginVerticalRace("campaign-boss", true, { campaignLevelIndex: index, boss });
+  openBossIntro({ mode: "campaign-boss", options: { campaignLevelIndex: index, boss }, boss, ignoreLock: true });
 }
 
 function topDownImageForCar(carId) {
@@ -1217,14 +1282,14 @@ function setTopCar(node, image, alt, color) {
 }
 
 function openBossIntro(startConfig = { mode: "boss", options: {} }) {
-  const boss = selectedBoss();
+  const boss = startConfig.boss || startConfig.options?.boss || selectedBoss();
   const bossIndex = bossChallengeBosses.findIndex((item) => item.id === boss.id);
-  if (bossIndex > state.highestBossIndex) {
+  if (!startConfig.ignoreLock && bossIndex > state.highestBossIndex) {
     el.storyMessage.className = "race-message loss";
     el.storyMessage.textContent = "Beat the previous boss to unlock this challenge.";
     return;
   }
-  pendingBossRaceStart = startConfig;
+  pendingBossRaceStart = { mode: startConfig.mode || "boss", options: startConfig.options || {} };
   el.bossModalKicker.textContent = `${boss.track.city}, ${boss.track.country}`;
   el.bossModalTitle.textContent = `${boss.name} challenges you`;
   el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} XP.`;
@@ -1260,6 +1325,7 @@ function unmaskRacerAlpha() {
 function closeRacerAlphaUnmask() {
   el.unmaskModal.classList.remove("active");
   el.unmaskModal.setAttribute("aria-hidden", "true");
+  if (verticalRace?.carId) showPendingEvolution(verticalRace.carId);
 }
 
 function beginVerticalRace(mode, waitForStart = false, options = {}) {
@@ -1716,10 +1782,19 @@ el.evolutionModal.addEventListener("click", (event) => {
 el.resetProgress.addEventListener("click", openResetModal);
 el.confirmReset.addEventListener("click", resetRacingData);
 el.cancelReset.addEventListener("click", closeResetModal);
+el.godMode.addEventListener("click", openGodModal);
+el.confirmGod.addEventListener("click", activateGodMode);
+el.cancelGod.addEventListener("click", closeGodModal);
 
 el.resetModal.addEventListener("click", (event) => {
   if (event.target === el.resetModal) {
     closeResetModal();
+  }
+});
+
+el.godModal.addEventListener("click", (event) => {
+  if (event.target === el.godModal) {
+    closeGodModal();
   }
 });
 
@@ -1749,8 +1824,16 @@ document.addEventListener("keydown", (event) => {
     closeResetModal();
     return;
   }
+  if (event.key === "Escape" && el.godModal.classList.contains("active")) {
+    closeGodModal();
+    return;
+  }
   if (event.key === "Escape" && el.bossModal.classList.contains("active")) {
     closeBossIntro();
+    return;
+  }
+  if (event.key === "Escape" && el.unmaskModal.classList.contains("active")) {
+    closeRacerAlphaUnmask();
     return;
   }
   if (event.key === "Escape" && el.evolutionModal.classList.contains("active")) {

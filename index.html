@@ -107,8 +107,8 @@
               </div>
               <div class="race-message" id="story-message">Select a boss and start the race.</div>
               <div class="touch-controls" aria-label="Story steering controls">
-                <button class="steer-button" data-steer="left" type="button">Left</button>
-                <button class="steer-button" data-steer="right" type="button">Right</button>
+                <button class="steer-button" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <button class="steer-button" data-steer="right" type="button" aria-label="Steer right">→</button>
               </div>
             </div>
           </div>
@@ -147,8 +147,8 @@
               </div>
               <div class="race-message" id="time-message">Pick a track and chase your best run.</div>
               <div class="touch-controls" aria-label="Time Trial steering controls">
-                <button class="steer-button" data-steer="left" type="button">Left</button>
-                <button class="steer-button" data-steer="right" type="button">Right</button>
+                <button class="steer-button" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <button class="steer-button" data-steer="right" type="button" aria-label="Steer right">→</button>
               </div>
             </div>
           </div>
@@ -281,8 +281,9 @@
         <section class="view" id="garage-view" aria-labelledby="garage-title">
           <div class="section-heading">
             <p>Garage</p>
-            <h1 id="garage-title">Your starting six Gearborn.</h1>
+            <h1 id="garage-title">Your Gearborn lineup.</h1>
           </div>
+          <div class="garage-status" id="garage-status" hidden></div>
           <div class="garage-grid" id="garage-grid"></div>
         </section>
 
@@ -311,6 +312,7 @@
                 <small id="key-note">Click the box, then press the key you want.</small>
               </div>
               <div class="danger-zone">
+                <button class="god-button" id="god-mode" type="button">God Mode</button>
                 <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
               </div>
             </div>
@@ -352,6 +354,18 @@
         <div class="modal-actions">
           <button class="danger-button" id="confirm-reset" type="button">Reset Racing Data</button>
           <button class="ghost" id="cancel-reset" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="god-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="god-title">
+        <p class="modal-kicker">Activate God Mode</p>
+        <h2 id="god-title">Are you sure you wish to activate God Mode?</h2>
+        <p>This will max every car, unlock all levels, and evolve Rainbowlt into Hornula1 at Level 10.</p>
+        <div class="modal-actions">
+          <button class="god-button" id="confirm-god" type="button">Activate God Mode</button>
+          <button class="ghost" id="cancel-god" type="button">Cancel</button>
         </div>
       </div>
     </div>
