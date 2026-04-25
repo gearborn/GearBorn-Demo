@@ -9,20 +9,23 @@
   <body>
     <div class="app">
       <header class="topbar">
-        <button class="brand" data-view="menu" aria-label="Gearborn home">
-          <span class="brand-mark">G</span>
-          <span>
-            <strong>GearBorn</strong>
-            <small>Engines Evolved</small>
-          </span>
-        </button>
+        <div class="topbar-left">
+          <button class="main-menu-button" data-view="menu" type="button">Main Menu</button>
+          <button class="brand" data-view="menu" aria-label="Gearborn home">
+            <span class="brand-mark">G</span>
+            <span>
+              <strong>GearBorn</strong>
+              <small>Engines Evolved</small>
+            </span>
+          </button>
+        </div>
         <nav class="nav" aria-label="Main navigation">
-          <button class="nav-button active" data-view="menu" type="button">Menu</button>
-          <button class="nav-button" data-view="play" type="button">Drag</button>
-          <button class="nav-button" data-view="story" type="button">Story</button>
+          <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
+          <button class="nav-button" data-view="play" type="button">Drag Race</button>
           <button class="nav-button" data-view="time-trial" type="button">Time Trial</button>
-          <button class="nav-button" data-view="vindex" type="button">VINdex</button>
+          <button class="nav-button" data-view="boss" type="button">Boss Challenge</button>
           <button class="nav-button" data-view="garage" type="button">Garage</button>
+          <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
       </header>
@@ -39,22 +42,45 @@
               <p class="menu-subtitle">Race, Train, Evolve</p>
             </div>
             <div class="menu-actions" aria-label="Menu choices">
-              <button class="menu-button primary" data-view="story" type="button">Story Mode</button>
+              <button class="menu-button story-primary" data-view="story" type="button">Story Mode</button>
               <button class="menu-button primary" data-view="play" type="button">Drag Race</button>
               <button class="menu-button primary" data-view="time-trial" type="button">Time Trial</button>
-              <button class="menu-button" data-view="vindex" type="button">VINdex</button>
+              <button class="menu-button primary" data-view="boss" type="button">Boss Challenge</button>
               <button class="menu-button" data-view="garage" type="button">Garage</button>
+              <button class="menu-button" data-view="vindex" type="button">VINdex</button>
               <button class="menu-button" data-view="settings" type="button">Settings</button>
+              <p class="creator-credit">Created by Corey Hanley</p>
             </div>
           </div>
         </section>
 
         <section class="view" id="story-view" aria-labelledby="story-title">
+          <div class="section-heading">
+            <p>Story Mode</p>
+            <h1 id="story-title">Race, train, evolve through the GearBorn world.</h1>
+          </div>
+          <div class="campaign-layout">
+            <div class="campaign-list" id="campaign-list"></div>
+            <div class="campaign-detail">
+              <p id="campaign-type"></p>
+              <h2 id="campaign-title"></h2>
+              <span id="campaign-meta"></span>
+              <div class="field">
+                <label for="campaign-car">Story car</label>
+                <select id="campaign-car"></select>
+              </div>
+              <button class="story-primary campaign-start" id="start-campaign" type="button">Start Level</button>
+            </div>
+          </div>
+          <div class="campaign-race-mount" id="campaign-race-mount"></div>
+        </section>
+
+        <section class="view" id="boss-view" aria-labelledby="boss-title">
           <div class="vertical-mode">
             <div class="setup">
               <div class="section-heading">
-                <p>Story Mode</p>
-                <h1 id="story-title">Race the GearBorn bosses.</h1>
+                <p>Boss Challenge</p>
+                <h1 id="boss-title">Race the GearBorn bosses.</h1>
               </div>
               <div class="field">
                 <label for="story-car">Your car</label>
@@ -301,6 +327,19 @@
         <p id="boss-modal-copy"></p>
         <div class="modal-actions">
           <button class="primary" id="continue-boss" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="unmask-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="unmask-title">
+        <div class="boss-portrait" id="unmask-portrait"></div>
+        <p class="modal-kicker">Final Boss Defeated</p>
+        <h2 id="unmask-title">Unmask Racer Alpha</h2>
+        <p id="unmask-copy">Racer Alpha's helmet is ready to come off.</p>
+        <div class="modal-actions">
+          <button class="primary" id="unmask-button" type="button">Unmask</button>
+          <button class="ghost" id="continue-unmask" type="button" hidden>Continue</button>
         </div>
       </div>
     </div>

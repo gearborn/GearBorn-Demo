@@ -186,6 +186,24 @@ const bosses = [
   { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/story/kuumbusta-topdown.png", portrait: "assets/bosses/jabu.png" },
   { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/bosses/pallavi.png" }
 ];
+const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/story/unlock-hornula1-topdown.png", portrait: "assets/bosses/racer-alpha-helmet.png", unmaskedPortrait: "assets/bosses/racer-alpha.png" };
+const bossChallengeBosses = bosses.concat(finalBoss);
+const campaignDragStages = [
+  { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/rival-bananachi-race.png" },
+  { rankKey: "D", name: "Beardo", xp: 150, power: 1.05, image: "assets/cars/rival-beardo-race.png" },
+  { rankKey: "D", name: "Boates", xp: 190, power: 1.16, image: "assets/cars/whale-boates-race.png" },
+  { rankKey: "C", name: "Manstrocity", xp: 250, power: 1.3, image: "assets/cars/rival-manstrocity-race.png" },
+  { rankKey: "B", name: "Sponsore", xp: 330, power: 1.5, image: "assets/cars/rival-sponsore-race.png" },
+  { rankKey: "B", name: "Tookerjaw", xp: 410, power: 1.66, image: "assets/cars/pickup-tookerjaw-race.png" },
+  { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/rival-crusadome-race.png" },
+  { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png" }
+];
+const campaignLevels = bosses.flatMap((boss, index) => {
+  const drag = { type: "drag", title: `${campaignDragStages[index].rankKey} Class Drag: ${campaignDragStages[index].name}`, drag: campaignDragStages[index] };
+  const trial = { type: "trial", title: `${boss.track.city} Time Trial`, track: boss.track, bossIndex: index };
+  const battle = { type: "boss", title: `${boss.name} Boss Race`, bossIndex: index };
+  return index % 2 === 0 ? [drag, trial, battle] : [trial, drag, battle];
+}).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 14.5 },
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 17.5 },
@@ -241,6 +259,8 @@ const defaultState = {
   selectedTimeTrack: storyTracks[0].id,
   selectedVindex: vindexEntries[0].number,
   highestBossIndex: 0,
+  selectedCampaign: 0,
+  highestCampaignIndex: 0,
   timeTrials: {},
   garage: Object.fromEntries(cars.map((car) => [car.id, { level: 1, xp: 0, evolution: 0, pendingEvolution: null }]))
 };
@@ -257,6 +277,7 @@ const el = {
   navButtons: document.querySelectorAll("[data-view]"),
   playerCar: document.querySelector("#player-car"),
   storyCar: document.querySelector("#story-car"),
+  campaignCar: document.querySelector("#campaign-car"),
   timeCar: document.querySelector("#time-car"),
   timeTrack: document.querySelector("#time-track"),
   bossList: document.querySelector("#boss-list"),
@@ -281,6 +302,12 @@ const el = {
   timeMapStart: document.querySelector("#time-map-start"),
   timeMessage: document.querySelector("#time-message"),
   timeTargets: document.querySelector("#time-targets"),
+  campaignList: document.querySelector("#campaign-list"),
+  campaignType: document.querySelector("#campaign-type"),
+  campaignTitle: document.querySelector("#campaign-title"),
+  campaignMeta: document.querySelector("#campaign-meta"),
+  startCampaign: document.querySelector("#start-campaign"),
+  campaignRaceMount: document.querySelector("#campaign-race-mount"),
   vindexList: document.querySelector("#vindex-list"),
   vindexArt: document.querySelector("#vindex-art"),
   vindexNumber: document.querySelector("#vindex-number"),
@@ -326,8 +353,19 @@ const el = {
   bossModalTitle: document.querySelector("#boss-modal-title"),
   bossModalKicker: document.querySelector("#boss-modal-kicker"),
   bossModalCopy: document.querySelector("#boss-modal-copy"),
-  continueBoss: document.querySelector("#continue-boss")
+  continueBoss: document.querySelector("#continue-boss"),
+  unmaskModal: document.querySelector("#unmask-modal"),
+  unmaskPortrait: document.querySelector("#unmask-portrait"),
+  unmaskButton: document.querySelector("#unmask-button"),
+  continueUnmask: document.querySelector("#continue-unmask"),
+  unmaskCopy: document.querySelector("#unmask-copy")
 };
+const embeddedRaceHomes = ["play", "time-trial", "boss"].map((view) => {
+  const node = document.querySelector(`#${view}-view`);
+  return { view, node, parent: node.parentNode, next: node.nextSibling };
+});
+let embeddedCampaignView = null;
+let pendingBossRaceStart = null;
 
 function loadState() {
   try {
@@ -367,10 +405,12 @@ function sanitizeState() {
   if (!ranks.some((rank) => rank.key === state.selectedRank)) {
     state.selectedRank = ranks[0].key;
   }
-  if (!bosses.some((boss) => boss.id === state.selectedBoss)) state.selectedBoss = bosses[0].id;
-  state.highestBossIndex = Math.min(state.highestBossIndex || 0, bosses.length - 1);
-  if (bosses.findIndex((boss) => boss.id === state.selectedBoss) > state.highestBossIndex) {
-    state.selectedBoss = bosses[state.highestBossIndex].id;
+  if (!bossChallengeBosses.some((boss) => boss.id === state.selectedBoss)) state.selectedBoss = bossChallengeBosses[0].id;
+  state.highestBossIndex = Math.min(state.highestBossIndex || 0, bossChallengeBosses.length - 1);
+  state.highestCampaignIndex = Math.min(state.highestCampaignIndex || 0, campaignLevels.length - 1);
+  state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
+  if (bossChallengeBosses.findIndex((boss) => boss.id === state.selectedBoss) > state.highestBossIndex) {
+    state.selectedBoss = bossChallengeBosses[state.highestBossIndex].id;
   }
   if (!storyTracks.some((track) => track.id === state.selectedTimeTrack)) state.selectedTimeTrack = storyTracks[0].id;
   if (!vindexEntries.some((entry) => entry.number === state.selectedVindex)) state.selectedVindex = vindexEntries[0].number;
@@ -468,6 +508,7 @@ function difficultyMultiplier() {
 function render() {
   renderCarSelect();
   renderVerticalSelects();
+  renderCampaign();
   renderBosses();
   renderTimeTargets();
   renderVindex();
@@ -495,15 +536,45 @@ function renderVerticalSelects() {
     return `<option value="${car.id}">${form.name} · Lv ${progress.level}</option>`;
   }).join("");
   el.storyCar.innerHTML = options;
+  el.campaignCar.innerHTML = options;
   el.timeCar.innerHTML = options;
   el.storyCar.value = state.selectedStoryCar;
+  el.campaignCar.value = state.selectedStoryCar;
   el.timeCar.value = state.selectedTimeCar;
   el.timeTrack.innerHTML = storyTracks.map((track) => `<option value="${track.id}">${track.city}, ${track.country}</option>`).join("");
   el.timeTrack.value = state.selectedTimeTrack;
 }
 
+function renderCampaign() {
+  el.campaignList.innerHTML = campaignLevels.map((level, index) => {
+    const locked = index > state.highestCampaignIndex;
+    const active = index === state.selectedCampaign;
+    const type = level.type === "drag" ? "Drag Race" : level.type === "trial" ? "Time Trial" : "Boss Challenge";
+    return `
+      <button class="campaign-button ${active ? "active" : ""} ${locked ? "locked" : ""}" type="button" data-campaign="${index}" ${locked ? "disabled" : ""}>
+        <strong>${index + 1}. ${locked && level.final ? "?" : level.title}</strong>
+        <small>${locked ? "Locked" : type}</small>
+      </button>
+    `;
+  }).join("");
+  const level = campaignLevels[state.selectedCampaign];
+  const locked = state.selectedCampaign > state.highestCampaignIndex;
+  el.campaignType.textContent = locked ? "Locked" : level.type === "drag" ? "Drag Race" : level.type === "trial" ? "Time Trial" : "Boss Challenge";
+  el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
+  el.campaignMeta.textContent = campaignLevelMeta(level, locked);
+  el.startCampaign.disabled = locked;
+}
+
+function campaignLevelMeta(level, locked) {
+  if (locked) return level.final ? "Play through the story to unlock the final boss." : "Finish the previous level to unlock.";
+  if (level.type === "drag") return `${level.drag.rankKey} Class · CPU ${level.drag.name} · ${level.drag.xp} XP`;
+  if (level.type === "trial") return `${level.track.city}, ${level.track.country} · No Phantaxi`;
+  const boss = level.final ? finalBoss : bosses[level.bossIndex];
+  return `${boss.name} · ${boss.car} · ${boss.xp} XP`;
+}
+
 function renderBosses() {
-  el.bossList.innerHTML = bosses.map((boss, index) => {
+  el.bossList.innerHTML = bossChallengeBosses.map((boss, index) => {
     const active = boss.id === state.selectedBoss;
     const locked = index > state.highestBossIndex;
     return `
@@ -526,7 +597,7 @@ function renderTimeTargets() {
   el.timeTargets.innerHTML = timeMedals.map((medal) => {
     const target = timeTarget(medal, trackIndex);
     return `<div><span>${medal.label} · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} XP</strong></div>`;
-  }).join("") + `<div><span>Best</span><strong>${best ? `${best.toFixed(2)} s` : "No run yet"}</strong></div>`;
+  }).join("") + `<div><span>Phantaxi Time</span><strong>${best ? `${best.toFixed(2)} s` : "No Phantaxi Time"}</strong></div>`;
 }
 
 function renderVindex() {
@@ -670,8 +741,14 @@ function setRacerImage(container, image, src, alt) {
 }
 
 function startRace() {
+  startDragRace();
+}
+
+function startDragRace(campaignLevelIndex = null, dragStage = null) {
   const car = carStats(state.selectedCar);
-  const rank = ranks.find((item) => item.key === state.selectedRank);
+  const rank = dragStage
+    ? { key: dragStage.rankKey, name: dragStage.name, xpBonus: dragStage.xp / 180, power: dragStage.power, color: "#f25f5c", images: { race: dragStage.image } }
+    : ranks.find((item) => item.key === state.selectedRank);
   const distance = distances.find((item) => item.meters === state.selectedDistance);
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
   const classScale = 0.9 + rankIndex * 0.09;
@@ -695,8 +772,13 @@ function startRace() {
     rivalAcceleration: 17 + rivalPower * 12,
     shiftScore: [],
     rank,
-    distance
+    distance,
+    campaignLevelIndex
   };
+  if (dragStage) {
+    el.rivalRacer.style.setProperty("--car-color", rank.color);
+    setRacerImage(el.rivalRacer, el.rivalRacerImage, dragStage.image, dragStage.name);
+  }
   lastFrame = performance.now();
   el.raceMessage.className = "race-message";
   el.raceMessage.textContent = `Race started. Press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
@@ -812,6 +894,9 @@ function finishRace(playerWon) {
   }
 
   saveState();
+  if (race.campaignLevelIndex !== null && race.campaignLevelIndex !== undefined && playerWon) {
+    completeCampaignLevel(race.campaignLevelIndex);
+  }
   render();
   showPendingEvolution(state.selectedCar);
 }
@@ -1037,7 +1122,81 @@ function timeTarget(medal, trackIndex) {
 }
 
 function selectedBoss() {
-  return bosses.find((boss) => boss.id === state.selectedBoss);
+  return bossChallengeBosses.find((boss) => boss.id === state.selectedBoss);
+}
+
+function showView(view) {
+  if (view !== "story") restoreEmbeddedCampaignRace();
+  el.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}-view`));
+  if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
+  document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === view));
+  document.body.classList.toggle("mode-active", view !== "menu");
+}
+
+function restoreEmbeddedCampaignRace() {
+  embeddedRaceHomes.forEach((home) => {
+    if (home.node.parentNode !== home.parent) {
+      if (home.next && home.next.parentNode === home.parent) {
+        home.parent.insertBefore(home.node, home.next);
+      } else {
+        home.parent.appendChild(home.node);
+      }
+    }
+    home.node.classList.remove("active");
+  });
+  embeddedCampaignView = null;
+}
+
+function mountCampaignRace(view) {
+  restoreEmbeddedCampaignRace();
+  showView("story");
+  const home = embeddedRaceHomes.find((item) => item.view === view);
+  if (!home) return;
+  el.campaignRaceMount.appendChild(home.node);
+  home.node.classList.add("active");
+  embeddedCampaignView = home;
+}
+
+function completeCampaignLevel(index) {
+  if (index === state.highestCampaignIndex && state.highestCampaignIndex < campaignLevels.length - 1) {
+    state.highestCampaignIndex += 1;
+  }
+  state.selectedCampaign = Math.min(index + 1, campaignLevels.length - 1);
+  saveState();
+}
+
+function startCampaignLevel() {
+  const index = state.selectedCampaign;
+  if (index > state.highestCampaignIndex) return;
+  const level = campaignLevels[index];
+  if (level.type === "drag") {
+    mountCampaignRace("play");
+    state.selectedCar = state.selectedStoryCar;
+    state.selectedDistance = 500;
+    saveState();
+    render();
+    startDragRace(index, level.drag);
+    return;
+  }
+  if (level.type === "trial") {
+    mountCampaignRace("time-trial");
+    state.selectedTimeCar = state.selectedStoryCar;
+    state.selectedTimeTrack = level.track.id;
+    saveState();
+    render();
+    beginVerticalRace("campaign-time", true, { campaignLevelIndex: index, track: level.track });
+    return;
+  }
+  const boss = level.final ? finalBoss : bosses[level.bossIndex];
+  mountCampaignRace("boss");
+  state.selectedBoss = boss.id;
+  saveState();
+  render();
+  if (boss.id === "racer-alpha") {
+    openBossIntro({ mode: "campaign-boss", options: { campaignLevelIndex: index, boss } });
+    return;
+  }
+  beginVerticalRace("campaign-boss", true, { campaignLevelIndex: index, boss });
 }
 
 function topDownImageForCar(carId) {
@@ -1057,14 +1216,15 @@ function setTopCar(node, image, alt, color) {
   node.appendChild(img);
 }
 
-function openBossIntro() {
+function openBossIntro(startConfig = { mode: "boss", options: {} }) {
   const boss = selectedBoss();
-  const bossIndex = bosses.findIndex((item) => item.id === boss.id);
+  const bossIndex = bossChallengeBosses.findIndex((item) => item.id === boss.id);
   if (bossIndex > state.highestBossIndex) {
     el.storyMessage.className = "race-message loss";
     el.storyMessage.textContent = "Beat the previous boss to unlock this challenge.";
     return;
   }
+  pendingBossRaceStart = startConfig;
   el.bossModalKicker.textContent = `${boss.track.city}, ${boss.track.country}`;
   el.bossModalTitle.textContent = `${boss.name} challenges you`;
   el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} XP.`;
@@ -1079,17 +1239,43 @@ function closeBossIntro() {
   el.bossModal.setAttribute("aria-hidden", "true");
 }
 
-function beginVerticalRace(mode, waitForStart = false) {
-  const isStory = mode === "story";
-  const trackNode = isStory ? el.storyTrack : el.timeTrialTrack;
-  const carId = isStory ? state.selectedStoryCar : state.selectedTimeCar;
+function showRacerAlphaUnmask() {
+  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.portrait}" alt="Racer Alpha helmet" onerror="this.remove()">`;
+  el.unmaskCopy.textContent = "Racer Alpha's helmet is ready to come off.";
+  el.unmaskButton.hidden = false;
+  el.continueUnmask.hidden = true;
+  el.unmaskModal.classList.add("active");
+  el.unmaskModal.setAttribute("aria-hidden", "false");
+  el.unmaskButton.focus();
+}
+
+function unmaskRacerAlpha() {
+  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.unmaskedPortrait}" alt="Racer Alpha" onerror="this.remove()">`;
+  el.unmaskCopy.textContent = "Racer Alpha has been unmasked.";
+  el.unmaskButton.hidden = true;
+  el.continueUnmask.hidden = false;
+  el.continueUnmask.focus();
+}
+
+function closeRacerAlphaUnmask() {
+  el.unmaskModal.classList.remove("active");
+  el.unmaskModal.setAttribute("aria-hidden", "true");
+}
+
+function beginVerticalRace(mode, waitForStart = false, options = {}) {
+  const isBossRace = mode === "boss" || mode === "campaign-boss";
+  const isStandaloneTime = mode === "time";
+  const isCampaignTime = mode === "campaign-time";
+  const trackNode = isBossRace ? el.storyTrack : el.timeTrialTrack;
+  const carId = isBossRace ? state.selectedStoryCar : state.selectedTimeCar;
   const stats = carStats(carId);
-  const boss = isStory ? selectedBoss() : null;
-  const trackId = isStory ? boss.track.id : state.selectedTimeTrack;
+  const boss = isBossRace ? (options.boss || selectedBoss()) : null;
+  const track = options.track || (boss ? boss.track : storyTracks.find((item) => item.id === state.selectedTimeTrack));
+  const trackId = track.id;
   const trackIndex = storyTracks.findIndex((track) => track.id === trackId);
-  const playerNode = isStory ? el.storyPlayer : el.timePlayer;
-  const bossNode = isStory ? el.storyBoss : null;
-  const ghostNode = isStory ? null : el.timeGhost;
+  const playerNode = isBossRace ? el.storyPlayer : el.timePlayer;
+  const bossNode = isBossRace ? el.storyBoss : null;
+  const ghostNode = isStandaloneTime ? el.timeGhost : null;
   setTopCar(playerNode, topDownImageForCar(carId), currentEvolution(carId).name, cars.find((car) => car.id === carId).color);
   if (bossNode) setTopCar(bossNode, boss.carImage, boss.car, "#f25f5c");
   if (ghostNode) setTopCar(ghostNode, "assets/story/phantaxi-topdown.png", "Phantaxi", "#c084fc");
@@ -1100,12 +1286,12 @@ function beginVerticalRace(mode, waitForStart = false) {
     trackNode,
     carId,
     trackId,
-    targetDistance: isStory ? 500 : 1000,
+    targetDistance: isBossRace ? 500 : 1000,
     startTime: performance.now(),
     last: performance.now(),
     player: { x: 42, y: 88, speed: 58, distance: 0, node: playerNode },
     boss: boss ? { x: 58, y: 88, speed: 38 + boss.difficulty * 11, distance: 0, node: bossNode, difficulty: boss.difficulty } : null,
-    ghost: state.timeTrials[trackId]?.ghost || null,
+    ghost: isStandaloneTime ? (state.timeTrials[trackId]?.ghost || null) : null,
     ghostNode,
     stats,
     bossData: boss,
@@ -1114,12 +1300,14 @@ function beginVerticalRace(mode, waitForStart = false) {
     spawnTimer: 0,
     keys: {},
     record: [],
+    campaignLevelIndex: options.campaignLevelIndex ?? null,
     countdownStarted: false,
     finished: false
   };
   clearTrackItems(trackNode);
   updateVerticalPositions();
-  if (isStory) {
+  applyTrackMap(trackNode, track);
+  if (isBossRace) {
     el.storyMessage.className = "race-message";
     el.storyMessage.textContent = waitForStart ? "Press Start on the map when you're ready." : "Get ready.";
     el.storyMapStart.classList.toggle("active", waitForStart);
@@ -1135,7 +1323,7 @@ function startVerticalCountdown() {
   if (!verticalRace || verticalRace.active || verticalRace.countdownStarted) return;
   verticalRace.countdownStarted = true;
   const raceStateRef = verticalRace;
-  const isStory = raceStateRef.mode === "story";
+  const isStory = raceStateRef.mode === "boss" || raceStateRef.mode === "campaign-boss";
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
   if (isStory) {
@@ -1306,7 +1494,7 @@ function updateVerticalPositions() {
     raceState.boss.node.style.top = `${raceState.boss.y}%`;
   }
   const distance = Math.min(raceState.targetDistance, Math.floor(raceState.player.distance));
-  if (raceState.mode === "story") {
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
     el.storySpeed.textContent = `${Math.round(raceState.player.speed)} MPH`;
     el.storyDistance.textContent = `${distance} / 500 m`;
   } else {
@@ -1322,35 +1510,43 @@ function finishVerticalRace(playerWon) {
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
   const elapsed = (performance.now() - raceState.startTime) / 1000;
-  if (raceState.mode === "story") {
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
     const xp = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
     const xpResult = addXp(raceState.carId, xp);
     if (playerWon) {
-      const bossIndex = bosses.findIndex((boss) => boss.id === raceState.bossData.id);
-      if (bossIndex === state.highestBossIndex && state.highestBossIndex < bosses.length - 1) {
+      const bossIndex = bossChallengeBosses.findIndex((boss) => boss.id === raceState.bossData.id);
+      if (bossIndex === state.highestBossIndex && state.highestBossIndex < bossChallengeBosses.length - 1) {
         state.highestBossIndex += 1;
       }
     }
     el.storyMessage.className = `race-message ${playerWon ? "win" : "loss"}`;
-    const nextBoss = playerWon && state.highestBossIndex < bosses.length
-      ? bosses[state.highestBossIndex]
+    const nextBoss = playerWon && state.highestBossIndex < bossChallengeBosses.length
+      ? bossChallengeBosses[state.highestBossIndex]
       : null;
     const unlockText = nextBoss && nextBoss.id !== raceState.bossData.id ? ` ${nextBoss.name} is now unlocked.` : "";
     el.storyMessage.textContent = raceResultMessage(`${playerWon ? "Victory" : "Defeat"}. ${currentEvolution(raceState.carId).name} earned ${xp} XP.${unlockText}`, xpResult);
+    if (raceState.campaignLevelIndex !== null && playerWon) completeCampaignLevel(raceState.campaignLevelIndex);
   } else {
     const trackIndex = raceState.trackIndex;
     const beaten = timeMedals.find((medal) => elapsed <= timeTarget(medal, trackIndex));
     const xp = beaten ? beaten.xp : 40;
     const xpResult = addXp(raceState.carId, xp);
     const best = state.timeTrials[raceState.trackId]?.bestTime;
-    if (!best || elapsed < best) {
+    if (raceState.mode === "time" && (!best || elapsed < best)) {
       state.timeTrials[raceState.trackId] = { bestTime: elapsed, ghost: raceState.record.filter((_, index) => index % 4 === 0) };
     }
     el.timeMessage.className = `race-message ${beaten ? "win" : ""}`;
     el.timeMessage.textContent = raceResultMessage(`${elapsed.toFixed(2)} seconds. ${beaten ? `${beaten.label} beaten` : "Finish recorded"}. ${currentEvolution(raceState.carId).name} earned ${xp} XP.`, xpResult);
+    if (raceState.campaignLevelIndex !== null) completeCampaignLevel(raceState.campaignLevelIndex);
   }
   saveState();
   render();
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+    if (playerWon && raceState.bossData.id === "racer-alpha") {
+      showRacerAlphaUnmask();
+      return;
+    }
+  }
   showPendingEvolution(raceState.carId);
 }
 
@@ -1408,9 +1604,7 @@ document.querySelectorAll("[data-steer]").forEach((button) => {
 
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
-    const view = button.dataset.view;
-    el.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}-view`));
-    document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === view));
+    showView(button.dataset.view);
   });
 });
 
@@ -1421,6 +1615,12 @@ el.playerCar.addEventListener("change", (event) => {
 });
 
 el.storyCar.addEventListener("change", (event) => {
+  state.selectedStoryCar = event.target.value;
+  saveState();
+  render();
+});
+
+el.campaignCar.addEventListener("change", (event) => {
   state.selectedStoryCar = event.target.value;
   saveState();
   render();
@@ -1456,11 +1656,16 @@ el.opponentList.addEventListener("click", (event) => {
 
 el.startRace.addEventListener("click", startRace);
 el.shiftButton.addEventListener("click", shift);
-el.startStory.addEventListener("click", openBossIntro);
+el.startCampaign.addEventListener("click", startCampaignLevel);
+el.startStory.addEventListener("click", () => openBossIntro());
 el.continueBoss.addEventListener("click", () => {
   closeBossIntro();
-  beginVerticalRace("story", true);
+  const startConfig = pendingBossRaceStart || { mode: "boss", options: {} };
+  pendingBossRaceStart = null;
+  beginVerticalRace(startConfig.mode, true, startConfig.options || {});
 });
+el.unmaskButton.addEventListener("click", unmaskRacerAlpha);
+el.continueUnmask.addEventListener("click", closeRacerAlphaUnmask);
 el.startTimeTrial.addEventListener("click", () => beginVerticalRace("time", true));
 el.storyMapStart.addEventListener("click", startVerticalCountdown);
 el.timeMapStart.addEventListener("click", startVerticalCountdown);
@@ -1471,6 +1676,14 @@ el.bossList.addEventListener("click", (event) => {
   state.selectedBoss = button.dataset.boss;
   saveState();
   render();
+});
+
+el.campaignList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-campaign]");
+  if (!button || button.disabled) return;
+  state.selectedCampaign = Number(button.dataset.campaign);
+  saveState();
+  renderCampaign();
 });
 
 el.vindexList.addEventListener("click", (event) => {

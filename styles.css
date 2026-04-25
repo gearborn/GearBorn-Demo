@@ -54,6 +54,29 @@ button {
   margin-bottom: 24px;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.main-menu-button {
+  display: none;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--gold);
+  border-radius: 7px;
+  background: rgba(255, 200, 87, 0.16);
+  color: var(--gold);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+body.mode-active .main-menu-button {
+  display: inline-flex;
+  align-items: center;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -125,6 +148,12 @@ button {
   border-color: var(--gold);
   background: rgba(255, 200, 87, 0.16);
   color: var(--gold);
+}
+
+.nav-button.story-nav.active {
+  border-color: var(--green);
+  background: rgba(110, 231, 168, 0.16);
+  color: var(--green);
 }
 
 .view {
@@ -211,6 +240,112 @@ button {
   color: var(--ink);
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.creator-credit {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.story-primary {
+  min-height: 52px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--green);
+  color: #082014;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.campaign-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.campaign-list,
+.campaign-detail {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(26, 31, 39, 0.9);
+  box-shadow: 0 18px 46px var(--shadow);
+}
+
+.campaign-list {
+  max-height: 290px;
+  overflow: auto;
+}
+
+.campaign-button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.campaign-button.active {
+  background: rgba(110, 231, 168, 0.16);
+  color: var(--green);
+}
+
+.campaign-button.locked {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.campaign-button small {
+  color: var(--muted);
+}
+
+.campaign-detail {
+  min-height: 300px;
+  padding: 22px;
+}
+
+.campaign-detail p {
+  margin: 0 0 8px;
+  color: var(--green);
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.campaign-detail h2 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.campaign-detail span {
+  display: block;
+  margin: 12px 0 24px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.campaign-start {
+  width: min(260px, 100%);
+}
+
+.campaign-race-mount {
+  margin-top: 18px;
+}
+
+.campaign-race-mount .view.active {
+  display: block;
+}
+
+.campaign-race-mount .setup {
+  display: none;
 }
 
 .race-panel {
@@ -1246,7 +1381,8 @@ small {
 @media (max-width: 900px) {
   .race-panel,
   .vertical-mode,
-  .vindex-layout {
+  .vindex-layout,
+  .campaign-layout {
     grid-template-columns: 1fr;
   }
 
