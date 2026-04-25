@@ -324,6 +324,8 @@ const el = {
   startRace: document.querySelector("#start-race"),
   godMode: document.querySelector("#god-mode"),
   godModal: document.querySelector("#god-modal"),
+  godCode: document.querySelector("#god-code"),
+  godCodeError: document.querySelector("#god-code-error"),
   confirmGod: document.querySelector("#confirm-god"),
   cancelGod: document.querySelector("#cancel-god"),
   resetProgress: document.querySelector("#reset-progress"),
@@ -1041,17 +1043,26 @@ function resetRacingData() {
 }
 
 function openGodModal() {
+  el.godCode.value = "";
+  el.godCodeError.textContent = "";
   el.godModal.classList.add("active");
   el.godModal.setAttribute("aria-hidden", "false");
-  el.confirmGod.focus();
+  el.godCode.focus();
 }
 
 function closeGodModal() {
   el.godModal.classList.remove("active");
   el.godModal.setAttribute("aria-hidden", "true");
+  el.godCode.value = "";
+  el.godCodeError.textContent = "";
 }
 
 function activateGodMode() {
+  if (el.godCode.value.trim() !== "Corey") {
+    el.godCodeError.textContent = "Incorrect code.";
+    el.godCode.focus();
+    return;
+  }
   state.unlockedCars = { ...state.unlockedCars, rainbowlt: true };
   cars.forEach((car) => {
     state.garage[car.id] = {
@@ -1785,6 +1796,15 @@ el.cancelReset.addEventListener("click", closeResetModal);
 el.godMode.addEventListener("click", openGodModal);
 el.confirmGod.addEventListener("click", activateGodMode);
 el.cancelGod.addEventListener("click", closeGodModal);
+el.godCode.addEventListener("input", () => {
+  el.godCodeError.textContent = "";
+});
+el.godCode.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    activateGodMode();
+  }
+});
 
 el.resetModal.addEventListener("click", (event) => {
   if (event.target === el.resetModal) {

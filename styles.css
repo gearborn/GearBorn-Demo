@@ -428,6 +428,12 @@ small {
   color: var(--muted);
 }
 
+.code-error {
+  min-height: 1.2em;
+  color: #ff8f8d;
+  font-weight: 850;
+}
+
 .segmented {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

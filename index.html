@@ -361,8 +361,13 @@
     <div class="modal-overlay" id="god-modal" aria-hidden="true">
       <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="god-title">
         <p class="modal-kicker">Activate God Mode</p>
-        <h2 id="god-title">Are you sure you wish to activate God Mode?</h2>
+        <h2 id="god-title">Enter the God Mode code.</h2>
         <p>This will max every car, unlock all levels, and evolve Rainbowlt into Hornula1 at Level 10.</p>
+        <div class="field">
+          <label for="god-code">Code</label>
+          <input id="god-code" type="text" autocomplete="off">
+          <small class="code-error" id="god-code-error"></small>
+        </div>
         <div class="modal-actions">
           <button class="god-button" id="confirm-god" type="button">Activate God Mode</button>
           <button class="ghost" id="cancel-god" type="button">Cancel</button>
