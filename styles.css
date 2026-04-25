@@ -335,6 +335,7 @@ small {
   gap: 8px;
   max-height: 360px;
   overflow: auto;
+  margin-bottom: 14px;
 }
 
 .boss-button {
@@ -862,6 +863,33 @@ small {
 
 .race-message.loss {
   color: var(--red);
+}
+
+.touch-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.steer-button {
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  touch-action: none;
+  user-select: none;
+}
+
+.steer-button:active,
+.steer-button.pressed {
+  border-color: var(--gold);
+  background: rgba(255, 200, 87, 0.18);
+  color: var(--gold);
 }
 
 .shift-button {

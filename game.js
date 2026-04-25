@@ -1382,6 +1382,30 @@ function beep(label) {
   osc.stop(ctx.currentTime + 0.07);
 }
 
+function setSteer(direction, active) {
+  if (!verticalRace?.keys) return;
+  const key = direction === "left" ? "ArrowLeft" : "ArrowRight";
+  verticalRace.keys[key] = active;
+}
+
+document.querySelectorAll("[data-steer]").forEach((button) => {
+  const direction = button.dataset.steer;
+  const press = (event) => {
+    event.preventDefault();
+    button.classList.add("pressed");
+    setSteer(direction, true);
+  };
+  const release = (event) => {
+    event.preventDefault();
+    button.classList.remove("pressed");
+    setSteer(direction, false);
+  };
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", release);
+});
+
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
     const view = button.dataset.view;
