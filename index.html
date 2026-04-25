@@ -18,7 +18,10 @@
         </button>
         <nav class="nav" aria-label="Main navigation">
           <button class="nav-button active" data-view="menu" type="button">Menu</button>
-          <button class="nav-button" data-view="play" type="button">Race</button>
+          <button class="nav-button" data-view="play" type="button">Drag</button>
+          <button class="nav-button" data-view="story" type="button">Story</button>
+          <button class="nav-button" data-view="time-trial" type="button">Time Trial</button>
+          <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="garage" type="button">Garage</button>
           <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
@@ -33,11 +36,104 @@
                 <span>GearBorn</span>
                 <strong>Engines Evolved</strong>
               </div>
+              <p class="menu-subtitle">Race, Train, Evolve</p>
             </div>
             <div class="menu-actions" aria-label="Menu choices">
-              <button class="menu-button primary" data-view="play" type="button">Race</button>
+              <button class="menu-button primary" data-view="story" type="button">Story Mode</button>
+              <button class="menu-button primary" data-view="play" type="button">Drag Race</button>
+              <button class="menu-button primary" data-view="time-trial" type="button">Time Trial</button>
+              <button class="menu-button" data-view="vindex" type="button">VINdex</button>
               <button class="menu-button" data-view="garage" type="button">Garage</button>
               <button class="menu-button" data-view="settings" type="button">Settings</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="story-view" aria-labelledby="story-title">
+          <div class="vertical-mode">
+            <div class="setup">
+              <div class="section-heading">
+                <p>Story Mode</p>
+                <h1 id="story-title">Race the GearBorn bosses.</h1>
+              </div>
+              <div class="field">
+                <label for="story-car">Your car</label>
+                <select id="story-car"></select>
+              </div>
+              <div class="field">
+                <label>Boss</label>
+                <div class="boss-list" id="boss-list"></div>
+              </div>
+              <button class="primary" id="start-story" type="button">Start Boss Race</button>
+            </div>
+            <div class="vertical-shell">
+              <div class="vertical-hud">
+                <strong id="story-location">Indianapolis, USA</strong>
+                <span id="story-speed">0 MPH</span>
+                <span id="story-distance">0 / 500 m</span>
+              </div>
+              <div class="vertical-track" id="story-track">
+                <div class="vertical-finish"></div>
+                <div class="top-car user" id="story-player"></div>
+                <div class="top-car boss" id="story-boss"></div>
+                <button class="map-start-button" id="story-map-start" type="button">Start</button>
+                <div class="countdown" id="story-countdown"></div>
+              </div>
+              <div class="race-message" id="story-message">Select a boss and start the race.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="time-trial-view" aria-labelledby="time-title">
+          <div class="vertical-mode">
+            <div class="setup">
+              <div class="section-heading">
+                <p>Time Trial</p>
+                <h1 id="time-title">Beat bronze, silver, and gold.</h1>
+              </div>
+              <div class="field">
+                <label for="time-car">Your car</label>
+                <select id="time-car"></select>
+              </div>
+              <div class="field">
+                <label for="time-track">Track</label>
+                <select id="time-track"></select>
+              </div>
+              <div class="time-targets" id="time-targets"></div>
+              <button class="primary" id="start-time-trial" type="button">Start Time Trial</button>
+            </div>
+            <div class="vertical-shell">
+              <div class="vertical-hud">
+                <strong id="time-location">Indianapolis, USA</strong>
+                <span id="time-clock">0.00 s</span>
+                <span id="time-distance">0 / 1000 m</span>
+              </div>
+              <div class="vertical-track" id="time-trial-track">
+                <div class="vertical-finish"></div>
+                <div class="top-car ghost" id="time-ghost"></div>
+                <div class="top-car user" id="time-player"></div>
+                <button class="map-start-button" id="time-map-start" type="button">Start</button>
+                <div class="countdown" id="time-countdown"></div>
+              </div>
+              <div class="race-message" id="time-message">Pick a track and chase your best run.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="vindex-view" aria-labelledby="vindex-title">
+          <div class="section-heading">
+            <p>VINdex</p>
+            <h1 id="vindex-title">GearBorn car archive.</h1>
+          </div>
+          <div class="vindex-layout">
+            <div class="vindex-list" id="vindex-list"></div>
+            <div class="vindex-detail">
+              <div class="vindex-art" id="vindex-art"></div>
+              <div class="vindex-copy">
+                <p id="vindex-number"></p>
+                <h2 id="vindex-name"></h2>
+                <span id="vindex-line"></span>
+              </div>
             </div>
           </div>
         </section>
@@ -187,6 +283,18 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <div class="modal-overlay" id="boss-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="boss-modal-title">
+        <div class="boss-portrait" id="boss-portrait"></div>
+        <p class="modal-kicker" id="boss-modal-kicker">Boss Race</p>
+        <h2 id="boss-modal-title"></h2>
+        <p id="boss-modal-copy"></p>
+        <div class="modal-actions">
+          <button class="primary" id="continue-boss" type="button">Continue</button>
+        </div>
+      </div>
     </div>
 
     <div class="modal-overlay" id="reset-modal" aria-hidden="true">
