@@ -261,6 +261,167 @@ body.mode-active .main-menu-button {
   text-transform: uppercase;
 }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(34, 41, 54, 0.82);
+  color: var(--ink);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.solo-heading {
+  text-align: center;
+}
+
+.solo-heading h1 {
+  margin-inline: auto;
+}
+
+.solo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.solo-card {
+  display: grid;
+  gap: 10px;
+  min-height: 180px;
+  align-content: center;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(26, 31, 39, 0.9);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 18px 46px var(--shadow);
+}
+
+.solo-card.primary-card {
+  border-color: rgba(255, 200, 87, 0.45);
+}
+
+.solo-card strong {
+  color: var(--gold);
+  font-size: 1.55rem;
+  font-weight: 1000;
+}
+
+.solo-card span {
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.flow-step {
+  display: none;
+}
+
+.flow-step.active {
+  display: block;
+}
+
+.campaign-layout.flow-step.active {
+  display: grid;
+}
+
+.flow-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(26, 31, 39, 0.9);
+  box-shadow: 0 18px 46px var(--shadow);
+}
+
+.flow-card h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+}
+
+.flow-next,
+.campaign-replay {
+  margin-top: 16px;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.icon-card {
+  display: grid;
+  gap: 8px;
+  min-height: 148px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #111820;
+  color: var(--ink);
+  font-weight: 950;
+  text-align: center;
+}
+
+.icon-card.active {
+  border-color: var(--gold);
+  background: rgba(255, 200, 87, 0.14);
+  color: var(--gold);
+}
+
+.icon-card .selection-preview-art {
+  height: 88px;
+  margin: 0;
+}
+
+.icon-card .selection-preview-art .car {
+  width: 120px;
+  height: 76px;
+}
+
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.map-button {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111820;
+  color: var(--ink);
+  font-weight: 850;
+  text-align: left;
+}
+
+.map-button.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(255, 200, 87, 0.14);
+}
+
+.map-preview {
+  height: 170px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.16) 8% 8.5%, transparent 8.5% 91.5%, rgba(255, 255, 255, 0.16) 91.5% 92%, transparent 92%),
+    #252b34;
+  background-position: center;
+  background-size: cover;
+}
+
 .tuner-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -316,6 +477,61 @@ body.mode-active .main-menu-button {
   margin-top: 18px;
 }
 
+#cutscene-modal.single-speaker .cutscene-stage {
+  display: flex;
+  justify-content: center;
+}
+
+#cutscene-modal.single-speaker .cutscene-character:first-child {
+  width: min(520px, 100%);
+}
+
+#cutscene-modal.single-speaker .cutscene-character:last-child,
+#cutscene-modal.single-speaker #cutscene-right-art,
+#cutscene-modal.single-speaker #cutscene-right-dialogue {
+  display: none;
+}
+
+#cutscene-modal .modal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 132px);
+  justify-content: center;
+  gap: 10px;
+}
+
+#cutscene-modal #back-cutscene,
+#cutscene-modal #continue-cutscene {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  min-height: 44px;
+  border-color: transparent;
+  background: var(--gold);
+  color: #18140a;
+  font-weight: 850;
+}
+
+#cutscene-modal #back-cutscene[hidden] {
+  display: none;
+}
+
+#cutscene-modal #skip-cutscene {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 132px;
+}
+
+#cutscene-modal .modal-actions:has(#back-cutscene[hidden]) #continue-cutscene {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+#cutscene-modal #continue-cutscene.finish {
+  background: var(--green);
+  color: #082014;
+}
+
 .cutscene-character {
   display: grid;
   gap: 12px;
@@ -329,6 +545,8 @@ body.mode-active .main-menu-button {
 }
 
 .dialogue-box {
+  display: grid;
+  gap: 8px;
   min-height: 92px;
   padding: 14px;
   border: 1px solid var(--line);
@@ -337,6 +555,15 @@ body.mode-active .main-menu-button {
   color: var(--ink);
   font-weight: 800;
   text-align: left;
+}
+
+.dialogue-box strong {
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.dialogue-box span {
+  color: var(--ink);
 }
 
 .campaign-layout {
@@ -356,6 +583,10 @@ body.mode-active .main-menu-button {
 .campaign-list {
   max-height: 290px;
   overflow: auto;
+}
+
+.campaign-list.story-hidden {
+  display: none;
 }
 
 .campaign-button {
@@ -410,8 +641,68 @@ body.mode-active .main-menu-button {
   font-weight: 800;
 }
 
+.campaign-detail .field {
+  display: none;
+}
+
+#play-view .flow-step[data-step="match"] > .field:first-child,
+#time-trial-view .flow-step[data-step="match"] > .field:first-child,
+#boss-view .flow-step[data-step="match"] > .field:first-child {
+  display: none;
+}
+
 .campaign-start {
   width: min(260px, 100%);
+}
+
+.campaign-replay {
+  width: min(260px, 100%);
+}
+
+.campaign-change-car {
+  width: min(260px, 100%);
+  margin-top: 12px;
+}
+
+.story-loadout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.loadout-card {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 118px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #111820;
+}
+
+.loadout-card .character-frame,
+.loadout-card .selection-preview-art {
+  min-height: 92px;
+  height: 92px;
+}
+
+.loadout-card .character-frame img {
+  max-height: 92px;
+}
+
+.loadout-card span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.loadout-card strong,
+.loadout-card small {
+  display: block;
 }
 
 .campaign-race-mount {
@@ -552,7 +843,7 @@ small {
 .boss-list {
   display: grid;
   gap: 8px;
-  max-height: 360px;
+  max-height: 306px;
   overflow: auto;
   margin-bottom: 14px;
 }
@@ -627,6 +918,16 @@ small {
   object-fit: contain;
 }
 
+.selection-preview-art .character-frame {
+  min-height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.selection-preview-art .character-frame img {
+  max-height: 100%;
+}
+
 .selection-preview strong,
 .selection-preview small {
   display: block;
@@ -679,6 +980,24 @@ small {
 
 .track-shell {
   overflow: hidden;
+}
+
+#play-view:not(.race-step) .track-shell,
+#time-trial-view:not(.race-step) .vertical-shell,
+#boss-view:not(.race-step) .vertical-shell {
+  display: none;
+}
+
+#play-view.race-step .setup,
+#time-trial-view.race-step .setup,
+#boss-view.race-step .setup {
+  display: none;
+}
+
+#play-view.race-step .race-panel,
+#time-trial-view.race-step .vertical-mode,
+#boss-view.race-step .vertical-mode {
+  grid-template-columns: 1fr;
 }
 
 .vertical-shell {
@@ -820,6 +1139,52 @@ small {
 
 .countdown.active {
   display: grid;
+}
+
+.race-result-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  padding-top: 28px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.race-result-card {
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100% - 28px));
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(17, 24, 32, 0.94);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.race-result-popup.win .race-result-card {
+  border-color: rgba(110, 231, 168, 0.58);
+}
+
+.race-result-popup.loss .race-result-card {
+  border-color: rgba(242, 95, 92, 0.58);
+}
+
+.race-result-card h2 {
+  margin: 0;
+  color: var(--gold);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.race-result-card p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 850;
 }
 
 .map-start-button {
@@ -1155,6 +1520,36 @@ small {
   text-transform: uppercase;
 }
 
+.evolution-switcher {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.evolution-switcher button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-weight: 1000;
+}
+
+.evolution-switcher button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.evolution-switcher strong {
+  overflow: hidden;
+  color: var(--gold);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .vindex-layout,
 .profile-layout {
   display: grid;
@@ -1164,7 +1559,9 @@ small {
 
 .vindex-list,
 .profile-list {
-  max-height: 680px;
+  display: grid;
+  grid-template-columns: 1fr;
+  max-height: 268px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1233,6 +1630,61 @@ small {
 .vindex-copy,
 .profile-copy {
   padding: 22px;
+}
+
+.vindex-evolution-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.vindex-evolution-card {
+  display: grid;
+  gap: 8px;
+  width: 132px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #111820;
+  text-align: center;
+}
+
+.vindex-evolution-card .selection-preview-art {
+  height: 82px;
+}
+
+.vindex-evolution-card .selection-preview-art .car {
+  width: 112px;
+  height: 72px;
+}
+
+.evolution-arrow {
+  color: var(--gold);
+  font-size: 1.35rem;
+  font-weight: 1000;
+}
+
+.silhouette-card {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 82px;
+  place-items: center;
+}
+
+.silhouette-car {
+  display: grid;
+  width: 86px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50% 42% 36% 36%;
+  background: rgba(153, 165, 183, 0.22);
+  color: var(--muted);
+  font-size: 1.8rem;
+  font-weight: 1000;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.36));
 }
 
 .vindex-copy p,
@@ -1558,8 +2010,15 @@ small {
   .vertical-mode,
   .vindex-layout,
   .profile-layout,
-  .campaign-layout {
+  .campaign-layout,
+  .solo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .vindex-list,
+  .profile-list {
+    grid-template-columns: 1fr;
+    max-height: 268px;
   }
 
   .garage-grid {
@@ -1600,7 +2059,10 @@ small {
   }
 
   .tuner-options,
-  .cutscene-stage {
+  .cutscene-stage,
+  .icon-grid,
+  .map-grid,
+  .story-loadout {
     grid-template-columns: 1fr;
   }
 

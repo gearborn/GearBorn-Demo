@@ -21,9 +21,7 @@
         </div>
         <nav class="nav" aria-label="Main navigation">
           <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
-          <button class="nav-button" data-view="play" type="button">Drag Race</button>
-          <button class="nav-button" data-view="time-trial" type="button">Time Trial</button>
-          <button class="nav-button" data-view="boss" type="button">Boss Challenge</button>
+          <button class="nav-button" data-view="solo" type="button">Training Academy</button>
           <button class="nav-button" data-view="garage" type="button">Garage</button>
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
@@ -44,9 +42,7 @@
             </div>
             <div class="menu-actions" aria-label="Menu choices">
               <button class="menu-button story-primary" data-view="story" type="button">Story Mode</button>
-              <button class="menu-button primary" data-view="play" type="button">Drag Race</button>
-              <button class="menu-button primary" data-view="time-trial" type="button">Time Trial</button>
-              <button class="menu-button primary" data-view="boss" type="button">Boss Challenge</button>
+              <button class="menu-button primary" data-view="solo" type="button">Training Academy</button>
               <button class="menu-button" data-view="garage" type="button">Garage</button>
               <button class="menu-button" data-view="vindex" type="button">VINdex</button>
               <button class="menu-button" data-view="profiles" type="button">Racer Profiles</button>
@@ -56,43 +52,82 @@
           </div>
         </section>
 
+        <section class="view" id="solo-view" aria-labelledby="solo-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading solo-heading">
+            <p>Training Academy</p>
+            <h1 id="solo-title">Choose a training race.</h1>
+          </div>
+          <div class="solo-grid">
+            <button class="solo-card primary-card" data-view="play" type="button">
+              <strong>Drag Race</strong>
+              <span>Shift through gears and beat class rivals.</span>
+            </button>
+            <button class="solo-card primary-card" data-view="time-trial" type="button">
+              <strong>Time Trial</strong>
+              <span>Chase bronze, silver, gold, and your Phantaxi Time.</span>
+            </button>
+            <button class="solo-card primary-card" data-view="boss" type="button">
+              <strong>Boss Challenge</strong>
+              <span>Race the bosses directly on their city tracks.</span>
+            </button>
+          </div>
+        </section>
+
         <section class="view" id="story-view" aria-labelledby="story-title">
+          <button class="back-link" data-mode-back="story" type="button">Back</button>
           <div class="section-heading">
             <p>Story Mode</p>
             <h1 id="story-title">Race, train, evolve through the GearBorn world.</h1>
           </div>
-          <div class="campaign-layout">
+          <div class="flow-step active" data-flow="story" data-step="car">
+            <div class="flow-card">
+              <h2>Choose Your Car</h2>
+              <div class="icon-grid" id="story-car-grid"></div>
+              <button class="story-primary flow-next" data-flow-next="story:next" type="button">Continue</button>
+            </div>
+          </div>
+          <div class="campaign-layout flow-step" data-flow="story" data-step="next">
             <div class="campaign-list" id="campaign-list"></div>
             <div class="campaign-detail">
               <p id="campaign-type"></p>
               <h2 id="campaign-title"></h2>
               <span id="campaign-meta"></span>
+              <div class="story-loadout" id="story-loadout"></div>
               <div class="field">
                 <label for="campaign-car">Story car</label>
                 <select id="campaign-car"></select>
               </div>
-              <button class="story-primary campaign-start" id="start-campaign" type="button">Start Level</button>
+              <button class="story-primary campaign-start" id="start-campaign" type="button">Continue Story</button>
+              <button class="ghost campaign-change-car" id="change-story-car" type="button">Change Vehicle</button>
+              <button class="ghost campaign-replay" id="replay-campaign" type="button">Replay Level</button>
             </div>
           </div>
           <div class="campaign-race-mount" id="campaign-race-mount"></div>
         </section>
 
         <section class="view" id="boss-view" aria-labelledby="boss-title">
+          <button class="back-link" data-mode-back="boss" type="button">Back</button>
           <div class="vertical-mode">
             <div class="setup">
-              <div class="section-heading">
+              <div class="section-heading flow-step active" data-flow="boss" data-step="car">
                 <p>Boss Challenge</p>
-                <h1 id="boss-title">Race the GearBorn bosses.</h1>
+                <h1 id="boss-title">Choose your car.</h1>
+                <div class="icon-grid" id="boss-car-grid"></div>
+                <button class="primary flow-next" data-flow-next="boss:match" type="button">Next</button>
               </div>
-              <div class="field">
-                <label for="story-car">Your car</label>
-                <select id="story-car"></select>
+              <div class="flow-step" data-flow="boss" data-step="match">
+                <div class="field">
+                  <label for="story-car">Your car</label>
+                  <select id="story-car"></select>
+                </div>
+                <div class="field">
+                  <label>Boss</label>
+                  <div class="boss-list" id="boss-list"></div>
+                </div>
+                <div class="selection-preview boss-preview" id="boss-preview"></div>
+                <button class="primary" id="start-story" type="button">Start Boss Race</button>
               </div>
-              <div class="field">
-                <label>Boss</label>
-                <div class="boss-list" id="boss-list"></div>
-              </div>
-              <button class="primary" id="start-story" type="button">Start Boss Race</button>
             </div>
             <div class="vertical-shell">
               <div class="vertical-hud">
@@ -117,22 +152,29 @@
         </section>
 
         <section class="view" id="time-trial-view" aria-labelledby="time-title">
+          <button class="back-link" data-mode-back="time" type="button">Back</button>
           <div class="vertical-mode">
             <div class="setup">
-              <div class="section-heading">
+              <div class="section-heading flow-step active" data-flow="time" data-step="car">
                 <p>Time Trial</p>
-                <h1 id="time-title">Beat bronze, silver, and gold.</h1>
+                <h1 id="time-title">Choose your car.</h1>
+                <div class="icon-grid" id="time-car-grid"></div>
+                <button class="primary flow-next" data-flow-next="time:match" type="button">Next</button>
               </div>
-              <div class="field">
-                <label for="time-car">Your car</label>
-                <select id="time-car"></select>
+              <div class="flow-step" data-flow="time" data-step="match">
+                <div class="field">
+                  <label for="time-car">Your car</label>
+                  <select id="time-car"></select>
+                </div>
+                <div class="field">
+                  <label for="time-track">Track</label>
+                  <select id="time-track"></select>
+                </div>
+                <div class="map-grid" id="time-track-grid"></div>
+                <div class="map-preview" id="time-track-preview"></div>
+                <div class="time-targets" id="time-targets"></div>
+                <button class="primary" id="start-time-trial" type="button">Start Time Trial</button>
               </div>
-              <div class="field">
-                <label for="time-track">Track</label>
-                <select id="time-track"></select>
-              </div>
-              <div class="time-targets" id="time-targets"></div>
-              <button class="primary" id="start-time-trial" type="button">Start Time Trial</button>
             </div>
             <div class="vertical-shell">
               <div class="vertical-hud">
@@ -157,6 +199,7 @@
         </section>
 
         <section class="view" id="vindex-view" aria-labelledby="vindex-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
             <p>VINdex</p>
             <h1 id="vindex-title">GearBorn car archive.</h1>
@@ -175,6 +218,7 @@
         </section>
 
         <section class="view" id="profiles-view" aria-labelledby="profiles-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
             <p>Racer Profiles</p>
             <h1 id="profiles-title">Meet the GearBorn racers.</h1>
@@ -193,47 +237,52 @@
         </section>
 
         <section class="view" id="play-view" aria-labelledby="play-title">
+          <button class="back-link" data-mode-back="drag" type="button">Back</button>
           <div class="race-panel">
             <div class="setup">
-              <div class="section-heading">
+              <div class="section-heading flow-step active" data-flow="drag" data-step="car">
                 <p>Race Setup</p>
-                <h1 id="play-title">Choose your Gearborn and line up.</h1>
+                <h1 id="play-title">Choose your GearBorn.</h1>
+                <div class="icon-grid" id="drag-car-grid"></div>
+                <button class="primary flow-next" data-flow-next="drag:match" type="button">Next</button>
               </div>
 
-              <div class="field">
-                <label for="player-car">Your car</label>
-                <select id="player-car"></select>
-              </div>
-              <div class="selection-preview" id="player-preview">
-                <div class="selection-preview-art" id="player-preview-art"></div>
-                <div>
-                  <strong id="player-preview-name"></strong>
-                  <small id="player-preview-meta"></small>
+              <div class="flow-step" data-flow="drag" data-step="match">
+                <div class="field">
+                  <label for="player-car">Your car</label>
+                  <select id="player-car"></select>
                 </div>
-              </div>
-
-              <div class="field">
-                <label>Race distance</label>
-                <div class="segmented" id="distance-options" role="group" aria-label="Race distance"></div>
-              </div>
-
-              <div class="field">
-                <label>Opponent rank</label>
-                <div class="opponent-list" id="opponent-list"></div>
-              </div>
-              <div class="selection-preview" id="opponent-preview">
-                <div class="selection-preview-art" id="opponent-preview-art"></div>
-                <div>
-                  <strong id="opponent-preview-name"></strong>
-                  <small id="opponent-preview-meta"></small>
+                <div class="selection-preview" id="player-preview">
+                  <div class="selection-preview-art" id="player-preview-art"></div>
+                  <div>
+                    <strong id="player-preview-name"></strong>
+                    <small id="player-preview-meta"></small>
+                  </div>
                 </div>
-              </div>
 
-              <div class="setup-actions">
-                <button class="primary" id="start-race" type="button">
-                  <span class="button-icon">▶</span>
-                  Start Race
-                </button>
+                <div class="field">
+                  <label>Race distance</label>
+                  <div class="segmented" id="distance-options" role="group" aria-label="Race distance"></div>
+                </div>
+
+                <div class="field">
+                  <label>Opponent rank</label>
+                  <div class="opponent-list" id="opponent-list"></div>
+                </div>
+                <div class="selection-preview" id="opponent-preview">
+                  <div class="selection-preview-art" id="opponent-preview-art"></div>
+                  <div>
+                    <strong id="opponent-preview-name"></strong>
+                    <small id="opponent-preview-meta"></small>
+                  </div>
+                </div>
+
+                <div class="setup-actions">
+                  <button class="primary" id="start-race" type="button">
+                    <span class="button-icon">▶</span>
+                    Continue to Race
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -287,6 +336,8 @@
                     <span class="wheel rear"></span>
                   </div>
                 </div>
+                <button class="map-start-button" id="drag-map-start" type="button">Start Race</button>
+                <div class="countdown" id="drag-countdown"></div>
               </div>
 
               <div class="race-message" id="race-message">
@@ -299,6 +350,7 @@
         </section>
 
         <section class="view" id="garage-view" aria-labelledby="garage-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
             <p>Garage</p>
             <h1 id="garage-title">Your Gearborn lineup.</h1>
@@ -308,6 +360,7 @@
         </section>
 
         <section class="view" id="settings-view" aria-labelledby="settings-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="settings-layout">
             <div class="section-heading">
               <p>Settings</p>
@@ -380,6 +433,7 @@
           </div>
         </div>
         <div class="modal-actions">
+          <button class="ghost" id="back-cutscene" type="button" hidden>Back</button>
           <button class="primary" id="continue-cutscene" type="button">Continue</button>
           <button class="ghost" id="skip-cutscene" type="button">Skip</button>
         </div>
