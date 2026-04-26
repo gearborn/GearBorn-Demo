@@ -283,6 +283,296 @@ const instructorSceneLines = [
   { speaker: "user", text: "Too hard isn’t a thing, but thanks, I guess." },
   { speaker: "instructor", text: "Fine, just... go race. I’m so sick of you hot-shot young Tuners who think you know everything..." }
 ];
+const storyCutsceneScripts = {
+  "rev-rend": {
+    pre: [
+      { speaker: "boss", text: "Brothers, sisters, and horsepower believers." },
+      { speaker: "boss", text: "Welcome to the Conclave Cup Revival!" },
+      { speaker: "boss", text: "I see before me a soul in need of guidance and a vehicle in need of surrender." },
+      { speaker: "user", text: "Let me guess. You want my car?" },
+      { speaker: "boss", text: "Lay down your GearBorn at my altar, and I shall make it divine!" },
+      { speaker: "user", text: "Yeah, hard pass." },
+      { speaker: "boss", text: "Then we settle this on the track!" },
+      { speaker: "boss", text: "If I win, your GearBorn joins my congregation!" },
+      { speaker: "user", text: "And when I win?" },
+      { speaker: "boss", text: "You may leave... enlightened." },
+      { speaker: "user", text: "Cool. I’ll settle for winning." },
+      { speaker: "boss", text: "The track is my pulpit. Prepare to be converted!" }
+    ],
+    post: [
+      { speaker: "boss", text: "No... this cannot be! The track does not lie!" },
+      { speaker: "boss", text: "You’re a blasphemous heretic!" },
+      { speaker: "user", text: "Or I just beat you." },
+      { speaker: "boss", text: "You defy the Conclave!" },
+      { speaker: "user", text: "I think the Conclave’s just you taking people’s cars." },
+      { speaker: "boss", text: "I offer salvation!" },
+      { speaker: "user", text: "You offer a scam." },
+      { speaker: "boss", text: "The road... has forsaken me." },
+      { speaker: "user", text: "Or your whole act just fell apart." },
+      { speaker: "user", text: "Keep the religion. I’ll keep my car." }
+    ]
+  },
+  karen: {
+    pre: [
+      { speaker: "boss", text: "You’re late." },
+      { speaker: "user", text: "Wow, no hello? Berlin hospitality’s really something." },
+      { speaker: "boss", text: "Timing is the first rule. You’ve already failed it." },
+      { speaker: "user", text: "Good thing we’re racing, not scheduling a meeting." },
+      { speaker: "boss", text: "Racing is precision. Every move, every second - controlled." },
+      { speaker: "user", text: "You sound fun." },
+      { speaker: "boss", text: "Fun is inefficiency." },
+      { speaker: "boss", text: "On my track, there is no chaos. Only execution." },
+      { speaker: "user", text: "Cool. I’ll try not to ruin your spreadsheet." },
+      { speaker: "boss", text: "You won’t." },
+      { speaker: "boss", text: "If you win, it’s because I made a mistake." },
+      { speaker: "user", text: "And if you lose?" },
+      { speaker: "boss", text: "I don’t." },
+      { speaker: "user", text: "Guess we’ll find out." }
+    ],
+    post: [
+      { speaker: "boss", text: "...I miscalculated." },
+      { speaker: "boss", text: "One mistake." },
+      { speaker: "user", text: "It happens. But everything else was perfect." },
+      { speaker: "boss", text: "Perfect isn’t enough if you still lose." },
+      { speaker: "user", text: "You controlled that whole race." },
+      { speaker: "user", text: "Most people just hope to win. You plan to win." },
+      { speaker: "boss", text: "Planning failed." },
+      { speaker: "user", text: "Barely." },
+      { speaker: "user", text: "You’re the real deal. Discipline, execution... it shows." },
+      { speaker: "boss", text: "Then I refine. I don’t repeat mistakes." },
+      { speaker: "user", text: "Good. Wouldn’t want it to be easy next time." }
+    ]
+  },
+  samir: {
+    pre: [
+      { speaker: "boss", text: "Welcome, my friend. Try not to scratch the paint. This one’s expensive." },
+      { speaker: "user", text: "Yours? Or your dad’s?" },
+      { speaker: "boss", text: "Ah. Straight to it. I like you." },
+      { speaker: "user", text: "Let me guess - you win, I have to compliment your inheritance?" },
+      { speaker: "boss", text: "Careful. This “inheritance” tends to leave people in the dust." },
+      { speaker: "user", text: "Yeah, yeah. Big car, big allowance." },
+      { speaker: "user", text: "Must be tough." },
+      { speaker: "boss", text: "You think it’s easy, carrying expectations like this?" },
+      { speaker: "user", text: "I think you’ve never had to earn anything." },
+      { speaker: "boss", text: "Then prove it." },
+      { speaker: "boss", text: "Beat me. Then maybe I’ll start believing you." },
+      { speaker: "user", text: "Oh, I will." },
+      { speaker: "user", text: "And when I do, try not to have your dad ground me." }
+    ],
+    post: [
+      { speaker: "boss", text: "...Well. That settles it." },
+      { speaker: "user", text: "Guess the family car isn’t unbeatable after all." },
+      { speaker: "boss", text: "It was never really mine." },
+      { speaker: "user", text: "Yeah, I figured." },
+      { speaker: "boss", text: "There’s another one I prefer." },
+      { speaker: "user", text: "Oh? What, something even flashier?" },
+      { speaker: "boss", text: "No." },
+      { speaker: "boss", text: "The Honky." },
+      { speaker: "user", text: "The silly goose car?" },
+      { speaker: "boss", text: "It’s not silly." },
+      { speaker: "boss", text: "It’s... misunderstood." },
+      { speaker: "user", text: "That’s one way to say it." },
+      { speaker: "boss", text: "Everyone laughs at it." },
+      { speaker: "boss", text: "But it’s like the ugly duckling... hiding a swan inside." },
+      { speaker: "user", text: "Okay, I didn’t expect that from you." },
+      { speaker: "boss", text: "Neither did I." }
+    ]
+  },
+  thais: {
+    pre: [
+      { speaker: "boss", text: "Hmm. I don’t think this collab makes sense for me." },
+      { speaker: "user", text: "Collab?" },
+      { speaker: "boss", text: "Your numbers are too low." },
+      { speaker: "user", text: "I’m here to race, not post." },
+      { speaker: "boss", text: "Everything is content." },
+      { speaker: "boss", text: "And you? Not very engaging." },
+      { speaker: "user", text: "Wow. Okay." },
+      { speaker: "user", text: "Didn’t realize I needed followers to beat you." },
+      { speaker: "boss", text: "You don’t." },
+      { speaker: "boss", text: "You need skill." },
+      { speaker: "user", text: "...Right." },
+      { speaker: "user", text: "That’s the part I brought." },
+      { speaker: "boss", text: "Confident. I like that." },
+      { speaker: "boss", text: "Let’s see if it performs." },
+      { speaker: "user", text: "Oh, it will." },
+      { speaker: "user", text: "Just make sure you capture my good side when I pass you." }
+    ],
+    post: [
+      { speaker: "boss", text: "Wait. Before you go, can you sign this?" },
+      { speaker: "user", text: "What is it?" },
+      { speaker: "boss", text: "Release form. I’m posting the race." },
+      { speaker: "user", text: "Sure." },
+      { speaker: "user", text: "As long as you don’t edit it." },
+      { speaker: "boss", text: "...That’s not how this works." },
+      { speaker: "user", text: "Thought everything was content." },
+      { speaker: "user", text: "Or is it only content when you control it?" },
+      { speaker: "boss", text: "I curate my image." },
+      { speaker: "user", text: "Yeah. That’s what I’m saying." },
+      { speaker: "user", text: "You’ve been faking it." },
+      { speaker: "boss", text: "It’s not fake. It’s strategy." },
+      { speaker: "user", text: "Then post it." },
+      { speaker: "user", text: "Exactly how it happened." },
+      { speaker: "boss", text: "I’ll... consider it." },
+      { speaker: "user", text: "Cool." },
+      { speaker: "user", text: "I’ll consider signing." }
+    ]
+  },
+  "jimmy-chin": {
+    pre: [
+      { speaker: "boss", text: "Have you seen this? Have you heard about this?" },
+      { speaker: "user", text: "Seen what? What are you talking about?" },
+      { speaker: "boss", text: "They said they were sending me a tuner. Tune her? I hardly know her." },
+      { speaker: "user", text: "Wow. That was awful." },
+      { speaker: "boss", text: "Hey, I’m still number one in my timeslot!" },
+      { speaker: "boss", text: "10:40pm-10:50pm among 65-69 year old men." },
+      { speaker: "user", text: "I guess that’s better than number one in your heart?" },
+      { speaker: "boss", text: "Still counts! I bet you’re not getting that on Tic Tac?" },
+      { speaker: "user", text: "The mints?" },
+      { speaker: "boss", text: "You know what I mean!" },
+      { speaker: "user", text: "I thought your show got cancelled." },
+      { speaker: "boss", text: "Cancelled?! I’ll show you who’s cancelled!" }
+    ],
+    post: [
+      { speaker: "boss", text: "Well... not bad, kid." },
+      { speaker: "boss", text: "Tell you what. I’ll give you my time slot." },
+      { speaker: "user", text: "Your what?" },
+      { speaker: "boss", text: "In five years. Then you take over. Big handoff." },
+      { speaker: "user", text: "Or you could just... retire now." },
+      { speaker: "boss", text: "Retire?" },
+      { speaker: "boss", text: "Huh. Would give me more time with the one I love most." },
+      { speaker: "user", text: "Your wife?" },
+      { speaker: "boss", text: "Heck no." },
+      { speaker: "boss", text: "My cars!" }
+    ]
+  },
+  "rip-lee": {
+    pre: [
+      { speaker: "boss", text: "You’re the challenger?" },
+      { speaker: "user", text: "Yeah. Let’s get this over with." },
+      { speaker: "boss", text: "“Let’s get this over with.”" },
+      { speaker: "boss", text: "Why do you sound like a substitute teacher?" },
+      { speaker: "user", text: "What? I don’t-" },
+      { speaker: "boss", text: "It’s okay." },
+      { speaker: "boss", text: "You’ve got... Unc energy." },
+      { speaker: "user", text: "Unc-?" },
+      { speaker: "user", text: "I’m not old." },
+      { speaker: "boss", text: "Ummmmm... sure." },
+      { speaker: "user", text: "Okay, whatever." },
+      { speaker: "user", text: "Let’s see if this Unc still has it." },
+      { speaker: "boss", text: "Don’t break a hip." }
+    ],
+    post: [
+      { speaker: "user", text: "Told you. Unc still got it." },
+      { speaker: "boss", text: "Mm." },
+      { speaker: "user", text: "That’s it?" },
+      { speaker: "user", text: "No comeback? No speech?" },
+      { speaker: "boss", text: "It was a good race." },
+      { speaker: "user", text: "I won." },
+      { speaker: "boss", text: "You did." },
+      { speaker: "user", text: "You’re not even a little mad?" },
+      { speaker: "boss", text: "At...?" },
+      { speaker: "user", text: "Losing?" },
+      { speaker: "boss", text: "*stares at you unbothered*" },
+      { speaker: "user", text: "Ugh, you’re so cool." },
+      { speaker: "boss", text: "I know." }
+    ]
+  },
+  jabu: {
+    pre: [
+      { speaker: "boss", text: "Hey! Welcome, my friend. You made it all this way." },
+      { speaker: "user", text: "You’re very friendly for someone I’m about to race." },
+      { speaker: "boss", text: "Why not? It’s a beautiful day." },
+      { speaker: "boss", text: "First time in Africa? Not what you expected?" },
+      { speaker: "user", text: "I don’t know. I just thought it’d be more... Africa-like?" },
+      { speaker: "boss", text: "People think lions, elephants, leopards." },
+      { speaker: "boss", text: "You know what’s the fastest thing on land?" },
+      { speaker: "user", text: "Cheetah?" },
+      { speaker: "boss", text: "Jabu." },
+      { speaker: "user", text: "Now that’s what I’m here for. Let’s race!" }
+    ],
+    post: [
+      { speaker: "user", text: "You weren’t kidding about the cheetah thing." },
+      { speaker: "boss", text: "And you kept up." },
+      { speaker: "boss", text: "Not bad, my friend." },
+      { speaker: "user", text: "Careful, I’ll start thinking you like me." },
+      { speaker: "boss", text: "I do!" },
+      { speaker: "boss", text: "Makes it more fun when we race again." },
+      { speaker: "user", text: "Oh, we’re definitely running that back." },
+      { speaker: "boss", text: "Good." },
+      { speaker: "boss", text: "Next time, I won’t be so nice." },
+      { speaker: "user", text: "You say that like you weren’t trying." },
+      { speaker: "boss", text: "I was." },
+      { speaker: "boss", text: "That’s why I’m smiling." }
+    ]
+  },
+  pallavi: {
+    pre: [
+      { speaker: "boss", text: "In my family, everything has a place. A path. You follow it with purpose." },
+      { speaker: "user", text: "So this is like a Bend It Like Beckham situation?" },
+      { speaker: "boss", text: "That’s a little racist." },
+      { speaker: "user", text: "What? No, I didn’t mean..." },
+      { speaker: "user", text: "I just meant, like, the soccer... tradition... family..." },
+      { speaker: "boss", text: "Relax. I’m messing with you." },
+      { speaker: "user", text: "Oh." },
+      { speaker: "boss", text: "Mostly." },
+      { speaker: "user", text: "Cool." },
+      { speaker: "boss", text: "You’re already off balance. Good." },
+      { speaker: "boss", text: "I’m in your head now." },
+      { speaker: "user", text: "Yeah, no, that’s... not ideal." },
+      { speaker: "boss", text: "Better for the race." }
+    ],
+    post: [
+      { speaker: "boss", text: "Maybe I wasn’t as in your head as I thought." },
+      { speaker: "user", text: "Yeah, I was gonna say - it felt pretty clear up there." },
+      { speaker: "boss", text: "Don’t get used to it." },
+      { speaker: "user", text: "So what now?" },
+      { speaker: "user", text: "I just beat... what, the eight best racers in the world?" },
+      { speaker: "boss", text: "In this world." },
+      { speaker: "user", text: "...Okay, that sounds ominous." },
+      { speaker: "boss", text: "Your next opponent isn’t from here." },
+      { speaker: "user", text: "From where?" },
+      { speaker: "boss", text: "No one knows." },
+      { speaker: "boss", text: "They call him Racer Alpha." },
+      { speaker: "user", text: "That’s not comforting." },
+      { speaker: "boss", text: "It’s not supposed to be." }
+    ]
+  },
+  "racer-alpha": {
+    pre: [
+      { speaker: "user", text: "Racer Alpha! I'm here to challenge you!" },
+      { speaker: "boss", text: "*muffled talking*" },
+      { speaker: "user", text: "What?" },
+      { speaker: "boss", text: "*muffled talking*" },
+      { speaker: "user", text: "I can't hear you with that stupid mask on." },
+      { speaker: "boss", text: "Yes you can. Stop lying." },
+      { speaker: "user", text: "Okay, I heard that. Take the mask off though. You're not Banksy." },
+      { speaker: "boss", text: "You don't know that." },
+      { speaker: "user", text: "Are you Banksy?" },
+      { speaker: "boss", text: "You'll have to beat me if you want to find out what's under this mask." },
+      { speaker: "user", text: "Is Nick Cannon going to unmask you?" },
+      { speaker: "boss", text: "Let's see if your car's as fast as your mouth." }
+    ],
+    post: [
+      { speaker: "user", text: "So... I win." },
+      { speaker: "user", text: "Guess that means mask off." },
+      { speaker: "boss", text: "Very well." },
+      { speaker: "user", text: "Wait -hold on..." },
+      { speaker: "boss", text: "", unmask: true },
+      { speaker: "user", text: "Brad Pitt?" },
+      { speaker: "boss", text: "No. I chose this form." },
+      { speaker: "user", text: "You chose Brad Pitt?" },
+      { speaker: "boss", text: "I read your mind and thought Brad Pitt from F1 would be cool for you." },
+      { speaker: "user", text: "I mean... yeah, fair." },
+      { speaker: "boss", text: "I am not human. I was sent here to evaluate your world’s greatest Tuners." },
+      { speaker: "user", text: "Of course you were." },
+      { speaker: "boss", text: "You have shown that you are worthy. Join us." },
+      { speaker: "user", text: "Join... what?" },
+      { speaker: "boss", text: "An intergalactic racing circuit." },
+      { speaker: "user", text: "Nah. Pretty sure they haven’t figured out pizza in space yet." },
+      { speaker: "user", text: "But give me a call when they do." }
+    ]
+  }
+};
 
 const defaultState = {
   selectedCar: cars[0].id,
@@ -306,6 +596,7 @@ const defaultState = {
   tunerChosen: false,
   tunerChoiceVersion: 0,
   instructorIntroSeen: false,
+  storyCarChosen: false,
   highestBossIndex: 0,
   selectedCampaign: 0,
   highestCampaignIndex: 0,
@@ -322,6 +613,7 @@ let verticalRace = null;
 let pendingCutsceneStart = null;
 let activeCutsceneLines = null;
 let activeCutsceneIndex = 0;
+let activeCutsceneContext = null;
 let pendingDragRace = null;
 let pendingIntroView = null;
 const modeFlow = {
@@ -373,6 +665,7 @@ const el = {
   campaignType: document.querySelector("#campaign-type"),
   campaignTitle: document.querySelector("#campaign-title"),
   campaignMeta: document.querySelector("#campaign-meta"),
+  campaignRewards: document.querySelector("#campaign-rewards"),
   storyLoadout: document.querySelector("#story-loadout"),
   startCampaign: document.querySelector("#start-campaign"),
   changeStoryCar: document.querySelector("#change-story-car"),
@@ -521,6 +814,7 @@ function sanitizeState() {
   if (state.selectedTuner && !tuners.some((tuner) => tuner.id === state.selectedTuner)) state.selectedTuner = null;
   state.tunerChoiceVersion = state.tunerChoiceVersion || 0;
   state.instructorIntroSeen = Boolean(state.instructorIntroSeen);
+  state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
   cars.forEach((car) => {
@@ -643,6 +937,7 @@ function setSelectedCarForMode(mode, carId) {
   state.selectedCar = carId;
   state.selectedTimeCar = carId;
   state.selectedStoryCar = carId;
+  if (mode === "story") state.storyCarChosen = true;
   saveState();
   render();
 }
@@ -685,7 +980,11 @@ function backFromMode(mode) {
       return;
     }
     if (step === "next") {
-      setFlowStep("story", "car");
+      showView("menu");
+      return;
+    }
+    if (step === "car" && state.storyCarChosen) {
+      setFlowStep("story", "next");
       return;
     }
     showView("menu");
@@ -787,9 +1086,33 @@ function renderCampaign() {
   el.campaignType.textContent = locked ? "Locked" : level.type === "drag" ? "Drag Race" : level.type === "trial" ? "Time Trial" : "Boss Battle";
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
   el.campaignMeta.textContent = campaignLevelMeta(level, locked);
+  renderCampaignRewards(level, locked);
   renderStoryLoadout();
   el.startCampaign.disabled = locked;
   el.startCampaign.textContent = storyReplayOpen ? "Start Level" : "Continue Story";
+}
+
+function renderCampaignRewards(level, locked) {
+  if (locked) {
+    el.campaignRewards.innerHTML = "";
+    return;
+  }
+  if (level.type === "trial") {
+    const trackIndex = storyTracks.findIndex((track) => track.id === level.track.id);
+    el.campaignRewards.innerHTML = timeMedals.map((medal) => `
+      <div class="reward-row compact">
+        <span class="medal-text ${medal.key}">${medal.label}</span>
+        <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} XP</strong>
+      </div>
+    `).join("");
+    return;
+  }
+  if (level.type === "drag") {
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} XP</strong></div>`;
+    return;
+  }
+  const boss = level.final ? finalBoss : bosses[level.bossIndex];
+  el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} XP</strong></div>`;
 }
 
 function renderStoryLoadout() {
@@ -818,7 +1141,7 @@ function renderStoryLoadout() {
 
 function campaignLevelMeta(level, locked) {
   if (locked) return level.final ? "Play through the story to unlock the final boss." : "Finish the previous level to unlock.";
-  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "200 m" : "500 m"} · CPU ${level.drag.name} · ${level.drag.xp} XP`;
+  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "200 m" : "500 m"}`;
   if (level.type === "trial") return `${level.track.city}, ${level.track.country} · No Phantaxi`;
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
   return `${boss.name} · ${boss.car} · ${boss.xp} XP`;
@@ -856,7 +1179,7 @@ function renderTimeTargets() {
   applyTrackMap(el.timeTrialTrack, storyTracks.find((track) => track.id === state.selectedTimeTrack));
   el.timeTargets.innerHTML = timeMedals.map((medal) => {
     const target = timeTarget(medal, trackIndex);
-    return `<div><span>${medal.label} · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} XP</strong></div>`;
+    return `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} XP</strong></div>`;
   }).join("") + `<div><span>Phantaxi Time</span><strong>${best ? `${best.toFixed(2)} s` : "No Phantaxi Time"}</strong></div>`;
 }
 
@@ -1344,12 +1667,12 @@ function finishRace(playerWon) {
       state.highestRankIndex += 1;
     }
     el.raceMessage.className = "race-message win";
-    el.raceMessage.textContent = "Victory.";
+    el.raceMessage.textContent = "";
   } else {
     earned = Math.floor(race.distance.xp * 0.16);
     xpResult = addXp(state.selectedCar, earned);
     el.raceMessage.className = "race-message loss";
-    el.raceMessage.textContent = "Defeat.";
+    el.raceMessage.textContent = "";
   }
 
   saveState();
@@ -1711,7 +2034,7 @@ function showView(view) {
   document.body.classList.toggle("mode-active", view !== "menu");
   if (view === "story") {
     storyReplayOpen = false;
-    modeFlow.story = "car";
+    modeFlow.story = state.storyCarChosen ? "next" : "car";
     state.selectedCampaign = Math.min(state.highestCampaignIndex, campaignLevels.length - 1);
     saveState();
     render();
@@ -1834,19 +2157,20 @@ function shouldShowStoryCutscene(index, level) {
   return level.type === "boss";
 }
 
-function openStoryCutscene(level, startRaceCallback) {
+function openStoryCutscene(level, startRaceCallback, phase = "pre") {
   pendingCutsceneStart = startRaceCallback;
   const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
   const isIntro = level.type === "intro";
   const boss = level.type === "boss" ? (level.final ? finalBoss : bosses[level.bossIndex]) : null;
-  const other = boss || { name: "Instructor", image: "assets/characters/instructor.png" };
-  activeCutsceneLines = isIntro ? instructorSceneLines : null;
+  activeCutsceneContext = { type: isIntro ? "intro" : level.type, boss, phase };
+  activeCutsceneLines = isIntro ? instructorSceneLines : storyCutsceneScripts[boss?.id]?.[phase] || null;
   activeCutsceneIndex = 0;
-  el.cutsceneTitle.textContent = level.type === "boss" ? `${tuner.name} meets ${boss.name}` : "Training Academy Intro";
-  el.cutsceneModal.classList.toggle("single-speaker", isIntro);
-  if (isIntro) {
+  el.cutsceneTitle.textContent = "Story Scene";
+  el.cutsceneModal.classList.toggle("single-speaker", Boolean(activeCutsceneLines));
+  if (activeCutsceneLines) {
     renderCutsceneLine();
   } else {
+    const other = boss || { name: "Instructor", image: "assets/characters/instructor.png" };
     el.cutsceneLeftArt.innerHTML = characterMarkup(tuner);
     el.cutsceneRightArt.innerHTML = characterMarkup(other);
     el.cutsceneLeftDialogue.textContent = "Placeholder dialogue for your chosen tuner will appear here.";
@@ -1862,16 +2186,29 @@ function renderCutsceneLine() {
   const line = activeCutsceneLines?.[activeCutsceneIndex];
   if (!line) return;
   const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
-  const character = line.speaker === "user"
-    ? tuner
-    : { name: "Instructor", image: "assets/characters/instructor.png" };
+  const character = cutsceneCharacterForLine(line);
   el.cutsceneLeftArt.innerHTML = characterMarkup(character);
-  el.cutsceneLeftDialogue.innerHTML = `<strong>${character.name}</strong><span>${line.text}</span>`;
+  el.cutsceneLeftDialogue.innerHTML = line.text ? `<strong>${character.name}</strong><span>${line.text}</span>` : "";
   el.cutsceneRightArt.innerHTML = "";
   el.cutsceneRightDialogue.textContent = "";
   el.backCutscene.hidden = activeCutsceneIndex === 0;
   el.continueCutscene.textContent = activeCutsceneIndex === activeCutsceneLines.length - 1 ? "Continue" : "Next";
   el.continueCutscene.classList.toggle("finish", activeCutsceneIndex === activeCutsceneLines.length - 1);
+}
+
+function cutsceneCharacterForLine(line) {
+  const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
+  if (line.speaker === "user") return tuner;
+  if (line.speaker === "instructor") return { name: "Instructor", image: "assets/characters/instructor.png" };
+  const boss = activeCutsceneContext?.boss || finalBoss;
+  const unmaskedAlpha = boss.id === "racer-alpha" && (
+    line.unmask ||
+    activeCutsceneLines?.slice(0, activeCutsceneIndex + 1).some((entry) => entry.unmask)
+  );
+  return {
+    name: boss.name,
+    image: unmaskedAlpha ? finalBoss.unmaskedPortrait : boss.portrait
+  };
 }
 
 function advanceCutscene() {
@@ -1897,6 +2234,7 @@ function closeStoryCutsceneAndStart() {
   el.cutsceneModal.dataset.sceneType = "";
   activeCutsceneLines = null;
   activeCutsceneIndex = 0;
+  activeCutsceneContext = null;
   el.backCutscene.hidden = true;
   el.continueCutscene.textContent = "Continue";
   el.continueCutscene.classList.remove("finish");
@@ -2278,7 +2616,7 @@ function finishVerticalRace(playerWon) {
     el.storyMessage.className = `race-message ${playerWon ? "win" : "loss"}`;
     const unlockText = unlockedBossName ? ` ${unlockedBossName} is now unlocked.` : "";
     if (unlockedBossName) resultLines.push(`Boss Unlocked: ${unlockedBossName}`);
-    el.storyMessage.textContent = `${playerWon ? "Victory" : "Defeat"}.${unlockText}`;
+    el.storyMessage.textContent = "";
     if (raceState.campaignLevelIndex !== null && playerWon) completeCampaignLevel(raceState.campaignLevelIndex);
   } else {
     const trackIndex = raceState.trackIndex;
@@ -2294,7 +2632,7 @@ function finishVerticalRace(playerWon) {
     resultLines.push(`Time: ${elapsed.toFixed(2)} seconds`);
     resultLines.push(beaten ? `<span class="medal-text ${beaten.key}">${beaten.label}</span> Medal Awarded` : "Finish Recorded");
     el.timeMessage.className = `race-message ${beaten ? "win" : ""}`;
-    el.timeMessage.textContent = `${elapsed.toFixed(2)} seconds. ${beaten ? `${beaten.label} Medal Awarded` : "Finish recorded"}.`;
+    el.timeMessage.textContent = "";
     if (raceState.campaignLevelIndex !== null) completeCampaignLevel(raceState.campaignLevelIndex);
   }
   saveState();
@@ -2315,13 +2653,23 @@ function finishVerticalRace(playerWon) {
         }
       }
       if (isStoryRace) {
-        finishStoryRaceScreen();
+        const finishStory = () => {
+          finishStoryRaceScreen();
+          showPendingEvolution(raceState.carId);
+        };
+        const level = campaignLevels[raceState.campaignLevelIndex];
+        if (playerWon && raceState.mode === "campaign-boss" && shouldShowStoryCutscene(raceState.campaignLevelIndex, level)) {
+          openStoryCutscene(level, finishStory, "post");
+          return;
+        }
+        finishStory();
       } else if (raceState.mode === "boss") {
         setFlowStep("boss", "match");
+        showPendingEvolution(raceState.carId);
       } else {
         setFlowStep("time", "match");
+        showPendingEvolution(raceState.carId);
       }
-      showPendingEvolution(raceState.carId);
     },
     onRaceAgain: () => {
       if (isStoryRace) {
@@ -2398,6 +2746,10 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 document.querySelectorAll("[data-flow-next]").forEach((button) => {
   button.addEventListener("click", () => {
     const [mode, step] = button.dataset.flowNext.split(":");
+    if (mode === "story" && step === "next") {
+      state.storyCarChosen = true;
+      saveState();
+    }
     setFlowStep(mode, step);
   });
 });
