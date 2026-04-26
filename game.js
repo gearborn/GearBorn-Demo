@@ -2159,23 +2159,21 @@ function shouldShowStoryCutscene(index, level) {
 
 function openStoryCutscene(level, startRaceCallback, phase = "pre") {
   pendingCutsceneStart = startRaceCallback;
-  const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
   const isIntro = level.type === "intro";
   const boss = level.type === "boss" ? (level.final ? finalBoss : bosses[level.bossIndex]) : null;
   activeCutsceneContext = { type: isIntro ? "intro" : level.type, boss, phase };
   activeCutsceneLines = isIntro ? instructorSceneLines : storyCutsceneScripts[boss?.id]?.[phase] || null;
   activeCutsceneIndex = 0;
-  el.cutsceneTitle.textContent = "Story Scene";
-  el.cutsceneModal.classList.toggle("single-speaker", Boolean(activeCutsceneLines));
-  if (activeCutsceneLines) {
-    renderCutsceneLine();
-  } else {
-    const other = boss || { name: "Instructor", image: "assets/characters/instructor.png" };
-    el.cutsceneLeftArt.innerHTML = characterMarkup(tuner);
-    el.cutsceneRightArt.innerHTML = characterMarkup(other);
-    el.cutsceneLeftDialogue.textContent = "Placeholder dialogue for your chosen tuner will appear here.";
-    el.cutsceneRightDialogue.textContent = "Placeholder boss dialogue will appear here.";
+  if (!activeCutsceneLines?.length) {
+    console.warn(`Missing cutscene script for ${boss?.id || level.type} ${phase}`);
+    pendingCutsceneStart = null;
+    activeCutsceneContext = null;
+    if (startRaceCallback) startRaceCallback();
+    return;
   }
+  el.cutsceneTitle.textContent = "Story Scene";
+  el.cutsceneModal.classList.add("single-speaker");
+  renderCutsceneLine();
   el.cutsceneModal.dataset.sceneType = isIntro ? "intro" : level.type;
   el.cutsceneModal.classList.add("active");
   el.cutsceneModal.setAttribute("aria-hidden", "false");
@@ -2235,6 +2233,10 @@ function closeStoryCutsceneAndStart() {
   activeCutsceneLines = null;
   activeCutsceneIndex = 0;
   activeCutsceneContext = null;
+  el.cutsceneLeftArt.innerHTML = "";
+  el.cutsceneRightArt.innerHTML = "";
+  el.cutsceneLeftDialogue.textContent = "";
+  el.cutsceneRightDialogue.textContent = "";
   el.backCutscene.hidden = true;
   el.continueCutscene.textContent = "Continue";
   el.continueCutscene.classList.remove("finish");
