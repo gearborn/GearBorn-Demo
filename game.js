@@ -656,6 +656,7 @@ function renderFlowScreens() {
   document.querySelector("#play-view")?.classList.toggle("race-step", modeFlow.drag === "race");
   document.querySelector("#time-trial-view")?.classList.toggle("race-step", modeFlow.time === "race");
   document.querySelector("#boss-view")?.classList.toggle("race-step", modeFlow.boss === "race");
+  document.querySelector("#story-view")?.classList.toggle("story-race-step", modeFlow.story === "race");
   el.campaignList.classList.toggle("story-hidden", !storyReplayOpen);
 }
 
@@ -1232,6 +1233,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     shiftScore: [],
     rank,
     distance,
+    dragStage,
     campaignLevelIndex
   };
   if (dragStage) {
@@ -1329,6 +1331,8 @@ function finishRace(playerWon) {
   race.active = false;
   race.finished = true;
   drawRace();
+  const finishedRace = race;
+  const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
 
   let earned = 0;
   let xpResult = null;
@@ -1349,15 +1353,31 @@ function finishRace(playerWon) {
   }
 
   saveState();
-  if (race.campaignLevelIndex !== null && race.campaignLevelIndex !== undefined && playerWon) {
-    completeCampaignLevel(race.campaignLevelIndex);
+  if (isStoryRace && playerWon) {
+    completeCampaignLevel(finishedRace.campaignLevelIndex);
   }
   render();
   showRaceResult(el.dragTrack, {
     won: playerWon,
     xp: earned,
     xpResult,
-    onContinue: () => showPendingEvolution(state.selectedCar)
+    primaryLabel: isStoryRace ? "Next" : "Select Opponent",
+    raceAgainLabel: "Race Again",
+    onPrimary: () => {
+      if (isStoryRace) {
+        finishStoryRaceScreen();
+      } else {
+        setFlowStep("drag", "match");
+      }
+      showPendingEvolution(state.selectedCar);
+    },
+    onRaceAgain: () => {
+      if (isStoryRace) {
+        startCampaignRace(finishedRace.campaignLevelIndex, campaignLevels[finishedRace.campaignLevelIndex]);
+      } else {
+        prepareDragRace(null, null);
+      }
+    }
   });
 }
 
@@ -1400,7 +1420,7 @@ function raceResultMessage(baseMessage, xpResult) {
 
 function showRaceResult(trackNode, result) {
   if (!trackNode) {
-    result.onContinue?.();
+    result.onPrimary?.();
     return;
   }
   trackNode.querySelectorAll(".race-result-popup").forEach((node) => node.remove());
@@ -1410,15 +1430,34 @@ function showRaceResult(trackNode, result) {
     <div class="race-result-card">
       <h2>${result.won ? "Victory" : "Defeat"}</h2>
       <p>XP Earned: <strong>${result.xp}</strong></p>
+      ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       ${result.xpResult?.leveledUp ? `<p>${result.xpResult.name} has leveled up to Lvl. ${result.xpResult.level}</p>` : ""}
-      <button class="primary" type="button">Continue</button>
+      <div class="race-result-actions">
+        <button class="primary" type="button" data-result-action="primary">${result.primaryLabel || "Continue"}</button>
+        <button class="ghost" type="button" data-result-action="again">${result.raceAgainLabel || "Race Again"}</button>
+      </div>
     </div>
   `;
-  popup.querySelector("button").addEventListener("click", () => {
+  popup.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-result-action]");
+    if (!button) return;
+    const action = button.dataset.resultAction;
     popup.remove();
-    result.onContinue?.();
+    if (action === "again") {
+      result.onRaceAgain?.();
+      return;
+    }
+    result.onPrimary?.();
   });
   trackNode.appendChild(popup);
+}
+
+function finishStoryRaceScreen() {
+  if (race) race.active = false;
+  if (verticalRace) verticalRace.active = false;
+  restoreEmbeddedCampaignRace();
+  storyReplayOpen = false;
+  setFlowStep("story", "next");
 }
 
 function showPendingEvolution(carId) {
@@ -1427,6 +1466,7 @@ function showPendingEvolution(carId) {
   const currentForm = currentEvolution(carId);
   const nextForm = evolutionByIndex(carId, progress.pendingEvolution);
   evolutionModal = { mode: "ready", carId, evolution: progress.pendingEvolution };
+  el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionKicker.textContent = "Evolution Ready";
   el.evolutionTitle.textContent = `${currentForm.name} is ready to evolve`;
   el.evolutionCopy.textContent = "The next Gearborn form is charged and waiting.";
@@ -1450,6 +1490,7 @@ function revealEvolution(carId, evolutionIndex) {
   const unlockedCarId = unlockSecretCars();
   const form = currentEvolution(carId);
   evolutionModal = { mode: "unlocked", carId, evolution: evolutionIndex };
+  el.evolutionModal.classList.add("evolution-unlocked");
   el.evolutionKicker.textContent = "Evolution Unlocked";
   el.evolutionTitle.textContent = unlockedCarId === "rainbowlt"
     ? "You've unlocked Rainbowlt"
@@ -1468,6 +1509,7 @@ function revealEvolution(carId, evolutionIndex) {
 
 function closeEvolutionModal() {
   evolutionModal = null;
+  el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
 }
@@ -1973,6 +2015,13 @@ function beginVerticalRace(mode, waitForStart = false, options = {}) {
   const playerNode = isBossRace ? el.storyPlayer : el.timePlayer;
   const bossNode = isBossRace ? el.storyBoss : null;
   const ghostNode = isStandaloneTime ? el.timeGhost : null;
+  el.timeGhost.classList.toggle("hidden", !isStandaloneTime);
+  if (!isStandaloneTime) {
+    el.timeGhost.innerHTML = "";
+    el.timeGhost.classList.remove("has-image");
+    el.timeGhost.style.removeProperty("left");
+    el.timeGhost.style.removeProperty("top");
+  }
   setTopCar(playerNode, topDownImageForCar(carId), currentEvolution(carId).name, cars.find((car) => car.id === carId).color);
   if (bossNode) setTopCar(bossNode, boss.carImage, boss.car, "#f25f5c");
   if (ghostNode) setTopCar(ghostNode, "assets/story/phantaxi-topdown.png", "Phantaxi", "#c084fc");
@@ -2209,11 +2258,13 @@ function finishVerticalRace(playerWon) {
   const elapsed = (performance.now() - raceState.startTime) / 1000;
   let resultXp = 0;
   let resultXpState = null;
+  const resultLines = [];
   if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
     const xp = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
     const xpResult = addXp(raceState.carId, xp);
     resultXp = xp;
     resultXpState = xpResult;
+    let unlockedBossName = "";
     if (playerWon) {
       if (raceState.bossData.id === "racer-alpha") {
         state.racerAlphaUnmasked = true;
@@ -2221,13 +2272,12 @@ function finishVerticalRace(playerWon) {
       const bossIndex = bossChallengeBosses.findIndex((boss) => boss.id === raceState.bossData.id);
       if (bossIndex === state.highestBossIndex && state.highestBossIndex < bossChallengeBosses.length - 1) {
         state.highestBossIndex += 1;
+        unlockedBossName = bossChallengeBosses[state.highestBossIndex]?.name || "";
       }
     }
     el.storyMessage.className = `race-message ${playerWon ? "win" : "loss"}`;
-    const nextBoss = playerWon && state.highestBossIndex < bossChallengeBosses.length
-      ? bossChallengeBosses[state.highestBossIndex]
-      : null;
-    const unlockText = nextBoss && nextBoss.id !== raceState.bossData.id ? ` ${nextBoss.name} is now unlocked.` : "";
+    const unlockText = unlockedBossName ? ` ${unlockedBossName} is now unlocked.` : "";
+    if (unlockedBossName) resultLines.push(`Boss Unlocked: ${unlockedBossName}`);
     el.storyMessage.textContent = `${playerWon ? "Victory" : "Defeat"}.${unlockText}`;
     if (raceState.campaignLevelIndex !== null && playerWon) completeCampaignLevel(raceState.campaignLevelIndex);
   } else {
@@ -2241,24 +2291,48 @@ function finishVerticalRace(playerWon) {
     if (raceState.mode === "time" && (!best || elapsed < best)) {
       state.timeTrials[raceState.trackId] = { bestTime: elapsed, ghost: raceState.record.filter((_, index) => index % 4 === 0) };
     }
+    resultLines.push(`Time: ${elapsed.toFixed(2)} seconds`);
+    resultLines.push(beaten ? `<span class="medal-text ${beaten.key}">${beaten.label}</span> Medal Awarded` : "Finish Recorded");
     el.timeMessage.className = `race-message ${beaten ? "win" : ""}`;
-    el.timeMessage.textContent = `${elapsed.toFixed(2)} seconds. ${beaten ? `${beaten.label} beaten` : "Finish recorded"}.`;
+    el.timeMessage.textContent = `${elapsed.toFixed(2)} seconds. ${beaten ? `${beaten.label} Medal Awarded` : "Finish recorded"}.`;
     if (raceState.campaignLevelIndex !== null) completeCampaignLevel(raceState.campaignLevelIndex);
   }
   saveState();
   render();
+  const isStoryRace = raceState.campaignLevelIndex !== null;
   showRaceResult(raceState.trackNode, {
     won: playerWon,
     xp: resultXp,
     xpResult: resultXpState,
-    onContinue: () => {
+    lines: resultLines,
+    primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    raceAgainLabel: "Race Again",
+    onPrimary: () => {
       if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
         if (playerWon && raceState.mode === "boss" && raceState.bossData.id === "racer-alpha") {
           showRacerAlphaUnmask();
           return;
         }
       }
+      if (isStoryRace) {
+        finishStoryRaceScreen();
+      } else if (raceState.mode === "boss") {
+        setFlowStep("boss", "match");
+      } else {
+        setFlowStep("time", "match");
+      }
       showPendingEvolution(raceState.carId);
+    },
+    onRaceAgain: () => {
+      if (isStoryRace) {
+        startCampaignRace(raceState.campaignLevelIndex, campaignLevels[raceState.campaignLevelIndex]);
+        return;
+      }
+      if (raceState.mode === "boss") {
+        beginVerticalRace("boss", true, { boss: raceState.bossData });
+        return;
+      }
+      beginVerticalRace("time", true, { track: storyTracks.find((track) => track.id === raceState.trackId) });
     }
   });
 }

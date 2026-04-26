@@ -332,6 +332,11 @@ body.mode-active .main-menu-button {
   display: grid;
 }
 
+#story-view.story-race-step > .section-heading,
+#story-view.story-race-step > .flow-step {
+  display: none;
+}
+
 .flow-card {
   padding: 22px;
   border: 1px solid var(--line);
@@ -717,6 +722,10 @@ body.mode-active .main-menu-button {
   display: none;
 }
 
+.campaign-race-mount .back-link {
+  display: none;
+}
+
 .race-panel {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr);
@@ -1090,6 +1099,10 @@ small {
   filter: saturate(0.65);
 }
 
+.top-car.hidden {
+  display: none;
+}
+
 .track-item {
   position: absolute;
   display: grid;
@@ -1185,6 +1198,34 @@ small {
   margin: 0;
   color: var(--ink);
   font-weight: 850;
+}
+
+.medal-text {
+  font-weight: 1000;
+}
+
+.medal-text.gold {
+  color: #ffd65a;
+}
+
+.medal-text.silver {
+  color: #d8e1ec;
+}
+
+.medal-text.bronze {
+  color: #cd8c52;
+}
+
+.race-result-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.race-result-actions .primary,
+.race-result-actions .ghost {
+  min-height: 44px;
 }
 
 .map-start-button {
@@ -1996,6 +2037,17 @@ small {
   max-width: 34rem;
   color: var(--muted);
   font-weight: 700;
+}
+
+#evolution-modal.evolution-unlocked #evolve-button {
+  display: none !important;
+}
+
+#evolution-modal.evolution-unlocked #close-evolution {
+  border-color: transparent;
+  background: var(--green);
+  color: #082014;
+  font-weight: 850;
 }
 
 .modal-actions {
