@@ -315,6 +315,14 @@
                 <div class="perfect-band"></div>
               </div>
 
+              <div class="nitro-panel" aria-label="Nitro boost meter">
+                <img src="assets/items/token-nitrous.png" alt="Nitro">
+                <div class="nitro-bar">
+                  <div class="nitro-fill" id="nitro-fill"></div>
+                </div>
+                <span id="nitro-readout">0%</span>
+              </div>
+
               <div class="track" aria-label="Drag race track">
                 <div class="finish-line"></div>
                 <div class="lane">
@@ -346,6 +354,7 @@
               </div>
 
               <button class="shift-button" id="shift-button" type="button">Shift</button>
+              <button class="nitro-button" id="nitro-button" type="button" disabled>Nitro</button>
             </div>
           </div>
         </section>
@@ -384,6 +393,33 @@
                 <label for="shift-key">Shift key</label>
                 <input id="shift-key" type="text" maxlength="12" value="Space" aria-describedby="key-note">
                 <small id="key-note">Click the box, then press the key you want.</small>
+              </div>
+              <div class="field">
+                <label for="nitro-key">Nitro key</label>
+                <input id="nitro-key" type="text" maxlength="12" value="N" aria-describedby="nitro-key-note">
+                <small id="nitro-key-note">Click the box, then press the key you want.</small>
+              </div>
+              <div class="field">
+                <label>Time Trial / Boss Challenge controls</label>
+                <div class="control-grid">
+                  <div>
+                    <label for="vertical-up-key">Up</label>
+                    <input id="vertical-up-key" type="text" maxlength="12" value="W">
+                  </div>
+                  <div>
+                    <label for="vertical-left-key">Left</label>
+                    <input id="vertical-left-key" type="text" maxlength="12" value="A">
+                  </div>
+                  <div>
+                    <label for="vertical-down-key">Down</label>
+                    <input id="vertical-down-key" type="text" maxlength="12" value="S">
+                  </div>
+                  <div>
+                    <label for="vertical-right-key">Right</label>
+                    <input id="vertical-right-key" type="text" maxlength="12" value="D">
+                  </div>
+                </div>
+                <small>Arrow keys and on-screen arrows still work.</small>
               </div>
               <div class="field">
                 <label>Story tuner</label>

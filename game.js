@@ -1,8 +1,10 @@
 const distances = [
-  { meters: 200, label: "200 m", xp: 80, difficulty: 0.9 },
-  { meters: 500, label: "500 m", xp: 180, difficulty: 1.05 },
-  { meters: 1000, label: "1000 m", xp: 420, difficulty: 1.22 }
+  { meters: 400, label: "400 m", xp: 80, difficulty: 0.9 },
+  { meters: 800, label: "800 m", xp: 180, difficulty: 1.05 },
+  { meters: 1600, label: "1600 m", xp: 420, difficulty: 1.22 }
 ];
+const dragNitroMultiplier = 1.25;
+const dragNitroDuration = 1.7;
 
 const ranks = [
   {
@@ -101,6 +103,7 @@ const cars = [
     family: "Pig",
     color: "#f4a7b9",
     trait: "Stable power",
+    unlockable: true,
     evolutions: [
       { name: "Hogson", images: { display: "assets/cars/pig-hogson-display.png", race: "assets/cars/pig-hogson-race.png" } },
       { name: "Snoffle", images: { display: "assets/cars/pig-snoffle-display.png", race: "assets/cars/pig-snoffle-race.png" } },
@@ -123,6 +126,7 @@ const cars = [
     family: "Whale",
     color: "#52c7ff",
     trait: "High top speed",
+    unlockable: true,
     evolutions: [
       { name: "Totorca", images: { display: "assets/cars/whale-totorca-display.png", race: "assets/cars/whale-totorca-race.png" } },
       { name: "Boates", images: { display: "assets/cars/whale-boates-display.png", race: "assets/cars/whale-boates-race.png" } },
@@ -134,10 +138,47 @@ const cars = [
     family: "Frog",
     color: "#6ee7a8",
     trait: "Late race surge",
+    unlockable: true,
     evolutions: [
       { name: "Rivvir", images: { display: "assets/cars/frog-rivvir-display.png", race: "assets/cars/frog-rivvir-race.png" } },
       { name: "Croakra", images: { display: "assets/cars/frog-croakra-display.png", race: "assets/cars/frog-croakra-race.png" } },
       { name: "Kermajesty", images: { display: "assets/cars/frog-kermajesty-display.png", race: "assets/cars/frog-kermajesty-race.png" } }
+    ]
+  },
+  {
+    id: "techno-dinosaur",
+    family: "Techno Dinosaur",
+    color: "#7bdff2",
+    trait: "Power surges",
+    unlockable: true,
+    evolutions: [
+      { name: "Shufflodon", images: { display: "assets/cars/techno-dinosaur-shufflodon-display.png", race: "assets/cars/techno-dinosaur-shufflodon-race.png", topdown: "assets/cars/techno-dinosaur-shufflodon-topdown.png" } },
+      { name: "Dropatops", images: { display: "assets/cars/techno-dinosaur-dropatops-display.png", race: "assets/cars/techno-dinosaur-dropatops-race.png", topdown: "assets/cars/techno-dinosaur-dropatops-topdown.png" } },
+      { name: "K-Wrex", images: { display: "assets/cars/techno-dinosaur-k-wrex-display.png", race: "assets/cars/techno-dinosaur-k-wrex-race.png", topdown: "assets/cars/techno-dinosaur-k-wrex-topdown.png" } }
+    ]
+  },
+  {
+    id: "sorority-elephant",
+    family: "Sorority Elephant",
+    color: "#c084fc",
+    trait: "Prestige cruising",
+    unlockable: true,
+    evolutions: [
+      { name: "Elepledge", images: { display: "assets/cars/sorority-elephant-elepledge-display.png", race: "assets/cars/sorority-elephant-elepledge-race.png", topdown: "assets/cars/sorority-elephant-elepledge-topdown.png" } },
+      { name: "Sororitrunk", images: { display: "assets/cars/sorority-elephant-sororitrunk-display.png", race: "assets/cars/sorority-elephant-sororitrunk-race.png", topdown: "assets/cars/sorority-elephant-sororitrunk-topdown.png" } },
+      { name: "Plaidonna", images: { display: "assets/cars/sorority-elephant-plaidonna-display.png", race: "assets/cars/sorority-elephant-plaidonna-race.png", topdown: "assets/cars/sorority-elephant-plaidonna-topdown.png" } }
+    ]
+  },
+  {
+    id: "florida-gator",
+    family: "Florida Gator",
+    color: "#6ee7a8",
+    trait: "Chaos brawling",
+    unlockable: true,
+    evolutions: [
+      { name: "Gladigator", images: { display: "assets/cars/florida-gator-gladigator-display.png", race: "assets/cars/florida-gator-gladigator-race.png", topdown: "assets/cars/florida-gator-gladigator-topdown.png" } },
+      { name: "Swampagne", images: { display: "assets/cars/florida-gator-swampagne-display.png", race: "assets/cars/florida-gator-swampagne-race.png", topdown: "assets/cars/florida-gator-swampagne-topdown.png" } },
+      { name: "Fourcroco", images: { display: "assets/cars/florida-gator-fourcroco-display.png", race: "assets/cars/florida-gator-fourcroco-race.png", topdown: "assets/cars/florida-gator-fourcroco-topdown.png" } }
     ]
   },
   {
@@ -146,7 +187,7 @@ const cars = [
     color: "#c084fc",
     trait: "Unlocked by mastering every starter line",
     unlockable: true,
-    unlockInstruction: "Evolve all 6 cars to their final forms to unlock",
+    unlockInstruction: "Evolve all 9 GearBorn lines to their final forms to unlock",
     evolutions: [
       { name: "Rainbowlt", images: { display: "assets/cars/unlock-rainbowlt-display.png", race: "assets/cars/unlock-rainbowlt-race.png", topdown: "assets/story/unlock-rainbowlt-topdown.png" } },
       { name: "Hornula1", images: { display: "assets/cars/rival-hornula1-display.png", race: "assets/cars/rival-hornula1-race.png", topdown: "assets/story/unlock-hornula1-topdown.png" } }
@@ -154,8 +195,23 @@ const cars = [
   }
 ];
 
-const starterCarIds = cars.filter((car) => !car.unlockable).map((car) => car.id);
+const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
+const pinkSlipUnlockOrder = ["pig", "whale", "frog", "techno-dinosaur", "sorority-elephant", "florida-gator"];
+const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
+const starterCarIds = coreGearbornLineIds;
 const maxCarLevel = 10;
+const gearbornStatProfiles = {
+  bee: { speed: 74, acceleration: 86, handling: 82, transmission: 84, playstyle: "Technical Sprinter" },
+  pickup: { speed: 72, acceleration: 88, handling: 68, transmission: 78, playstyle: "Launch Bruiser" },
+  pig: { speed: 76, acceleration: 80, handling: 78, transmission: 86, playstyle: "Balanced Street Racer" },
+  rabbit: { speed: 78, acceleration: 84, handling: 90, transmission: 72, playstyle: "Agile Racer" },
+  whale: { speed: 84, acceleration: 70, handling: 66, transmission: 92, playstyle: "Heavy Tank" },
+  frog: { speed: 80, acceleration: 74, handling: 86, transmission: 86, playstyle: "Momentum Racer" },
+  "techno-dinosaur": { speed: 82, acceleration: 86, handling: 72, transmission: 74, playstyle: "Power Surger" },
+  "sorority-elephant": { speed: 78, acceleration: 76, handling: 74, transmission: 88, playstyle: "Prestige Cruiser" },
+  "florida-gator": { speed: 80, acceleration: 84, handling: 70, transmission: 76, playstyle: "Chaos Brawler" },
+  rainbowlt: { speed: 86, acceleration: 86, handling: 86, transmission: 86, playstyle: "Elite All-Rounder" }
+};
 const storyTracks = [
   { id: "indianapolis", city: "Indianapolis", country: "USA", map: "assets/maps/map-indianapolis.png" },
   { id: "berlin", city: "Berlin", country: "Germany", map: "assets/maps/map-berlin.png" },
@@ -198,11 +254,32 @@ const campaignDragStages = [
   { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/rival-crusadome-race.png" },
   { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png" }
 ];
+const pinkSlipRacePlan = {
+  0: { carId: "pig", rankKey: "D", xp: 180, power: 1.08, distance: 400 },
+  1: { carId: "whale", rankKey: "C", xp: 240, power: 1.2, distance: 800 },
+  2: { carId: "frog", rankKey: "C", xp: 300, power: 1.32, distance: 800 },
+  4: { carId: "techno-dinosaur", rankKey: "B", xp: 420, power: 1.55, distance: 800 },
+  5: { carId: "sorority-elephant", rankKey: "A", xp: 540, power: 1.74, distance: 1600 },
+  6: { carId: "florida-gator", rankKey: "S", xp: 680, power: 1.95, distance: 1600 }
+};
+function pinkSlipStageFor(plan) {
+  const car = cars.find((item) => item.id === plan.carId);
+  const form = car.evolutions[0];
+  return {
+    ...plan,
+    type: "pink-slip",
+    name: form.name,
+    title: `Pink Slip Race: ${form.name}`,
+    image: imageFor(form, "race"),
+    displayImage: imageFor(form, "display")
+  };
+}
 const campaignLevels = bosses.flatMap((boss, index) => {
   const drag = { type: "drag", title: `${campaignDragStages[index].rankKey} Class Drag: ${campaignDragStages[index].name}`, drag: campaignDragStages[index] };
   const trial = { type: "trial", title: `${boss.track.city} Time Trial`, track: boss.track, bossIndex: index };
   const battle = { type: "boss", title: `${boss.name} Boss Race`, bossIndex: index };
-  return index % 2 === 0 ? [drag, trial, battle] : [trial, drag, battle];
+  const arc = index % 2 === 0 ? [drag, trial, battle] : [trial, drag, battle];
+  return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId }]) : arc;
 }).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 14.5 },
@@ -223,12 +300,21 @@ const vindexEntries = [
   ["067", "Snoffle", "Pig Line", "assets/cars/pig-snoffle-display.png"],
   ["068", "Swinecroft", "Pig Line", "assets/cars/pig-swinecroft-display.png"],
   ["082", "Phantaxi", "Ghost Taxi Line", "assets/story/phantaxi-display.png"],
+  ["088", "Shufflodon", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-shufflodon-display.png"],
+  ["089", "Dropatops", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-dropatops-display.png"],
+  ["090", "K-Wrex", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-k-wrex-display.png"],
   ["091", "Bunnae", "Rabbit Line", "assets/cars/rabbit-bunnae-display.png"],
   ["092", "Lopstar", "Rabbit Line", "assets/cars/rabbit-lopstar-display.png"],
   ["093", "Matunnie", "Rabbit Line", "assets/cars/rabbit-matunnie-display.png"],
   ["151", "Totorca", "Whale Line", "assets/cars/whale-totorca-display.png"],
   ["152", "Boates", "Whale Line", "assets/cars/whale-boates-display.png"],
   ["153", "Shamacht", "Whale Line", "assets/cars/whale-shamacht-display.png"],
+  ["154", "Gladigator", "Florida Gator Line", "assets/cars/florida-gator-gladigator-display.png"],
+  ["155", "Swampagne", "Florida Gator Line", "assets/cars/florida-gator-swampagne-display.png"],
+  ["156", "Fourcroco", "Florida Gator Line", "assets/cars/florida-gator-fourcroco-display.png"],
+  ["198", "Elepledge", "Sorority Elephant Line", "assets/cars/sorority-elephant-elepledge-display.png"],
+  ["199", "Sororitrunk", "Sorority Elephant Line", "assets/cars/sorority-elephant-sororitrunk-display.png"],
+  ["200", "Plaidonna", "Sorority Elephant Line", "assets/cars/sorority-elephant-plaidonna-display.png"],
   ["231", "Rivvir", "Frog Line", "assets/cars/frog-rivvir-display.png"],
   ["232", "Croakra", "Frog Line", "assets/cars/frog-croakra-display.png"],
   ["233", "Kermajesty", "Frog Line", "assets/cars/frog-kermajesty-display.png"],
@@ -270,18 +356,20 @@ const tunerChoiceVersion = 1;
 const instructorSceneLines = [
   { speaker: "instructor", text: "Welcome to the Tuner Academy. I’m here to prep you for your first race." },
   { speaker: "user", text: "I know what I’m doing. Can we get to the race?" },
-  { speaker: "instructor", text: "Just one thing first. Your garage is stocked with 6 unique GearBorn." },
+  { speaker: "instructor", text: "Just one thing first. Your garage is stocked with 3 unique GearBorn." },
   { speaker: "instructor", text: "Racing earns XP, which goes toward leveling your car." },
   { speaker: "user", text: "I get it. Level up, go faster." },
-  { speaker: "instructor", text: "That’s correct. But once you reach Level 5, something amazing happens..." },
+  { speaker: "instructor", text: "That’s correct. But once you reach Level 5, something amazing happens…" },
   { speaker: "user", text: "How do I get to Level 5 if you won’t shut up and let me race?" },
-  { speaker: "instructor", text: "Can you just...? GearBorn evolve, yada yada yada. You ruined it." },
-  { speaker: "instructor", text: "Try to evolve all 6 to their final form for a special surprise." },
+  { speaker: "instructor", text: "Can you just…? GearBorn evolve, yada yada yada. You ruined it." },
+  { speaker: "user", text: "So I really only get 3?" },
+  { speaker: "instructor", text: "Ok, greedy. There are 6 Pink Slip races you can compete in to unlock new GearBorn." },
+  { speaker: "instructor", text: "Try to evolve all 9 GearBorn to their final form for a special surprise." },
   { speaker: "user", text: "Is it a pony?" },
   { speaker: "instructor", text: "It’s not a pony." },
   { speaker: "instructor", text: "If a race is too hard, go to the Training Academy to earn more XP." },
   { speaker: "user", text: "Too hard isn’t a thing, but thanks, I guess." },
-  { speaker: "instructor", text: "Fine, just... go race. I’m so sick of you hot-shot young Tuners who think you know everything..." }
+  { speaker: "instructor", text: "Fine, just… go race. I’m so sick of you hot-shot young Tuners who think you know everything…" }
 ];
 const storyCutsceneScripts = {
   "rev-rend": {
@@ -556,7 +644,7 @@ const storyCutsceneScripts = {
       { speaker: "user", text: "So... I win." },
       { speaker: "user", text: "Guess that means mask off." },
       { speaker: "boss", text: "Very well." },
-      { speaker: "user", text: "Wait -hold on..." },
+      { speaker: "user", text: "Wait - hold on..." },
       { speaker: "boss", text: "", unmask: true },
       { speaker: "user", text: "Brad Pitt?" },
       { speaker: "boss", text: "No. I chose this form." },
@@ -577,12 +665,19 @@ const storyCutsceneScripts = {
 const defaultState = {
   selectedCar: cars[0].id,
   selectedRank: "E",
-  selectedDistance: 200,
+  selectedDistance: 400,
   highestRankIndex: 0,
   settings: {
     difficulty: "normal",
     volume: 45,
-    shiftKey: "Space"
+    shiftKey: "Space",
+    nitroKey: "N",
+    verticalKeys: {
+      up: "W",
+      down: "S",
+      left: "A",
+      right: "D"
+    }
   },
   selectedBoss: bosses[0].id,
   selectedStoryCar: cars[0].id,
@@ -600,7 +695,9 @@ const defaultState = {
   highestBossIndex: 0,
   selectedCampaign: 0,
   highestCampaignIndex: 0,
+  unlockedLines: [...defaultUnlockedLines],
   timeTrials: {},
+  storyTimeTrials: {},
   garage: Object.fromEntries(cars.map((car) => [car.id, { level: 1, xp: 0, evolution: 0, pendingEvolution: null }]))
 };
 
@@ -616,6 +713,7 @@ let activeCutsceneIndex = 0;
 let activeCutsceneContext = null;
 let pendingDragRace = null;
 let pendingIntroView = null;
+let pendingPinkSlipContinue = null;
 const modeFlow = {
   drag: "car",
   time: "car",
@@ -714,11 +812,19 @@ const el = {
   rivalRacerImage: document.querySelector("#rival-racer-image"),
   raceMessage: document.querySelector("#race-message"),
   shiftButton: document.querySelector("#shift-button"),
+  nitroFill: document.querySelector("#nitro-fill"),
+  nitroReadout: document.querySelector("#nitro-readout"),
+  nitroButton: document.querySelector("#nitro-button"),
   garageGrid: document.querySelector("#garage-grid"),
   garageStatus: document.querySelector("#garage-status"),
   difficulty: document.querySelector("#difficulty"),
   volume: document.querySelector("#volume"),
   shiftKey: document.querySelector("#shift-key"),
+  nitroKey: document.querySelector("#nitro-key"),
+  verticalUpKey: document.querySelector("#vertical-up-key"),
+  verticalDownKey: document.querySelector("#vertical-down-key"),
+  verticalLeftKey: document.querySelector("#vertical-left-key"),
+  verticalRightKey: document.querySelector("#vertical-right-key"),
   evolutionModal: document.querySelector("#evolution-modal"),
   evolutionStage: document.querySelector("#evolution-stage"),
   evolutionKicker: document.querySelector("#evolution-kicker"),
@@ -772,6 +878,7 @@ function mergeState(base, saved) {
     ...saved,
     settings: { ...base.settings, ...saved.settings },
     timeTrials: { ...base.timeTrials, ...saved.timeTrials },
+    storyTimeTrials: { ...base.storyTimeTrials, ...saved.storyTimeTrials },
     garage: { ...base.garage, ...saved.garage }
   };
 }
@@ -782,8 +889,40 @@ function saveState() {
 
 function sanitizeState() {
   state.unlockedCars = state.unlockedCars || {};
+  state.unlockedLines = Array.isArray(state.unlockedLines) ? state.unlockedLines : [...defaultUnlockedLines];
+  defaultUnlockedLines.forEach((carId) => {
+    if (!state.unlockedLines.includes(carId)) state.unlockedLines.push(carId);
+  });
+  Object.entries(state.unlockedCars).forEach(([carId, unlocked]) => {
+    if (unlocked && !state.unlockedLines.includes(carId)) state.unlockedLines.push(carId);
+  });
+  const legacyGodModeActive = Boolean(
+    state.unlockedCars?.rainbowlt &&
+    state.garage?.rainbowlt?.level >= maxCarLevel &&
+    state.garage?.rainbowlt?.evolution >= (cars.find((car) => car.id === "rainbowlt")?.evolutions.length || 1) - 1
+  );
+  if (legacyGodModeActive) {
+    state.unlockedLines = cars.map((car) => car.id);
+    cars.forEach((car) => {
+      state.garage[car.id] = {
+        level: maxCarLevel,
+        xp: 0,
+        evolution: car.evolutions.length - 1,
+        unlockedEvolution: car.evolutions.length - 1,
+        pendingEvolution: null
+      };
+    });
+  }
+  state.unlockedLines = state.unlockedLines.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index);
+  state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
   state.timeTrials = state.timeTrials || {};
-  if (allStarterFinalFormsUnlocked()) {
+  state.storyTimeTrials = state.storyTimeTrials || {};
+  state.settings.verticalKeys = {
+    ...defaultState.settings.verticalKeys,
+    ...(state.settings.verticalKeys || {})
+  };
+  if (allStarterFinalFormsUnlocked() && !state.unlockedLines.includes("rainbowlt")) {
+    state.unlockedLines.push("rainbowlt");
     state.unlockedCars.rainbowlt = true;
   }
   if (!cars.some((car) => car.id === state.selectedCar)) {
@@ -798,6 +937,9 @@ function sanitizeState() {
   state.highestRankIndex = Math.min(state.highestRankIndex || 0, ranks.length - 1);
   if (ranks.findIndex((rank) => rank.key === state.selectedRank) > state.highestRankIndex) {
     state.selectedRank = ranks[state.highestRankIndex].key;
+  }
+  if (!distances.some((distance) => distance.meters === state.selectedDistance)) {
+    state.selectedDistance = distances[0].meters;
   }
   if (!bossChallengeBosses.some((boss) => boss.id === state.selectedBoss)) state.selectedBoss = bossChallengeBosses[0].id;
   state.highestBossIndex = Math.min(state.highestBossIndex || 0, bossChallengeBosses.length - 1);
@@ -863,7 +1005,7 @@ function maxEligibleEvolutionForCar(carId, level) {
 
 function isCarUnlocked(carId) {
   const car = cars.find((item) => item.id === carId);
-  return !car?.unlockable || state.unlockedCars?.[carId];
+  return Boolean(car && state.unlockedLines?.includes(carId));
 }
 
 function allStarterFinalFormsUnlocked() {
@@ -885,7 +1027,9 @@ function garageGodModeActive() {
 
 function unlockSecretCars() {
   state.unlockedCars = state.unlockedCars || {};
-  if (!state.unlockedCars.rainbowlt && allStarterFinalFormsUnlocked()) {
+  state.unlockedLines = state.unlockedLines || [...defaultUnlockedLines];
+  if (!state.unlockedLines.includes("rainbowlt") && allStarterFinalFormsUnlocked()) {
+    state.unlockedLines.push("rainbowlt");
     state.unlockedCars.rainbowlt = true;
     state.garage.rainbowlt = state.garage.rainbowlt || { level: 1, xp: 0, evolution: 0, pendingEvolution: null };
     return "rainbowlt";
@@ -912,14 +1056,45 @@ function evolutionByIndex(carId, evolutionIndex) {
 
 function carStats(carId) {
   const progress = state.garage[carId];
-  const evolutionBoost = 1 + unlockedEvolutionIndex(carId) * 0.18;
-  const levelBoost = 1 + (progress.level - 1) * 0.075;
+  const stats = displayedGearbornStats(carId);
+  const avgRating = (stats.speed + stats.acceleration + stats.handling + stats.transmission) / 4;
+  const transmissionNorm = normalizedGearbornStat(stats.transmission);
   return {
-    power: levelBoost * evolutionBoost,
-    maxSpeed: 112 + progress.level * 6.5 + unlockedEvolutionIndex(carId) * 20,
-    acceleration: 23 + progress.level * 1.25 + unlockedEvolutionIndex(carId) * 4.5,
-    shiftWindow: Math.max(0.09, 0.18 - unlockedEvolutionIndex(carId) * 0.008)
+    ratings: stats,
+    playstyle: gearbornStatProfiles[carId]?.playstyle || "",
+    transmissionNorm,
+    power: 0.92 + (avgRating - 76) * 0.008 + (progress.level - 1) * 0.03,
+    maxSpeed: 48 + stats.speed * 1.1 + progress.level * 3.1,
+    acceleration: 12 + stats.acceleration * 0.2 + progress.level * 0.45,
+    handling: 56 + (stats.handling - 76) * 0.45,
+    boostEffectiveness: 0.88 + transmissionNorm * 0.3,
+    obstacleResistance: 1.12 - transmissionNorm * 0.3,
+    shiftWindow: 0.12 + transmissionNorm * 0.08
   };
+}
+
+function displayedGearbornStats(carId) {
+  const profile = gearbornStatProfiles[carId] || gearbornStatProfiles.bee;
+  const level = state.garage[carId]?.level || 1;
+  if (carId === "rainbowlt" && level >= maxCarLevel) {
+    return {
+      speed: 100,
+      acceleration: 100,
+      handling: 100,
+      transmission: 100
+    };
+  }
+  const levelGain = Math.floor((level - 1) * 0.75);
+  return {
+    speed: Math.min(100, profile.speed + levelGain),
+    acceleration: Math.min(100, profile.acceleration + levelGain),
+    handling: Math.min(100, profile.handling + levelGain),
+    transmission: Math.min(100, profile.transmission + levelGain)
+  };
+}
+
+function normalizedGearbornStat(value) {
+  return Math.max(0, Math.min(1, (value - 60) / 40));
 }
 
 function difficultyMultiplier() {
@@ -1017,11 +1192,10 @@ function carTileMarkup(car, mode) {
 
 function renderCarTiles() {
   const available = cars.filter((car) => isCarUnlocked(car.id));
-  const starterOnly = available.filter((car) => !car.unlockable);
-  if (el.dragCarGrid) el.dragCarGrid.innerHTML = starterOnly.map((car) => carTileMarkup(car, "drag")).join("");
-  if (el.timeCarGrid) el.timeCarGrid.innerHTML = starterOnly.map((car) => carTileMarkup(car, "time")).join("");
-  if (el.bossCarGrid) el.bossCarGrid.innerHTML = starterOnly.map((car) => carTileMarkup(car, "boss")).join("");
-  if (el.storyCarGrid) el.storyCarGrid.innerHTML = starterOnly.map((car) => carTileMarkup(car, "story")).join("");
+  if (el.dragCarGrid) el.dragCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "drag")).join("");
+  if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
+  if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
+  if (el.storyCarGrid) el.storyCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "story")).join("");
 }
 
 function render() {
@@ -1073,23 +1247,39 @@ function renderCampaign() {
   el.campaignList.innerHTML = campaignLevels.map((level, index) => {
     const locked = index > state.highestCampaignIndex;
     const active = index === state.selectedCampaign;
-    const type = level.type === "drag" ? "Drag Race" : level.type === "trial" ? "Time Trial" : "Boss Battle";
+    const type = campaignTypeLabel(level);
     return `
       <button class="campaign-button ${active ? "active" : ""} ${locked ? "locked" : ""}" type="button" data-campaign="${index}" ${locked ? "disabled" : ""}>
-        <strong>${index + 1}. ${locked && level.final ? "?" : level.title}</strong>
-        <small>${locked ? "Locked" : type}</small>
+        <span class="campaign-button-copy">
+          <strong>${index + 1}. ${locked && level.final ? "?" : level.title}</strong>
+          <small>${locked ? "Locked" : type}</small>
+        </span>
+        ${campaignLevelEarnedBadge(index, level, locked)}
       </button>
     `;
   }).join("");
   const level = campaignLevels[state.selectedCampaign];
   const locked = state.selectedCampaign > state.highestCampaignIndex;
-  el.campaignType.textContent = locked ? "Locked" : level.type === "drag" ? "Drag Race" : level.type === "trial" ? "Time Trial" : "Boss Battle";
+  el.campaignType.textContent = locked ? "Locked" : campaignTypeLabel(level);
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
   el.campaignMeta.textContent = campaignLevelMeta(level, locked);
   renderCampaignRewards(level, locked);
   renderStoryLoadout();
   el.startCampaign.disabled = locked;
   el.startCampaign.textContent = storyReplayOpen ? "Start Level" : "Continue Story";
+}
+
+function campaignLevelEarnedBadge(index, level, locked) {
+  const result = !locked && level.type === "trial" ? state.storyTimeTrials?.[index] : null;
+  if (!result?.medalKey) return "";
+  return `<span class="campaign-earned medal-text ${result.medalKey}">${result.medalLabel} Earned</span>`;
+}
+
+function campaignTypeLabel(level) {
+  if (level.type === "drag") return "Drag Race";
+  if (level.type === "pink-slip") return "Pink Slip Race";
+  if (level.type === "trial") return "Time Trial";
+  return "Boss Battle";
 }
 
 function renderCampaignRewards(level, locked) {
@@ -1099,15 +1289,22 @@ function renderCampaignRewards(level, locked) {
   }
   if (level.type === "trial") {
     const trackIndex = storyTracks.findIndex((track) => track.id === level.track.id);
+    const result = state.storyTimeTrials?.[state.selectedCampaign];
+    const bestResult = result?.medalKey
+      ? `<div class="reward-row compact story-best-time">
+          <span class="medal-text ${result.medalKey}">${result.medalLabel} Earned</span>
+          <strong>${result.bestTime.toFixed(2)} s</strong>
+        </div>`
+      : "";
     el.campaignRewards.innerHTML = timeMedals.map((medal) => `
       <div class="reward-row compact">
         <span class="medal-text ${medal.key}">${medal.label}</span>
         <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} XP</strong>
       </div>
-    `).join("");
+    `).join("") + bestResult;
     return;
   }
-  if (level.type === "drag") {
+  if (level.type === "drag" || level.type === "pink-slip") {
     el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} XP</strong></div>`;
     return;
   }
@@ -1141,10 +1338,10 @@ function renderStoryLoadout() {
 
 function campaignLevelMeta(level, locked) {
   if (locked) return level.final ? "Play through the story to unlock the final boss." : "Finish the previous level to unlock.";
-  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "200 m" : "500 m"}`;
-  if (level.type === "trial") return `${level.track.city}, ${level.track.country} · No Phantaxi`;
-  const boss = level.final ? finalBoss : bosses[level.bossIndex];
-  return `${boss.name} · ${boss.car} · ${boss.xp} XP`;
+  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "400 m" : "800 m"}`;
+  if (level.type === "pink-slip") return `${level.drag.rankKey} Class · ${level.drag.distance} m · Unlock ${level.drag.name}`;
+  if (level.type === "trial") return `${level.track.city}, ${level.track.country}`;
+  return "";
 }
 
 function renderBosses() {
@@ -1379,9 +1576,10 @@ function renderGarage() {
   const godModeActive = garageGodModeActive();
   el.garageStatus.hidden = !godModeActive;
   el.garageStatus.textContent = godModeActive
-    ? "God Mode Active: Rainbowlt is Level 10 and evolved into Hornula1"
+    ? "God Mode Active: all GearBorn lines are unlocked and maxed"
     : "";
-  el.garageGrid.innerHTML = cars.map((car) => {
+  const garageCars = cars.filter((car) => isCarUnlocked(car.id) || car.id === "rainbowlt");
+  el.garageGrid.innerHTML = garageCars.map((car) => {
     if (!isCarUnlocked(car.id)) {
       return lockedGarageCard(car);
     }
@@ -1389,7 +1587,8 @@ function renderGarage() {
     const next = xpForNextLevel(progress.level);
     const maxed = progress.level >= maxCarLevel;
     const pct = maxed ? 100 : Math.min(100, (progress.xp / next) * 100);
-    const stats = carStats(car.id);
+    const stats = displayedGearbornStats(car.id);
+    const playstyle = gearbornStatProfiles[car.id]?.playstyle || "";
     return `
       <article class="garage-card">
         <div class="garage-art">
@@ -1398,25 +1597,44 @@ function renderGarage() {
         <div class="garage-info">
           <h2>${currentEvolution(car.id).name}</h2>
           <h3>${car.family}</h3>
+          <p class="playstyle-tag">${playstyle}</p>
           <div class="meta-row">
             <span>Level ${progress.level}</span>
             <span class="evolution">Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</span>
           </div>
           ${garageEvolutionControls(car)}
-          <div class="meta-row">
-            <span>Max Speed</span>
-            <span>${Math.round(stats.maxSpeed)} MPH</span>
-          </div>
+          ${garageStatsMarkup(stats)}
           <div class="xp-bar"><div class="xp-fill" style="width:${pct}%"></div></div>
           <div class="meta-row">
             <span>${maxed ? "Max Level" : `${progress.xp} / ${next} XP`}</span>
-            <span>${progress.pendingEvolution ? "Ready to evolve" : car.trait}</span>
+            <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
           </div>
           ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${car.id}">Evolve</button>` : ""}
         </div>
       </article>
     `;
   }).join("");
+}
+
+function garageStatsMarkup(stats) {
+  return `
+    <div class="garage-stat-grid" aria-label="GearBorn stats">
+      ${garageStatBar("SPD", stats.speed)}
+      ${garageStatBar("ACC", stats.acceleration)}
+      ${garageStatBar("HDL", stats.handling)}
+      ${garageStatBar("TRN", stats.transmission)}
+    </div>
+  `;
+}
+
+function garageStatBar(label, value) {
+  const pct = normalizedGearbornStat(value) * 100;
+  return `
+    <div class="garage-stat">
+      <span>${label}</span>
+      <div class="garage-stat-bar"><div style="width:${pct}%"></div></div>
+    </div>
+  `;
 }
 
 function garageEvolutionControls(car) {
@@ -1477,6 +1695,11 @@ function renderSettings() {
   el.difficulty.value = state.settings.difficulty;
   el.volume.value = state.settings.volume;
   el.shiftKey.value = readableKey(state.settings.shiftKey);
+  el.nitroKey.value = readableKey(state.settings.nitroKey);
+  el.verticalUpKey.value = readableKey(state.settings.verticalKeys.up);
+  el.verticalDownKey.value = readableKey(state.settings.verticalKeys.down);
+  el.verticalLeftKey.value = readableKey(state.settings.verticalKeys.left);
+  el.verticalRightKey.value = readableKey(state.settings.verticalKeys.right);
 }
 
 function paintCars() {
@@ -1514,6 +1737,7 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   el.playerRacer.style.transform = "translateX(0)";
   el.rivalRacer.style.transform = "translateX(0)";
   race = null;
+  updateNitroHud();
   paintCars();
 }
 
@@ -1536,6 +1760,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
   const classScale = 0.9 + rankIndex * 0.09;
   const rivalPower = rank.power * classScale * distance.difficulty * difficultyMultiplier();
+  const rivalNitroSkill = Math.max(0, rankIndex) / Math.max(1, ranks.length - 1);
   race = {
     active: true,
     finished: false,
@@ -1549,10 +1774,23 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     playerPower: car.power,
     playerMaxSpeed: car.maxSpeed,
     playerAcceleration: car.acceleration,
+    playerTransmission: car.transmissionNorm,
+    accelPenalty: 1,
     topGearBoost: 1,
     shiftWindow: car.shiftWindow,
     rivalMaxSpeed: 92 + rivalPower * 42,
     rivalAcceleration: 17 + rivalPower * 12,
+    nitroCharge: 0,
+    nitroActive: false,
+    nitroTimer: 0,
+    overheatCount: 0,
+    overheatLatched: false,
+    rivalNitroCharge: 0,
+    rivalNitroActive: false,
+    rivalNitroTimer: 0,
+    rivalNitroSkill,
+    rivalShiftTimer: Math.max(0.65, 1.3 - rivalNitroSkill * 0.35),
+    rivalNitroDelay: 0,
     shiftScore: [],
     rank,
     distance,
@@ -1566,6 +1804,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   lastFrame = performance.now();
   el.raceMessage.className = "race-message";
   el.raceMessage.textContent = `Race started. Press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
+  updateNitroHud();
   requestAnimationFrame(updateRace);
 }
 
@@ -1577,18 +1816,25 @@ function updateRace(now) {
   if (race.gear >= 6) {
     const speedRatio = Math.min(1, race.playerSpeed / race.playerMaxSpeed);
     const topGearPull = Math.max(0.16, 1 - speedRatio);
-    race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * topGearPull * dt;
+    race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * race.accelPenalty * topGearPull * dt;
     race.rpm = 0.74;
   } else {
     const gearDrag = 1 - (race.gear - 1) * 0.08;
     const rpmPower = 0.52 + race.rpm * 0.72;
-    race.playerSpeed += race.playerAcceleration * race.playerPower * gearDrag * rpmPower * dt;
+    if (race.rpm > 0.86) {
+      race.accelPenalty = Math.max(0.42, race.accelPenalty - 0.34 * dt);
+    }
+    race.playerSpeed += race.playerAcceleration * race.playerPower * race.accelPenalty * gearDrag * rpmPower * dt;
     race.rpm += (0.22 + race.playerSpeed / 260) * dt;
   }
+  updateDragNitroTimers(dt);
+  updateRivalNitro(dt);
   race.rivalSpeed += race.rivalAcceleration * (0.78 + Math.random() * 0.08) * dt;
 
-  const playerCap = race.gear >= 6 ? race.playerMaxSpeed : race.playerMaxSpeed * (0.58 + race.gear * 0.15);
-  const rivalCap = race.rivalMaxSpeed;
+  const playerNitroScale = race.nitroActive ? dragNitroMultiplier : 1;
+  const rivalNitroScale = race.rivalNitroActive ? dragNitroMultiplier : 1;
+  const playerCap = (race.gear >= 6 ? race.playerMaxSpeed : race.playerMaxSpeed * (0.58 + race.gear * 0.15)) * playerNitroScale;
+  const rivalCap = race.rivalMaxSpeed * rivalNitroScale;
   race.playerSpeed = Math.min(race.playerSpeed, playerCap);
   race.rivalSpeed = Math.min(race.rivalSpeed, rivalCap);
 
@@ -1596,7 +1842,16 @@ function updateRace(now) {
   race.rivalDistance += mphToMetersPerSecond(race.rivalSpeed) * dt;
 
   if (race.gear < 6 && race.rpm >= 1) {
-    race.playerSpeed *= 0.985;
+    if (!race.overheatLatched) {
+      race.overheatCount += 1;
+      race.overheatLatched = true;
+      race.accelPenalty = Math.max(0.34, race.accelPenalty - 0.18);
+      if (race.overheatCount >= 3) {
+        failDragRace("Engine Overheated");
+        return;
+      }
+    }
+    race.playerSpeed *= 0.975;
     race.rpm = 1;
   }
 
@@ -1618,18 +1873,29 @@ function shift() {
   }
   const ideal = 0.73;
   const diff = Math.abs(race.rpm - ideal);
+  const transmission = race.playerTransmission ?? 0.5;
   let label = "Early";
-  let multiplier = 0.82;
+  let multiplier = 0.72 + transmission * 0.16;
 
   if (diff <= race.shiftWindow) {
     label = diff < race.shiftWindow * 0.38 ? "Perfect" : "Good";
-    multiplier = label === "Perfect" ? 1.1 : 1.02;
+    multiplier = label === "Perfect" ? 1.06 + transmission * 0.08 : 1 + transmission * 0.05;
   } else if (race.rpm > ideal) {
     label = "Late";
-    multiplier = 0.88;
+    multiplier = 0.78 + transmission * 0.16;
   }
 
   race.shiftScore.push(label);
+  if (label === "Perfect" || label === "Good") {
+    race.nitroCharge = Math.min(4, race.nitroCharge + 1);
+  }
+  race.accelPenalty = {
+    Perfect: 1.04 + transmission * 0.06,
+    Good: 0.98 + transmission * 0.04,
+    Late: 0.58 + transmission * 0.3,
+    Early: 0.52 + transmission * 0.3
+  }[label] || 1;
+  race.overheatLatched = false;
   race.playerSpeed *= multiplier;
   const nextGear = Math.min(6, race.gear + 1);
   if (nextGear === 6) {
@@ -1638,7 +1904,72 @@ function shift() {
   race.gear = nextGear;
   race.rpm = race.gear === 6 ? 0.74 : Math.max(0.22, 0.34 - race.gear * 0.015);
   el.shiftReadout.textContent = label;
+  updateNitroHud();
   beep(label);
+}
+
+function updateDragNitroTimers(dt) {
+  if (race.nitroTimer > 0) {
+    race.nitroTimer = Math.max(0, race.nitroTimer - dt);
+    race.nitroActive = race.nitroTimer > 0;
+  }
+  if (race.rivalNitroTimer > 0) {
+    race.rivalNitroTimer = Math.max(0, race.rivalNitroTimer - dt);
+    race.rivalNitroActive = race.rivalNitroTimer > 0;
+  }
+  if (race.rivalNitroDelay > 0) {
+    race.rivalNitroDelay = Math.max(0, race.rivalNitroDelay - dt);
+  }
+}
+
+function updateRivalNitro(dt) {
+  race.rivalShiftTimer -= dt;
+  if (race.rivalShiftTimer <= 0 && race.rivalNitroCharge < 4) {
+    const cleanShiftChance = 0.42 + race.rivalNitroSkill * 0.5;
+    if (Math.random() < cleanShiftChance) {
+      race.rivalNitroCharge = Math.min(4, race.rivalNitroCharge + 1);
+    }
+    race.rivalShiftTimer = Math.max(0.62, 1.22 - race.rivalNitroSkill * 0.42 + Math.random() * 0.22);
+  }
+  if (race.rivalNitroCharge < 4 || race.rivalNitroActive || race.rivalNitroDelay > 0) return;
+  const progress = race.rivalDistance / race.target;
+  const behind = race.rivalDistance < race.playerDistance;
+  const panicUse = behind && progress > 0.36 + (1 - race.rivalNitroSkill) * 0.25;
+  const smartUse = progress > 0.58 - race.rivalNitroSkill * 0.18;
+  const badUse = Math.random() < (0.004 + race.rivalNitroSkill * 0.002);
+  if (panicUse || smartUse || badUse) {
+    useRivalNitro();
+  }
+}
+
+function useNitro() {
+  if (!race?.active || race.finished || race.nitroCharge < 4 || race.nitroActive) return;
+  race.nitroCharge = 0;
+  race.nitroActive = true;
+  race.nitroTimer = dragNitroDuration;
+  race.playerSpeed = Math.min(race.playerSpeed * dragNitroMultiplier, race.playerMaxSpeed * dragNitroMultiplier);
+  el.shiftReadout.textContent = "Nitro";
+  updateNitroHud();
+}
+
+function useRivalNitro() {
+  race.rivalNitroCharge = 0;
+  race.rivalNitroActive = true;
+  race.rivalNitroTimer = dragNitroDuration;
+  race.rivalNitroDelay = 2.2 + (1 - race.rivalNitroSkill) * 1.2;
+  race.rivalSpeed = Math.min(race.rivalSpeed * dragNitroMultiplier, race.rivalMaxSpeed * dragNitroMultiplier);
+}
+
+function updateNitroHud() {
+  const charge = race?.nitroCharge || 0;
+  const percent = Math.round((charge / 4) * 100);
+  if (el.nitroFill) el.nitroFill.style.width = `${percent}%`;
+  if (el.nitroReadout) el.nitroReadout.textContent = race?.nitroActive ? "BOOST" : `${percent}%`;
+  if (el.nitroButton) {
+    const ready = Boolean(race?.active && !race.finished && charge >= 4 && !race.nitroActive);
+    el.nitroButton.disabled = !ready;
+    el.nitroButton.classList.toggle("ready", ready);
+  }
 }
 
 function topGearBoostForShift(label) {
@@ -1656,6 +1987,8 @@ function finishRace(playerWon) {
   drawRace();
   const finishedRace = race;
   const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
+  const finishedLevel = isStoryRace ? campaignLevels[finishedRace.campaignLevelIndex] : null;
+  const pinkSlipCarId = finishedLevel?.type === "pink-slip" ? finishedLevel.pinkSlipCarId : null;
 
   let earned = 0;
   let xpResult = null;
@@ -1688,15 +2021,55 @@ function finishRace(playerWon) {
     raceAgainLabel: "Race Again",
     onPrimary: () => {
       if (isStoryRace) {
-        finishStoryRaceScreen();
+        const finishStory = () => {
+          finishStoryRaceScreen();
+          showPendingEvolution(state.selectedCar);
+        };
+        if (playerWon && pinkSlipCarId && !isCarUnlocked(pinkSlipCarId)) {
+          showPinkSlipUnlock(pinkSlipCarId, finishStory);
+          return;
+        }
+        finishStory();
       } else {
         setFlowStep("drag", "match");
+        showPendingEvolution(state.selectedCar);
       }
-      showPendingEvolution(state.selectedCar);
     },
     onRaceAgain: () => {
       if (isStoryRace) {
         startCampaignRace(finishedRace.campaignLevelIndex, campaignLevels[finishedRace.campaignLevelIndex]);
+      } else {
+        prepareDragRace(null, null);
+      }
+    }
+  });
+}
+
+function failDragRace(title) {
+  if (!race?.active || race.finished) return;
+  race.active = false;
+  race.finished = true;
+  drawRace();
+  const failedRace = race;
+  const isStoryRace = failedRace.campaignLevelIndex !== null && failedRace.campaignLevelIndex !== undefined;
+  el.raceMessage.className = "race-message loss";
+  el.raceMessage.textContent = "";
+  showRaceResult(el.dragTrack, {
+    won: false,
+    title,
+    xp: 0,
+    primaryLabel: isStoryRace ? "Next" : "Select Opponent",
+    raceAgainLabel: "Race Again",
+    onPrimary: () => {
+      if (isStoryRace) {
+        finishStoryRaceScreen();
+      } else {
+        setFlowStep("drag", "match");
+      }
+    },
+    onRaceAgain: () => {
+      if (isStoryRace) {
+        startCampaignRace(failedRace.campaignLevelIndex, campaignLevels[failedRace.campaignLevelIndex]);
       } else {
         prepareDragRace(null, null);
       }
@@ -1751,7 +2124,7 @@ function showRaceResult(trackNode, result) {
   popup.className = `race-result-popup ${result.won ? "win" : "loss"}`;
   popup.innerHTML = `
     <div class="race-result-card">
-      <h2>${result.won ? "Victory" : "Defeat"}</h2>
+      <h2>${result.title || (result.won ? "Victory" : "Defeat")}</h2>
       <p>XP Earned: <strong>${result.xp}</strong></p>
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       ${result.xpResult?.leveledUp ? `<p>${result.xpResult.name} has leveled up to Lvl. ${result.xpResult.level}</p>` : ""}
@@ -1830,11 +2203,54 @@ function revealEvolution(carId, evolutionIndex) {
   render();
 }
 
+function unlockGearbornLine(carId) {
+  if (isCarUnlocked(carId)) return false;
+  state.unlockedLines = state.unlockedLines || [...defaultUnlockedLines];
+  state.unlockedLines.push(carId);
+  state.unlockedCars = state.unlockedCars || {};
+  state.unlockedCars[carId] = true;
+  state.garage[carId] = {
+    level: 1,
+    xp: 0,
+    evolution: 0,
+    unlockedEvolution: 0,
+    pendingEvolution: null
+  };
+  saveState();
+  render();
+  return true;
+}
+
+function showPinkSlipUnlock(carId, onContinue) {
+  const car = cars.find((item) => item.id === carId);
+  if (!car) {
+    onContinue?.();
+    return;
+  }
+  unlockGearbornLine(carId);
+  const form = car.evolutions[0];
+  pendingPinkSlipContinue = onContinue;
+  evolutionModal = { mode: "pink-slip", carId, evolution: 0 };
+  el.evolutionModal.classList.add("evolution-unlocked");
+  el.evolutionKicker.textContent = "Pink Slip Won";
+  el.evolutionTitle.textContent = `${form.name} is Unlocked`;
+  el.evolutionCopy.textContent = "and is parked in your Garage";
+  el.evolveButton.hidden = true;
+  el.closeEvolution.textContent = "Continue";
+  el.evolutionStage.innerHTML = carMarkupForEvolution(carId, 0, "display");
+  el.evolutionModal.classList.add("active");
+  el.evolutionModal.setAttribute("aria-hidden", "false");
+  el.closeEvolution.focus();
+}
+
 function closeEvolutionModal() {
+  const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
+  pendingPinkSlipContinue = null;
   evolutionModal = null;
   el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
+  continueAfterPinkSlip?.();
 }
 
 function openResetModal() {
@@ -1882,7 +2298,8 @@ function activateGodMode() {
     el.godCode.focus();
     return;
   }
-  state.unlockedCars = { ...state.unlockedCars, rainbowlt: true };
+  state.unlockedLines = cars.map((car) => car.id);
+  state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
   cars.forEach((car) => {
     state.garage[car.id] = {
       level: maxCarLevel,
@@ -1910,7 +2327,7 @@ function activateGodMode() {
   render();
   showView("garage");
   el.raceMessage.className = "race-message win";
-  el.raceMessage.textContent = "God Mode activated. Rainbowlt is now Level 10 and evolved into Hornula1.";
+  el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, and evolved.";
 }
 
 function imageFor(entry, role) {
@@ -1982,6 +2399,7 @@ function drawRace() {
     el.shiftButton.classList.remove("pulse");
     el.shiftReadout.textContent = "Top";
     el.tachFill.style.width = "74%";
+    updateNitroHud();
     return;
   }
 
@@ -1994,6 +2412,7 @@ function drawRace() {
   } else if (race.active) {
     el.shiftReadout.textContent = "Build";
   }
+  updateNitroHud();
 }
 
 function mphToMetersPerSecond(mph) {
@@ -2123,10 +2542,10 @@ function startCampaignLevel() {
 }
 
 function startCampaignRace(index, level) {
-  if (level.type === "drag") {
+  if (level.type === "drag" || level.type === "pink-slip") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
-    state.selectedDistance = index === 0 ? 200 : 500;
+    state.selectedDistance = level.type === "pink-slip" ? level.drag.distance : index === 0 ? 400 : 800;
     saveState();
     render();
     prepareDragRace(index, level.drag);
@@ -2385,6 +2804,7 @@ function beginVerticalRace(mode, waitForStart = false, options = {}) {
     items: [],
     spawnTimer: 0,
     keys: {},
+    itemScore: 0,
     record: [],
     campaignLevelIndex: options.campaignLevelIndex ?? null,
     countdownStarted: false,
@@ -2454,10 +2874,10 @@ function updateVerticalRace(now) {
   const maxSpeed = raceState.stats.maxSpeed;
   const accel = raceState.stats.acceleration;
   const keys = raceState.keys;
-  raceState.player.x += ((keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0)) * 58 * dt;
+  raceState.player.x += ((verticalKeyActive(keys, "right") ? 1 : 0) - (verticalKeyActive(keys, "left") ? 1 : 0)) * raceState.stats.handling * dt;
   const targetY = 90 - Math.min(42, (raceState.player.distance / raceState.targetDistance) * 42);
   raceState.player.y += (targetY - raceState.player.y) * 1.8 * dt;
-  raceState.player.y += ((keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0)) * 22 * dt;
+  raceState.player.y += ((verticalKeyActive(keys, "down") ? 1 : 0) - (verticalKeyActive(keys, "up") ? 1 : 0)) * 22 * dt;
   raceState.player.x = Math.max(12, Math.min(88, raceState.player.x));
   raceState.player.y = Math.max(28, Math.min(94, raceState.player.y));
   raceState.player.speed = Math.min(maxSpeed, raceState.player.speed + accel * 0.22 * dt);
@@ -2551,15 +2971,22 @@ function applyVerticalItemHit(target, item) {
   if (!racer) return;
   item.hit = true;
   if (item.type === "token") {
-    racer.speed = Math.min(verticalRace.stats.maxSpeed, racer.speed + item.config.boost);
+    if (target === "player") verticalRace.itemScore = Math.min(3, verticalRace.itemScore + 1);
+    const boost = target === "player" ? item.config.boost * verticalRace.stats.boostEffectiveness : item.config.boost;
+    racer.speed = Math.min(verticalRace.stats.maxSpeed, racer.speed + boost);
     racer.distance = Math.min(verticalRace.targetDistance, racer.distance + 24);
     racer.y = Math.max(28, racer.y - 9);
   } else {
-    racer.speed = Math.max(20, racer.speed - item.config.penalty);
+    if (target === "player") verticalRace.itemScore -= 1;
+    const penalty = target === "player" ? item.config.penalty * verticalRace.stats.obstacleResistance : item.config.penalty;
+    racer.speed = Math.max(20, racer.speed - penalty);
     racer.distance = Math.max(0, racer.distance - 18);
     racer.y = Math.min(94, racer.y + 11);
   }
   item.node.remove();
+  if (target === "player" && verticalRace.itemScore <= -3) {
+    failVerticalRace("You Crashed");
+  }
 }
 
 function updateGhost(now) {
@@ -2592,6 +3019,7 @@ function updateVerticalPositions() {
 function finishVerticalRace(playerWon) {
   const raceState = verticalRace;
   raceState.active = false;
+  raceState.finished = true;
   raceState.countdownStarted = false;
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
@@ -2630,6 +3058,16 @@ function finishVerticalRace(playerWon) {
     const best = state.timeTrials[raceState.trackId]?.bestTime;
     if (raceState.mode === "time" && (!best || elapsed < best)) {
       state.timeTrials[raceState.trackId] = { bestTime: elapsed, ghost: raceState.record.filter((_, index) => index % 4 === 0) };
+    }
+    if (raceState.mode === "campaign-time" && beaten && raceState.campaignLevelIndex !== null) {
+      const storyBest = state.storyTimeTrials[raceState.campaignLevelIndex]?.bestTime;
+      if (!storyBest || elapsed < storyBest) {
+        state.storyTimeTrials[raceState.campaignLevelIndex] = {
+          bestTime: elapsed,
+          medalKey: beaten.key,
+          medalLabel: beaten.label
+        };
+      }
     }
     resultLines.push(`Time: ${elapsed.toFixed(2)} seconds`);
     resultLines.push(beaten ? `<span class="medal-text ${beaten.key}">${beaten.label}</span> Medal Awarded` : "Finish Recorded");
@@ -2687,6 +3125,51 @@ function finishVerticalRace(playerWon) {
   });
 }
 
+function failVerticalRace(title) {
+  const raceState = verticalRace;
+  if (!raceState || raceState.finished) return;
+  raceState.active = false;
+  raceState.finished = true;
+  raceState.countdownStarted = false;
+  el.storyMapStart.classList.remove("active");
+  el.timeMapStart.classList.remove("active");
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+    el.storyMessage.className = "race-message loss";
+    el.storyMessage.textContent = "";
+  } else {
+    el.timeMessage.className = "race-message loss";
+    el.timeMessage.textContent = "";
+  }
+  const isStoryRace = raceState.campaignLevelIndex !== null;
+  showRaceResult(raceState.trackNode, {
+    won: false,
+    title,
+    xp: 0,
+    primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    raceAgainLabel: "Race Again",
+    onPrimary: () => {
+      if (isStoryRace) {
+        finishStoryRaceScreen();
+      } else if (raceState.mode === "boss") {
+        setFlowStep("boss", "match");
+      } else {
+        setFlowStep("time", "match");
+      }
+    },
+    onRaceAgain: () => {
+      if (isStoryRace) {
+        startCampaignRace(raceState.campaignLevelIndex, campaignLevels[raceState.campaignLevelIndex]);
+        return;
+      }
+      if (raceState.mode === "boss") {
+        beginVerticalRace("boss", true, { boss: raceState.bossData });
+        return;
+      }
+      beginVerticalRace("time", true, { track: storyTracks.find((track) => track.id === raceState.trackId) });
+    }
+  });
+}
+
 function clearTrackItems(trackNode) {
   trackNode.querySelectorAll(".track-item").forEach((item) => item.remove());
 }
@@ -2697,6 +3180,21 @@ function readableKey(key) {
 
 function normalizeKey(event) {
   return event.code === "Space" ? "Space" : event.key.length === 1 ? event.key.toUpperCase() : event.key;
+}
+
+const verticalArrowKeys = {
+  up: "ArrowUp",
+  down: "ArrowDown",
+  left: "ArrowLeft",
+  right: "ArrowRight"
+};
+
+function verticalKeyActive(keys, direction) {
+  return Boolean(keys[verticalArrowKeys[direction]] || keys[state.settings.verticalKeys[direction]]);
+}
+
+function isVerticalControlKey(key) {
+  return Object.values(verticalArrowKeys).includes(key) || Object.values(state.settings.verticalKeys).includes(key);
 }
 
 function beep(label) {
@@ -2815,6 +3313,7 @@ el.opponentList.addEventListener("click", (event) => {
 el.startRace.addEventListener("click", startRace);
 el.dragMapStart.addEventListener("click", startPendingDragRace);
 el.shiftButton.addEventListener("click", shift);
+el.nitroButton.addEventListener("click", useNitro);
 el.startCampaign.addEventListener("click", startCampaignLevel);
 el.changeStoryCar.addEventListener("click", () => setFlowStep("story", "car"));
 el.replayCampaign.addEventListener("click", () => {
@@ -2960,10 +3459,43 @@ el.shiftKey.addEventListener("keydown", (event) => {
   saveState();
 });
 
-document.addEventListener("keydown", (event) => {
-  if (verticalRace?.active && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS"].includes(event.code)) {
+el.nitroKey.addEventListener("keydown", (event) => {
+  event.preventDefault();
+  state.settings.nitroKey = normalizeKey(event);
+  el.nitroKey.value = readableKey(state.settings.nitroKey);
+  saveState();
+});
+
+function bindVerticalKeyInput(input, direction) {
+  input.addEventListener("keydown", (event) => {
     event.preventDefault();
-    verticalRace.keys[event.code] = true;
+    state.settings.verticalKeys[direction] = normalizeKey(event);
+    input.value = readableKey(state.settings.verticalKeys[direction]);
+    saveState();
+  });
+}
+
+function isKeySettingFocused() {
+  return [
+    el.shiftKey,
+    el.nitroKey,
+    el.verticalUpKey,
+    el.verticalDownKey,
+    el.verticalLeftKey,
+    el.verticalRightKey
+  ].includes(document.activeElement);
+}
+
+bindVerticalKeyInput(el.verticalUpKey, "up");
+bindVerticalKeyInput(el.verticalDownKey, "down");
+bindVerticalKeyInput(el.verticalLeftKey, "left");
+bindVerticalKeyInput(el.verticalRightKey, "right");
+
+document.addEventListener("keydown", (event) => {
+  const key = normalizeKey(event);
+  if (verticalRace?.active && isVerticalControlKey(key)) {
+    event.preventDefault();
+    verticalRace.keys[key] = true;
   }
   if (event.key === "Escape" && el.resetModal.classList.contains("active")) {
     closeResetModal();
@@ -2985,17 +3517,21 @@ document.addEventListener("keydown", (event) => {
     closeEvolutionModal();
     return;
   }
-  const key = normalizeKey(event);
-  if (document.activeElement === el.shiftKey) return;
+  if (isKeySettingFocused()) return;
   if (key === state.settings.shiftKey) {
     event.preventDefault();
     shift();
+    return;
+  }
+  if (key === state.settings.nitroKey) {
+    event.preventDefault();
+    useNitro();
   }
 });
 
 document.addEventListener("keyup", (event) => {
   if (verticalRace?.keys) {
-    verticalRace.keys[event.code] = false;
+    verticalRace.keys[normalizeKey(event)] = false;
   }
 });
 
