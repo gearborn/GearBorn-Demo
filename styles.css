@@ -58,6 +58,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .main-menu-button {
@@ -125,6 +126,36 @@ body.mode-active .main-menu-button {
   font-size: 0.78rem;
 }
 
+.sprox-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 200, 87, 0.42);
+  border-radius: 999px;
+  background: rgba(17, 24, 32, 0.82);
+  color: var(--gold);
+  box-shadow: 0 10px 24px var(--shadow);
+  white-space: nowrap;
+}
+
+.sprox-coin {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fff4ad, #ffc857 48%, #b76c12);
+  color: transparent;
+  box-shadow: inset 0 0 0 2px rgba(88, 49, 5, 0.25);
+}
+
+.sprox-wallet strong {
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
 .nav {
   display: flex;
   gap: 8px;
@@ -176,10 +207,10 @@ body.mode-active .main-menu-button {
 
 .main-menu {
   display: grid;
-  min-height: min(680px, calc(100vh - 130px));
+  min-height: min(760px, calc(100svh - 126px));
   place-items: center;
-  align-content: end;
-  padding: 40px 16px 48px;
+  align-content: center;
+  padding: 28px 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -195,7 +226,7 @@ body.mode-active .main-menu-button {
   justify-items: center;
   gap: 14px;
   width: min(640px, 100%);
-  margin-bottom: 34px;
+  margin-bottom: 24px;
 }
 
 .menu-title-box {
@@ -229,7 +260,7 @@ body.mode-active .main-menu-button {
 
 .logo-placeholder span {
   color: var(--gold);
-  font-size: clamp(3.2rem, 12vw, 7.6rem);
+  font-size: 5rem;
   font-weight: 1000;
   line-height: 0.9;
   letter-spacing: 0;
@@ -238,14 +269,14 @@ body.mode-active .main-menu-button {
 
 .logo-placeholder strong {
   color: var(--ink);
-  font-size: clamp(1.2rem, 4vw, 2.1rem);
+  font-size: 1.55rem;
   letter-spacing: 0.12em;
 }
 
 .menu-subtitle {
   margin: -8px 0 0;
   color: var(--gold);
-  font-size: clamp(1rem, 3vw, 1.45rem);
+  font-size: 1.12rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -253,13 +284,13 @@ body.mode-active .main-menu-button {
 
 .menu-actions {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   width: min(320px, 100%);
   margin-top: 0;
 }
 
 .menu-button {
-  min-height: 52px;
+  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--panel-soft);
@@ -388,10 +419,27 @@ body.mode-active .main-menu-button {
   margin-top: 16px;
 }
 
+.car-select-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) minmax(280px, 1.2fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.compact-car-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  max-height: 430px;
+  margin-top: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
 .icon-card {
   display: grid;
   gap: 8px;
-  min-height: 148px;
+  min-height: 180px;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -399,6 +447,32 @@ body.mode-active .main-menu-button {
   color: var(--ink);
   font-weight: 950;
   text-align: center;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.icon-card.compact {
+  align-content: center;
+  gap: 6px;
+  min-height: 116px;
+  padding: 8px;
+}
+
+.icon-card strong,
+.icon-card small {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.18;
+}
+
+.icon-card em {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1.15;
 }
 
 .icon-card.active {
@@ -407,14 +481,122 @@ body.mode-active .main-menu-button {
   color: var(--gold);
 }
 
-.icon-card .selection-preview-art {
-  height: 88px;
+.icon-card.compact .selection-preview-art {
+  height: 78px;
   margin: 0;
 }
 
-.icon-card .selection-preview-art .car {
-  width: 120px;
-  height: 76px;
+.icon-card.compact .selection-preview-art .car {
+  width: 112px;
+  height: 74px;
+}
+
+.car-select-preview {
+  display: grid;
+  grid-template-rows: minmax(190px, 1fr) auto;
+  gap: 12px;
+  min-height: 430px;
+  padding: 14px;
+  border: 1px solid rgba(255, 200, 87, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 200, 87, 0.1), rgba(82, 199, 255, 0.08)),
+    #111820;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.car-select-preview-art {
+  display: grid;
+  position: relative;
+  min-height: 190px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.car-select-preview-art .car {
+  position: absolute;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  top: 50%;
+  width: min(290px, 100%);
+  height: 210px;
+  transform: translate(-50%, -50%);
+}
+
+.car-select-preview-art .car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.car-select-preview-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  text-align: left;
+}
+
+.car-select-preview-copy span,
+.car-select-preview-copy small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.car-select-preview-copy h3 {
+  margin: 0;
+  color: var(--gold);
+  font-size: clamp(1.4rem, 3vw, 2.1rem);
+  line-height: 1;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+}
+
+.car-select-preview-copy p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.car-select-preview .garage-stat-grid {
+  margin: 8px 0 0;
+}
+
+.mini-stat-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.mini-stat {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+
+.mini-stat span {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.mini-stat div {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mini-stat i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #52c7ff, #6ee7a8, #ffd978);
 }
 
 .map-grid {
@@ -457,6 +639,7 @@ body.mode-active .main-menu-button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .tuner-options.large {
@@ -466,8 +649,8 @@ body.mode-active .main-menu-button {
 .tuner-card {
   display: grid;
   gap: 8px;
-  min-height: 180px;
-  padding: 12px;
+  min-height: 0;
+  padding: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(34, 41, 54, 0.84);
@@ -482,11 +665,11 @@ body.mode-active .main-menu-button {
 }
 
 .tuner-card .character-frame {
-  min-height: 120px;
+  min-height: 92px;
 }
 
 .tuner-card .character-frame img {
-  max-height: 140px;
+  max-height: 98px;
 }
 
 .cutscene-modal {
@@ -651,9 +834,9 @@ body.mode-active .main-menu-button {
 
 .campaign-button-copy strong,
 .campaign-button-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .campaign-earned {
@@ -696,7 +879,9 @@ body.mode-active .main-menu-button {
 
 .campaign-detail h2 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
+  overflow-wrap: anywhere;
+  font-size: 3rem;
+  line-height: 1.02;
 }
 
 .campaign-detail span {
@@ -789,6 +974,10 @@ body.mode-active .main-menu-button {
   background: #111820;
 }
 
+.loadout-card > div {
+  min-width: 0;
+}
+
 .loadout-card .character-frame,
 .loadout-card .selection-preview-art {
   min-height: 92px;
@@ -809,6 +998,11 @@ body.mode-active .main-menu-button {
 .loadout-card strong,
 .loadout-card small {
   display: block;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.18;
 }
 
 .campaign-race-mount {
@@ -1044,10 +1238,11 @@ small {
 }
 
 .selection-preview strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 1rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.18;
 }
 
 .selection-preview small {
@@ -1521,6 +1716,7 @@ small {
   height: calc(100% + 26px);
   object-fit: contain;
   filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.42));
+  transform: scale(var(--display-scale, 1));
 }
 
 .car.has-image .car-image {
@@ -1531,6 +1727,41 @@ small {
 .car.has-image .car-glow,
 .car.has-image .wheel {
   display: none;
+}
+
+.car.nitro-active::before,
+.car.nitro-active::after {
+  content: "";
+  position: absolute;
+  right: -52px;
+  z-index: -1;
+  width: 74px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(82, 199, 255, 0), rgba(82, 199, 255, 0.95), rgba(255, 255, 255, 0.86));
+  filter: blur(1px);
+  animation: nitro-streak 180ms linear infinite;
+}
+
+.car.nitro-active::before {
+  top: 10px;
+}
+
+.car.nitro-active::after {
+  bottom: 8px;
+  width: 92px;
+  animation-delay: 80ms;
+}
+
+@keyframes nitro-streak {
+  from {
+    opacity: 0.35;
+    transform: translateX(0) scaleX(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(12px) scaleX(1);
+  }
 }
 
 .car-body {
@@ -1594,7 +1825,7 @@ small {
 
 .touch-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   padding: 0 16px 16px;
 }
@@ -1610,6 +1841,9 @@ small {
   text-transform: uppercase;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .steer-button:active,
@@ -1752,11 +1986,12 @@ small {
 }
 
 .evolution-switcher strong {
-  overflow: hidden;
   color: var(--gold);
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.12;
 }
 
 .playstyle-tag {
@@ -1848,6 +2083,14 @@ small {
   font-weight: 900;
 }
 
+.vindex-button strong {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.16;
+}
+
 .vindex-detail,
 .profile-detail {
   min-height: 560px;
@@ -1929,6 +2172,12 @@ small {
   place-items: center;
 }
 
+.vindex-art > .silhouette-card {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+}
+
 .silhouette-car {
   display: grid;
   width: 86px;
@@ -1953,6 +2202,10 @@ small {
 .profile-copy h2 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 4rem);
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.02;
 }
 
 .vindex-copy span,
@@ -2079,6 +2332,10 @@ small {
 .garage-info h2 {
   margin: 0 0 4px;
   font-size: 1.16rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.15;
 }
 
 .garage-info h3 {
@@ -2097,7 +2354,8 @@ small {
   font-size: 0.84rem;
 }
 
-.garage-evolve {
+.garage-evolve,
+.garage-upgrade {
   width: 100%;
   min-height: 38px;
   margin-top: 14px;
@@ -2106,6 +2364,12 @@ small {
   background: rgba(255, 200, 87, 0.16);
   color: var(--gold);
   font-weight: 900;
+}
+
+.garage-upgrade {
+  border-color: rgba(82, 199, 255, 0.72);
+  background: rgba(82, 199, 255, 0.14);
+  color: var(--blue);
 }
 
 .xp-bar {
@@ -2210,6 +2474,7 @@ small {
 }
 
 .evolution-modal,
+.upgrade-modal,
 .confirm-modal {
   width: min(520px, 100%);
   border: 1px solid var(--line);
@@ -2219,6 +2484,132 @@ small {
     var(--panel);
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55);
   padding: 22px;
+  text-align: center;
+}
+
+.upgrade-modal {
+  position: relative;
+  width: min(680px, 100%);
+  text-align: left;
+}
+
+.upgrade-modal h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1;
+}
+
+.modal-close-bubble {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(15, 20, 26, 0.95);
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.upgrade-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 200, 87, 0.38);
+  border-radius: 999px;
+  background: rgba(17, 24, 32, 0.72);
+  color: var(--gold);
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.upgrade-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.9fr) minmax(240px, 1.1fr);
+  gap: 16px;
+  align-items: center;
+  margin: 18px 0;
+}
+
+.upgrade-art {
+  position: relative;
+  min-height: 210px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 32px, rgba(255, 255, 255, 0.04) 32px 34px),
+    linear-gradient(135deg, rgba(82, 199, 255, 0.12), rgba(255, 200, 87, 0.12));
+}
+
+.upgrade-art .car {
+  right: auto;
+  left: 50%;
+  bottom: 62px;
+  transform: translateX(-50%) scale(1.82);
+}
+
+.upgrade-detail {
+  min-width: 0;
+}
+
+.upgrade-detail h3 {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
+  line-height: 1;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.upgrade-detail p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.upgrade-stat-bar {
+  position: relative;
+}
+
+.upgrade-stat-bar .upgrade-current {
+  background: linear-gradient(90deg, #52c7ff, #6ee7a8, #ffd978);
+}
+
+.upgrade-stat-bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: block;
+  border-radius: inherit;
+  background: #52c7ff;
+  box-shadow: 0 0 12px rgba(82, 199, 255, 0.7);
+}
+
+.upgrade-level-button {
+  width: 100%;
+  min-height: 46px;
+}
+
+.upgrade-level-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upgrade-cost {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-weight: 850;
   text-align: center;
 }
 
@@ -2290,13 +2681,41 @@ small {
 }
 
 @media (max-width: 900px) {
+  .main-menu {
+    min-height: calc(100svh - 112px);
+    padding: 22px 14px;
+  }
+
+  .logo-placeholder span {
+    font-size: 4rem;
+  }
+
+  .logo-placeholder strong {
+    font-size: 1.3rem;
+  }
+
+  .campaign-detail h2 {
+    font-size: 2.35rem;
+  }
+
   .race-panel,
   .vertical-mode,
   .vindex-layout,
   .profile-layout,
   .campaign-layout,
+  .car-select-layout,
   .solo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .compact-car-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .car-select-preview {
+    min-height: 0;
   }
 
   .vindex-list,
@@ -2316,9 +2735,55 @@ small {
     padding-top: 12px;
   }
 
+  .main-menu {
+    min-height: calc(100svh - 154px);
+    padding: 16px 10px;
+    background-position: center top;
+  }
+
+  .menu-logo {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .menu-title-box {
+    max-width: 100%;
+    padding: 8px 12px 10px;
+  }
+
+  .logo-placeholder span {
+    font-size: 2.8rem;
+  }
+
+  .logo-placeholder strong {
+    font-size: 0.98rem;
+  }
+
+  .menu-subtitle {
+    font-size: 0.86rem;
+  }
+
+  .menu-actions {
+    gap: 8px;
+    width: min(292px, 100%);
+  }
+
+  .menu-button,
+  .story-primary {
+    min-height: 42px;
+  }
+
+  .creator-credit {
+    font-size: 0.74rem;
+  }
+
   .topbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar-left {
+    justify-content: center;
   }
 
   .nav {
@@ -2342,15 +2807,118 @@ small {
     grid-template-columns: 1fr;
   }
 
-  .tuner-options,
   .cutscene-stage,
-  .icon-grid,
   .map-grid,
   .story-loadout {
     grid-template-columns: 1fr;
   }
 
+  .icon-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tuner-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-car-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .icon-card.compact {
+    min-height: 108px;
+  }
+
+  .icon-card.compact .selection-preview-art {
+    height: 70px;
+  }
+
+  .icon-card.compact .selection-preview-art .car {
+    width: 100px;
+    height: 66px;
+  }
+
+  .car-select-preview {
+    grid-template-rows: auto auto;
+    padding: 12px;
+  }
+
+  .car-select-preview-art {
+    min-height: 170px;
+  }
+
+  .car-select-preview-art .car {
+    height: 176px;
+  }
+
+  .campaign-detail {
+    padding: 16px;
+  }
+
+  .campaign-detail h2 {
+    font-size: 1.85rem;
+  }
+
+  .campaign-detail span {
+    margin: 8px 0 14px;
+  }
+
+  .loadout-card {
+    grid-template-columns: 82px minmax(0, 1fr);
+    min-height: 104px;
+  }
+
+  .loadout-card .character-frame,
+  .loadout-card .selection-preview-art {
+    min-height: 78px;
+    height: 78px;
+  }
+
   .modal-actions {
     display: grid;
+  }
+
+  .upgrade-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-art {
+    min-height: 180px;
+  }
+
+  .upgrade-art .car {
+    bottom: 54px;
+    transform: translateX(-50%) scale(1.55);
+  }
+}
+
+@media (max-height: 760px) and (min-width: 621px) {
+  .main-menu {
+    min-height: calc(100svh - 112px);
+    padding: 18px 14px;
+  }
+
+  .menu-logo {
+    margin-bottom: 16px;
+  }
+
+  .menu-title-box {
+    padding: 8px 14px 10px;
+  }
+
+  .logo-placeholder span {
+    font-size: 3.6rem;
+  }
+
+  .logo-placeholder strong {
+    font-size: 1.12rem;
+  }
+
+  .menu-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .menu-button {
+    min-height: 42px;
   }
 }

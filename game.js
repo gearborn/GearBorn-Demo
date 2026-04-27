@@ -78,7 +78,7 @@ const ranks = [
 const cars = [
   {
     id: "bee",
-    family: "Bee",
+    family: "Bee-cycle",
     color: "#f4d35e",
     trait: "Fast shifts",
     evolutions: [
@@ -89,7 +89,7 @@ const cars = [
   },
   {
     id: "pickup",
-    family: "Pickup Truck",
+    family: "Patriot Pickup",
     color: "#b7c1d1",
     trait: "Strong launches",
     evolutions: [
@@ -100,7 +100,7 @@ const cars = [
   },
   {
     id: "pig",
-    family: "Pig",
+    family: "Detective Pig",
     color: "#f4a7b9",
     trait: "Stable power",
     unlockable: true,
@@ -112,7 +112,7 @@ const cars = [
   },
   {
     id: "rabbit",
-    family: "Rabbit",
+    family: "K-Pop Bunny",
     color: "#ffffff",
     trait: "Quick acceleration",
     evolutions: [
@@ -123,7 +123,7 @@ const cars = [
   },
   {
     id: "whale",
-    family: "Whale",
+    family: "Yacht Rock Whale",
     color: "#52c7ff",
     trait: "High top speed",
     unlockable: true,
@@ -135,7 +135,7 @@ const cars = [
   },
   {
     id: "frog",
-    family: "Frog",
+    family: "Exulted Frog",
     color: "#6ee7a8",
     trait: "Late race surge",
     unlockable: true,
@@ -200,6 +200,30 @@ const pinkSlipUnlockOrder = ["pig", "whale", "frog", "techno-dinosaur", "sororit
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const maxCarLevel = 10;
+const displayImageScaleByName = {
+  swinecroft: 1.22,
+  phantaxi: 1.28,
+  shufflodon: 1.26,
+  dropatops: 1.26,
+  "k-wrex": 1.26,
+  matunnie: 1.2,
+  shamacht: 1.2,
+  gladigator: 1.22,
+  swampagne: 1.22,
+  fourcroco: 1.22,
+  elepledge: 1.24,
+  sororitrunk: 1.24,
+  plaidonna: 1.24,
+  kermajesty: 1.2,
+  inflewenze: 1.22,
+  sponsore: 1.22,
+  baronessex: 1.22,
+  crusadome: 1.18,
+  kuumbusta: 1.22,
+  hurrdaboutis: 1.22,
+  rainbowlt: 1.24,
+  hornula1: 1.18
+};
 const gearbornStatProfiles = {
   bee: { speed: 74, acceleration: 86, handling: 82, transmission: 84, playstyle: "Technical Sprinter" },
   pickup: { speed: 72, acceleration: 88, handling: 68, transmission: 78, playstyle: "Launch Bruiser" },
@@ -290,34 +314,34 @@ const vindexEntries = [
   ["010", "Bananachi", "Monkey Line", "assets/cars/rival-bananachi-display.png"],
   ["032", "Manstrocity", "Armadillo Dad Line", "assets/cars/rival-manstrocity-display.png"],
   ["037", "Beardo", "Mustache Line", "assets/cars/rival-beardo-display.png"],
-  ["039", "Baybee", "Bee Line", "assets/cars/bee-baybee-display.png"],
-  ["040", "Syndrone", "Bee Line", "assets/cars/bee-syndrone-display.png"],
-  ["041", "Motonarch", "Bee Line", "assets/cars/bee-motonarch-display.png"],
-  ["058", "Murrka", "Pickup Truck Line", "assets/cars/pickup-murrka-display.png"],
-  ["059", "Wallmort", "Pickup Truck Line", "assets/cars/pickup-wallmort-display.png"],
-  ["060", "Tookerjaw", "Pickup Truck Line", "assets/cars/pickup-tookerjaw-display.png"],
-  ["066", "Hogson", "Pig Line", "assets/cars/pig-hogson-display.png"],
-  ["067", "Snoffle", "Pig Line", "assets/cars/pig-snoffle-display.png"],
-  ["068", "Swinecroft", "Pig Line", "assets/cars/pig-swinecroft-display.png"],
+  ["039", "Baybee", "Bee-cycle Line", "assets/cars/bee-baybee-display.png"],
+  ["040", "Syndrone", "Bee-cycle Line", "assets/cars/bee-syndrone-display.png"],
+  ["041", "Motonarch", "Bee-cycle Line", "assets/cars/bee-motonarch-display.png"],
+  ["058", "Murrka", "Patriot Pickup Line", "assets/cars/pickup-murrka-display.png"],
+  ["059", "Wallmort", "Patriot Pickup Line", "assets/cars/pickup-wallmort-display.png"],
+  ["060", "Tookerjaw", "Patriot Pickup Line", "assets/cars/pickup-tookerjaw-display.png"],
+  ["066", "Hogson", "Detective Pig Line", "assets/cars/pig-hogson-display.png"],
+  ["067", "Snoffle", "Detective Pig Line", "assets/cars/pig-snoffle-display.png"],
+  ["068", "Swinecroft", "Detective Pig Line", "assets/cars/pig-swinecroft-display.png"],
   ["082", "Phantaxi", "Ghost Taxi Line", "assets/story/phantaxi-display.png"],
   ["088", "Shufflodon", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-shufflodon-display.png"],
   ["089", "Dropatops", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-dropatops-display.png"],
   ["090", "K-Wrex", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-k-wrex-display.png"],
-  ["091", "Bunnae", "Rabbit Line", "assets/cars/rabbit-bunnae-display.png"],
-  ["092", "Lopstar", "Rabbit Line", "assets/cars/rabbit-lopstar-display.png"],
-  ["093", "Matunnie", "Rabbit Line", "assets/cars/rabbit-matunnie-display.png"],
-  ["151", "Totorca", "Whale Line", "assets/cars/whale-totorca-display.png"],
-  ["152", "Boates", "Whale Line", "assets/cars/whale-boates-display.png"],
-  ["153", "Shamacht", "Whale Line", "assets/cars/whale-shamacht-display.png"],
+  ["091", "Bunnae", "K-Pop Bunny Line", "assets/cars/rabbit-bunnae-display.png"],
+  ["092", "Lopstar", "K-Pop Bunny Line", "assets/cars/rabbit-lopstar-display.png"],
+  ["093", "Matunnie", "K-Pop Bunny Line", "assets/cars/rabbit-matunnie-display.png"],
+  ["151", "Totorca", "Yacht Rock Whale Line", "assets/cars/whale-totorca-display.png"],
+  ["152", "Boates", "Yacht Rock Whale Line", "assets/cars/whale-boates-display.png"],
+  ["153", "Shamacht", "Yacht Rock Whale Line", "assets/cars/whale-shamacht-display.png"],
   ["154", "Gladigator", "Florida Gator Line", "assets/cars/florida-gator-gladigator-display.png"],
   ["155", "Swampagne", "Florida Gator Line", "assets/cars/florida-gator-swampagne-display.png"],
   ["156", "Fourcroco", "Florida Gator Line", "assets/cars/florida-gator-fourcroco-display.png"],
   ["198", "Elepledge", "Sorority Elephant Line", "assets/cars/sorority-elephant-elepledge-display.png"],
   ["199", "Sororitrunk", "Sorority Elephant Line", "assets/cars/sorority-elephant-sororitrunk-display.png"],
   ["200", "Plaidonna", "Sorority Elephant Line", "assets/cars/sorority-elephant-plaidonna-display.png"],
-  ["231", "Rivvir", "Frog Line", "assets/cars/frog-rivvir-display.png"],
-  ["232", "Croakra", "Frog Line", "assets/cars/frog-croakra-display.png"],
-  ["233", "Kermajesty", "Frog Line", "assets/cars/frog-kermajesty-display.png"],
+  ["231", "Rivvir", "Exulted Frog Line", "assets/cars/frog-rivvir-display.png"],
+  ["232", "Croakra", "Exulted Frog Line", "assets/cars/frog-croakra-display.png"],
+  ["233", "Kermajesty", "Exulted Frog Line", "assets/cars/frog-kermajesty-display.png"],
   ["251", "Inflewenze", "Influencer Line", "assets/story/inflewenze-display.png"],
   ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/rival-sponsore-display.png"],
   ["296", "Baronessex", "German Discipline Line", "assets/story/baronessex-display.png"],
@@ -357,7 +381,7 @@ const instructorSceneLines = [
   { speaker: "instructor", text: "Welcome to the Tuner Academy. I’m here to prep you for your first race." },
   { speaker: "user", text: "I know what I’m doing. Can we get to the race?" },
   { speaker: "instructor", text: "Just one thing first. Your garage is stocked with 3 unique GearBorn." },
-  { speaker: "instructor", text: "Racing earns XP, which goes toward leveling your car." },
+  { speaker: "instructor", text: "Racing earns Sprox, which you can spend to level your car." },
   { speaker: "user", text: "I get it. Level up, go faster." },
   { speaker: "instructor", text: "That’s correct. But once you reach Level 5, something amazing happens…" },
   { speaker: "user", text: "How do I get to Level 5 if you won’t shut up and let me race?" },
@@ -367,7 +391,7 @@ const instructorSceneLines = [
   { speaker: "instructor", text: "Try to evolve all 9 GearBorn to their final form for a special surprise." },
   { speaker: "user", text: "Is it a pony?" },
   { speaker: "instructor", text: "It’s not a pony." },
-  { speaker: "instructor", text: "If a race is too hard, go to the Training Academy to earn more XP." },
+  { speaker: "instructor", text: "If a race is too hard, go to the Training Academy to earn more Sprox." },
   { speaker: "user", text: "Too hard isn’t a thing, but thanks, I guess." },
   { speaker: "instructor", text: "Fine, just… go race. I’m so sick of you hot-shot young Tuners who think you know everything…" }
 ];
@@ -687,6 +711,8 @@ const defaultState = {
   selectedProfile: racerProfiles[0].id,
   racerAlphaUnmasked: false,
   racerAlphaProfileView: "masked",
+  sprox: 0,
+  unlimitedSprox: false,
   selectedTuner: null,
   tunerChosen: false,
   tunerChoiceVersion: 0,
@@ -714,6 +740,7 @@ let activeCutsceneContext = null;
 let pendingDragRace = null;
 let pendingIntroView = null;
 let pendingPinkSlipContinue = null;
+let upgradeModalCarId = null;
 const modeFlow = {
   drag: "car",
   time: "car",
@@ -725,10 +752,15 @@ let storyReplayOpen = false;
 const el = {
   views: document.querySelectorAll(".view"),
   navButtons: document.querySelectorAll("[data-view]"),
+  sproxTotal: document.querySelector("#sprox-total"),
   dragCarGrid: document.querySelector("#drag-car-grid"),
   timeCarGrid: document.querySelector("#time-car-grid"),
   bossCarGrid: document.querySelector("#boss-car-grid"),
   storyCarGrid: document.querySelector("#story-car-grid"),
+  dragCarSelectPreview: document.querySelector("#drag-car-select-preview"),
+  timeCarSelectPreview: document.querySelector("#time-car-select-preview"),
+  bossCarSelectPreview: document.querySelector("#boss-car-select-preview"),
+  storyCarSelectPreview: document.querySelector("#story-car-select-preview"),
   playerCar: document.querySelector("#player-car"),
   storyCar: document.querySelector("#story-car"),
   campaignCar: document.querySelector("#campaign-car"),
@@ -797,6 +829,16 @@ const el = {
   godCodeError: document.querySelector("#god-code-error"),
   confirmGod: document.querySelector("#confirm-god"),
   cancelGod: document.querySelector("#cancel-god"),
+  upgradeModal: document.querySelector("#upgrade-modal"),
+  closeUpgrade: document.querySelector("#close-upgrade"),
+  confirmUpgrade: document.querySelector("#confirm-upgrade"),
+  upgradeArt: document.querySelector("#upgrade-art"),
+  upgradeSproxTotal: document.querySelector("#upgrade-sprox-total"),
+  upgradeTitle: document.querySelector("#upgrade-title"),
+  upgradeCarName: document.querySelector("#upgrade-car-name"),
+  upgradeCarMeta: document.querySelector("#upgrade-car-meta"),
+  upgradeStats: document.querySelector("#upgrade-stats"),
+  upgradeCost: document.querySelector("#upgrade-cost"),
   resetProgress: document.querySelector("#reset-progress"),
   resetModal: document.querySelector("#reset-modal"),
   confirmReset: document.querySelector("#confirm-reset"),
@@ -888,6 +930,8 @@ function saveState() {
 }
 
 function sanitizeState() {
+  state.sprox = Number.isFinite(Number(state.sprox)) ? Math.max(0, Math.floor(Number(state.sprox))) : 0;
+  state.unlimitedSprox = Boolean(state.unlimitedSprox);
   state.unlockedCars = state.unlockedCars || {};
   state.unlockedLines = Array.isArray(state.unlockedLines) ? state.unlockedLines : [...defaultUnlockedLines];
   defaultUnlockedLines.forEach((carId) => {
@@ -902,6 +946,7 @@ function sanitizeState() {
     state.garage?.rainbowlt?.evolution >= (cars.find((car) => car.id === "rainbowlt")?.evolutions.length || 1) - 1
   );
   if (legacyGodModeActive) {
+    state.unlimitedSprox = true;
     state.unlockedLines = cars.map((car) => car.id);
     cars.forEach((car) => {
       state.garage[car.id] = {
@@ -961,10 +1006,11 @@ function sanitizeState() {
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
   cars.forEach((car) => {
     state.garage[car.id] = state.garage[car.id] || { level: 1, xp: 0, evolution: 0, pendingEvolution: null };
-    state.garage[car.id].level = Math.min(maxCarLevel, state.garage[car.id].level || 1);
-    if (state.garage[car.id].level >= maxCarLevel) {
-      state.garage[car.id].xp = 0;
+    if (!state.unlimitedSprox && state.garage[car.id].xp > 0) {
+      state.sprox += Math.max(0, Math.floor(state.garage[car.id].xp));
     }
+    state.garage[car.id].xp = 0;
+    state.garage[car.id].level = Math.min(maxCarLevel, state.garage[car.id].level || 1);
     state.garage[car.id].pendingEvolution = state.garage[car.id].pendingEvolution ?? null;
     state.garage[car.id].evolution = Math.min(state.garage[car.id].evolution || 0, car.evolutions.length - 1);
     state.garage[car.id].unlockedEvolution = Math.min(
@@ -987,6 +1033,28 @@ function sanitizeState() {
 function xpForNextLevel(level) {
   if (level >= maxCarLevel) return 0;
   return Math.floor(95 * Math.pow(level, 1.48));
+}
+
+function formatSprox(amount = state.sprox) {
+  return state.unlimitedSprox ? "∞ Sprox" : `${Math.max(0, Math.floor(amount))} Sprox`;
+}
+
+function addSprox(amount) {
+  if (!state.unlimitedSprox) {
+    state.sprox = Math.max(0, Math.floor((state.sprox || 0) + amount));
+  }
+  return Math.max(0, Math.floor(amount));
+}
+
+function canAffordUpgrade(cost) {
+  return state.unlimitedSprox || state.sprox >= cost;
+}
+
+function spendSprox(cost) {
+  if (state.unlimitedSprox) return true;
+  if (state.sprox < cost) return false;
+  state.sprox -= cost;
+  return true;
 }
 
 function evolutionIndexForLevel(level) {
@@ -1074,8 +1142,11 @@ function carStats(carId) {
 }
 
 function displayedGearbornStats(carId) {
+  return displayedGearbornStatsAtLevel(carId, state.garage[carId]?.level || 1);
+}
+
+function displayedGearbornStatsAtLevel(carId, level) {
   const profile = gearbornStatProfiles[carId] || gearbornStatProfiles.bee;
-  const level = state.garage[carId]?.level || 1;
   if (carId === "rainbowlt" && level >= maxCarLevel) {
     return {
       speed: 100,
@@ -1182,12 +1253,37 @@ function carTileMarkup(car, mode) {
   const progress = state.garage[car.id];
   const form = currentEvolution(car.id);
   return `
-    <button class="icon-card ${selectedCarIdForMode(mode) === car.id ? "active" : ""}" type="button" data-car-target="${mode}" data-car-id="${car.id}">
+    <button class="icon-card compact ${selectedCarIdForMode(mode) === car.id ? "active" : ""}" type="button" data-car-target="${mode}" data-car-id="${car.id}">
       <div class="selection-preview-art">${carMarkupForEvolution(car.id, progress.evolution, "display")}</div>
       <strong>${form.name}</strong>
-      <small>${car.family} · Lv ${progress.level}</small>
     </button>
   `;
+}
+
+function carSelectPreviewMarkup(carId) {
+  const car = cars.find((item) => item.id === carId) || cars.find((item) => isCarUnlocked(item.id));
+  if (!car) return "";
+  const progress = state.garage[car.id];
+  const form = currentEvolution(car.id);
+  const stats = displayedGearbornStats(car.id);
+  const playstyle = gearbornStatProfiles[car.id]?.playstyle || "";
+  return `
+    <div class="car-select-preview-art">
+      ${carMarkupForEvolution(car.id, progress.evolution, "display")}
+    </div>
+    <div class="car-select-preview-copy">
+      <span>${car.family}</span>
+      <h3>${form.name}</h3>
+      <p>${playstyle}</p>
+      <small>Level ${progress.level} · Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</small>
+      ${garageStatsMarkup(stats)}
+    </div>
+  `;
+}
+
+function renderCarSelectPreview(mode, node) {
+  if (!node) return;
+  node.innerHTML = carSelectPreviewMarkup(selectedCarIdForMode(mode));
 }
 
 function renderCarTiles() {
@@ -1196,9 +1292,14 @@ function renderCarTiles() {
   if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
   if (el.storyCarGrid) el.storyCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "story")).join("");
+  renderCarSelectPreview("drag", el.dragCarSelectPreview);
+  renderCarSelectPreview("time", el.timeCarSelectPreview);
+  renderCarSelectPreview("boss", el.bossCarSelectPreview);
+  renderCarSelectPreview("story", el.storyCarSelectPreview);
 }
 
 function render() {
+  renderSproxWallet();
   renderFlowScreens();
   renderCarTiles();
   renderCarSelect();
@@ -1299,17 +1400,17 @@ function renderCampaignRewards(level, locked) {
     el.campaignRewards.innerHTML = timeMedals.map((medal) => `
       <div class="reward-row compact">
         <span class="medal-text ${medal.key}">${medal.label}</span>
-        <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} XP</strong>
+        <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} Sprox</strong>
       </div>
     `).join("") + bestResult;
     return;
   }
   if (level.type === "drag" || level.type === "pink-slip") {
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} XP</strong></div>`;
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} Sprox</strong></div>`;
     return;
   }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
-  el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} XP</strong></div>`;
+  el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} Sprox</strong></div>`;
 }
 
 function renderStoryLoadout() {
@@ -1351,7 +1452,7 @@ function renderBosses() {
     return `
       <button class="boss-button ${active ? "active" : ""} ${locked ? "locked" : ""}" type="button" data-boss="${boss.id}" ${locked ? "disabled" : ""}>
         <strong>${index + 1}. ${boss.name}</strong>
-        <small>${locked ? "Locked" : `${boss.track.city}, ${boss.track.country} · ${boss.car} · ${boss.xp} XP`}</small>
+        <small>${locked ? "Locked" : `${boss.track.city}, ${boss.track.country} · ${boss.car} · ${boss.xp} Sprox`}</small>
       </button>
     `;
   }).join("");
@@ -1376,7 +1477,7 @@ function renderTimeTargets() {
   applyTrackMap(el.timeTrialTrack, storyTracks.find((track) => track.id === state.selectedTimeTrack));
   el.timeTargets.innerHTML = timeMedals.map((medal) => {
     const target = timeTarget(medal, trackIndex);
-    return `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} XP</strong></div>`;
+    return `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} Sprox</strong></div>`;
   }).join("") + `<div><span>Phantaxi Time</span><strong>${best ? `${best.toFixed(2)} s` : "No Phantaxi Time"}</strong></div>`;
 }
 
@@ -1576,7 +1677,7 @@ function renderGarage() {
   const godModeActive = garageGodModeActive();
   el.garageStatus.hidden = !godModeActive;
   el.garageStatus.textContent = godModeActive
-    ? "God Mode Active: all GearBorn lines are unlocked and maxed"
+    ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
     : "";
   const garageCars = cars.filter((car) => isCarUnlocked(car.id) || car.id === "rainbowlt");
   el.garageGrid.innerHTML = garageCars.map((car) => {
@@ -1584,11 +1685,10 @@ function renderGarage() {
       return lockedGarageCard(car);
     }
     const progress = state.garage[car.id];
-    const next = xpForNextLevel(progress.level);
     const maxed = progress.level >= maxCarLevel;
-    const pct = maxed ? 100 : Math.min(100, (progress.xp / next) * 100);
     const stats = displayedGearbornStats(car.id);
     const playstyle = gearbornStatProfiles[car.id]?.playstyle || "";
+    const upgradeCost = xpForNextLevel(progress.level);
     return `
       <article class="garage-card">
         <div class="garage-art">
@@ -1604,11 +1704,11 @@ function renderGarage() {
           </div>
           ${garageEvolutionControls(car)}
           ${garageStatsMarkup(stats)}
-          <div class="xp-bar"><div class="xp-fill" style="width:${pct}%"></div></div>
           <div class="meta-row">
-            <span>${maxed ? "Max Level" : `${progress.xp} / ${next} XP`}</span>
+            <span>${maxed ? "Max Level" : `Upgrade: ${upgradeCost} Sprox`}</span>
             <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
           </div>
+          ${!maxed ? `<button class="garage-upgrade" type="button" data-upgrade-car="${car.id}">Upgrade</button>` : ""}
           ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${car.id}">Evolve</button>` : ""}
         </div>
       </article>
@@ -1635,6 +1735,96 @@ function garageStatBar(label, value) {
       <div class="garage-stat-bar"><div style="width:${pct}%"></div></div>
     </div>
   `;
+}
+
+function upgradeStatsMarkup(carId) {
+  const progress = state.garage[carId];
+  const currentStats = displayedGearbornStatsAtLevel(carId, progress.level);
+  const nextStats = displayedGearbornStatsAtLevel(carId, Math.min(maxCarLevel, progress.level + 1));
+  return `
+    <div class="garage-stat-grid upgrade-stat-grid" aria-label="Upgrade preview stats">
+      ${upgradeStatBar("SPD", currentStats.speed, nextStats.speed)}
+      ${upgradeStatBar("ACC", currentStats.acceleration, nextStats.acceleration)}
+      ${upgradeStatBar("HDL", currentStats.handling, nextStats.handling)}
+      ${upgradeStatBar("TRN", currentStats.transmission, nextStats.transmission)}
+    </div>
+  `;
+}
+
+function upgradeStatBar(label, current, next) {
+  const currentPct = normalizedGearbornStat(current) * 100;
+  const nextPct = normalizedGearbornStat(next) * 100;
+  const gainPct = Math.max(0, nextPct - currentPct);
+  return `
+    <div class="garage-stat upgrade-stat">
+      <span>${label}</span>
+      <div class="garage-stat-bar upgrade-stat-bar">
+        <div class="upgrade-current" style="width:${currentPct}%"></div>
+        <i style="left:${currentPct}%; width:${gainPct}%"></i>
+      </div>
+    </div>
+  `;
+}
+
+function openUpgradeModal(carId) {
+  upgradeModalCarId = carId;
+  renderUpgradeModal();
+  if (!upgradeModalCarId) return;
+  el.upgradeModal.classList.add("active");
+  el.upgradeModal.setAttribute("aria-hidden", "false");
+  el.confirmUpgrade.focus();
+}
+
+function renderUpgradeModal() {
+  const carId = upgradeModalCarId;
+  const car = cars.find((item) => item.id === carId);
+  const progress = state.garage?.[carId];
+  if (!car || !progress) return;
+  const form = currentEvolution(carId);
+  const maxed = progress.level >= maxCarLevel;
+  const cost = xpForNextLevel(progress.level);
+  if (el.upgradeSproxTotal) el.upgradeSproxTotal.textContent = formatSprox();
+  el.upgradeTitle.textContent = maxed ? "Max Level" : `Level ${progress.level} → ${progress.level + 1}`;
+  el.upgradeCarName.textContent = form.name;
+  el.upgradeCarMeta.textContent = `${car.family} · ${gearbornStatProfiles[car.id]?.playstyle || ""}`;
+  el.upgradeArt.innerHTML = carMarkupForEvolution(carId, progress.evolution, "display");
+  el.upgradeStats.innerHTML = upgradeStatsMarkup(carId);
+  el.upgradeCost.textContent = maxed ? "This GearBorn is already maxed." : `Price: ${cost} Sprox`;
+  el.confirmUpgrade.disabled = maxed || !canAffordUpgrade(cost);
+  el.confirmUpgrade.textContent = maxed ? "Max Level" : "Level Up";
+}
+
+function closeUpgradeModal() {
+  upgradeModalCarId = null;
+  el.upgradeModal.classList.remove("active");
+  el.upgradeModal.setAttribute("aria-hidden", "true");
+}
+
+function upgradeCarLevel() {
+  if (!upgradeModalCarId) return;
+  const carId = upgradeModalCarId;
+  const progress = state.garage[carId];
+  if (!progress || progress.level >= maxCarLevel) return;
+  const cost = xpForNextLevel(progress.level);
+  if (!spendSprox(cost)) {
+    el.upgradeCost.textContent = `Need ${cost} Sprox. Current balance: ${formatSprox()}`;
+    el.confirmUpgrade.disabled = true;
+    return;
+  }
+  progress.level = Math.min(maxCarLevel, progress.level + 1);
+  progress.xp = 0;
+  const newEvolution = maxEligibleEvolutionForCar(carId, progress.level);
+  if (newEvolution > unlockedEvolutionIndex(carId)) {
+    progress.pendingEvolution = progress.pendingEvolution || unlockedEvolutionIndex(carId) + 1;
+  }
+  unlockSecretCars();
+  saveState();
+  render();
+  const shouldEvolve = Boolean(progress.pendingEvolution);
+  renderUpgradeModal();
+  if (shouldEvolve) {
+    showPendingEvolution(carId);
+  }
 }
 
 function garageEvolutionControls(car) {
@@ -1736,6 +1926,8 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   el.raceMessage.textContent = "Press Start Race when you're ready.";
   el.playerRacer.style.transform = "translateX(0)";
   el.rivalRacer.style.transform = "translateX(0)";
+  el.playerRacer.classList.remove("nitro-active");
+  el.rivalRacer.classList.remove("nitro-active");
   race = null;
   updateNitroHud();
   paintCars();
@@ -1952,6 +2144,10 @@ function useNitro() {
   updateNitroHud();
 }
 
+function renderSproxWallet() {
+  if (el.sproxTotal) el.sproxTotal.textContent = formatSprox();
+}
+
 function useRivalNitro() {
   race.rivalNitroCharge = 0;
   race.rivalNitroActive = true;
@@ -1984,6 +2180,8 @@ function topGearBoostForShift(label) {
 function finishRace(playerWon) {
   race.active = false;
   race.finished = true;
+  race.nitroActive = false;
+  race.rivalNitroActive = false;
   drawRace();
   const finishedRace = race;
   const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
@@ -1991,10 +2189,9 @@ function finishRace(playerWon) {
   const pinkSlipCarId = finishedLevel?.type === "pink-slip" ? finishedLevel.pinkSlipCarId : null;
 
   let earned = 0;
-  let xpResult = null;
   if (playerWon) {
     earned = Math.floor(race.distance.xp * race.rank.xpBonus * difficultyMultiplier());
-    xpResult = addXp(state.selectedCar, earned);
+    addSprox(earned);
     const rankIndex = ranks.findIndex((rank) => rank.key === race.rank.key);
     if (rankIndex === state.highestRankIndex && state.highestRankIndex < ranks.length - 1) {
       state.highestRankIndex += 1;
@@ -2003,7 +2200,7 @@ function finishRace(playerWon) {
     el.raceMessage.textContent = "";
   } else {
     earned = Math.floor(race.distance.xp * 0.16);
-    xpResult = addXp(state.selectedCar, earned);
+    addSprox(earned);
     el.raceMessage.className = "race-message loss";
     el.raceMessage.textContent = "";
   }
@@ -2015,15 +2212,13 @@ function finishRace(playerWon) {
   render();
   showRaceResult(el.dragTrack, {
     won: playerWon,
-    xp: earned,
-    xpResult,
+    sprox: earned,
     primaryLabel: isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
     onPrimary: () => {
       if (isStoryRace) {
         const finishStory = () => {
           finishStoryRaceScreen();
-          showPendingEvolution(state.selectedCar);
         };
         if (playerWon && pinkSlipCarId && !isCarUnlocked(pinkSlipCarId)) {
           showPinkSlipUnlock(pinkSlipCarId, finishStory);
@@ -2032,7 +2227,6 @@ function finishRace(playerWon) {
         finishStory();
       } else {
         setFlowStep("drag", "match");
-        showPendingEvolution(state.selectedCar);
       }
     },
     onRaceAgain: () => {
@@ -2049,6 +2243,8 @@ function failDragRace(title) {
   if (!race?.active || race.finished) return;
   race.active = false;
   race.finished = true;
+  race.nitroActive = false;
+  race.rivalNitroActive = false;
   drawRace();
   const failedRace = race;
   const isStoryRace = failedRace.campaignLevelIndex !== null && failedRace.campaignLevelIndex !== undefined;
@@ -2057,7 +2253,7 @@ function failDragRace(title) {
   showRaceResult(el.dragTrack, {
     won: false,
     title,
-    xp: 0,
+    sprox: 0,
     primaryLabel: isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
     onPrimary: () => {
@@ -2077,43 +2273,6 @@ function failDragRace(title) {
   });
 }
 
-function addXp(carId, amount) {
-  const progress = state.garage[carId];
-  const startingLevel = progress.level;
-  if (progress.level >= maxCarLevel) {
-    progress.level = maxCarLevel;
-    progress.xp = 0;
-    return {
-      leveledUp: false,
-      level: progress.level,
-      name: currentEvolution(carId).name
-    };
-  }
-  progress.xp += amount;
-  while (progress.level < maxCarLevel && progress.xp >= xpForNextLevel(progress.level)) {
-    progress.xp -= xpForNextLevel(progress.level);
-    progress.level += 1;
-    const newEvolution = maxEligibleEvolutionForCar(carId, progress.level);
-    if (newEvolution > unlockedEvolutionIndex(carId)) {
-      progress.pendingEvolution = progress.pendingEvolution || unlockedEvolutionIndex(carId) + 1;
-    }
-  }
-  if (progress.level >= maxCarLevel) {
-    progress.level = maxCarLevel;
-    progress.xp = 0;
-  }
-  return {
-    leveledUp: progress.level > startingLevel,
-    level: progress.level,
-    name: currentEvolution(carId).name
-  };
-}
-
-function raceResultMessage(baseMessage, xpResult) {
-  if (!xpResult.leveledUp) return baseMessage;
-  return `${baseMessage} ${xpResult.name} has increased to Level ${xpResult.level}.`;
-}
-
 function showRaceResult(trackNode, result) {
   if (!trackNode) {
     result.onPrimary?.();
@@ -2125,9 +2284,8 @@ function showRaceResult(trackNode, result) {
   popup.innerHTML = `
     <div class="race-result-card">
       <h2>${result.title || (result.won ? "Victory" : "Defeat")}</h2>
-      <p>XP Earned: <strong>${result.xp}</strong></p>
+      <p>Sprox Earned: <strong>${result.sprox ?? 0}</strong></p>
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
-      ${result.xpResult?.leveledUp ? `<p>${result.xpResult.name} has leveled up to Lvl. ${result.xpResult.level}</p>` : ""}
       <div class="race-result-actions">
         <button class="primary" type="button" data-result-action="primary">${result.primaryLabel || "Continue"}</button>
         <button class="ghost" type="button" data-result-action="again">${result.raceAgainLabel || "Race Again"}</button>
@@ -2270,6 +2428,7 @@ function resetRacingData() {
   race = null;
   closeResetModal();
   closeEvolutionModal();
+  closeUpgradeModal();
   el.playerRacer.style.transform = "translateX(0)";
   el.rivalRacer.style.transform = "translateX(0)";
   el.raceMessage.className = "race-message";
@@ -2298,6 +2457,7 @@ function activateGodMode() {
     el.godCode.focus();
     return;
   }
+  state.unlimitedSprox = true;
   state.unlockedLines = cars.map((car) => car.id);
   state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
   cars.forEach((car) => {
@@ -2324,10 +2484,11 @@ function activateGodMode() {
   saveState();
   closeGodModal();
   closeEvolutionModal();
+  closeUpgradeModal();
   render();
   showView("garage");
   el.raceMessage.className = "race-message win";
-  el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, and evolved.";
+  el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, evolved, and stocked with unlimited Sprox.";
 }
 
 function imageFor(entry, role) {
@@ -2339,9 +2500,19 @@ function imageFor(entry, role) {
   return entry.image || "";
 }
 
+function carNameKey(name = "") {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function displayScaleStyle(name, role = "display") {
+  if (role !== "display") return "";
+  const scale = displayImageScaleByName[carNameKey(name)] || 1;
+  return scale === 1 ? "" : ` style="--display-scale:${scale}"`;
+}
+
 function rankMarkup(rank, role = "display") {
   const image = imageFor(rank, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}"${displayScaleStyle(rank.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${rank.color}">
@@ -2355,7 +2526,7 @@ function rankMarkup(rank, role = "display") {
 }
 
 function displayMarkup(image, alt, color) {
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}"${displayScaleStyle(alt, "display")} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   return `
     <div class="car ${image ? "has-image" : ""}" style="--car-color:${color}">
       ${imageTag}
@@ -2371,7 +2542,7 @@ function carMarkupForEvolution(carId, evolutionIndex, role = "display") {
   const car = cars.find((item) => item.id === carId);
   const form = evolutionByIndex(carId, evolutionIndex);
   const image = imageFor(form, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}"${displayScaleStyle(form.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${car.color}">
@@ -2390,6 +2561,8 @@ function drawRace() {
   const rivalProgress = Math.min(1, race.rivalDistance / race.target);
   el.playerRacer.style.transform = `translateX(${-playerProgress * maxTravel}px)`;
   el.rivalRacer.style.transform = `translateX(${-rivalProgress * maxTravel}px)`;
+  el.playerRacer.classList.toggle("nitro-active", Boolean(race.nitroActive));
+  el.rivalRacer.classList.toggle("nitro-active", Boolean(race.rivalNitroActive));
   el.mph.textContent = `${Math.round(race.playerSpeed)} MPH`;
   el.gear.textContent = race.gear;
   el.distance.textContent = `${Math.floor(Math.min(race.playerDistance, race.target))} m`;
@@ -2696,7 +2869,7 @@ function openBossIntro(startConfig = { mode: "boss", options: {} }) {
   pendingBossRaceStart = { mode: startConfig.mode || "boss", options: startConfig.options || {} };
   el.bossModalKicker.textContent = `${boss.track.city}, ${boss.track.country}`;
   el.bossModalTitle.textContent = `${boss.name} challenges you`;
-  el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} XP.`;
+  el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} Sprox.`;
   el.bossPortrait.innerHTML = `<img src="${boss.portrait}" alt="${boss.name}" onerror="this.remove()">`;
   el.bossModal.classList.add("active");
   el.bossModal.setAttribute("aria-hidden", "false");
@@ -3024,14 +3197,12 @@ function finishVerticalRace(playerWon) {
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
   const elapsed = (performance.now() - raceState.startTime) / 1000;
-  let resultXp = 0;
-  let resultXpState = null;
+  let resultSprox = 0;
   const resultLines = [];
   if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
-    const xp = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
-    const xpResult = addXp(raceState.carId, xp);
-    resultXp = xp;
-    resultXpState = xpResult;
+    const sprox = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
+    addSprox(sprox);
+    resultSprox = sprox;
     let unlockedBossName = "";
     if (playerWon) {
       if (raceState.bossData.id === "racer-alpha") {
@@ -3051,10 +3222,9 @@ function finishVerticalRace(playerWon) {
   } else {
     const trackIndex = raceState.trackIndex;
     const beaten = timeMedals.find((medal) => elapsed <= timeTarget(medal, trackIndex));
-    const xp = beaten ? beaten.xp : 40;
-    const xpResult = addXp(raceState.carId, xp);
-    resultXp = xp;
-    resultXpState = xpResult;
+    const sprox = beaten ? beaten.xp : 40;
+    addSprox(sprox);
+    resultSprox = sprox;
     const best = state.timeTrials[raceState.trackId]?.bestTime;
     if (raceState.mode === "time" && (!best || elapsed < best)) {
       state.timeTrials[raceState.trackId] = { bestTime: elapsed, ghost: raceState.record.filter((_, index) => index % 4 === 0) };
@@ -3080,8 +3250,7 @@ function finishVerticalRace(playerWon) {
   const isStoryRace = raceState.campaignLevelIndex !== null;
   showRaceResult(raceState.trackNode, {
     won: playerWon,
-    xp: resultXp,
-    xpResult: resultXpState,
+    sprox: resultSprox,
     lines: resultLines,
     primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     raceAgainLabel: "Race Again",
@@ -3095,7 +3264,6 @@ function finishVerticalRace(playerWon) {
       if (isStoryRace) {
         const finishStory = () => {
           finishStoryRaceScreen();
-          showPendingEvolution(raceState.carId);
         };
         const level = campaignLevels[raceState.campaignLevelIndex];
         if (playerWon && raceState.mode === "campaign-boss" && shouldShowStoryCutscene(raceState.campaignLevelIndex, level)) {
@@ -3105,10 +3273,8 @@ function finishVerticalRace(playerWon) {
         finishStory();
       } else if (raceState.mode === "boss") {
         setFlowStep("boss", "match");
-        showPendingEvolution(raceState.carId);
       } else {
         setFlowStep("time", "match");
-        showPendingEvolution(raceState.carId);
       }
     },
     onRaceAgain: () => {
@@ -3144,7 +3310,7 @@ function failVerticalRace(title) {
   showRaceResult(raceState.trackNode, {
     won: false,
     title,
-    xp: 0,
+    sprox: 0,
     primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     raceAgainLabel: "Race Again",
     onPrimary: () => {
@@ -3215,7 +3381,11 @@ function beep(label) {
 
 function setSteer(direction, active) {
   if (!verticalRace?.keys) return;
-  const key = direction === "left" ? "ArrowLeft" : "ArrowRight";
+  const key = {
+    left: "ArrowLeft",
+    up: "ArrowUp",
+    right: "ArrowRight"
+  }[direction] || "ArrowRight";
   verticalRace.keys[key] = active;
 }
 
@@ -3395,9 +3565,22 @@ el.garageGrid.addEventListener("click", (event) => {
     changeGarageEvolution(carId, direction);
     return;
   }
+  const upgradeButton = event.target.closest("[data-upgrade-car]");
+  if (upgradeButton) {
+    openUpgradeModal(upgradeButton.dataset.upgradeCar);
+    return;
+  }
   const button = event.target.closest("[data-evolve-car]");
   if (!button) return;
   showPendingEvolution(button.dataset.evolveCar);
+});
+
+el.confirmUpgrade.addEventListener("click", upgradeCarLevel);
+el.closeUpgrade.addEventListener("click", closeUpgradeModal);
+el.upgradeModal.addEventListener("click", (event) => {
+  if (event.target === el.upgradeModal) {
+    closeUpgradeModal();
+  }
 });
 
 el.evolveButton.addEventListener("click", () => {
@@ -3503,6 +3686,10 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Escape" && el.godModal.classList.contains("active")) {
     closeGodModal();
+    return;
+  }
+  if (event.key === "Escape" && el.upgradeModal.classList.contains("active")) {
+    closeUpgradeModal();
     return;
   }
   if (event.key === "Escape" && el.bossModal.classList.contains("active")) {
