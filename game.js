@@ -2152,19 +2152,18 @@ function upgradeCarLevel() {
     progress.pendingEvolution = 1;
   }
   unlockSecretCars();
+  const shouldEvolve = Boolean(progress.pendingEvolution);
+  if (shouldEvolve && tutorialActive() && carId === tutorialCarId) {
+    state.tutorialAwaitingUpgrade = false;
+    state.tutorialAwaitingEvolve = false;
+    setTutorialScene("evolve");
+  }
   saveState();
   render();
-  const shouldEvolve = Boolean(progress.pendingEvolution);
   renderUpgradeModal();
   if (shouldEvolve) {
-    if (tutorialActive() && carId === tutorialCarId) {
-      state.tutorialAwaitingUpgrade = false;
-      state.tutorialAwaitingEvolve = false;
-      setTutorialScene("evolve");
-      saveState();
-      renderTutorial();
-    }
     showPendingEvolution(carId);
+    if (tutorialActive() && carId === tutorialCarId) renderTutorial();
   }
 }
 
@@ -2777,19 +2776,11 @@ function showPinkSlipUnlock(carId, onContinue) {
 
 function closeEvolutionModal() {
   const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
-  const tutorialWasEvolving = tutorialActive() && currentTutorialScene().id === "evolve";
   pendingPinkSlipContinue = null;
   evolutionModal = null;
   el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
-  if (tutorialWasEvolving) {
-    closeUpgradeModal();
-    state.tutorialScene = tutorialScenes.findIndex((scene) => scene.id === "vindex");
-    setupTutorialScene();
-    saveState();
-    render();
-  }
   continueAfterPinkSlip?.();
 }
 
