@@ -129,9 +129,9 @@ body.mode-active .main-menu-button {
 .sprox-wallet {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 0 10px;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 12px;
   border: 1px solid rgba(255, 200, 87, 0.42);
   border-radius: 999px;
   background: rgba(17, 24, 32, 0.82);
@@ -141,14 +141,27 @@ body.mode-active .main-menu-button {
 }
 
 .sprox-coin {
-  display: grid;
-  width: 18px;
-  height: 18px;
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #fff4ad, #ffc857 48%, #b76c12);
+  background: url("assets/items/item-sprox.png") center / contain no-repeat;
   color: transparent;
-  box-shadow: inset 0 0 0 2px rgba(88, 49, 5, 0.25);
+  box-shadow: none;
+}
+
+.sprox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.sprox-inline .sprox-coin {
+  width: 34px;
+  height: 34px;
 }
 
 .sprox-wallet strong {
@@ -438,6 +451,7 @@ body.mode-active .main-menu-button {
 
 .icon-card {
   display: grid;
+  container-type: inline-size;
   gap: 8px;
   min-height: 180px;
   padding: 10px;
@@ -447,7 +461,7 @@ body.mode-active .main-menu-button {
   color: var(--ink);
   font-weight: 950;
   text-align: center;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
   hyphens: none;
 }
 
@@ -461,10 +475,18 @@ body.mode-active .main-menu-button {
 .icon-card strong,
 .icon-card small {
   min-width: 0;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.18;
+}
+
+.icon-card strong {
+  font-size: clamp(0.68rem, 8.8cqw, 1rem);
 }
 
 .icon-card em {
@@ -532,6 +554,7 @@ body.mode-active .main-menu-button {
 
 .car-select-preview-copy {
   display: grid;
+  container-type: inline-size;
   gap: 6px;
   min-width: 0;
   text-align: left;
@@ -548,9 +571,13 @@ body.mode-active .main-menu-button {
 .car-select-preview-copy h3 {
   margin: 0;
   color: var(--gold);
-  font-size: clamp(1.4rem, 3vw, 2.1rem);
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(1rem, 9cqw, 2.1rem);
   line-height: 1;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
 }
@@ -828,15 +855,24 @@ body.mode-active .main-menu-button {
 
 .campaign-button-copy {
   display: grid;
+  container-type: inline-size;
   gap: 3px;
   min-width: 0;
 }
 
 .campaign-button-copy strong,
 .campaign-button-copy small {
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
+}
+
+.campaign-button-copy strong {
+  font-size: clamp(0.72rem, 7cqw, 0.98rem);
 }
 
 .campaign-earned {
@@ -865,6 +901,7 @@ body.mode-active .main-menu-button {
 }
 
 .campaign-detail {
+  container-type: inline-size;
   min-height: 300px;
   padding: 22px;
 }
@@ -879,9 +916,15 @@ body.mode-active .main-menu-button {
 
 .campaign-detail h2 {
   margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 3rem;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: normal;
+  font-size: clamp(1.55rem, 12cqw, 3rem);
   line-height: 1.02;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+  hyphens: none;
 }
 
 .campaign-detail span {
@@ -975,6 +1018,7 @@ body.mode-active .main-menu-button {
 }
 
 .loadout-card > div {
+  container-type: inline-size;
   min-width: 0;
 }
 
@@ -999,10 +1043,17 @@ body.mode-active .main-menu-button {
 .loadout-card small {
   display: block;
   max-width: 100%;
-  overflow-wrap: break-word;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.18;
+}
+
+.loadout-card strong {
+  font-size: clamp(0.72rem, 9cqw, 1rem);
 }
 
 .campaign-race-mount {
@@ -1181,6 +1232,7 @@ small {
 
 .selection-preview {
   display: grid;
+  container-type: inline-size;
   grid-template-columns: 112px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
@@ -1238,8 +1290,12 @@ small {
 }
 
 .selection-preview strong {
-  font-size: 1rem;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(0.72rem, 5cqw, 1rem);
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.18;
@@ -1986,9 +2042,13 @@ small {
 }
 
 .evolution-switcher strong {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--gold);
   text-align: center;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.12;
@@ -2060,6 +2120,7 @@ small {
 
 .vindex-button {
   display: grid;
+  container-type: inline-size;
   grid-template-columns: 54px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
@@ -2085,7 +2146,12 @@ small {
 
 .vindex-button strong {
   min-width: 0;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(0.72rem, 8cqw, 1rem);
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.16;
@@ -2127,6 +2193,7 @@ small {
 
 .vindex-copy,
 .profile-copy {
+  container-type: inline-size;
   padding: 22px;
 }
 
@@ -2140,6 +2207,7 @@ small {
 
 .vindex-evolution-card {
   display: grid;
+  container-type: inline-size;
   gap: 8px;
   width: 132px;
   padding: 8px;
@@ -2147,6 +2215,17 @@ small {
   border-radius: 8px;
   background: #111820;
   text-align: center;
+}
+
+.vindex-evolution-card strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(0.68rem, 13cqw, 0.9rem);
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+  hyphens: none;
 }
 
 .vindex-evolution-card .selection-preview-art {
@@ -2201,8 +2280,12 @@ small {
 .vindex-copy h2,
 .profile-copy h2 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(1.45rem, 13cqw, 4rem);
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.02;
@@ -2326,13 +2409,18 @@ small {
 }
 
 .garage-info {
+  container-type: inline-size;
   padding: 16px;
 }
 
 .garage-info h2 {
   margin: 0 0 4px;
-  font-size: 1.16rem;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(0.86rem, 8cqw, 1.16rem);
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   word-break: normal;
   hyphens: none;
   line-height: 1.15;
@@ -2340,9 +2428,13 @@ small {
 
 .garage-info h3 {
   margin: 0 0 10px;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meta-row {
@@ -2427,6 +2519,7 @@ small {
 }
 
 .god-button,
+.tutorial-replay-button,
 .danger-button {
   min-height: 42px;
   width: 100%;
@@ -2439,6 +2532,12 @@ small {
   border: 1px solid rgba(110, 231, 168, 0.7);
   background: rgba(110, 231, 168, 0.14);
   color: var(--green);
+}
+
+.tutorial-replay-button {
+  border: 1px solid rgba(82, 199, 255, 0.72);
+  background: rgba(82, 199, 255, 0.14);
+  color: var(--blue);
 }
 
 .danger-button {
@@ -2457,6 +2556,134 @@ small {
   color: #ffd5d4;
 }
 
+.success-button {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid rgba(110, 231, 168, 0.7);
+  border-radius: 7px;
+  background: rgba(110, 231, 168, 0.18);
+  color: var(--green);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tutorial-scene-select {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tutorial-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.tutorial-overlay.active {
+  display: block;
+}
+
+.tutorial-card {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: min(420px, calc(100vw - 36px));
+  padding: 16px;
+  border: 1px solid rgba(82, 199, 255, 0.45);
+  border-radius: 8px;
+  background: rgba(17, 24, 32, 0.94);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.tutorial-card[data-scene="intro"] {
+  top: 92px;
+  right: 18px;
+  bottom: auto;
+}
+
+.tutorial-card[data-scene="mode-select"] {
+  right: auto;
+  left: 18px;
+}
+
+.tutorial-card[data-scene="dr-controls"],
+.tutorial-card[data-scene="tt-controls"] {
+  top: 82px;
+  right: 18px;
+  bottom: auto;
+}
+
+.tutorial-card[data-scene="sprox"],
+.tutorial-card[data-scene="enough-sprox"],
+.tutorial-card[data-scene="vindex"],
+.tutorial-card[data-scene="starters"] {
+  right: 18px;
+  bottom: 18px;
+}
+
+.tutorial-card[data-scene="garage"],
+.tutorial-card[data-scene="upgrade"] {
+  top: 88px;
+  bottom: auto;
+  right: 18px;
+}
+
+.tutorial-speaker {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+#tutorial-kicker {
+  display: none;
+}
+
+.tutorial-portrait .character-frame {
+  min-height: 74px;
+}
+
+.tutorial-card h2,
+.tutorial-card p {
+  margin: 0;
+}
+
+.tutorial-card #tutorial-copy {
+  margin-top: 12px;
+  color: var(--ink);
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.tutorial-card #tutorial-copy strong {
+  color: var(--gold);
+}
+
+.tutorial-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tutorial-actions button {
+  min-height: 40px;
+}
+
+.tutorial-skip {
+  display: block;
+  margin: 10px auto 0;
+  border: 0;
+  background: transparent;
+  color: rgba(153, 165, 183, 0.72);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .modal-overlay {
   display: none;
   position: fixed;
@@ -2471,6 +2698,10 @@ small {
 
 .modal-overlay.active {
   display: flex;
+}
+
+#evolution-modal.active {
+  z-index: 24;
 }
 
 .evolution-modal,
@@ -2522,9 +2753,10 @@ small {
 .upgrade-wallet {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   margin: 0 0 12px;
-  padding: 6px 10px;
+  min-height: 42px;
+  padding: 6px 12px;
   border: 1px solid rgba(255, 200, 87, 0.38);
   border-radius: 999px;
   background: rgba(17, 24, 32, 0.72);
@@ -2565,10 +2797,14 @@ small {
 
 .upgrade-detail h3 {
   margin: 0 0 4px;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--gold);
-  font-size: clamp(1.6rem, 4vw, 2.35rem);
+  font-size: clamp(1.1rem, 10cqw, 2.35rem);
   line-height: 1;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   hyphens: none;
 }
 
@@ -2889,6 +3125,31 @@ small {
   .upgrade-art .car {
     bottom: 54px;
     transform: translateX(-50%) scale(1.55);
+  }
+
+  .tutorial-card,
+  .tutorial-card[data-scene] {
+    left: 10px;
+    right: 10px;
+    top: auto;
+    bottom: 10px;
+    width: auto;
+    max-height: 44svh;
+    overflow: auto;
+    padding: 12px;
+  }
+
+  .tutorial-speaker {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .tutorial-portrait .character-frame {
+    min-height: 58px;
+  }
+
+  .tutorial-card #tutorial-copy {
+    font-size: 0.88rem;
+    line-height: 1.3;
   }
 }
 

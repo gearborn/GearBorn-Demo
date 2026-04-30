@@ -193,6 +193,28 @@ const cars = [
       { name: "Hornula1", images: { display: "assets/cars/rival-hornula1-display.png", race: "assets/cars/rival-hornula1-race.png", topdown: "assets/story/unlock-hornula1-topdown.png" } }
     ]
   }
+  ,
+  {
+    id: "metal-snake",
+    family: "Metal Snake",
+    color: "#d45b36",
+    trait: "Heavy burner",
+    tutorialOnly: true,
+    evolutions: [
+      { name: "Mamburn", images: { display: "assets/cars/snake-mamburn-display.png", race: "assets/cars/snake-mamburn-race.png", topdown: "assets/cars/snake-mamburn-topdown.png" } },
+      { name: "Snaytan", images: { display: "assets/cars/snake-snaytan-display.png", race: "assets/cars/snake-mamburn-race.png", topdown: "assets/cars/snake-mamburn-topdown.png" } }
+    ]
+  },
+  {
+    id: "training-car",
+    family: "Training Car",
+    color: "#9aa7b7",
+    trait: "Student driver",
+    tutorialOnly: true,
+    evolutions: [
+      { name: "Tutorque", images: { display: "assets/cars/tutorque-display.png", race: "assets/cars/tutorque-race.png", topdown: "assets/cars/tutorque-topdown.png" } }
+    ]
+  }
 ];
 
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
@@ -200,6 +222,188 @@ const pinkSlipUnlockOrder = ["pig", "whale", "frog", "techno-dinosaur", "sororit
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const maxCarLevel = 10;
+const tutorialCarId = "metal-snake";
+const tutorialOpponentCarId = "training-car";
+const tutorialTrack = { id: "training-school", city: "Training School", country: "Tuner Academy", map: "assets/maps/map-training-academy.png" };
+const tutorialDistance = { meters: 400, label: "400 m", xp: 80, difficulty: 0.55 };
+const tutorialRank = { key: "F", name: "Tutorque", xpBonus: 1, power: 0.28, color: "#9aa7b7", images: { display: "assets/cars/tutorque-display.png", race: "assets/cars/tutorque-race.png" } };
+const tutorialMedals = [
+  { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 16.0 },
+  { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 19.0 },
+  { key: "bronze", label: "Bronze", difficulty: "Easy", xp: 150, base: 23.0 }
+];
+const tutorialScenes = [
+  { id: "intro", label: "Intro", view: "menu", copy: "Tutorial placeholder: Dr. Tyree welcomes you to GearBorn." },
+  { id: "mode-select", label: "Mode Select", view: "solo", copy: "Tutorial placeholder: Training Academy holds practice races." },
+  { id: "mamburn", label: "Drag Race - Mamburn", view: "play", flow: "car", copy: "Tutorial placeholder: Select Mamburn for your first training run." },
+  { id: "drag-race", label: "Drag Race", view: "play", flow: "match", copy: "Tutorial placeholder: Race Tutorque in a 400 m drag race." },
+  { id: "dr-controls", label: "DR Controls", view: "play", flow: "race", copy: "Tutorial placeholder: Use Shift to hit clean gear changes, then fire Nitro when your bar is charged." },
+  { id: "sprox", label: "Sprox", view: "play", wait: true, copy: "Tutorial placeholder: Winning races earns Sprox." },
+  { id: "time-trial", label: "Time Trial", view: "time-trial", flow: "match", copy: "Tutorial placeholder: Time Trials test clean driving." },
+  { id: "tt-controls", label: "TT Controls", view: "time-trial", flow: "race", copy: "Tutorial placeholder: Steer toward boosts, avoid obstacles, and keep your run clean." },
+  { id: "enough-sprox", label: "Enough Sprox", view: "time-trial", wait: true, copy: "Tutorial placeholder: You now have enough Sprox to upgrade." },
+  { id: "garage", label: "Garage", view: "garage", copy: "Tutorial placeholder: The Garage is where upgrades happen." },
+  { id: "upgrade", label: "Upgrade", view: "garage", copy: "Tutorial placeholder: Spend Sprox to level Mamburn from 9 to 10." },
+  { id: "evolve", label: "Evolve", view: "garage", wait: true, copy: "Tutorial placeholder: Level 10 unlocks Snaytan." },
+  { id: "vindex", label: "VINdex", view: "vindex", copy: "Tutorial placeholder: The VINdex tracks discovered GearBorn." },
+  { id: "starters", label: "Starters", view: "garage", copy: "Tutorial placeholder: Your starter Garage is ready." }
+];
+const tutorialSceneSelectOptions = [
+  { label: "Drag Race", scene: "mamburn" },
+  { label: "Time Trial", scene: "time-trial" },
+  { label: "Garage", scene: "garage" },
+  { label: "VINdex", scene: "vindex" }
+];
+const gearbornKeyImage = "assets/items/item-gearbornkey.png";
+const tutorialDialogue = {
+  intro: [
+    ["tyree", "Welcome to Spindell Training Academy! My name is Dr. Tyree. I’ll be the one evaluating you today to become a Tuner."],
+    ["user", "Doctor? For cars?"],
+    ["tyree", "I wasn’t able to pass the Tuner exam, so I devoted my life to studying everything there is about GearBorn. I’ve got a PhD in GearBorn Mechanics and History."],
+    ["user", "Oh, so this is a “those who can’t do” situation."],
+    ["tyree", "I wouldn’t talk such a big game just yet. You haven’t even started the test. Follow me."]
+  ],
+  "mode-select": [
+    ["tyree", "There are three types of races you can choose from - Drag Races, Time Trials, and Boss Challenges."],
+    ["user", "Sick."],
+    ["tyree", "Drag Races are about speed and acceleration - a head-to-head matchup where your goal is to get from start to finish as fast as possible in a test of your gear-shifting ability."],
+    ["user", () => `If I do it while wearing ${selectedTuner()?.id === "mylo" ? "women’s" : "men’s"} clothing, would it be a Drag Drag Race?`],
+    ["tyree", "Next are Time Trials, a solo race where the goal is to collect speed tokens and avoid obstacles to best the Bronze, Silver, or Gold times."],
+    ["user", "Makes sense."],
+    ["tyree", "Finally, Boss Challenges work kind of like Time Trials, but you’ll face off against one of the best racers in the world."],
+    ["user", "These all sound easy."],
+    ["tyree", "You haven’t even driven a car."],
+    ["user", "And whose fault is that?"],
+    ["tyree", "Fine, fine - let’s get to the race."],
+    ["user", "Finally."]
+  ],
+  mamburn: [
+    ["tyree", "All of the practice GearBorn are out right now, so just this once, I’m going to let you use my Mamburn."],
+    ["user", "Siiiiiiiiiiiiiick. This is yours?!"],
+    ["tyree", "Maybe you shouldn’t judge a book by it’s cover. Just promise not to do anything stupid. I need this back in perfect condition."],
+    ["user", "Scout’s honor."],
+    ["tyree", "You’re a scout?"],
+    ["user", "Are we doing this or what?"],
+    ["tyree", "Tuners can communicate with their GearBorn via the <strong>GearBorn Key</strong>, which is tuned to your personal cars. Here - I’ll let you borrow this."],
+    ["key", "Dr. Tyree gives you his <strong>GearBorn Key</strong>."],
+    ["user", "Thank you- *starts walking off*"],
+    ["tyree", "Hey, wait! I’m not done."]
+  ],
+  "drag-race": [
+    ["tyree", "This is the race options screen, where you’ll get to choose the length of the race and your opponent. For today, let’s just keep it to 400m and you’ll be going up against… TUTORQUE!"],
+    ["tutorque", "HONK! HONK!"],
+    ["user", "*giggles* That?"],
+    ["tyree", "You’re confident now, but what about on the track?"],
+    ["user", "At this rate, are we even getting to the track?"]
+  ],
+  "dr-controls": [
+    ["tyree", "Are you happy?"],
+    ["user", "Happier, I guess."],
+    ["tyree", "Once the race starts, press Space when the bar reaches the shift point to shift gears up. After four Perfect shifts, you’ll earn a Nitrous boost that you can activate by pressing N."],
+    ["user", "Hit the NOS!"],
+    ["tyree", "You can change the controls at any time in Settings."],
+    ["tyree", "Just make sure that you don’t miss the shift window - too many bad shifts and you’ll overheat the engine."],
+    ["user", "*stares judgingly*"],
+    ["tyree", "Okay, okay… I’m done. Race time."]
+  ],
+  sprox: [
+    ["tyree", "Nice race! Maybe you ARE as good as you think. You’re just insufferable about it."],
+    ["tyree", "One of the rewards for winning races is earning Sprox, which you can use to purchase upgrades and more for your GearBorn."],
+    ["user", "More? What’s the more?"],
+    ["tyree", "Stop trying to skip ahead. We’ll get there."],
+    ["tyree", () => `You earned ${formatSprox(state.tutorialDragSprox || tutorialDistance.xp)} for winning the Drag Race, but that’s not enough to upgrade Mamburn yet.`],
+    ["user", "How do I get more?"],
+    ["tyree", "Let’s go to Time Trials."]
+  ],
+  "time-trial": [
+    ["tyree", "Here, you’ll get to choose from a selection of city maps, each with new times to beat."],
+    ["user", "Do you guys pay for the flights or how does that work?"],
+    ["tyree", "Today, we’ll just stick with the academy track, but you’ll unlock the rest if you make it to become a Tuner."],
+    ["user", "You say “if” like I didn’t just smoke that last race."],
+    ["tyree", "I’m just going to keep ignoring your little quips."],
+    ["user", "Fair."],
+    ["tyree", "Once you’ve set a new personal best on a track, the ghostly Phantaxi will remember your route and run it with you the next time you race."],
+    ["user", "Can I drive a Phantaxi?"],
+    ["tyree", "I’m not sure. You’d have to find a way to sit in one without passing through it."],
+    ["user", "Sick."]
+  ],
+  "tt-controls": [
+    ["tyree", "Like I said, the goal here is to collect green speed tokens, such as gas cans and nitrous tanks, and avoid obstacles, such as caution gates and other cars."],
+    ["user", "Can I crash into a couple just for fun?"],
+    ["tyree", "If you scratch my Mamburn…"],
+    ["tyree", "Use the WASD keys on your keyboard to control your car."],
+    ["tyree", "Ready?"],
+    ["user", "YES!"]
+  ],
+  "enough-sprox": [
+    ["tyree", "Wow! You’re much better at this than I thought you’d be."],
+    ["user", "I know you’re just being backhanded to get back at me, but it’s still rude."],
+    ["tyree", "You still don’t have quite enough to upgrade yet, but I’ll front the rest. Follow me to the garage."]
+  ],
+  garage: [
+    ["tyree", "This is the garage, where all of your GearBorn will be stored and you can look up their attributes."],
+    ["tyree", "Every GearBorn has a unique blend of four different attributes: SPEED, ACCELERATION, HANDLING, and TRANSMISSION."],
+    ["tyree", "Speed is what dictates your maximum speed."],
+    ["tyree", "Acceleration is how fast you can increase speed to reach your max speed."],
+    ["user", "I’m not 5. You can maybe skip this."],
+    ["tyree", "Alright, genius, how does handling work?"],
+    ["user", "Uh…."],
+    ["tyree", "*rolls eyes* Handling controls how well your car can turn."],
+    ["tyree", "Transmission is about how well you can shift gears."],
+    ["tyree", "In Drag Races, it’ll control how much bonus you get for a Perfect shift and how much penalty for a Bad shift. In Time Trials and Boss races, it controls how much boost you get for speed tokens and how much you lose for hitting obstacles."],
+    ["user", "Sick."],
+    ["tyree", "You say that a lot."],
+    ["user", "…Sick."],
+    ["tyree", "Let’s go to upgrading."]
+  ],
+  upgrade: [
+    ["tyree", "When you upgrade the level of your car, you’ll earn a permanent boost to all the attributes for your GearBorn."],
+    ["tyree", () => `As you can see, it costs 5,000 Sprox to upgrade from Level 9 to Level 10, but you only have ${formatSprox(state.sprox)}. I’ll give you the rest so that you can see what happens when you upgrade.`],
+    ["tyree", "Sick."],
+    ["user", "That’s my line."],
+    ["tyree", "I was anticipating. Click LEVEL UP and see what happens."]
+  ],
+  evolve: [
+    ["tyree", "What? It looks like Mamburn is evolving!"],
+    ["user", "You knew that was going to happen."],
+    ["tyree", "But it’s still pretty sick."],
+    ["user", "Okay, fine. Sick."],
+    ["tyree", "At certain levels, GearBorn evolve into more powerful, more exciting forms. Like Mamburn into the immortal Snaytan."],
+    ["user", "Whoa…"],
+    ["tyree", "Click EVOLVE. See what happens."],
+    ["user", "Okay, this is pretty dang cool."],
+    ["user", "Wait… Did you have me do all of this so that I could upgrade your car for you?"],
+    ["tyree", "Those who can’t do... get someone to do it for them."],
+    ["tyree", "So, yes, it’s a “those who can’t do” situation."],
+    ["user", "You’re smarter than you look."],
+    ["tyree", "It looks like my lessons here are done… Actually, one more."]
+  ],
+  vindex: [
+    ["tyree", "This is the VINdex."],
+    ["user", "Like Vin Diesel?"],
+    ["tyree", "Like Vehicle Identification Number."],
+    ["user", "It can be both…"],
+    ["tyree", "You’ll see here that the VINdex is locked until you discover more GearBorn."],
+    ["user", "Yeah, but other people discovered them, right? So you could just unlock it…"],
+    ["tyree", "Your generation always wants to skip the work and get right to the answers. Always take, take, take…"],
+    ["tyree", "By the way, I need my GearBorn key back."],
+    ["user", "So what I am I supposed to drive? I bought you a new car. The least you could do is give me a key."],
+    ["tyree", "*sighs* You really like ruining surprises, don’t you?"]
+  ],
+  starters: [
+    ["tyree", "Meet Baybee, Murrka, and Bunnae. They’ll be your first three GearBorn."],
+    ["user", "Sick."],
+    ["tyree", "Each one has different attributes, so play around with all of them to feel the difference."],
+    ["user", "I know you’re going to judge me, but are these it? How do I get more?"],
+    ["tyree", "For now, Pink Slip races are the only way to unlock more GearBorn. Advance through Story Mode to progress through the Pink Slip races and unlock the whole garage."],
+    ["tyree", "There are also great rewards for the Tuner who can unlock and evolve all of the GearBorn to their final forms."],
+    ["tyree", () => `${selectedTunerShortName()}. ${selectedTunerShortName()}!`],
+    ["user", "Huh? I stopped listening after you said Pink Slip races, but sounds cool. Key me, big dawg."],
+    ["tyree", "*shakes his head* Here. You earned this."],
+    ["key", "Dr. Tyree gives you your <strong>GearBorn Key</strong>."],
+    ["tyree", "Good luck and good racing!"]
+  ]
+};
 const displayImageScaleByName = {
   swinecroft: 1.22,
   phantaxi: 1.28,
@@ -222,7 +426,10 @@ const displayImageScaleByName = {
   kuumbusta: 1.22,
   hurrdaboutis: 1.22,
   rainbowlt: 1.24,
-  hornula1: 1.18
+  hornula1: 1.18,
+  mamburn: 1.34,
+  snaytan: 1.34,
+  tutorque: 1.18
 };
 const gearbornStatProfiles = {
   bee: { speed: 74, acceleration: 86, handling: 82, transmission: 84, playstyle: "Technical Sprinter" },
@@ -234,7 +441,9 @@ const gearbornStatProfiles = {
   "techno-dinosaur": { speed: 82, acceleration: 86, handling: 72, transmission: 74, playstyle: "Power Surger" },
   "sorority-elephant": { speed: 78, acceleration: 76, handling: 74, transmission: 88, playstyle: "Prestige Cruiser" },
   "florida-gator": { speed: 80, acceleration: 84, handling: 70, transmission: 76, playstyle: "Chaos Brawler" },
-  rainbowlt: { speed: 86, acceleration: 86, handling: 86, transmission: 86, playstyle: "Elite All-Rounder" }
+  rainbowlt: { speed: 86, acceleration: 86, handling: 86, transmission: 86, playstyle: "Elite All-Rounder" },
+  "metal-snake": { speed: 88, acceleration: 90, handling: 72, transmission: 78, playstyle: "Heavy Burner" },
+  "training-car": { speed: 66, acceleration: 66, handling: 66, transmission: 66, playstyle: "Student Driver" }
 };
 const storyTracks = [
   { id: "indianapolis", city: "Indianapolis", country: "USA", map: "assets/maps/map-indianapolis.png" },
@@ -330,6 +539,8 @@ const vindexEntries = [
   ["091", "Bunnae", "K-Pop Bunny Line", "assets/cars/rabbit-bunnae-display.png"],
   ["092", "Lopstar", "K-Pop Bunny Line", "assets/cars/rabbit-lopstar-display.png"],
   ["093", "Matunnie", "K-Pop Bunny Line", "assets/cars/rabbit-matunnie-display.png"],
+  ["110", "Mamburn", "Metal Snake Line", "assets/cars/snake-mamburn-display.png"],
+  ["111", "Snaytan", "Metal Snake Line", "assets/cars/snake-snaytan-display.png"],
   ["151", "Totorca", "Yacht Rock Whale Line", "assets/cars/whale-totorca-display.png"],
   ["152", "Boates", "Yacht Rock Whale Line", "assets/cars/whale-boates-display.png"],
   ["153", "Shamacht", "Yacht Rock Whale Line", "assets/cars/whale-shamacht-display.png"],
@@ -339,6 +550,7 @@ const vindexEntries = [
   ["198", "Elepledge", "Sorority Elephant Line", "assets/cars/sorority-elephant-elepledge-display.png"],
   ["199", "Sororitrunk", "Sorority Elephant Line", "assets/cars/sorority-elephant-sororitrunk-display.png"],
   ["200", "Plaidonna", "Sorority Elephant Line", "assets/cars/sorority-elephant-plaidonna-display.png"],
+  ["212", "Tutorque", "Training Car Line", "assets/cars/tutorque-display.png"],
   ["231", "Rivvir", "Exulted Frog Line", "assets/cars/frog-rivvir-display.png"],
   ["232", "Croakra", "Exulted Frog Line", "assets/cars/frog-croakra-display.png"],
   ["233", "Kermajesty", "Exulted Frog Line", "assets/cars/frog-kermajesty-display.png"],
@@ -364,7 +576,8 @@ const profileBios = {
   "rip-lee": "A superstar on the track. A stranger to herself. Rip Lee is a full performance of pink wigs, flashing lights, and K-pop perfection. Off the track, she is Jia, quiet and uncertain. Racing is where she finally feels real.",
   jabu: "A builder. A dreamer. A racer shaped by what he did not have. Jabu creates from scraps, turning discarded parts into something powerful and beautiful. He races to prove that vision matters more than resources.",
   pallavi: "Grace in life. Fire on the track. Pallavi lives between honoring tradition and chasing her own ambitions. Behind the wheel, she is focused, fearless, and unstoppable.",
-  "racer-alpha": "No name. No past. Just speed. Racer Alpha is a myth made real, hidden behind a mirrored helmet that reveals nothing. No one knows where he came from. If you beat him, you earn the right to find out."
+  "racer-alpha": "No name. No past. Just speed. Racer Alpha is a myth made real, hidden behind a mirrored helmet that reveals nothing. No one knows where he came from. If you beat him, you earn the right to find out.",
+  "dr-tyree": "A brilliant mind with a disappointing lap time. Dr. Tyree was once the Academy's top student - on paper. His understanding of GearBorn mechanics is unmatched, his theories cited across the world, and his doctorate... frequently mentioned. But on the track? Let's just say the data didn't translate. Now the Academy's lead instructor, Tyree treats GearBorn with absolute seriousness - borderline reverence. To him, this is about more than just rubber and road. He believes mastery comes from understanding - not instinct."
 };
 const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   id: boss.id,
@@ -374,27 +587,18 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   city: boss.track.city,
   country: boss.track.country,
   bio: profileBios[boss.id] || "Profile bio placeholder. Add the final lore from the Web Game Lore Doc."
-})));
+}))).concat([{
+  id: "dr-tyree",
+  name: "Dr. Tyree",
+  image: "assets/characters/instructor.png",
+  category: "Other",
+  car: "Other",
+  city: "Tuner Academy",
+  country: "Other",
+  bio: profileBios["dr-tyree"]
+}]);
 const saveKey = "gearborn-demo-save-v1";
 const tunerChoiceVersion = 1;
-const instructorSceneLines = [
-  { speaker: "instructor", text: "Welcome to the Tuner Academy. I’m here to prep you for your first race." },
-  { speaker: "user", text: "I know what I’m doing. Can we get to the race?" },
-  { speaker: "instructor", text: "Just one thing first. Your garage is stocked with 3 unique GearBorn." },
-  { speaker: "instructor", text: "Racing earns Sprox, which you can spend to level your car." },
-  { speaker: "user", text: "I get it. Level up, go faster." },
-  { speaker: "instructor", text: "That’s correct. But once you reach Level 5, something amazing happens…" },
-  { speaker: "user", text: "How do I get to Level 5 if you won’t shut up and let me race?" },
-  { speaker: "instructor", text: "Can you just…? GearBorn evolve, yada yada yada. You ruined it." },
-  { speaker: "user", text: "So I really only get 3?" },
-  { speaker: "instructor", text: "Ok, greedy. There are 6 Pink Slip races you can compete in to unlock new GearBorn." },
-  { speaker: "instructor", text: "Try to evolve all 9 GearBorn to their final form for a special surprise." },
-  { speaker: "user", text: "Is it a pony?" },
-  { speaker: "instructor", text: "It’s not a pony." },
-  { speaker: "instructor", text: "If a race is too hard, go to the Training Academy to earn more Sprox." },
-  { speaker: "user", text: "Too hard isn’t a thing, but thanks, I guess." },
-  { speaker: "instructor", text: "Fine, just… go race. I’m so sick of you hot-shot young Tuners who think you know everything…" }
-];
 const storyCutsceneScripts = {
   "rev-rend": {
     pre: [
@@ -716,7 +920,14 @@ const defaultState = {
   selectedTuner: null,
   tunerChosen: false,
   tunerChoiceVersion: 0,
-  instructorIntroSeen: false,
+  tutorialComplete: false,
+  tutorialActive: false,
+  tutorialScene: 0,
+  tutorialLine: 0,
+  tutorialDragSprox: 0,
+  tutorialAwaitingUpgrade: false,
+  tutorialAwaitingEvolve: false,
+  tutorialStartingSprox: 0,
   storyCarChosen: false,
   highestBossIndex: 0,
   selectedCampaign: 0,
@@ -840,6 +1051,12 @@ const el = {
   upgradeStats: document.querySelector("#upgrade-stats"),
   upgradeCost: document.querySelector("#upgrade-cost"),
   resetProgress: document.querySelector("#reset-progress"),
+  replayTutorial: document.querySelector("#replay-tutorial"),
+  tutorialReplayModal: document.querySelector("#tutorial-replay-modal"),
+  tutorialReplayYes: document.querySelector("#tutorial-replay-yes"),
+  tutorialSceneSelect: document.querySelector("#tutorial-scene-select"),
+  tutorialReplayCancel: document.querySelector("#tutorial-replay-cancel"),
+  tutorialSceneOptions: document.querySelector("#tutorial-scene-options"),
   resetModal: document.querySelector("#reset-modal"),
   confirmReset: document.querySelector("#confirm-reset"),
   cancelReset: document.querySelector("#cancel-reset"),
@@ -892,6 +1109,15 @@ const el = {
   backCutscene: document.querySelector("#back-cutscene"),
   continueCutscene: document.querySelector("#continue-cutscene"),
   skipCutscene: document.querySelector("#skip-cutscene"),
+  tutorialOverlay: document.querySelector("#tutorial-overlay"),
+  tutorialCard: document.querySelector("#tutorial-card"),
+  tutorialPortrait: document.querySelector("#tutorial-portrait"),
+  tutorialKicker: document.querySelector("#tutorial-kicker"),
+  tutorialTitle: document.querySelector("#tutorial-title"),
+  tutorialCopy: document.querySelector("#tutorial-copy"),
+  tutorialBack: document.querySelector("#tutorial-back"),
+  tutorialNext: document.querySelector("#tutorial-next"),
+  tutorialSkip: document.querySelector("#tutorial-skip"),
   unmaskModal: document.querySelector("#unmask-modal"),
   unmaskPortrait: document.querySelector("#unmask-portrait"),
   unmaskButton: document.querySelector("#unmask-button"),
@@ -1000,7 +1226,14 @@ function sanitizeState() {
   if (!state.racerAlphaUnmasked) state.racerAlphaProfileView = "masked";
   if (state.selectedTuner && !tuners.some((tuner) => tuner.id === state.selectedTuner)) state.selectedTuner = null;
   state.tunerChoiceVersion = state.tunerChoiceVersion || 0;
-  state.instructorIntroSeen = Boolean(state.instructorIntroSeen);
+  state.tutorialComplete = Boolean(state.tutorialComplete);
+  state.tutorialActive = Boolean(state.tutorialActive);
+  state.tutorialScene = Math.max(0, Math.min(Number(state.tutorialScene) || 0, tutorialScenes.length - 1));
+  state.tutorialLine = Math.max(0, Number(state.tutorialLine) || 0);
+  state.tutorialDragSprox = Math.max(0, Math.floor(Number(state.tutorialDragSprox) || 0));
+  state.tutorialAwaitingUpgrade = Boolean(state.tutorialAwaitingUpgrade);
+  state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
+  state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
@@ -1039,6 +1272,10 @@ function formatSprox(amount = state.sprox) {
   return state.unlimitedSprox ? "∞ Sprox" : `${Math.max(0, Math.floor(amount))} Sprox`;
 }
 
+function sproxAmountMarkup(amount = state.sprox) {
+  return `<span class="sprox-inline"><span>${formatSprox(amount)}</span><span class="sprox-coin" aria-hidden="true"></span></span>`;
+}
+
 function addSprox(amount) {
   if (!state.unlimitedSprox) {
     state.sprox = Math.max(0, Math.floor((state.sprox || 0) + amount));
@@ -1073,6 +1310,7 @@ function maxEligibleEvolutionForCar(carId, level) {
 
 function isCarUnlocked(carId) {
   const car = cars.find((item) => item.id === carId);
+  if (tutorialActive() && [tutorialCarId, tutorialOpponentCarId].includes(carId)) return true;
   return Boolean(car && state.unlockedLines?.includes(carId));
 }
 
@@ -1287,7 +1525,9 @@ function renderCarSelectPreview(mode, node) {
 }
 
 function renderCarTiles() {
-  const available = cars.filter((car) => isCarUnlocked(car.id));
+  const available = tutorialActive() && currentTutorialScene().id === "mamburn"
+    ? cars.filter((car) => car.id === tutorialCarId)
+    : cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly);
   if (el.dragCarGrid) el.dragCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "drag")).join("");
   if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
@@ -1300,6 +1540,7 @@ function renderCarTiles() {
 
 function render() {
   renderSproxWallet();
+  renderTutorial();
   renderFlowScreens();
   renderCarTiles();
   renderCarSelect();
@@ -1471,6 +1712,14 @@ function renderBosses() {
 }
 
 function renderTimeTargets() {
+  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
+    el.timeLocation.textContent = `${tutorialTrack.city}, ${tutorialTrack.country}`;
+    applyTrackMap(el.timeTrialTrack, tutorialTrack);
+    el.timeTargets.innerHTML = tutorialMedals.map((medal) => `
+      <div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${medal.base.toFixed(2)} s · ${medal.xp} Sprox</strong></div>
+    `).join("");
+    return;
+  }
   const trackIndex = storyTracks.findIndex((track) => track.id === state.selectedTimeTrack);
   const best = state.timeTrials[state.selectedTimeTrack]?.bestTime;
   el.timeLocation.textContent = trackLabel(state.selectedTimeTrack);
@@ -1483,6 +1732,17 @@ function renderTimeTargets() {
 
 function renderTimeTrackGrid() {
   if (!el.timeTrackGrid) return;
+  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
+    el.timeTrackGrid.innerHTML = `
+      <button class="map-button active" type="button" data-time-track="${tutorialTrack.id}">
+        ${tutorialTrack.city}
+      </button>
+    `;
+    if (el.timeTrackPreview) {
+      el.timeTrackPreview.style.backgroundImage = `linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.16) 8% 8.5%, transparent 8.5% 91.5%, rgba(255, 255, 255, 0.16) 91.5% 92%, transparent 92%), url("${tutorialTrack.map}")`;
+    }
+    return;
+  }
   el.timeTrackGrid.innerHTML = storyTracks.map((track) => `
     <button class="map-button ${track.id === state.selectedTimeTrack ? "active" : ""}" type="button" data-time-track="${track.id}">
       ${track.city}
@@ -1537,6 +1797,9 @@ const oneOffEvolutionMeta = {
 function isVindexDiscovered(entry) {
   const playable = playableEntryMeta(entry);
   if (playable) {
+    if ([tutorialCarId, tutorialOpponentCarId].includes(playable.car.id)) {
+      return state.tutorialComplete || tutorialActive();
+    }
     return isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= playable.index;
   }
   const rankIndex = ranks.findIndex((rank) => rank.name === entry.name);
@@ -1559,11 +1822,21 @@ function evolutionLineMarkup(entry) {
   const playable = playableEntryMeta(entry);
   let items = [];
   if (playable) {
-    items = playable.car.evolutions.map((evolution, index) => ({
-      name: evolution.name,
-      image: imageFor(evolution, "display"),
-      discovered: isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= index
-    }));
+    if (playable.car.id === tutorialCarId) {
+      items = [
+        { name: "????", image: "", discovered: false },
+        { name: "Mamburn", image: "assets/cars/snake-mamburn-display.png", discovered: state.tutorialComplete || tutorialActive() },
+        { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png", discovered: state.tutorialComplete || tutorialActive() }
+      ];
+    } else {
+      items = playable.car.evolutions.map((evolution, index) => ({
+        name: evolution.name,
+        image: imageFor(evolution, "display"),
+        discovered: playable.car.id === tutorialOpponentCarId
+          ? (state.tutorialComplete || tutorialActive())
+          : isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= index
+      }));
+    }
   } else {
     const meta = oneOffEvolutionMeta[entry.name];
     if (!meta) return "";
@@ -1601,7 +1874,7 @@ function characterMarkup(character) {
 function renderProfiles() {
   el.profileList.innerHTML = racerProfiles.map((profile) => `
     <button class="vindex-button ${profile.id === state.selectedProfile ? "active" : ""}" type="button" data-profile="${profile.id}">
-      <span>${profile.car ? "Boss" : "Tuner"}</span>
+      <span>${profile.category || (profile.car ? "Boss" : "Tuner")}</span>
       <strong>${profile.name}</strong>
     </button>
   `).join("");
@@ -1611,7 +1884,7 @@ function renderProfiles() {
     : profile;
   el.profileArt.innerHTML = characterMarkup(displayProfile) + racerAlphaProfileToggle(profile);
   el.profileName.textContent = profile.name;
-  el.profileMeta.textContent = profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
+  el.profileMeta.textContent = profile.category === "Other" ? "Other" : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
   el.profileBio.textContent = profile.bio;
 }
 
@@ -1637,6 +1910,14 @@ function renderTuners() {
 }
 
 function renderDistanceOptions() {
+  if (tutorialActive() && currentTutorialScene().id === "drag-race") {
+    el.distanceOptions.innerHTML = `
+      <button type="button" class="active" data-distance="400">
+        400 m
+      </button>
+    `;
+    return;
+  }
   el.distanceOptions.innerHTML = distances.map((distance) => `
     <button type="button" class="${state.selectedDistance === distance.meters ? "active" : ""}" data-distance="${distance.meters}">
       ${distance.label}
@@ -1645,6 +1926,15 @@ function renderDistanceOptions() {
 }
 
 function renderOpponents() {
+  if (tutorialActive() && currentTutorialScene().id === "drag-race") {
+    el.opponentList.innerHTML = `
+      <button class="opponent-button active" type="button" data-rank="F">
+        <strong>F Class</strong>
+        <small>Tutorque</small>
+      </button>
+    `;
+    return;
+  }
   el.opponentList.innerHTML = ranks.map((rank, index) => {
     const locked = index > state.highestRankIndex;
     const active = state.selectedRank === rank.key;
@@ -1661,7 +1951,7 @@ function renderSelectionPreviews() {
   const car = cars.find((item) => item.id === state.selectedCar);
   const progress = state.garage[car.id];
   const form = currentEvolution(car.id);
-  const rank = ranks.find((item) => item.key === state.selectedRank);
+  const rank = state.selectedRank === "F" ? tutorialRank : ranks.find((item) => item.key === state.selectedRank);
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
 
   el.playerPreviewArt.innerHTML = carMarkupForEvolution(car.id, progress.evolution, "display");
@@ -1674,12 +1964,16 @@ function renderSelectionPreviews() {
 }
 
 function renderGarage() {
+  if (tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene().id)) {
+    renderTutorialGarage();
+    return;
+  }
   const godModeActive = garageGodModeActive();
   el.garageStatus.hidden = !godModeActive;
   el.garageStatus.textContent = godModeActive
     ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
     : "";
-  const garageCars = cars.filter((car) => isCarUnlocked(car.id) || car.id === "rainbowlt");
+  const garageCars = cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt"));
   el.garageGrid.innerHTML = garageCars.map((car) => {
     if (!isCarUnlocked(car.id)) {
       return lockedGarageCard(car);
@@ -1716,6 +2010,39 @@ function renderGarage() {
   }).join("");
 }
 
+function renderTutorialGarage() {
+  el.garageStatus.hidden = false;
+  el.garageStatus.textContent = "Tutorial Garage";
+  const car = cars.find((item) => item.id === tutorialCarId);
+  const progress = state.garage[tutorialCarId];
+  const stats = displayedGearbornStats(tutorialCarId);
+  const playstyle = gearbornStatProfiles[tutorialCarId]?.playstyle || "";
+  const maxed = progress.level >= maxCarLevel;
+  el.garageGrid.innerHTML = `
+    <article class="garage-card">
+      <div class="garage-art">
+        ${carMarkupForEvolution(tutorialCarId, progress.evolution, "display")}
+      </div>
+      <div class="garage-info">
+        <h2>${currentEvolution(tutorialCarId).name}</h2>
+        <h3>${car.family}</h3>
+        <p class="playstyle-tag">${playstyle}</p>
+        <div class="meta-row">
+          <span>Level ${progress.level}</span>
+          <span class="evolution">Training</span>
+        </div>
+        ${garageStatsMarkup(stats)}
+        <div class="meta-row">
+          <span>${maxed ? "Max Level" : "Upgrade: 5000 Sprox"}</span>
+          <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
+        </div>
+        ${!maxed ? `<button class="garage-upgrade" type="button" data-upgrade-car="${tutorialCarId}">Upgrade</button>` : ""}
+        ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${tutorialCarId}">Evolve</button>` : ""}
+      </div>
+    </article>
+  `;
+}
+
 function garageStatsMarkup(stats) {
   return `
     <div class="garage-stat-grid" aria-label="GearBorn stats">
@@ -1740,7 +2067,11 @@ function garageStatBar(label, value) {
 function upgradeStatsMarkup(carId) {
   const progress = state.garage[carId];
   const currentStats = displayedGearbornStatsAtLevel(carId, progress.level);
-  const nextStats = displayedGearbornStatsAtLevel(carId, Math.min(maxCarLevel, progress.level + 1));
+  const rawNextStats = displayedGearbornStatsAtLevel(carId, Math.min(maxCarLevel, progress.level + 1));
+  const nextStats = Object.fromEntries(Object.entries(currentStats).map(([key, value]) => {
+    const nextValue = rawNextStats[key];
+    return [key, progress.level >= maxCarLevel || value >= 100 ? nextValue : Math.max(nextValue, Math.min(100, value + 1))];
+  }));
   return `
     <div class="garage-stat-grid upgrade-stat-grid" aria-label="Upgrade preview stats">
       ${upgradeStatBar("SPD", currentStats.speed, nextStats.speed)}
@@ -1782,7 +2113,7 @@ function renderUpgradeModal() {
   if (!car || !progress) return;
   const form = currentEvolution(carId);
   const maxed = progress.level >= maxCarLevel;
-  const cost = xpForNextLevel(progress.level);
+  const cost = tutorialActive() && carId === tutorialCarId ? 5000 : xpForNextLevel(progress.level);
   if (el.upgradeSproxTotal) el.upgradeSproxTotal.textContent = formatSprox();
   el.upgradeTitle.textContent = maxed ? "Max Level" : `Level ${progress.level} → ${progress.level + 1}`;
   el.upgradeCarName.textContent = form.name;
@@ -1805,7 +2136,7 @@ function upgradeCarLevel() {
   const carId = upgradeModalCarId;
   const progress = state.garage[carId];
   if (!progress || progress.level >= maxCarLevel) return;
-  const cost = xpForNextLevel(progress.level);
+  const cost = tutorialActive() && carId === tutorialCarId ? 5000 : xpForNextLevel(progress.level);
   if (!spendSprox(cost)) {
     el.upgradeCost.textContent = `Need ${cost} Sprox. Current balance: ${formatSprox()}`;
     el.confirmUpgrade.disabled = true;
@@ -1817,12 +2148,22 @@ function upgradeCarLevel() {
   if (newEvolution > unlockedEvolutionIndex(carId)) {
     progress.pendingEvolution = progress.pendingEvolution || unlockedEvolutionIndex(carId) + 1;
   }
+  if (tutorialActive() && carId === tutorialCarId && progress.level >= maxCarLevel) {
+    progress.pendingEvolution = 1;
+  }
   unlockSecretCars();
   saveState();
   render();
   const shouldEvolve = Boolean(progress.pendingEvolution);
   renderUpgradeModal();
   if (shouldEvolve) {
+    if (tutorialActive() && carId === tutorialCarId) {
+      state.tutorialAwaitingUpgrade = false;
+      state.tutorialAwaitingEvolve = false;
+      setTutorialScene("evolve");
+      saveState();
+      renderTutorial();
+    }
     showPendingEvolution(carId);
   }
 }
@@ -1894,7 +2235,7 @@ function renderSettings() {
 
 function paintCars() {
   const car = cars.find((item) => item.id === state.selectedCar);
-  const rank = ranks.find((item) => item.key === state.selectedRank);
+  const rank = state.selectedRank === "F" ? tutorialRank : ranks.find((item) => item.key === state.selectedRank);
   const form = currentEvolution(car.id);
   el.playerRacer.style.setProperty("--car-color", car.color);
   el.rivalRacer.style.setProperty("--car-color", rank.color);
@@ -1912,6 +2253,13 @@ function setRacerImage(container, image, src, alt) {
 }
 
 function startRace() {
+  if (tutorialActive() && currentTutorialScene().id === "drag-race") {
+    prepareDragRace(null, tutorialDragStage());
+    setTutorialScene("dr-controls");
+    saveState();
+    renderTutorial();
+    return;
+  }
   prepareDragRace();
 }
 
@@ -1948,9 +2296,9 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   const rank = dragStage
     ? { key: dragStage.rankKey, name: dragStage.name, xpBonus: dragStage.xp / 180, power: dragStage.power, color: "#f25f5c", images: { race: dragStage.image } }
     : ranks.find((item) => item.key === state.selectedRank);
-  const distance = distances.find((item) => item.meters === state.selectedDistance);
+  const distance = dragStage?.tutorial ? tutorialDistance : distances.find((item) => item.meters === state.selectedDistance);
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
-  const classScale = 0.9 + rankIndex * 0.09;
+  const classScale = dragStage?.tutorial ? 0.5 : 0.9 + rankIndex * 0.09;
   const rivalPower = rank.power * classScale * distance.difficulty * difficultyMultiplier();
   const rivalNitroSkill = Math.max(0, rankIndex) / Math.max(1, ranks.length - 1);
   race = {
@@ -2192,6 +2540,7 @@ function finishRace(playerWon) {
   if (playerWon) {
     earned = Math.floor(race.distance.xp * race.rank.xpBonus * difficultyMultiplier());
     addSprox(earned);
+    if (tutorialActive()) state.tutorialDragSprox = earned;
     const rankIndex = ranks.findIndex((rank) => rank.key === race.rank.key);
     if (rankIndex === state.highestRankIndex && state.highestRankIndex < ranks.length - 1) {
       state.highestRankIndex += 1;
@@ -2199,8 +2548,8 @@ function finishRace(playerWon) {
     el.raceMessage.className = "race-message win";
     el.raceMessage.textContent = "";
   } else {
-    earned = Math.floor(race.distance.xp * 0.16);
-    addSprox(earned);
+    earned = tutorialActive() ? 0 : Math.floor(race.distance.xp * 0.16);
+    if (earned) addSprox(earned);
     el.raceMessage.className = "race-message loss";
     el.raceMessage.textContent = "";
   }
@@ -2212,10 +2561,25 @@ function finishRace(playerWon) {
   render();
   showRaceResult(el.dragTrack, {
     won: playerWon,
+    title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
-    primaryLabel: isStoryRace ? "Next" : "Select Opponent",
+    primaryLabel: tutorialActive() && !playerWon ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
+    hideRaceAgain: tutorialActive() && !playerWon,
+    hideSprox: tutorialActive() && !playerWon,
     onPrimary: () => {
+      if (tutorialActive() && !playerWon) {
+        prepareDragRace(null, tutorialDragStage());
+        startPendingDragRace();
+        setTutorialScene("sprox");
+        saveState();
+        renderTutorial();
+        return;
+      }
+      if (tutorialActive() && playerWon && currentTutorialScene().id === "sprox") {
+        advanceTutorial();
+        return;
+      }
       if (isStoryRace) {
         const finishStory = () => {
           finishStoryRaceScreen();
@@ -2252,11 +2616,21 @@ function failDragRace(title) {
   el.raceMessage.textContent = "";
   showRaceResult(el.dragTrack, {
     won: false,
-    title,
+    title: tutorialActive() ? "RACE LOST" : title,
     sprox: 0,
-    primaryLabel: isStoryRace ? "Next" : "Select Opponent",
+    primaryLabel: tutorialActive() ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
+    hideRaceAgain: tutorialActive(),
+    hideSprox: tutorialActive(),
     onPrimary: () => {
+      if (tutorialActive()) {
+        prepareDragRace(null, tutorialDragStage());
+        startPendingDragRace();
+        setTutorialScene("sprox");
+        saveState();
+        renderTutorial();
+        return;
+      }
       if (isStoryRace) {
         finishStoryRaceScreen();
       } else {
@@ -2284,11 +2658,11 @@ function showRaceResult(trackNode, result) {
   popup.innerHTML = `
     <div class="race-result-card">
       <h2>${result.title || (result.won ? "Victory" : "Defeat")}</h2>
-      <p>Sprox Earned: <strong>${result.sprox ?? 0}</strong></p>
+      ${result.hideSprox ? "" : `<p>Sprox Earned: <strong>${sproxAmountMarkup(result.sprox ?? 0)}</strong></p>`}
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       <div class="race-result-actions">
         <button class="primary" type="button" data-result-action="primary">${result.primaryLabel || "Continue"}</button>
-        <button class="ghost" type="button" data-result-action="again">${result.raceAgainLabel || "Race Again"}</button>
+        ${result.hideRaceAgain ? "" : `<button class="ghost" type="button" data-result-action="again">${result.raceAgainLabel || "Race Again"}</button>`}
       </div>
     </div>
   `;
@@ -2403,11 +2777,19 @@ function showPinkSlipUnlock(carId, onContinue) {
 
 function closeEvolutionModal() {
   const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
+  const tutorialWasEvolving = tutorialActive() && currentTutorialScene().id === "evolve";
   pendingPinkSlipContinue = null;
   evolutionModal = null;
   el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
+  if (tutorialWasEvolving) {
+    closeUpgradeModal();
+    state.tutorialScene = tutorialScenes.findIndex((scene) => scene.id === "vindex");
+    setupTutorialScene();
+    saveState();
+    render();
+  }
   continueAfterPinkSlip?.();
 }
 
@@ -2449,6 +2831,26 @@ function closeGodModal() {
   el.godModal.setAttribute("aria-hidden", "true");
   el.godCode.value = "";
   el.godCodeError.textContent = "";
+}
+
+function openTutorialReplayModal() {
+  el.tutorialSceneOptions.hidden = true;
+  el.tutorialReplayModal.classList.add("active");
+  el.tutorialReplayModal.setAttribute("aria-hidden", "false");
+  el.tutorialReplayYes.focus();
+}
+
+function closeTutorialReplayModal() {
+  el.tutorialReplayModal.classList.remove("active");
+  el.tutorialReplayModal.setAttribute("aria-hidden", "true");
+  el.tutorialSceneOptions.hidden = true;
+}
+
+function renderTutorialSceneOptions() {
+  el.tutorialSceneOptions.innerHTML = tutorialSceneSelectOptions.map((option) => `
+    <button class="tutorial-replay-button" type="button" data-tutorial-scene="${option.scene}">${option.label}</button>
+  `).join("");
+  el.tutorialSceneOptions.hidden = false;
 }
 
 function activateGodMode() {
@@ -2644,19 +3046,303 @@ function storyTunerReady() {
   return Boolean(state.tunerChosen && state.selectedTuner && state.tunerChoiceVersion >= tunerChoiceVersion);
 }
 
+function currentTutorialScene() {
+  return tutorialScenes[state.tutorialScene] || tutorialScenes[0];
+}
+
+function selectedTuner() {
+  return tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
+}
+
+function selectedTunerShortName() {
+  return selectedTuner().name.split(" ")[0];
+}
+
+function tutorialActive() {
+  return Boolean(state.tutorialActive);
+}
+
+function startTutorial(sceneId = "intro") {
+  const sceneIndex = Math.max(0, tutorialScenes.findIndex((scene) => scene.id === sceneId));
+  if (!storyTunerReady()) {
+    pendingIntroView = `tutorial:${sceneId}`;
+    openTunerModal();
+    return;
+  }
+  state.tutorialActive = true;
+  state.tutorialComplete = false;
+  state.tutorialScene = sceneIndex;
+  state.tutorialLine = 0;
+  state.tutorialAwaitingUpgrade = false;
+  state.tutorialAwaitingEvolve = false;
+  state.tutorialStartingSprox = state.unlimitedSprox ? 0 : Math.max(0, Math.floor(state.sprox || 0));
+  if (sceneId === "intro") {
+    state.sprox = 0;
+    state.tutorialDragSprox = 0;
+  }
+  setupTutorialScene();
+  saveState();
+  render();
+}
+
+function finishTutorial() {
+  if (!state.unlimitedSprox) state.sprox = Math.max(0, Math.floor(state.tutorialStartingSprox || 0));
+  state.tutorialActive = false;
+  state.tutorialComplete = true;
+  state.tutorialScene = 0;
+  state.tutorialLine = 0;
+  state.tutorialAwaitingUpgrade = false;
+  state.tutorialAwaitingEvolve = false;
+  state.tutorialStartingSprox = 0;
+  state.selectedCar = defaultUnlockedLines.includes(state.selectedCar) ? state.selectedCar : defaultUnlockedLines[0];
+  state.selectedStoryCar = defaultUnlockedLines.includes(state.selectedStoryCar) ? state.selectedStoryCar : state.selectedCar;
+  state.selectedTimeCar = defaultUnlockedLines.includes(state.selectedTimeCar) ? state.selectedTimeCar : state.selectedCar;
+  state.selectedRank = ranks[0].key;
+  state.selectedTimeTrack = storyTracks[0].id;
+  closeUpgradeModal();
+  closeEvolutionModal();
+  restoreEmbeddedCampaignRace();
+  saveState();
+  showView("menu");
+  render();
+}
+
+function skipTutorial() {
+  finishTutorial();
+}
+
+function setupTutorialScene() {
+  const scene = currentTutorialScene();
+  if (!scene) return;
+  if (scene.id === "upgrade") {
+    ensureTutorialCarState({ level: 9 });
+  } else {
+    ensureTutorialCarState();
+  }
+  if (scene.view) showView(scene.view);
+  if (scene.flow) {
+    if (scene.view === "play") setFlowStep("drag", scene.flow);
+    if (scene.view === "time-trial") setFlowStep("time", scene.flow);
+  }
+  if (scene.id === "drag-race") setupTutorialDragMenu();
+  if (scene.id === "time-trial") setupTutorialTimeMenu();
+  if (scene.id === "garage") showView("garage");
+  if (scene.id === "upgrade") openUpgradeModal(tutorialCarId);
+  if (scene.id === "vindex") {
+    closeUpgradeModal();
+    if (el.evolutionModal) {
+      evolutionModal = null;
+      el.evolutionModal.classList.remove("evolution-unlocked");
+      el.evolutionModal.classList.remove("active");
+      el.evolutionModal.setAttribute("aria-hidden", "true");
+    }
+    state.selectedVindex = "110";
+    showView("vindex");
+  }
+  if (scene.id === "starters") {
+    showView("garage");
+  }
+}
+
+function ensureTutorialCarState(options = {}) {
+  state.garage[tutorialCarId] = state.garage[tutorialCarId] || { level: 1, xp: 0, evolution: 0, unlockedEvolution: 0, pendingEvolution: null };
+  state.garage[tutorialOpponentCarId] = state.garage[tutorialOpponentCarId] || { level: 1, xp: 0, evolution: 0, unlockedEvolution: 0, pendingEvolution: null };
+  if (options.level) {
+    state.garage[tutorialCarId].level = options.level;
+    state.garage[tutorialCarId].evolution = options.level >= 10 ? 1 : 0;
+    state.garage[tutorialCarId].unlockedEvolution = options.level >= 10 ? 1 : 0;
+    state.garage[tutorialCarId].pendingEvolution = null;
+  }
+  if (options.sprox && !state.unlimitedSprox) {
+    state.sprox = Math.max(state.sprox || 0, options.sprox);
+  }
+  state.selectedCar = tutorialCarId;
+  state.selectedStoryCar = tutorialCarId;
+  state.selectedTimeCar = tutorialCarId;
+}
+
+function setupTutorialDragMenu() {
+  state.selectedCar = tutorialCarId;
+  state.selectedDistance = 400;
+  state.selectedRank = "F";
+  render();
+}
+
+function setupTutorialTimeMenu() {
+  state.selectedTimeCar = tutorialCarId;
+  state.selectedTimeTrack = tutorialTrack.id;
+  render();
+}
+
+function tutorialLinesForScene(scene) {
+  return tutorialDialogue[scene.id] || [["tyree", scene.copy || "Tutorial placeholder."]];
+}
+
+function normalizeTutorialLine(line) {
+  const speaker = Array.isArray(line) ? line[0] : "tyree";
+  const content = Array.isArray(line) ? line[1] : line;
+  return { speaker, text: typeof content === "function" ? content() : content };
+}
+
+function tutorialSpeakerProfile(speaker) {
+  if (speaker === "user") return selectedTuner();
+  if (speaker === "key") return { name: "GearBorn Key", image: gearbornKeyImage };
+  if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
+  return { name: "Dr. Tyree", image: "assets/characters/instructor.png" };
+}
+
+function setTutorialScene(sceneId) {
+  state.tutorialScene = Math.max(0, tutorialScenes.findIndex((scene) => scene.id === sceneId));
+  state.tutorialLine = 0;
+  state.tutorialAwaitingUpgrade = false;
+  state.tutorialAwaitingEvolve = false;
+}
+
+function tutorialEvolvePromptIndex() {
+  return tutorialLinesForScene({ id: "evolve" }).findIndex((line) => {
+    const normalized = normalizeTutorialLine(line);
+    return normalized.text.includes("Click EVOLVE");
+  });
+}
+
+function advanceTutorial() {
+  const scene = currentTutorialScene();
+  const lines = tutorialLinesForScene(scene);
+  if (scene.id === "evolve" && state.tutorialLine === tutorialEvolvePromptIndex()) {
+    state.tutorialAwaitingEvolve = true;
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (state.tutorialLine < lines.length - 1) {
+    state.tutorialLine += 1;
+    if (scene.id === "upgrade" && state.tutorialLine >= 2 && !state.unlimitedSprox) {
+      state.sprox = Math.max(state.sprox || 0, 5000);
+      openUpgradeModal(tutorialCarId);
+    }
+    saveState();
+    renderTutorial();
+    return;
+  }
+  state.tutorialLine = 0;
+  if (scene.id === "starters") {
+    finishTutorial();
+    return;
+  }
+  if (scene.id === "upgrade") {
+    state.tutorialAwaitingUpgrade = true;
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (scene.id === "mamburn") {
+    state.selectedCar = tutorialCarId;
+    setFlowStep("drag", "match");
+  }
+  if (scene.id === "drag-race") {
+    prepareDragRace(null, tutorialDragStage());
+    setTutorialScene("dr-controls");
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (scene.id === "dr-controls") {
+    startPendingDragRace();
+    setTutorialScene("sprox");
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (scene.id === "time-trial") {
+    modeFlow.time = "race";
+    renderFlowScreens();
+    beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+    setTutorialScene("tt-controls");
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (scene.id === "tt-controls") {
+    modeFlow.time = "race";
+    renderFlowScreens();
+    if (!verticalRace || verticalRace.finished || verticalRace.mode !== "tutorial-time") {
+      beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+    }
+    startVerticalCountdown();
+    setTutorialScene("enough-sprox");
+    saveState();
+    renderTutorial();
+    return;
+  }
+  if (scene.id === "upgrade") {
+    openUpgradeModal(tutorialCarId);
+  }
+  state.tutorialScene = Math.min(tutorialScenes.length - 1, state.tutorialScene + 1);
+  setupTutorialScene();
+  saveState();
+  render();
+}
+
+function rewindTutorial() {
+  state.tutorialAwaitingUpgrade = false;
+  state.tutorialAwaitingEvolve = false;
+  if (state.tutorialLine > 0) {
+    state.tutorialLine -= 1;
+    saveState();
+    renderTutorial();
+    return;
+  }
+  state.tutorialScene = Math.max(0, state.tutorialScene - 1);
+  state.tutorialLine = Math.max(0, tutorialLinesForScene(currentTutorialScene()).length - 1);
+  setupTutorialScene();
+  saveState();
+  render();
+}
+
+function tutorialDragStage() {
+  return { rankKey: "F", name: "Tutorque", xp: 80, power: 0.28, distance: 400, image: "assets/cars/tutorque-race.png", tutorial: true };
+}
+
+function renderTutorial() {
+  if (!el.tutorialOverlay) return;
+  const active = tutorialActive();
+  el.tutorialOverlay.classList.toggle("active", active);
+  el.tutorialOverlay.setAttribute("aria-hidden", active ? "false" : "true");
+  if (!active) return;
+  const scene = currentTutorialScene();
+  const countdownRunning = el.dragCountdown.classList.contains("active")
+    || el.storyCountdown.classList.contains("active")
+    || el.timeCountdown.classList.contains("active");
+  if (scene.id === "upgrade" && state.tutorialAwaitingUpgrade) {
+    el.tutorialOverlay.classList.remove("active");
+    return;
+  }
+  if (scene.id === "evolve" && state.tutorialAwaitingEvolve) {
+    el.tutorialOverlay.classList.remove("active");
+    return;
+  }
+  const waitingOnRace = scene.wait && (countdownRunning || (race && !race.finished) || (verticalRace && !verticalRace.finished));
+  el.tutorialOverlay.classList.toggle("active", !waitingOnRace);
+  if (waitingOnRace) return;
+  const lines = tutorialLinesForScene(scene);
+  state.tutorialLine = Math.max(0, Math.min(state.tutorialLine || 0, lines.length - 1));
+  const line = normalizeTutorialLine(lines[state.tutorialLine]);
+  const speaker = tutorialSpeakerProfile(line.speaker);
+  el.tutorialKicker.textContent = "";
+  el.tutorialTitle.textContent = speaker.name;
+  el.tutorialCopy.innerHTML = line.text;
+  el.tutorialPortrait.innerHTML = characterMarkup(speaker);
+  el.tutorialBack.hidden = state.tutorialScene === 0 && state.tutorialLine === 0;
+  el.tutorialNext.textContent = scene.id === "starters" && state.tutorialLine === lines.length - 1 ? "Continue" : "Next";
+  el.tutorialCard.dataset.scene = scene.id;
+}
+
 function ensureTunerAndIntro(view) {
   if (!["story", "solo"].includes(view)) return;
   if (!storyTunerReady()) {
     pendingIntroView = view;
     openTunerModal();
-    return;
   }
-  openInstructorIntroIfNeeded();
-}
-
-function openInstructorIntroIfNeeded() {
-  if (state.instructorIntroSeen || !storyTunerReady()) return;
-  openStoryCutscene({ type: "intro", title: "Training Academy Intro" }, null);
 }
 
 function restoreEmbeddedCampaignRace() {
@@ -2703,10 +3389,6 @@ function startCampaignLevel() {
   }
   const level = campaignLevels[index];
   const runLevel = () => startCampaignRace(index, level);
-  if (!state.instructorIntroSeen) {
-    openInstructorIntroIfNeeded();
-    return;
-  }
   if (shouldShowStoryCutscene(index, level)) {
     openStoryCutscene(level, runLevel);
     return;
@@ -2751,10 +3433,9 @@ function shouldShowStoryCutscene(index, level) {
 
 function openStoryCutscene(level, startRaceCallback, phase = "pre") {
   pendingCutsceneStart = startRaceCallback;
-  const isIntro = level.type === "intro";
   const boss = level.type === "boss" ? (level.final ? finalBoss : bosses[level.bossIndex]) : null;
-  activeCutsceneContext = { type: isIntro ? "intro" : level.type, boss, phase };
-  activeCutsceneLines = isIntro ? instructorSceneLines : storyCutsceneScripts[boss?.id]?.[phase] || null;
+  activeCutsceneContext = { type: level.type, boss, phase };
+  activeCutsceneLines = storyCutsceneScripts[boss?.id]?.[phase] || null;
   activeCutsceneIndex = 0;
   if (!activeCutsceneLines?.length) {
     console.warn(`Missing cutscene script for ${boss?.id || level.type} ${phase}`);
@@ -2766,7 +3447,7 @@ function openStoryCutscene(level, startRaceCallback, phase = "pre") {
   el.cutsceneTitle.textContent = "Story Scene";
   el.cutsceneModal.classList.add("single-speaker");
   renderCutsceneLine();
-  el.cutsceneModal.dataset.sceneType = isIntro ? "intro" : level.type;
+  el.cutsceneModal.dataset.sceneType = level.type;
   el.cutsceneModal.classList.add("active");
   el.cutsceneModal.setAttribute("aria-hidden", "false");
   el.continueCutscene.focus();
@@ -2789,7 +3470,6 @@ function renderCutsceneLine() {
 function cutsceneCharacterForLine(line) {
   const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
   if (line.speaker === "user") return tuner;
-  if (line.speaker === "instructor") return { name: "Instructor", image: "assets/characters/instructor.png" };
   const boss = activeCutsceneContext?.boss || finalBoss;
   const unmaskedAlpha = boss.id === "racer-alpha" && (
     line.unmask ||
@@ -2817,7 +3497,6 @@ function rewindCutscene() {
 }
 
 function closeStoryCutsceneAndStart() {
-  const sceneType = el.cutsceneModal.dataset.sceneType;
   el.cutsceneModal.classList.remove("active");
   el.cutsceneModal.setAttribute("aria-hidden", "true");
   el.cutsceneModal.classList.remove("single-speaker");
@@ -2832,10 +3511,6 @@ function closeStoryCutsceneAndStart() {
   el.backCutscene.hidden = true;
   el.continueCutscene.textContent = "Continue";
   el.continueCutscene.classList.remove("finish");
-  if (sceneType === "intro") {
-    state.instructorIntroSeen = true;
-    saveState();
-  }
   const start = pendingCutsceneStart;
   pendingCutsceneStart = null;
   if (start) start();
@@ -2928,8 +3603,13 @@ function selectTuner(tunerId) {
   closeTunerModal();
   render();
   if (pendingIntroView) {
+    if (pendingIntroView.startsWith("tutorial:")) {
+      const sceneId = pendingIntroView.split(":")[1] || "intro";
+      pendingIntroView = null;
+      startTutorial(sceneId);
+      return;
+    }
     pendingIntroView = null;
-    openInstructorIntroIfNeeded();
   }
 }
 
@@ -3198,6 +3878,7 @@ function finishVerticalRace(playerWon) {
   el.timeMapStart.classList.remove("active");
   const elapsed = (performance.now() - raceState.startTime) / 1000;
   let resultSprox = 0;
+  let resultWon = playerWon;
   const resultLines = [];
   if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
     const sprox = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
@@ -3221,9 +3902,11 @@ function finishVerticalRace(playerWon) {
     if (raceState.campaignLevelIndex !== null && playerWon) completeCampaignLevel(raceState.campaignLevelIndex);
   } else {
     const trackIndex = raceState.trackIndex;
-    const beaten = timeMedals.find((medal) => elapsed <= timeTarget(medal, trackIndex));
-    const sprox = beaten ? beaten.xp : 40;
-    addSprox(sprox);
+    const medalSet = raceState.mode === "tutorial-time" ? tutorialMedals : timeMedals;
+    const beaten = medalSet.find((medal) => elapsed <= (raceState.mode === "tutorial-time" ? medal.base : timeTarget(medal, trackIndex)));
+    resultWon = raceState.mode === "tutorial-time" ? Boolean(beaten) : playerWon;
+    const sprox = beaten ? beaten.xp : raceState.mode === "tutorial-time" ? 0 : 40;
+    if (sprox) addSprox(sprox);
     resultSprox = sprox;
     const best = state.timeTrials[raceState.trackId]?.bestTime;
     if (raceState.mode === "time" && (!best || elapsed < best)) {
@@ -3249,12 +3932,27 @@ function finishVerticalRace(playerWon) {
   render();
   const isStoryRace = raceState.campaignLevelIndex !== null;
   showRaceResult(raceState.trackNode, {
-    won: playerWon,
+    won: resultWon,
+    title: tutorialActive() && !resultWon ? "RACE LOST" : undefined,
     sprox: resultSprox,
-    lines: resultLines,
-    primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    lines: tutorialActive() && !resultWon ? [] : resultLines,
+    primaryLabel: tutorialActive() && !resultWon ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     raceAgainLabel: "Race Again",
+    hideRaceAgain: tutorialActive() && !resultWon,
+    hideSprox: tutorialActive() && !resultWon,
     onPrimary: () => {
+      if (tutorialActive() && !resultWon) {
+        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+        startVerticalCountdown();
+        setTutorialScene("enough-sprox");
+        saveState();
+        renderTutorial();
+        return;
+      }
+      if (tutorialActive() && resultWon && currentTutorialScene().id === "enough-sprox") {
+        advanceTutorial();
+        return;
+      }
       if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
         if (playerWon && raceState.mode === "boss" && raceState.bossData.id === "racer-alpha") {
           showRacerAlphaUnmask();
@@ -3309,11 +4007,21 @@ function failVerticalRace(title) {
   const isStoryRace = raceState.campaignLevelIndex !== null;
   showRaceResult(raceState.trackNode, {
     won: false,
-    title,
+    title: tutorialActive() ? "RACE LOST" : title,
     sprox: 0,
-    primaryLabel: isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    primaryLabel: tutorialActive() ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     raceAgainLabel: "Race Again",
+    hideRaceAgain: tutorialActive(),
+    hideSprox: tutorialActive(),
     onPrimary: () => {
+      if (tutorialActive()) {
+        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+        startVerticalCountdown();
+        setTutorialScene("enough-sprox");
+        saveState();
+        renderTutorial();
+        return;
+      }
       if (isStoryRace) {
         finishStoryRaceScreen();
       } else if (raceState.mode === "boss") {
@@ -3507,6 +4215,13 @@ el.skipCutscene.addEventListener("click", closeStoryCutsceneAndStart);
 el.startTimeTrial.addEventListener("click", () => {
   modeFlow.time = "race";
   renderFlowScreens();
+  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
+    beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+    setTutorialScene("tt-controls");
+    saveState();
+    renderTutorial();
+    return;
+  }
   beginVerticalRace("time", true);
 });
 el.storyMapStart.addEventListener("click", startVerticalCountdown);
@@ -3585,8 +4300,15 @@ el.upgradeModal.addEventListener("click", (event) => {
 
 el.evolveButton.addEventListener("click", () => {
   if (!evolutionModal) return;
+  const tutorialEvolving = tutorialActive() && currentTutorialScene().id === "evolve" && evolutionModal.carId === tutorialCarId;
   el.evolveButton.hidden = true;
   revealEvolution(evolutionModal.carId, evolutionModal.evolution);
+  if (tutorialEvolving) {
+    state.tutorialAwaitingEvolve = false;
+    state.tutorialLine = 7;
+    saveState();
+    renderTutorial();
+  }
 });
 
 el.closeEvolution.addEventListener("click", closeEvolutionModal);
@@ -3603,6 +4325,22 @@ el.cancelReset.addEventListener("click", closeResetModal);
 el.godMode.addEventListener("click", openGodModal);
 el.confirmGod.addEventListener("click", activateGodMode);
 el.cancelGod.addEventListener("click", closeGodModal);
+el.replayTutorial.addEventListener("click", openTutorialReplayModal);
+el.tutorialReplayYes.addEventListener("click", () => {
+  closeTutorialReplayModal();
+  startTutorial("intro");
+});
+el.tutorialSceneSelect.addEventListener("click", renderTutorialSceneOptions);
+el.tutorialReplayCancel.addEventListener("click", closeTutorialReplayModal);
+el.tutorialSceneOptions.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-tutorial-scene]");
+  if (!button) return;
+  closeTutorialReplayModal();
+  startTutorial(button.dataset.tutorialScene);
+});
+el.tutorialBack.addEventListener("click", rewindTutorial);
+el.tutorialNext.addEventListener("click", advanceTutorial);
+el.tutorialSkip.addEventListener("click", skipTutorial);
 el.godCode.addEventListener("input", () => {
   el.godCodeError.textContent = "";
 });
@@ -3622,6 +4360,12 @@ el.resetModal.addEventListener("click", (event) => {
 el.godModal.addEventListener("click", (event) => {
   if (event.target === el.godModal) {
     closeGodModal();
+  }
+});
+
+el.tutorialReplayModal.addEventListener("click", (event) => {
+  if (event.target === el.tutorialReplayModal) {
+    closeTutorialReplayModal();
   }
 });
 
@@ -3688,6 +4432,10 @@ document.addEventListener("keydown", (event) => {
     closeGodModal();
     return;
   }
+  if (event.key === "Escape" && el.tutorialReplayModal.classList.contains("active")) {
+    closeTutorialReplayModal();
+    return;
+  }
   if (event.key === "Escape" && el.upgradeModal.classList.contains("active")) {
     closeUpgradeModal();
     return;
@@ -3723,3 +4471,8 @@ document.addEventListener("keyup", (event) => {
 });
 
 render();
+if (!state.tutorialComplete && !state.tutorialActive) {
+  startTutorial("intro");
+} else if (state.tutorialActive) {
+  setupTutorialScene();
+}

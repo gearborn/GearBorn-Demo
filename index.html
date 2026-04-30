@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gearborn Drag Demo</title>
+    <title>GearBorn: Engines Evolved Demo</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -21,8 +21,8 @@
             </span>
           </button>
           <div class="sprox-wallet" aria-label="Sprox balance">
-            <span class="sprox-coin">●</span>
             <strong id="sprox-total">0 Sprox</strong>
+            <span class="sprox-coin" aria-hidden="true">●</span>
           </div>
         </div>
         <nav class="nav" aria-label="Main navigation">
@@ -449,6 +449,7 @@
               </div>
               <div class="danger-zone">
                 <button class="god-button" id="god-mode" type="button">God Mode</button>
+                <button class="tutorial-replay-button" id="replay-tutorial" type="button">Replay Tutorial</button>
                 <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
               </div>
             </div>
@@ -495,6 +496,37 @@
           <button class="primary" id="continue-cutscene" type="button">Continue</button>
           <button class="ghost" id="skip-cutscene" type="button">Skip</button>
         </div>
+      </div>
+    </div>
+
+    <div class="tutorial-overlay" id="tutorial-overlay" aria-hidden="true">
+      <div class="tutorial-card" id="tutorial-card">
+        <div class="tutorial-speaker">
+          <div class="tutorial-portrait" id="tutorial-portrait"></div>
+          <div>
+            <p class="modal-kicker" id="tutorial-kicker">Tutorial</p>
+            <h2 id="tutorial-title">Dr. Tyree</h2>
+          </div>
+        </div>
+        <p id="tutorial-copy"></p>
+        <div class="tutorial-actions">
+          <button class="ghost" id="tutorial-back" type="button">Back</button>
+          <button class="primary" id="tutorial-next" type="button">Next</button>
+        </div>
+        <button class="tutorial-skip" id="tutorial-skip" type="button">Skip Tutorial</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-replay-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-replay-title">
+        <p class="modal-kicker">Replay Tutorial</p>
+        <h2 id="tutorial-replay-title">Are you sure you want to replay the tutorial?</h2>
+        <div class="modal-actions">
+          <button class="success-button" id="tutorial-replay-yes" type="button">Yes</button>
+          <button class="tutorial-replay-button" id="tutorial-scene-select" type="button">Scene Select</button>
+          <button class="danger-button" id="tutorial-replay-cancel" type="button">Cancel</button>
+        </div>
+        <div class="tutorial-scene-select" id="tutorial-scene-options" hidden></div>
       </div>
     </div>
 
@@ -558,8 +590,8 @@
         <button class="modal-close-bubble" id="close-upgrade" type="button" aria-label="Close upgrade window">×</button>
         <p class="modal-kicker">Garage Upgrade</p>
         <div class="upgrade-wallet" aria-label="Sprox balance">
-          <span class="sprox-coin">●</span>
           <strong id="upgrade-sprox-total">0 Sprox</strong>
+          <span class="sprox-coin" aria-hidden="true">●</span>
         </div>
         <h2 id="upgrade-title">Level Up</h2>
         <div class="upgrade-layout">
