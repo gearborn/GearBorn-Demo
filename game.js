@@ -1777,26 +1777,69 @@ function renderCarTiles() {
   renderCarSelectPreview("story", el.storyCarSelectPreview);
 }
 
+function activeViewId() {
+  return document.querySelector(".view.active")?.id || "menu-view";
+}
+
+function viewIsActive(view) {
+  return activeViewId() === `${view}-view`;
+}
+
+function embeddedViewIs(view) {
+  return embeddedCampaignView?.view === view;
+}
+
+function renderMenuGoal() {
+  const nextRaceNode = document.querySelector("#menu-next-race");
+  const nextRewardNode = document.querySelector("#menu-next-reward");
+  if (!nextRaceNode || !nextRewardNode) return;
+  const cityIndex = Math.max(0, Math.min(state.selectedStoryCity || 0, highestUnlockedStoryCityIndex()));
+  const city = storyCities[cityIndex] || storyCities[0];
+  const level = firstPlayableStoryLevelForCity(cityIndex) || campaignLevels[0];
+  const cityName = city?.city || "Indianapolis";
+  nextRaceNode.textContent = `${cityName} - ${level?.title || "Next Level"}`;
+  let reward = 50;
+  if (level?.type === "drag" || level?.type === "pink-slip") reward = level.drag.xp;
+  if (level?.type === "trial") reward = timeMedals[timeMedals.length - 1].xp;
+  if (level?.type === "battle") reward = battleRewardForBossIndex(level.bossIndex);
+  if (level?.type === "boss") reward = (level.final ? finalBoss : bosses[level.bossIndex])?.xp || reward;
+  nextRewardNode.textContent = `Reward +${reward} Sprox`;
+}
+
 function render() {
+  const activeView = activeViewId();
+  const needsDrag = activeView === "play-view" || embeddedViewIs("play");
+  const needsTime = activeView === "time-trial-view" || embeddedViewIs("time-trial");
+  const needsBoss = activeView === "boss-view" || embeddedViewIs("boss");
+  const needsBattle = activeView === "battle-view" || embeddedViewIs("battle");
+  const needsStory = activeView === "story-view";
+  const needsCarSelect = needsDrag || needsTime || needsBoss || needsBattle || needsStory || tutorialActive();
   renderSproxWallet();
+  if (activeView === "menu-view") renderMenuGoal();
   renderTutorial();
   renderFlowScreens();
-  renderCarTiles();
-  renderCarSelect();
-  renderVerticalSelects();
-  renderCampaign();
-  renderBosses();
-  renderBattles();
-  renderTimeTargets();
-  renderTimeTrackGrid();
-  renderVindex();
-  renderProfiles();
-  renderTuners();
-  renderDistanceOptions();
-  renderOpponents();
-  renderSelectionPreviews();
-  renderGarage();
-  renderSettings();
+  if (needsCarSelect) {
+    renderCarTiles();
+    renderCarSelect();
+    renderVerticalSelects();
+  }
+  if (needsStory) renderCampaign();
+  if (needsBoss) renderBosses();
+  if (needsBattle) renderBattles();
+  if (needsTime) {
+    renderTimeTargets();
+    renderTimeTrackGrid();
+  }
+  if (viewIsActive("vindex")) renderVindex();
+  if (viewIsActive("profiles")) renderProfiles();
+  if (viewIsActive("settings") || el.tunerModal?.classList.contains("active")) renderTuners();
+  if (needsDrag) {
+    renderDistanceOptions();
+    renderOpponents();
+    renderSelectionPreviews();
+  }
+  if (viewIsActive("garage")) renderGarage();
+  if (viewIsActive("settings")) renderSettings();
   paintCars();
 }
 
@@ -1888,7 +1931,7 @@ function renderCampaign() {
   if (!el.storyCityMap) return;
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   const cityUnlocked = storyCityUnlocked(state.selectedStoryCity);
-  el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "";
+  el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
   el.storyCityTitle.textContent = `${city.city}, ${city.country}`.toUpperCase();
   el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.cityMap || city.track.map}")`;
   el.storyCityMap.style.backgroundSize = "cover";
@@ -1919,8 +1962,8 @@ function storyNodeIconMarkup(city, level, visual) {
     const boss = level.final ? finalBoss : bosses[level.bossIndex];
     return `
       <span class="story-node-icon layered type-boss">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true">
-        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
       </span>
     `;
   }
@@ -1928,14 +1971,14 @@ function storyNodeIconMarkup(city, level, visual) {
     const form = level.drag;
     return `
       <span class="story-node-icon layered type-pink-slip">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true">
-        <img class="node-subject pink-car" src="${form.displayImage || form.image}" alt="${form.name}">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        <img class="node-subject pink-car" src="${form.displayImage || form.image}" alt="${form.name}" loading="lazy" decoding="async">
       </span>
     `;
   }
   return `
     <span class="story-node-icon type-${level.type}">
-      <img class="node-bg" src="${visual.icon}" alt="${visual.label}">
+      <img class="node-bg" src="${visual.icon}" alt="${visual.label}" loading="lazy" decoding="async">
     </span>
   `;
 }
@@ -1946,7 +1989,7 @@ function renderStoryCityGrid() {
     const unlocked = storyCityUnlocked(index);
     return `
       <button class="story-city-tile ${index === state.selectedStoryCity ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-story-city="${index}" ${unlocked ? "" : "disabled"}>
-        <span class="city-icon">${city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : ""}</span>
+        <span class="city-icon">${city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : ""}</span>
         <strong>${cityAbbreviations[city.id] || city.city}</strong>
       </button>
     `;
@@ -1959,7 +2002,7 @@ function renderStoryLevelPreview() {
   if (!panelOpen || !level) return;
   const locked = storyLevelLocked(storyCities[state.selectedStoryCity], level);
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
-  el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true">`;
+  el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
   el.storyPreviewIcon.style.background = "transparent";
   el.campaignType.textContent = locked ? "Locked" : campaignTypeLabel(level);
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
@@ -2560,7 +2603,7 @@ function characterMarkup(character) {
   const initials = character.name.split(" ").map((part) => part[0]).join("").slice(0, 2);
   return `
     <div class="character-frame">
-      <img src="${character.image}" alt="${character.name}" onerror="this.parentElement.classList.add('placeholder'); this.remove();">
+      <img src="${character.image}" alt="${character.name}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('placeholder'); this.remove();">
       <span>${initials}</span>
     </div>
   `;
@@ -2581,7 +2624,7 @@ function renderProfiles() {
   el.profileName.textContent = profile.name;
   el.profileMeta.textContent = profile.category === "Other" ? "Other" : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
   const boss = bossChallengeBosses.find((item) => item.id === profile.id);
-  el.profileCarArt.innerHTML = boss ? `<img src="${bossCarDisplayImage(boss)}" alt="${boss.car}">` : "";
+  el.profileCarArt.innerHTML = boss ? `<img src="${bossCarDisplayImage(boss)}" alt="${boss.car}" loading="lazy" decoding="async">` : "";
   el.profileBio.textContent = profile.bio;
 }
 
@@ -2909,7 +2952,7 @@ function lockedGarageCard(car) {
 function carMarkup(color) {
   const currentCar = cars.find((car) => car.color === color);
   const image = currentCar ? imageFor(currentEvolution(currentCar.id), "display") : "";
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${currentEvolution(currentCar.id).name}" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${currentEvolution(currentCar.id).name}" loading="lazy" decoding="async" onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${color}">
@@ -3645,7 +3688,7 @@ function displayScaleStyle(name, role = "display") {
 
 function rankMarkup(rank, role = "display") {
   const image = imageFor(rank, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}"${displayScaleStyle(rank.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${rank.name}" loading="lazy" decoding="async"${displayScaleStyle(rank.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${rank.color}">
@@ -3659,7 +3702,7 @@ function rankMarkup(rank, role = "display") {
 }
 
 function displayMarkup(image, alt, color) {
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}"${displayScaleStyle(alt, "display")} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${alt}" loading="lazy" decoding="async"${displayScaleStyle(alt, "display")} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   return `
     <div class="car ${image ? "has-image" : ""}" style="--car-color:${color}">
       ${imageTag}
@@ -3675,7 +3718,7 @@ function carMarkupForEvolution(carId, evolutionIndex, role = "display") {
   const car = cars.find((item) => item.id === carId);
   const form = evolutionByIndex(carId, evolutionIndex);
   const image = imageFor(form, role);
-  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}"${displayScaleStyle(form.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
+  const imageTag = image ? `<img class="car-image" src="${image}" alt="${form.name}" loading="lazy" decoding="async"${displayScaleStyle(form.name, role)} onerror="this.closest('.car')?.classList.remove('has-image')">` : "";
   const imageClass = image ? " has-image" : "";
   return `
     <div class="car${imageClass}" style="--car-color:${car.color}">
@@ -3773,6 +3816,7 @@ function showView(view) {
   if (view === "time-trial") setFlowStep("time", "car");
   if (view === "boss") setFlowStep("boss", "car");
   if (view === "battle") setFlowStep("battle", "car");
+  if (!["story", "play", "time-trial", "boss", "battle"].includes(view)) render();
 }
 
 function storyTunerReady() {
@@ -4341,7 +4385,7 @@ function openBossIntro(startConfig = { mode: "boss", options: {} }) {
   el.bossModalKicker.textContent = `${boss.track.city}, ${boss.track.country}`;
   el.bossModalTitle.textContent = `${boss.name} challenges you`;
   el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} Sprox.`;
-  el.bossPortrait.innerHTML = `<img src="${boss.portrait}" alt="${boss.name}" onerror="this.remove()">`;
+  el.bossPortrait.innerHTML = `<img src="${boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async" onerror="this.remove()">`;
   el.bossModal.classList.add("active");
   el.bossModal.setAttribute("aria-hidden", "false");
   el.continueBoss.focus();
@@ -4353,7 +4397,7 @@ function closeBossIntro() {
 }
 
 function showRacerAlphaUnmask() {
-  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.portrait}" alt="Racer Alpha helmet" onerror="this.remove()">`;
+  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.portrait}" alt="Racer Alpha helmet" loading="lazy" decoding="async" onerror="this.remove()">`;
   el.unmaskCopy.textContent = "Racer Alpha's helmet is ready to come off.";
   el.unmaskButton.hidden = false;
   el.continueUnmask.hidden = true;
@@ -4366,7 +4410,7 @@ function unmaskRacerAlpha() {
   state.racerAlphaUnmasked = true;
   state.racerAlphaProfileView = "unmasked";
   saveState();
-  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.unmaskedPortrait}" alt="Racer Alpha" onerror="this.remove()">`;
+  el.unmaskPortrait.innerHTML = `<img src="${finalBoss.unmaskedPortrait}" alt="Racer Alpha" loading="lazy" decoding="async" onerror="this.remove()">`;
   el.unmaskCopy.textContent = "Racer Alpha has been unmasked.";
   el.unmaskButton.hidden = true;
   el.continueUnmask.hidden = false;
@@ -5348,9 +5392,64 @@ document.addEventListener("keyup", (event) => {
   }
 });
 
+function startLoadingExperience() {
+  const screen = document.querySelector("#loading-screen");
+  const fill = document.querySelector("#fuel-fill");
+  const tip = document.querySelector("#loading-tip");
+  if (!screen || !fill) {
+    document.body.classList.remove("app-loading");
+    return { complete() {} };
+  }
+  const tips = [
+    "Say 'Unlock' to call your nearest GearBorn.",
+    "Not all GearBorn answer right away.",
+    "Medallions can evolve a GearBorn - but connection matters more.",
+    "Sprox power upgrades in the Garage.",
+    "Every GearBorn has its own driving personality."
+  ];
+  let progress = 10;
+  let tipIndex = 0;
+  let done = false;
+  const setProgress = (value) => {
+    progress = Math.max(progress, Math.min(100, value));
+    fill.style.width = `${progress}%`;
+  };
+  const progressTimer = window.setInterval(() => {
+    if (done) return;
+    const ceiling = document.readyState === "complete" ? 95 : 88;
+    setProgress(Math.min(ceiling, progress + 2 + Math.random() * 7));
+  }, 180);
+  const tipTimer = window.setInterval(() => {
+    tipIndex = (tipIndex + 1) % tips.length;
+    if (tip) tip.textContent = tips[tipIndex];
+  }, 1500);
+  const complete = () => {
+    if (done) return;
+    done = true;
+    window.clearInterval(progressTimer);
+    window.clearInterval(tipTimer);
+    setProgress(100);
+    window.setTimeout(() => {
+      document.body.classList.remove("app-loading");
+      screen.classList.add("done");
+    }, 260);
+    window.setTimeout(() => screen.remove(), 980);
+  };
+  window.setTimeout(complete, 3600);
+  return { complete };
+}
+
+const loadingExperience = startLoadingExperience();
 render();
 if (!state.tutorialComplete && !state.tutorialActive) {
   openFirstTutorialModal();
 } else if (state.tutorialActive) {
   setupTutorialScene();
+}
+
+const finishInitialLoad = () => loadingExperience.complete();
+if (document.readyState === "complete") {
+  window.setTimeout(finishInitialLoad, 450);
+} else {
+  window.addEventListener("load", () => window.setTimeout(finishInitialLoad, 450), { once: true });
 }

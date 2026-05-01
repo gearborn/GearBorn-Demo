@@ -6,7 +6,24 @@
     <title>GearBorn: Engines Evolved Demo</title>
     <link rel="stylesheet" href="styles.css">
   </head>
-  <body>
+  <body class="app-loading">
+    <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-logo">
+          <img src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn Engines Evolved">
+          <div class="loading-logo-text">
+            <strong>GearBorn</strong>
+            <span>Engines Evolved</span>
+          </div>
+        </div>
+          <h1>Fueling Engines…</h1>
+        <div class="fuel-tank" aria-label="Loading progress">
+          <div class="fuel-fill" id="fuel-fill"></div>
+          <span class="fuel-cap" aria-hidden="true"></span>
+        </div>
+        <p class="loading-tip" id="loading-tip">Sprox power upgrades in the Garage.</p>
+      </div>
+    </div>
     <div class="app">
       <header class="topbar">
         <div class="topbar-left">
@@ -48,13 +65,45 @@
                 <p class="menu-subtitle">Race, Train, Evolve</p>
               </div>
             </div>
-            <div class="menu-actions" aria-label="Menu choices">
-              <button class="menu-button story-primary" data-view="story" type="button">Story Mode</button>
-              <button class="menu-button primary" data-view="solo" type="button">Training Academy</button>
-              <button class="menu-button" data-view="garage" type="button">Garage</button>
-              <button class="menu-button" data-view="vindex" type="button">VINdex</button>
-              <button class="menu-button" data-view="profiles" type="button">Racer Profiles</button>
-              <button class="menu-button" data-view="settings" type="button">Settings</button>
+            <div class="menu-dashboard" aria-label="Menu choices">
+              <button class="menu-card hero-menu-card" data-view="story" type="button">
+                <span class="menu-card-kicker">Play</span>
+                <strong>Story Mode</strong>
+                <small>Race. Evolve. Prove yourself.</small>
+                <span class="menu-card-cta">Start Story</span>
+              </button>
+              <aside class="next-goal-panel">
+                <span>Next Story Race</span>
+                <strong id="menu-next-race">Indianapolis - Level 2</strong>
+                <small id="menu-next-reward">Reward +50 Sprox</small>
+                <button class="story-primary" data-view="story" type="button">Start Race</button>
+              </aside>
+              <div class="menu-secondary-grid">
+                <button class="menu-card garage-card" data-view="garage" type="button">
+                  <span class="menu-card-icon">G</span>
+                  <strong>Garage</strong>
+                  <small>Upgrade your GearBorn.</small>
+                </button>
+                <button class="menu-card training-card" data-view="solo" type="button">
+                  <span class="menu-card-icon">T</span>
+                  <strong>Training</strong>
+                  <small>Master every race mode.</small>
+                </button>
+              </div>
+              <div class="menu-utility-grid">
+                <button class="menu-utility" data-view="vindex" type="button">
+                  <strong>VINdex</strong>
+                  <small>Discover every GearBorn.</small>
+                </button>
+                <button class="menu-utility" data-view="profiles" type="button">
+                  <strong>Racer Profiles</strong>
+                  <small>Meet the rivals.</small>
+                </button>
+                <button class="menu-utility" data-view="settings" type="button">
+                  <strong>Settings</strong>
+                  <small>Tune your experience.</small>
+                </button>
+              </div>
               <p class="creator-credit">Created by Corey Hanley</p>
             </div>
           </div>
@@ -68,20 +117,28 @@
           </div>
           <div class="solo-grid">
             <button class="solo-card primary-card" data-view="play" type="button">
+              <span class="solo-card-icon"></span>
               <strong>Drag Race</strong>
               <span>Shift through gears and beat class rivals.</span>
+              <em>Start</em>
             </button>
             <button class="solo-card primary-card" data-view="time-trial" type="button">
+              <span class="solo-card-icon"></span>
               <strong>Time Trial</strong>
               <span>Chase bronze, silver, gold, and your Phantaxi Time.</span>
+              <em>Start</em>
             </button>
             <button class="solo-card primary-card" data-view="boss" type="button">
+              <span class="solo-card-icon"></span>
               <strong>Boss Race</strong>
               <span>Race the bosses directly on their city tracks.</span>
+              <em>Start</em>
             </button>
             <button class="solo-card primary-card" data-view="battle" type="button">
+              <span class="solo-card-icon"></span>
               <strong>Battle Mode</strong>
               <span>Trade attacks, defend, and use specials in arena battles.</span>
+              <em>Start</em>
             </button>
           </div>
         </section>
