@@ -76,8 +76,12 @@
               <span>Chase bronze, silver, gold, and your Phantaxi Time.</span>
             </button>
             <button class="solo-card primary-card" data-view="boss" type="button">
-              <strong>Boss Challenge</strong>
+              <strong>Boss Race</strong>
               <span>Race the bosses directly on their city tracks.</span>
+            </button>
+            <button class="solo-card primary-card" data-view="battle" type="button">
+              <strong>Battle Mode</strong>
+              <span>Trade attacks, defend, and use specials in arena battles.</span>
             </button>
           </div>
         </section>
@@ -145,7 +149,7 @@
           <div class="vertical-mode">
             <div class="setup">
               <div class="section-heading flow-step active" data-flow="boss" data-step="car">
-                <p>Boss Challenge</p>
+                <p>Boss Race</p>
                 <h1 id="boss-title">Choose your car.</h1>
                 <div class="car-select-layout">
                   <div class="icon-grid compact-car-grid" id="boss-car-grid"></div>
@@ -184,6 +188,56 @@
                 <button class="steer-button" data-steer="left" type="button" aria-label="Steer left">←</button>
                 <button class="steer-button" data-steer="up" type="button" aria-label="Steer up">↑</button>
                 <button class="steer-button" data-steer="right" type="button" aria-label="Steer right">→</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="battle-view" aria-labelledby="battle-title">
+          <button class="back-link" data-mode-back="battle" type="button">Back</button>
+          <div class="battle-mode">
+            <div class="setup">
+              <div class="section-heading flow-step active" data-flow="battle" data-step="car">
+                <p>Battle Mode</p>
+                <h1 id="battle-title">Choose your car.</h1>
+                <div class="car-select-layout">
+                  <div class="icon-grid compact-car-grid" id="battle-car-grid"></div>
+                  <div class="car-select-preview" id="battle-car-select-preview"></div>
+                </div>
+                <button class="primary flow-next" data-flow-next="battle:match" type="button">Next</button>
+              </div>
+              <div class="flow-step" data-flow="battle" data-step="match">
+                <div class="field">
+                  <label>Opponent</label>
+                  <div class="boss-list" id="battle-list"></div>
+                </div>
+                <div class="selection-preview boss-preview" id="battle-preview"></div>
+                <button class="primary battle-start-button" id="start-battle" type="button">Start Battle</button>
+              </div>
+            </div>
+            <div class="battle-shell flow-step" data-flow="battle" data-step="race">
+              <div class="battle-arena" id="battle-arena">
+                <div class="battle-status player">
+                  <strong id="battle-player-name"></strong>
+                  <div class="hp-bar"><span id="battle-player-hp-fill"></span><b id="battle-player-hp"></b></div>
+                  <div class="sp-bar"><span id="battle-player-sp-fill"></span><b id="battle-player-sp"></b></div>
+                </div>
+                <div class="battle-status opponent">
+                  <strong id="battle-opponent-name"></strong>
+                  <div class="hp-bar"><span id="battle-opponent-hp-fill"></span><b id="battle-opponent-hp"></b></div>
+                  <div class="sp-bar"><span id="battle-opponent-sp-fill"></span><b id="battle-opponent-sp"></b></div>
+                </div>
+                <div class="battle-car player" id="battle-player-car"></div>
+                <div class="battle-car opponent" id="battle-opponent-car"></div>
+                <div class="battle-move player" id="battle-player-move"></div>
+                <div class="battle-move opponent" id="battle-opponent-move"></div>
+                <div class="battle-actions" id="battle-actions">
+                  <button class="battle-action attack" data-battle-move="attack" type="button"><img src="assets/items/battle-attack.png" alt="">Attack</button>
+                  <button class="battle-action defend" data-battle-move="defend" type="button"><img src="assets/items/battle-defend.png" alt="">Defend</button>
+                  <button class="battle-action special" data-battle-move="special" type="button"><img src="assets/items/battle-special.png" alt="">Special</button>
+                </div>
+                <button class="battle-next" id="battle-next-turn" type="button" hidden>Next Turn</button>
+                <div class="battle-log" id="battle-log">Choose a move.</div>
               </div>
             </div>
           </div>
@@ -270,8 +324,13 @@
             <div class="profile-detail">
               <div class="profile-art" id="profile-art"></div>
               <div class="profile-copy">
-                <h2 id="profile-name"></h2>
-                <p id="profile-meta"></p>
+                <div class="profile-name-row">
+                  <div>
+                    <h2 id="profile-name"></h2>
+                    <p id="profile-meta"></p>
+                  </div>
+                  <div class="profile-car-art" id="profile-car-art"></div>
+                </div>
                 <span id="profile-bio"></span>
               </div>
             </div>
@@ -444,7 +503,7 @@
                 <small id="nitro-key-note">Click the box, then press the key you want.</small>
               </div>
               <div class="field">
-                <label>Time Trial / Boss Challenge controls</label>
+                <label>Time Trial / Boss Race controls</label>
                 <div class="control-grid">
                   <div>
                     <label for="vertical-up-key">Up</label>
