@@ -182,12 +182,36 @@ const cars = [
     ]
   },
   {
+    id: "grunge-fish",
+    family: "Grunge Fish",
+    color: "#8fb3ff",
+    trait: "Dirty thrasher",
+    unlockable: true,
+    evolutions: [
+      { name: "Moshfin", images: { display: "assets/cars/fish-moshfin-display.png", race: "assets/cars/fish-moshfin-race.png", topdown: "assets/cars/fish-moshfin-topdown.png" } },
+      { name: "Barracobain", images: { display: "assets/cars/fish-barracobain-display.png", race: "assets/cars/fish-barracobain-race.png", topdown: "assets/cars/fish-barracobain-topdown.png" } },
+      { name: "Vedderanha", images: { display: "assets/cars/fish-vedderanha-display.png", race: "assets/cars/fish-vedderanha-race.png", topdown: "assets/cars/fish-vedderanha-topdown.png" } }
+    ]
+  },
+  {
+    id: "karate-cow",
+    family: "Karate Cow",
+    color: "#f8f1df",
+    trait: "Deceptive power",
+    unlockable: true,
+    evolutions: [
+      { name: "Udderlee", images: { display: "assets/cars/cow-udderlee-display.png", race: "assets/cars/cow-udderlee-race.png", topdown: "assets/cars/cow-udderlee-topdown.png" } },
+      { name: "Moosan", images: { display: "assets/cars/cow-moosan-display.png", race: "assets/cars/cow-moosan-race.png", topdown: "assets/cars/cow-moosan-topdown.png" } },
+      { name: "Grandmooster", images: { display: "assets/cars/cow-grandmooster-display.png", race: "assets/cars/cow-grandmooster-race.png", topdown: "assets/cars/cow-grandmooster-topdown.png" } }
+    ]
+  },
+  {
     id: "rainbowlt",
     family: "Secret",
     color: "#c084fc",
     trait: "Unlocked by mastering every starter line",
     unlockable: true,
-    unlockInstruction: "Evolve all 9 GearBorn lines to their final forms to unlock",
+    unlockInstruction: "Evolve all 11 GearBorn lines to their final forms to unlock",
     evolutions: [
       { name: "Rainbowlt", images: { display: "assets/cars/unlock-rainbowlt-display.png", race: "assets/cars/unlock-rainbowlt-race.png", topdown: "assets/story/unlock-rainbowlt-topdown.png" } },
       { name: "Hornula1", images: { display: "assets/cars/rival-hornula1-display.png", race: "assets/cars/rival-hornula1-race.png", topdown: "assets/story/unlock-hornula1-topdown.png" } }
@@ -218,9 +242,10 @@ const cars = [
 ];
 
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
-const pinkSlipUnlockOrder = ["pig", "whale", "frog", "techno-dinosaur", "sorority-elephant", "florida-gator"];
+const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, ["rainbowlt", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -429,7 +454,13 @@ const displayImageScaleByName = {
   hornula1: 1.18,
   mamburn: 1.34,
   snaytan: 1.34,
-  tutorque: 1.18
+  tutorque: 1.18,
+  moshfin: 1.24,
+  barracobain: 1.24,
+  vedderanha: 1.24,
+  udderlee: 1.24,
+  moosan: 1.24,
+  grandmooster: 1.24
 };
 const gearbornStatProfiles = {
   bee: { speed: 74, acceleration: 86, handling: 82, transmission: 84, playstyle: "Technical Sprinter" },
@@ -441,19 +472,21 @@ const gearbornStatProfiles = {
   "techno-dinosaur": { speed: 82, acceleration: 86, handling: 72, transmission: 74, playstyle: "Power Surger" },
   "sorority-elephant": { speed: 78, acceleration: 76, handling: 74, transmission: 88, playstyle: "Prestige Cruiser" },
   "florida-gator": { speed: 80, acceleration: 84, handling: 70, transmission: 76, playstyle: "Chaos Brawler" },
+  "grunge-fish": { speed: 78, acceleration: 76, handling: 88, transmission: 86, playstyle: "Dirty Thrasher" },
+  "karate-cow": { speed: 78, acceleration: 88, handling: 76, transmission: 88, playstyle: "Deceptive Powerhouse" },
   rainbowlt: { speed: 86, acceleration: 86, handling: 86, transmission: 86, playstyle: "Elite All-Rounder" },
   "metal-snake": { speed: 88, acceleration: 90, handling: 72, transmission: 78, playstyle: "Heavy Burner" },
   "training-car": { speed: 66, acceleration: 66, handling: 66, transmission: 66, playstyle: "Student Driver" }
 };
 const storyTracks = [
-  { id: "indianapolis", city: "Indianapolis", country: "USA", map: "assets/maps/map-indianapolis.png" },
-  { id: "berlin", city: "Berlin", country: "Germany", map: "assets/maps/map-berlin.png" },
-  { id: "dubai", city: "Dubai", country: "UAE", map: "assets/maps/map-dubai.png" },
-  { id: "rio", city: "Rio de Janeiro", country: "Brazil", map: "assets/maps/map-rio-de-janeiro.png" },
-  { id: "los-angeles", city: "Los Angeles", country: "USA", map: "assets/maps/map-los-angeles.png" },
-  { id: "seoul", city: "Seoul", country: "South Korea", map: "assets/maps/map-seoul.png" },
-  { id: "cape-town", city: "Cape Town", country: "South Africa", map: "assets/maps/map-cape-town.png" },
-  { id: "bangalore", city: "Bangalore", country: "India", map: "assets/maps/map-bangalore.png" }
+  { id: "indianapolis", city: "Indianapolis", country: "USA", map: "assets/maps/map-indianapolis.png", cityMap: "assets/maps/citymap-indianapolis.png", cityIcon: "assets/maps/cityicon-indianapolis.png" },
+  { id: "berlin", city: "Berlin", country: "Germany", map: "assets/maps/map-berlin.png", cityMap: "assets/maps/citymap-berlin.png", cityIcon: "assets/maps/cityicon-berlin.png" },
+  { id: "dubai", city: "Dubai", country: "UAE", map: "assets/maps/map-dubai.png", cityMap: "assets/maps/citymap-dubai.png", cityIcon: "assets/maps/cityicon-dubai.png" },
+  { id: "rio", city: "Rio de Janeiro", country: "Brazil", map: "assets/maps/map-rio-de-janeiro.png", cityMap: "assets/maps/citymap-rio-de-janeiro.png", cityIcon: "assets/maps/cityicon-rio-de-janeiro.png" },
+  { id: "los-angeles", city: "Los Angeles", country: "USA", map: "assets/maps/map-los-angeles.png", cityMap: "assets/maps/citymap-los-angeles.png", cityIcon: "assets/maps/cityicon-los-angeles.png" },
+  { id: "seoul", city: "Seoul", country: "South Korea", map: "assets/maps/map-seoul.png", cityMap: "assets/maps/citymap-seoul.png", cityIcon: "assets/maps/cityicon-seoul.png" },
+  { id: "cape-town", city: "Cape Town", country: "South Africa", map: "assets/maps/map-cape-town.png", cityMap: "assets/maps/citymap-cape-town.png", cityIcon: "assets/maps/cityicon-cape-town.png" },
+  { id: "bangalore", city: "Bengaluru", country: "India", map: "assets/maps/map-bangalore.png", cityMap: "assets/maps/citymap-bangalore.png", cityIcon: "assets/maps/cityicon-bangalore.png" }
 ];
 const trackItems = {
   tokens: [
@@ -466,16 +499,16 @@ const trackItems = {
   ]
 };
 const bosses = [
-  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/story/crusadome-topdown.png", portrait: "assets/bosses/rev-rend.png" },
-  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/story/baronessex-topdown.png", portrait: "assets/bosses/karen.png" },
-  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/bosses/samir.png" },
-  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/story/inflewenze-topdown.png", portrait: "assets/bosses/thais.png" },
-  { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/story/hurrdaboutis-topdown.png", portrait: "assets/bosses/jimmy-chin.png" },
-  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/bosses/rip-lee.png" },
-  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/story/kuumbusta-topdown.png", portrait: "assets/bosses/jabu.png" },
-  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/bosses/pallavi.png" }
+  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/story/crusadome-topdown.png", portrait: "assets/bosses/rev-rend.png", headshot: "assets/bosses/headshot-rev-rend.png" },
+  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/story/baronessex-topdown.png", portrait: "assets/bosses/karen.png", headshot: "assets/bosses/headshot-karen.png" },
+  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/bosses/samir.png", headshot: "assets/bosses/headshot-samir.png" },
+  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/story/inflewenze-topdown.png", portrait: "assets/bosses/thais.png", headshot: "assets/bosses/headshot-thais.png" },
+  { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/story/hurrdaboutis-topdown.png", portrait: "assets/bosses/jimmy-chin.png", headshot: "assets/bosses/headshot-jimmy-chin.png" },
+  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/bosses/rip-lee.png", headshot: "assets/bosses/headshot-rip-lee.png" },
+  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/story/kuumbusta-topdown.png", portrait: "assets/bosses/jabu.png", headshot: "assets/bosses/headshot-jabu.png" },
+  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/bosses/pallavi.png", headshot: "assets/bosses/headshot-pallavi.png" }
 ];
-const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/story/unlock-hornula1-topdown.png", portrait: "assets/bosses/racer-alpha-helmet.png", unmaskedPortrait: "assets/bosses/racer-alpha.png" };
+const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/story/unlock-hornula1-topdown.png", portrait: "assets/bosses/racer-alpha-helmet.png", unmaskedPortrait: "assets/bosses/racer-alpha.png", headshot: "assets/bosses/headshot-racer-alpha.png" };
 const bossChallengeBosses = bosses.concat(finalBoss);
 const campaignDragStages = [
   { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/rival-bananachi-race.png" },
@@ -489,11 +522,13 @@ const campaignDragStages = [
 ];
 const pinkSlipRacePlan = {
   0: { carId: "pig", rankKey: "D", xp: 180, power: 1.08, distance: 400 },
-  1: { carId: "whale", rankKey: "C", xp: 240, power: 1.2, distance: 800 },
-  2: { carId: "frog", rankKey: "C", xp: 300, power: 1.32, distance: 800 },
-  4: { carId: "techno-dinosaur", rankKey: "B", xp: 420, power: 1.55, distance: 800 },
-  5: { carId: "sorority-elephant", rankKey: "A", xp: 540, power: 1.74, distance: 1600 },
-  6: { carId: "florida-gator", rankKey: "S", xp: 680, power: 1.95, distance: 1600 }
+  1: { carId: "sorority-elephant", rankKey: "C", xp: 240, power: 1.2, distance: 800 },
+  2: { carId: "grunge-fish", rankKey: "C", xp: 300, power: 1.32, distance: 800 },
+  3: { carId: "florida-gator", rankKey: "B", xp: 360, power: 1.45, distance: 800 },
+  4: { carId: "whale", rankKey: "B", xp: 420, power: 1.55, distance: 800 },
+  5: { carId: "techno-dinosaur", rankKey: "A", xp: 540, power: 1.74, distance: 1600 },
+  6: { carId: "karate-cow", rankKey: "S", xp: 680, power: 1.95, distance: 1600 },
+  7: { carId: "frog", rankKey: "S", xp: 820, power: 2.08, distance: 1600 }
 };
 function pinkSlipStageFor(plan) {
   const car = cars.find((item) => item.id === plan.carId);
@@ -514,6 +549,45 @@ const campaignLevels = bosses.flatMap((boss, index) => {
   const arc = index % 2 === 0 ? [drag, trial, battle] : [trial, drag, battle];
   return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId }]) : arc;
 }).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
+const storyNodeLayouts = [
+  { key: "drag", x: 24, y: 68 },
+  { key: "trial", x: 76, y: 64 },
+  { key: "boss", x: 50, y: 34 },
+  { key: "pink-slip", x: 50, y: 82 }
+];
+const storyLevelVisuals = {
+  drag: { label: "Drag Race", icon: "assets/items/icon-drag-race.png", color: "#ffc857" },
+  trial: { label: "Time Trial", icon: "assets/items/icon-time-trial.png", color: "#6ee7a8" },
+  boss: { label: "Boss Battle", icon: "assets/items/icon-boss.png", color: "#52c7ff" },
+  "pink-slip": { label: "Pink Slip", icon: "assets/items/icon-pink-slip.png", color: "#f4a7d8" }
+};
+const cityAbbreviations = {
+  indianapolis: "Indy",
+  berlin: "Berlin",
+  dubai: "Dubai",
+  rio: "Rio",
+  "los-angeles": "LA",
+  seoul: "Seoul",
+  "cape-town": "S. AFRICA",
+  bangalore: "INDIA",
+  space: "Space"
+};
+let storyCursor = 0;
+const storyCities = bosses.map((boss, index) => {
+  const levelCount = 3 + (pinkSlipRacePlan[index] ? 1 : 0);
+  const levels = campaignLevels.slice(storyCursor, storyCursor + levelCount).map((level, offset) => ({ ...level, campaignIndex: storyCursor + offset }));
+  storyCursor += levelCount;
+  return { id: boss.track.id, city: boss.track.city, country: boss.track.country, track: boss.track, bossIndex: index, levels, icon: boss.track.cityIcon };
+}).concat([{
+  id: "space",
+  city: finalBoss.track.city,
+  country: finalBoss.track.country,
+  track: finalBoss.track,
+  bossIndex: bosses.length,
+  final: true,
+  levels: [{ ...campaignLevels[campaignLevels.length - 1], campaignIndex: campaignLevels.length - 1 }],
+  icon: finalBoss.track.cityIcon
+}]);
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 14.5 },
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 17.5 },
@@ -529,6 +603,9 @@ const vindexEntries = [
   ["058", "Murrka", "Patriot Pickup Line", "assets/cars/pickup-murrka-display.png"],
   ["059", "Wallmort", "Patriot Pickup Line", "assets/cars/pickup-wallmort-display.png"],
   ["060", "Tookerjaw", "Patriot Pickup Line", "assets/cars/pickup-tookerjaw-display.png"],
+  ["063", "Udderlee", "Karate Cow Line", "assets/cars/cow-udderlee-display.png"],
+  ["064", "Moosan", "Karate Cow Line", "assets/cars/cow-moosan-display.png"],
+  ["065", "Grandmooster", "Karate Cow Line", "assets/cars/cow-grandmooster-display.png"],
   ["066", "Hogson", "Detective Pig Line", "assets/cars/pig-hogson-display.png"],
   ["067", "Snoffle", "Detective Pig Line", "assets/cars/pig-snoffle-display.png"],
   ["068", "Swinecroft", "Detective Pig Line", "assets/cars/pig-swinecroft-display.png"],
@@ -541,6 +618,9 @@ const vindexEntries = [
   ["093", "Matunnie", "K-Pop Bunny Line", "assets/cars/rabbit-matunnie-display.png"],
   ["110", "Mamburn", "Metal Snake Line", "assets/cars/snake-mamburn-display.png"],
   ["111", "Snaytan", "Metal Snake Line", "assets/cars/snake-snaytan-display.png"],
+  ["145", "Moshfin", "Grunge Fish Line", "assets/cars/fish-moshfin-display.png"],
+  ["146", "Barracobain", "Grunge Fish Line", "assets/cars/fish-barracobain-display.png"],
+  ["147", "Vedderanha", "Grunge Fish Line", "assets/cars/fish-vedderanha-display.png"],
   ["151", "Totorca", "Yacht Rock Whale Line", "assets/cars/whale-totorca-display.png"],
   ["152", "Boates", "Yacht Rock Whale Line", "assets/cars/whale-boates-display.png"],
   ["153", "Shamacht", "Yacht Rock Whale Line", "assets/cars/whale-shamacht-display.png"],
@@ -564,8 +644,8 @@ const vindexEntries = [
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/rival-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
 const tuners = [
-  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
-  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
+  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
+  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
 ];
 const profileBios = {
   "rev-rend": "A preacher of speed and salvation, with a collection to match. Rev-rend built his empire on one promise: give him your GearBorn, and he will lead you to greatness. Behind the gospel is a man who has lost sight of what he ever believed in.",
@@ -582,7 +662,7 @@ const profileBios = {
 const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   id: boss.id,
   name: boss.name,
-  image: boss.unmaskedPortrait || boss.portrait,
+  image: boss.headshot || boss.unmaskedPortrait || boss.portrait,
   car: boss.car,
   city: boss.track.city,
   country: boss.track.country,
@@ -590,7 +670,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
 }))).concat([{
   id: "dr-tyree",
   name: "Dr. Tyree",
-  image: "assets/characters/instructor.png",
+  image: "assets/characters/headshot-dr-tyree.png",
   category: "Other",
   car: "Other",
   city: "Tuner Academy",
@@ -932,6 +1012,8 @@ const defaultState = {
   highestBossIndex: 0,
   selectedCampaign: 0,
   highestCampaignIndex: 0,
+  selectedStoryCity: 0,
+  completedCampaignLevels: {},
   unlockedLines: [...defaultUnlockedLines],
   timeTrials: {},
   storyTimeTrials: {},
@@ -1003,6 +1085,19 @@ const el = {
   timeMessage: document.querySelector("#time-message"),
   timeTargets: document.querySelector("#time-targets"),
   campaignList: document.querySelector("#campaign-list"),
+  storyCityMap: document.querySelector("#story-city-map"),
+  storyCityIcon: document.querySelector("#story-city-icon"),
+  storyCityTitle: document.querySelector("#story-city-title"),
+  storyCitySelect: document.querySelector("#story-city-select"),
+  bossUnlockNote: document.querySelector("#boss-unlock-note"),
+  storyMapStage: document.querySelector("#story-map-stage"),
+  storyPreviewPanel: document.querySelector("#story-preview-panel"),
+  closeStoryPreview: document.querySelector("#close-story-preview"),
+  storyPreviewIcon: document.querySelector("#story-preview-icon"),
+  storyPreviewArt: document.querySelector("#story-preview-art"),
+  storyCitySelectPanel: document.querySelector("#story-city-select-panel"),
+  closeCitySelect: document.querySelector("#close-city-select"),
+  storyCityGrid: document.querySelector("#story-city-grid"),
   campaignType: document.querySelector("#campaign-type"),
   campaignTitle: document.querySelector("#campaign-title"),
   campaignMeta: document.querySelector("#campaign-meta"),
@@ -1057,6 +1152,13 @@ const el = {
   tutorialSceneSelect: document.querySelector("#tutorial-scene-select"),
   tutorialReplayCancel: document.querySelector("#tutorial-replay-cancel"),
   tutorialSceneOptions: document.querySelector("#tutorial-scene-options"),
+  tutorialFirstModal: document.querySelector("#tutorial-first-modal"),
+  tutorialFirstYes: document.querySelector("#tutorial-first-yes"),
+  tutorialFirstNo: document.querySelector("#tutorial-first-no"),
+  cityUnlockModal: document.querySelector("#city-unlock-modal"),
+  cityUnlockIcon: document.querySelector("#city-unlock-icon"),
+  cityUnlockTitle: document.querySelector("#city-unlock-title"),
+  cityUnlockClose: document.querySelector("#city-unlock-close"),
   resetModal: document.querySelector("#reset-modal"),
   confirmReset: document.querySelector("#confirm-reset"),
   cancelReset: document.querySelector("#cancel-reset"),
@@ -1130,6 +1232,7 @@ const embeddedRaceHomes = ["play", "time-trial", "boss"].map((view) => {
 });
 let embeddedCampaignView = null;
 let pendingBossRaceStart = null;
+let pendingCityUnlock = null;
 
 function loadState() {
   try {
@@ -1147,6 +1250,7 @@ function mergeState(base, saved) {
     settings: { ...base.settings, ...saved.settings },
     timeTrials: { ...base.timeTrials, ...saved.timeTrials },
     storyTimeTrials: { ...base.storyTimeTrials, ...saved.storyTimeTrials },
+    completedCampaignLevels: { ...base.completedCampaignLevels, ...saved.completedCampaignLevels },
     garage: { ...base.garage, ...saved.garage }
   };
 }
@@ -1173,7 +1277,10 @@ function sanitizeState() {
   );
   if (legacyGodModeActive) {
     state.unlimitedSprox = true;
+  }
+  if (state.unlimitedSprox) {
     state.unlockedLines = cars.map((car) => car.id);
+    state.completedCampaignLevels = Object.fromEntries(campaignLevels.map((_, index) => [index, true]));
     cars.forEach((car) => {
       state.garage[car.id] = {
         level: maxCarLevel,
@@ -1216,6 +1323,14 @@ function sanitizeState() {
   state.highestBossIndex = Math.min(state.highestBossIndex || 0, bossChallengeBosses.length - 1);
   state.highestCampaignIndex = Math.min(state.highestCampaignIndex || 0, campaignLevels.length - 1);
   state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
+  state.completedCampaignLevels = state.completedCampaignLevels || {};
+  for (let index = 0; index < state.highestCampaignIndex; index += 1) {
+    state.completedCampaignLevels[index] = state.completedCampaignLevels[index] ?? true;
+  }
+  state.selectedStoryCity = Math.max(0, Math.min(Number(state.selectedStoryCity) || 0, storyCities.length - 1));
+  if (!storyCityUnlocked(state.selectedStoryCity)) {
+    state.selectedStoryCity = Math.max(0, highestUnlockedStoryCityIndex());
+  }
   if (bossChallengeBosses.findIndex((boss) => boss.id === state.selectedBoss) > state.highestBossIndex) {
     state.selectedBoss = bossChallengeBosses[state.highestBossIndex].id;
   }
@@ -1312,6 +1427,14 @@ function isCarUnlocked(carId) {
   const car = cars.find((item) => item.id === carId);
   if (tutorialActive() && [tutorialCarId, tutorialOpponentCarId].includes(carId)) return true;
   return Boolean(car && state.unlockedLines?.includes(carId));
+}
+
+function orderedCarList(list) {
+  return [...list].sort((a, b) => {
+    const aIndex = garageLineOrder.indexOf(a.id);
+    const bIndex = garageLineOrder.indexOf(b.id);
+    return (aIndex >= 0 ? aIndex : 999) - (bIndex >= 0 ? bIndex : 999);
+  });
 }
 
 function allStarterFinalFormsUnlocked() {
@@ -1436,13 +1559,13 @@ function renderFlowScreens() {
   document.querySelector("#time-trial-view")?.classList.toggle("race-step", modeFlow.time === "race");
   document.querySelector("#boss-view")?.classList.toggle("race-step", modeFlow.boss === "race");
   document.querySelector("#story-view")?.classList.toggle("story-race-step", modeFlow.story === "race");
-  el.campaignList.classList.toggle("story-hidden", !storyReplayOpen);
+  el.campaignList?.classList.toggle("story-hidden", !storyReplayOpen);
 }
 
 function setFlowStep(mode, step) {
   modeFlow[mode] = step;
   if (mode === "story" && step === "next" && !storyReplayOpen) {
-    state.selectedCampaign = Math.min(state.highestCampaignIndex, campaignLevels.length - 1);
+    state.selectedCampaign = firstPlayableStoryLevelForCity(state.selectedStoryCity)?.campaignIndex ?? state.selectedCampaign;
     saveState();
   }
   render();
@@ -1527,7 +1650,7 @@ function renderCarSelectPreview(mode, node) {
 function renderCarTiles() {
   const available = tutorialActive() && currentTutorialScene().id === "mamburn"
     ? cars.filter((car) => car.id === tutorialCarId)
-    : cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly);
+    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly));
   if (el.dragCarGrid) el.dragCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "drag")).join("");
   if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
@@ -1561,7 +1684,10 @@ function render() {
 }
 
 function renderCarSelect() {
-  el.playerCar.innerHTML = cars.filter((car) => isCarUnlocked(car.id)).map((car) => {
+  const selectableCars = tutorialActive()
+    ? cars.filter((car) => car.id === tutorialCarId)
+    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly));
+  el.playerCar.innerHTML = selectableCars.map((car) => {
     const progress = state.garage[car.id];
     const form = currentEvolution(car.id);
     return `<option value="${car.id}">${form.name} · ${car.family} · Lv ${progress.level}</option>`;
@@ -1570,45 +1696,218 @@ function renderCarSelect() {
 }
 
 function renderVerticalSelects() {
-  const options = cars.filter((car) => isCarUnlocked(car.id)).map((car) => {
+  const options = selectableCars.map((car) => {
     const progress = state.garage[car.id];
     const form = currentEvolution(car.id);
     return `<option value="${car.id}">${form.name} · Lv ${progress.level}</option>`;
   }).join("");
   el.storyCar.innerHTML = options;
-  el.campaignCar.innerHTML = options;
   el.timeCar.innerHTML = options;
   el.storyCar.value = state.selectedStoryCar;
-  el.campaignCar.value = state.selectedStoryCar;
+  if (el.campaignCar) {
+    el.campaignCar.innerHTML = options;
+    el.campaignCar.value = state.selectedStoryCar;
+  }
   el.timeCar.value = state.selectedTimeCar;
   el.timeTrack.innerHTML = storyTracks.map((track) => `<option value="${track.id}">${track.city}, ${track.country}</option>`).join("");
   el.timeTrack.value = state.selectedTimeTrack;
 }
 
+function storyLevelCompleted(index) {
+  return Boolean(state.completedCampaignLevels?.[index]);
+}
+
+function storyCityUnlocked(cityIndex) {
+  if (cityIndex <= 0) return true;
+  const previousCity = storyCities[cityIndex - 1];
+  if (!previousCity) return false;
+  const previousBoss = previousCity.levels.find((level) => level.type === "boss");
+  return previousBoss ? storyLevelCompleted(previousBoss.campaignIndex) : false;
+}
+
+function highestUnlockedStoryCityIndex() {
+  let highest = 0;
+  storyCities.forEach((_, index) => {
+    if (storyCityUnlocked(index)) highest = index;
+  });
+  return highest;
+}
+
+function cityCoreLevelsCompleted(city) {
+  return city.levels.filter((level) => level.type === "drag" || level.type === "trial").filter((level) => storyLevelCompleted(level.campaignIndex)).length;
+}
+
+function cityBossUnlocked(city) {
+  if (city.final) return storyCityUnlocked(storyCities.indexOf(city));
+  return cityCoreLevelsCompleted(city) >= 2;
+}
+
+function cityBossCompleted(city) {
+  const bossLevel = city.levels.find((level) => level.type === "boss");
+  return bossLevel ? storyLevelCompleted(bossLevel.campaignIndex) : false;
+}
+
+function storyLevelVisible(city, level) {
+  if (level.type === "drag" || level.type === "trial") return true;
+  if (level.type === "boss") return cityBossUnlocked(city);
+  if (level.type === "pink-slip") return cityBossCompleted(city);
+  return false;
+}
+
+function storyLevelLocked(city, level) {
+  if (!storyCityUnlocked(storyCities.indexOf(city))) return true;
+  if (level.type === "boss") return !cityBossUnlocked(city);
+  if (level.type === "pink-slip") return !cityBossCompleted(city);
+  return false;
+}
+
+function firstPlayableStoryLevelForCity(cityIndex) {
+  const city = storyCities[cityIndex] || storyCities[0];
+  return city.levels.find((level) => storyLevelVisible(city, level) && !storyLevelLocked(city, level) && !storyLevelCompleted(level.campaignIndex))
+    || city.levels.find((level) => storyLevelVisible(city, level) && !storyLevelLocked(city, level))
+    || city.levels[0];
+}
+
 function renderCampaign() {
-  el.campaignList.innerHTML = campaignLevels.map((level, index) => {
-    const locked = index > state.highestCampaignIndex;
-    const active = index === state.selectedCampaign;
-    const type = campaignTypeLabel(level);
+  if (!el.storyCityMap) return;
+  const city = storyCities[state.selectedStoryCity] || storyCities[0];
+  const cityUnlocked = storyCityUnlocked(state.selectedStoryCity);
+  el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "";
+  el.storyCityTitle.textContent = `${city.city}, ${city.country}`;
+  el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.cityMap || city.track.map}")`;
+  el.storyCityMap.style.backgroundSize = "cover";
+  el.storyCityMap.style.backgroundPosition = "center";
+  const remaining = Math.max(0, 2 - cityCoreLevelsCompleted(city));
+  el.bossUnlockNote.textContent = cityUnlocked && !city.final && !cityBossUnlocked(city) ? `Beat ${remaining}/2 Levels to Unlock Boss Race` : "";
+  el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
+  renderStoryCityGrid();
+  renderStoryLevelPreview();
+}
+
+function storyMapNodeMarkup(city, level) {
+  const hidden = !storyLevelVisible(city, level);
+  const locked = storyLevelLocked(city, level);
+  const completed = storyLevelCompleted(level.campaignIndex);
+  const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
+  const layout = storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
+  return `
+    <button class="story-map-node ${locked ? "locked" : ""} ${completed ? "completed" : ""}" type="button" data-story-level="${level.campaignIndex}" style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}" ${hidden ? "hidden" : ""} ${locked ? "disabled" : ""}>
+      ${storyNodeIconMarkup(city, level, visual)}
+      <span class="story-node-label">${completed ? "Complete" : visual.label}</span>
+    </button>
+  `;
+}
+
+function storyNodeIconMarkup(city, level, visual) {
+  if (level.type === "boss") {
+    const boss = level.final ? finalBoss : bosses[level.bossIndex];
     return `
-      <button class="campaign-button ${active ? "active" : ""} ${locked ? "locked" : ""}" type="button" data-campaign="${index}" ${locked ? "disabled" : ""}>
-        <span class="campaign-button-copy">
-          <strong>${index + 1}. ${locked && level.final ? "?" : level.title}</strong>
-          <small>${locked ? "Locked" : type}</small>
-        </span>
-        ${campaignLevelEarnedBadge(index, level, locked)}
+      <span class="story-node-icon layered">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true">
+        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}">
+      </span>
+    `;
+  }
+  if (level.type === "pink-slip") {
+    const form = level.drag;
+    return `
+      <span class="story-node-icon layered">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true">
+        <img class="node-subject pink-car" src="${form.displayImage || form.image}" alt="${form.name}">
+      </span>
+    `;
+  }
+  return `
+    <span class="story-node-icon">
+      <img class="node-bg" src="${visual.icon}" alt="${visual.label}">
+    </span>
+  `;
+}
+
+function renderStoryCityGrid() {
+  el.storyCityGrid.innerHTML = storyCities.map((city, index) => {
+    if (city.final && !storyCityUnlocked(index)) return "";
+    const unlocked = storyCityUnlocked(index);
+    return `
+      <button class="story-city-tile ${index === state.selectedStoryCity ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-story-city="${index}" ${unlocked ? "" : "disabled"}>
+        <span class="city-icon">${city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : ""}</span>
+        <strong>${cityAbbreviations[city.id] || city.city}</strong>
       </button>
     `;
   }).join("");
+}
+
+function renderStoryLevelPreview() {
+  const panelOpen = el.storyPreviewPanel.classList.contains("active");
   const level = campaignLevels[state.selectedCampaign];
-  const locked = state.selectedCampaign > state.highestCampaignIndex;
+  if (!panelOpen || !level) return;
+  const locked = storyLevelLocked(storyCities[state.selectedStoryCity], level);
+  const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
+  el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true">`;
+  el.storyPreviewIcon.style.background = visual.color;
   el.campaignType.textContent = locked ? "Locked" : campaignTypeLabel(level);
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
   el.campaignMeta.textContent = campaignLevelMeta(level, locked);
+  el.storyPreviewArt.innerHTML = storyPreviewArtMarkup(level, locked);
   renderCampaignRewards(level, locked);
   renderStoryLoadout();
   el.startCampaign.disabled = locked;
-  el.startCampaign.textContent = storyReplayOpen ? "Start Level" : "Continue Story";
+  el.startCampaign.textContent = "Start Level";
+}
+
+function storyPreviewArtMarkup(level, locked) {
+  if (locked) return `<div class="silhouette-card"><div class="silhouette-car">?</div></div>`;
+  if (level.type === "drag" || level.type === "pink-slip") {
+    const image = level.drag.displayImage || level.drag.image?.replace("-race.", "-display.");
+    return displayMarkup(image, level.drag.name, level.type === "pink-slip" ? "#f4a7d8" : "#ffc857");
+  }
+  if (level.type === "trial") {
+    return `<div class="story-map-preview" style="background-image:url('${level.track.map}')"><span>${level.track.city}</span></div>`;
+  }
+  const boss = level.final ? finalBoss : bosses[level.bossIndex];
+  return characterMarkup({ name: boss.name, image: boss.portrait });
+}
+
+function openStoryPreview(campaignIndex) {
+  const city = storyCities[state.selectedStoryCity] || storyCities[0];
+  const level = campaignLevels[campaignIndex];
+  if (!level || !city.levels.some((item) => item.campaignIndex === campaignIndex)) return;
+  if (!storyLevelVisible(city, level) || storyLevelLocked(city, level)) return;
+  state.selectedCampaign = campaignIndex;
+  el.storyPreviewPanel.classList.add("active");
+  el.storyPreviewPanel.setAttribute("aria-hidden", "false");
+  closeCitySelect();
+  saveState();
+  renderCampaign();
+}
+
+function closeStoryPreview() {
+  if (!el.storyPreviewPanel) return;
+  el.storyPreviewPanel.classList.remove("active");
+  el.storyPreviewPanel.setAttribute("aria-hidden", "true");
+}
+
+function openCitySelect() {
+  closeStoryPreview();
+  el.storyCitySelectPanel.classList.add("active");
+  el.storyCitySelectPanel.setAttribute("aria-hidden", "false");
+  renderStoryCityGrid();
+}
+
+function closeCitySelect() {
+  if (!el.storyCitySelectPanel) return;
+  el.storyCitySelectPanel.classList.remove("active");
+  el.storyCitySelectPanel.setAttribute("aria-hidden", "true");
+}
+
+function selectStoryCity(index) {
+  if (!storyCityUnlocked(index)) return;
+  state.selectedStoryCity = index;
+  state.selectedCampaign = firstPlayableStoryLevelForCity(index)?.campaignIndex ?? state.selectedCampaign;
+  closeCitySelect();
+  closeStoryPreview();
+  saveState();
+  renderCampaign();
 }
 
 function campaignLevelEarnedBadge(index, level, locked) {
@@ -1795,6 +2094,7 @@ const oneOffEvolutionMeta = {
 };
 
 function isVindexDiscovered(entry) {
+  if (state.unlimitedSprox) return true;
   const playable = playableEntryMeta(entry);
   if (playable) {
     if ([tutorialCarId, tutorialOpponentCarId].includes(playable.car.id)) {
@@ -1901,7 +2201,7 @@ function racerAlphaProfileToggle(profile) {
 function renderTuners() {
   const markup = tuners.map((tuner) => `
     <button class="tuner-card ${state.selectedTuner === tuner.id ? "active" : ""}" type="button" data-tuner="${tuner.id}">
-      ${characterMarkup(tuner)}
+      ${characterMarkup({ ...tuner, image: tuner.headshot || tuner.image })}
       <strong>${tuner.name}</strong>
     </button>
   `).join("");
@@ -1973,7 +2273,7 @@ function renderGarage() {
   el.garageStatus.textContent = godModeActive
     ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
     : "";
-  const garageCars = cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt"));
+  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
   el.garageGrid.innerHTML = garageCars.map((car) => {
     if (!isCarUnlocked(car.id)) {
       return lockedGarageCard(car);
@@ -2684,7 +2984,14 @@ function finishStoryRaceScreen() {
   if (verticalRace) verticalRace.active = false;
   restoreEmbeddedCampaignRace();
   storyReplayOpen = false;
+  closeStoryPreview();
+  closeCitySelect();
   setFlowStep("story", "next");
+  if (pendingCityUnlock) {
+    const city = pendingCityUnlock;
+    pendingCityUnlock = null;
+    openCityUnlockModal(city);
+  }
 }
 
 function showPendingEvolution(carId) {
@@ -2802,11 +3109,13 @@ function resetRacingData() {
   closeResetModal();
   closeEvolutionModal();
   closeUpgradeModal();
+  showView("menu");
   el.playerRacer.style.transform = "translateX(0)";
   el.rivalRacer.style.transform = "translateX(0)";
   el.raceMessage.className = "race-message";
   el.raceMessage.textContent = "Racing data reset. Fresh garage, fresh rivals.";
   render();
+  openFirstTutorialModal();
 }
 
 function openGodModal() {
@@ -2835,6 +3144,33 @@ function closeTutorialReplayModal() {
   el.tutorialReplayModal.classList.remove("active");
   el.tutorialReplayModal.setAttribute("aria-hidden", "true");
   el.tutorialSceneOptions.hidden = true;
+}
+
+function openFirstTutorialModal() {
+  showView("menu");
+  el.tutorialFirstModal.classList.add("active");
+  el.tutorialFirstModal.setAttribute("aria-hidden", "false");
+  el.tutorialFirstYes.focus();
+}
+
+function closeFirstTutorialModal() {
+  el.tutorialFirstModal.classList.remove("active");
+  el.tutorialFirstModal.setAttribute("aria-hidden", "true");
+}
+
+function openCityUnlockModal(city) {
+  if (!city || !el.cityUnlockModal) return;
+  el.cityUnlockIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "";
+  el.cityUnlockTitle.innerHTML = `<strong>${city.city}</strong> has been unlocked in <strong>CITY SELECT</strong>`;
+  el.cityUnlockModal.classList.add("active");
+  el.cityUnlockModal.setAttribute("aria-hidden", "false");
+  el.cityUnlockClose.focus();
+}
+
+function closeCityUnlockModal() {
+  if (!el.cityUnlockModal) return;
+  el.cityUnlockModal.classList.remove("active");
+  el.cityUnlockModal.setAttribute("aria-hidden", "true");
 }
 
 function renderTutorialSceneOptions() {
@@ -2872,6 +3208,8 @@ function activateGodMode() {
   state.highestRankIndex = ranks.length - 1;
   state.highestBossIndex = bossChallengeBosses.length - 1;
   state.highestCampaignIndex = campaignLevels.length - 1;
+  state.completedCampaignLevels = Object.fromEntries(campaignLevels.map((_, index) => [index, true]));
+  state.selectedStoryCity = storyCities.length - 1;
   state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
   state.selectedBoss = finalBoss.id;
   saveState();
@@ -3020,7 +3358,8 @@ function showView(view) {
   if (view === "story") {
     storyReplayOpen = false;
     modeFlow.story = state.storyCarChosen ? "next" : "car";
-    state.selectedCampaign = Math.min(state.highestCampaignIndex, campaignLevels.length - 1);
+    state.selectedStoryCity = Math.max(0, Math.min(state.selectedStoryCity || 0, highestUnlockedStoryCityIndex()));
+    state.selectedCampaign = firstPlayableStoryLevelForCity(state.selectedStoryCity)?.campaignIndex ?? state.selectedCampaign;
     saveState();
     render();
     ensureTunerAndIntro(view);
@@ -3364,21 +3703,39 @@ function mountCampaignRace(view) {
 }
 
 function completeCampaignLevel(index) {
-  if (index === state.highestCampaignIndex && state.highestCampaignIndex < campaignLevels.length - 1) {
+  state.completedCampaignLevels = state.completedCampaignLevels || {};
+  const cityIndex = storyCities.findIndex((city) => city.levels.some((level) => level.campaignIndex === index));
+  const completedLevel = cityIndex >= 0
+    ? storyCities[cityIndex].levels.find((level) => level.campaignIndex === index)
+    : null;
+  const nextCityIndex = cityIndex + 1;
+  const willUnlockNextCity = completedLevel?.type === "boss"
+    && nextCityIndex < storyCities.length
+    && !storyCityUnlocked(nextCityIndex);
+  state.completedCampaignLevels[index] = true;
+  while (state.highestCampaignIndex < campaignLevels.length - 1 && state.completedCampaignLevels[state.highestCampaignIndex]) {
     state.highestCampaignIndex += 1;
   }
-  state.selectedCampaign = Math.min(index + 1, campaignLevels.length - 1);
+  if (cityIndex >= 0) {
+    state.selectedStoryCity = cityIndex;
+    state.selectedStoryCity = Math.min(state.selectedStoryCity, highestUnlockedStoryCityIndex());
+    state.selectedCampaign = firstPlayableStoryLevelForCity(state.selectedStoryCity)?.campaignIndex ?? index;
+    if (willUnlockNextCity) {
+      pendingCityUnlock = storyCities[nextCityIndex];
+    }
+  }
   saveState();
 }
 
 function startCampaignLevel() {
   const index = state.selectedCampaign;
-  if (index > state.highestCampaignIndex) return;
   if (!storyTunerReady()) {
     openTunerModal();
     return;
   }
   const level = campaignLevels[index];
+  const city = storyCities[state.selectedStoryCity] || storyCities[0];
+  if (!level || storyLevelLocked(city, level) || !storyLevelVisible(city, level)) return;
   const runLevel = () => startCampaignRace(index, level);
   if (shouldShowStoryCutscene(index, level)) {
     openStoryCutscene(level, runLevel);
@@ -3388,6 +3745,8 @@ function startCampaignLevel() {
 }
 
 function startCampaignRace(index, level) {
+  closeStoryPreview();
+  closeCitySelect();
   if (level.type === "drag" || level.type === "pink-slip") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
@@ -4141,7 +4500,7 @@ el.storyCar.addEventListener("change", (event) => {
   setSelectedCarForMode("boss", event.target.value);
 });
 
-el.campaignCar.addEventListener("change", (event) => {
+el.campaignCar?.addEventListener("change", (event) => {
   setSelectedCarForMode("story", event.target.value);
 });
 
@@ -4185,9 +4544,18 @@ el.shiftButton.addEventListener("click", shift);
 el.nitroButton.addEventListener("click", useNitro);
 el.startCampaign.addEventListener("click", startCampaignLevel);
 el.changeStoryCar.addEventListener("click", () => setFlowStep("story", "car"));
-el.replayCampaign.addEventListener("click", () => {
-  storyReplayOpen = true;
-  setFlowStep("story", "next");
+el.storyCitySelect.addEventListener("click", openCitySelect);
+el.closeStoryPreview.addEventListener("click", closeStoryPreview);
+el.closeCitySelect.addEventListener("click", closeCitySelect);
+el.storyMapStage.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-story-level]");
+  if (!button || button.disabled) return;
+  openStoryPreview(Number(button.dataset.storyLevel));
+});
+el.storyCityGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-story-city]");
+  if (!button || button.disabled) return;
+  selectStoryCity(Number(button.dataset.storyCity));
 });
 el.startStory.addEventListener("click", () => openBossIntro());
 el.continueBoss.addEventListener("click", () => {
@@ -4226,12 +4594,10 @@ el.bossList.addEventListener("click", (event) => {
   render();
 });
 
-el.campaignList.addEventListener("click", (event) => {
+el.campaignList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-campaign]");
   if (!button || button.disabled) return;
-  state.selectedCampaign = Number(button.dataset.campaign);
-  saveState();
-  renderCampaign();
+  openStoryPreview(Number(button.dataset.campaign));
 });
 
 el.vindexList.addEventListener("click", (event) => {
@@ -4329,6 +4695,18 @@ el.tutorialSceneOptions.addEventListener("click", (event) => {
   closeTutorialReplayModal();
   startTutorial(button.dataset.tutorialScene);
 });
+el.tutorialFirstYes.addEventListener("click", () => {
+  closeFirstTutorialModal();
+  startTutorial("intro");
+});
+el.tutorialFirstNo.addEventListener("click", () => {
+  closeFirstTutorialModal();
+  state.tutorialActive = false;
+  state.tutorialComplete = true;
+  saveState();
+  render();
+});
+el.cityUnlockClose.addEventListener("click", closeCityUnlockModal);
 el.tutorialBack.addEventListener("click", rewindTutorial);
 el.tutorialNext.addEventListener("click", advanceTutorial);
 el.tutorialSkip.addEventListener("click", skipTutorial);
@@ -4357,6 +4735,22 @@ el.godModal.addEventListener("click", (event) => {
 el.tutorialReplayModal.addEventListener("click", (event) => {
   if (event.target === el.tutorialReplayModal) {
     closeTutorialReplayModal();
+  }
+});
+
+el.tutorialFirstModal.addEventListener("click", (event) => {
+  if (event.target === el.tutorialFirstModal) {
+    closeFirstTutorialModal();
+    state.tutorialActive = false;
+    state.tutorialComplete = true;
+    saveState();
+    render();
+  }
+});
+
+el.cityUnlockModal.addEventListener("click", (event) => {
+  if (event.target === el.cityUnlockModal) {
+    closeCityUnlockModal();
   }
 });
 
@@ -4427,6 +4821,26 @@ document.addEventListener("keydown", (event) => {
     closeTutorialReplayModal();
     return;
   }
+  if (event.key === "Escape" && el.storyPreviewPanel.classList.contains("active")) {
+    closeStoryPreview();
+    return;
+  }
+  if (event.key === "Escape" && el.storyCitySelectPanel.classList.contains("active")) {
+    closeCitySelect();
+    return;
+  }
+  if (event.key === "Escape" && el.tutorialFirstModal.classList.contains("active")) {
+    closeFirstTutorialModal();
+    state.tutorialActive = false;
+    state.tutorialComplete = true;
+    saveState();
+    render();
+    return;
+  }
+  if (event.key === "Escape" && el.cityUnlockModal.classList.contains("active")) {
+    closeCityUnlockModal();
+    return;
+  }
   if (event.key === "Escape" && el.upgradeModal.classList.contains("active")) {
     closeUpgradeModal();
     return;
@@ -4463,7 +4877,7 @@ document.addEventListener("keyup", (event) => {
 
 render();
 if (!state.tutorialComplete && !state.tutorialActive) {
-  startTutorial("intro");
+  openFirstTutorialModal();
 } else if (state.tutorialActive) {
   setupTutorialScene();
 }

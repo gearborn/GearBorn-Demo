@@ -99,20 +99,42 @@
             </div>
           </div>
           <div class="campaign-layout flow-step" data-flow="story" data-step="next">
-            <div class="campaign-list" id="campaign-list"></div>
-            <div class="campaign-detail">
-              <p id="campaign-type"></p>
-              <h2 id="campaign-title"></h2>
-              <span id="campaign-meta"></span>
+            <div class="story-city-map" id="story-city-map">
+              <div class="story-city-top">
+                <div class="story-city-heading">
+                  <span class="city-icon" id="story-city-icon">◆</span>
+                  <div>
+                    <h2 id="story-city-title">Indianapolis</h2>
+                  </div>
+                </div>
+                <button class="ghost city-select-button" id="story-city-select" type="button">City Select</button>
+              </div>
+              <div class="boss-unlock-note" id="boss-unlock-note"></div>
+              <div class="story-map-stage" id="story-map-stage"></div>
+              <div class="story-map-actions">
+                <button class="ghost campaign-change-car" id="change-story-car" type="button">Change Vehicle</button>
+              </div>
+            </div>
+            <div class="story-preview-panel" id="story-preview-panel" aria-hidden="true">
+              <button class="modal-close-bubble" id="close-story-preview" type="button" aria-label="Close level preview">×</button>
+              <div class="story-preview-head">
+                <span class="story-level-icon" id="story-preview-icon">◆</span>
+                <div>
+                  <p id="campaign-type"></p>
+                  <h2 id="campaign-title"></h2>
+                  <span id="campaign-meta"></span>
+                </div>
+              </div>
+              <div class="story-preview-art" id="story-preview-art"></div>
               <div class="campaign-rewards" id="campaign-rewards"></div>
               <div class="story-loadout" id="story-loadout"></div>
-              <div class="field">
-                <label for="campaign-car">Story car</label>
-                <select id="campaign-car"></select>
-              </div>
-              <button class="story-primary campaign-start" id="start-campaign" type="button">Continue Story</button>
-              <button class="ghost campaign-change-car" id="change-story-car" type="button">Change Vehicle</button>
-              <button class="ghost campaign-replay" id="replay-campaign" type="button">Replay Level</button>
+              <button class="story-primary campaign-start" id="start-campaign" type="button">Start Level</button>
+            </div>
+            <div class="story-city-select-panel" id="story-city-select-panel" aria-hidden="true">
+              <button class="modal-close-bubble" id="close-city-select" type="button" aria-label="Close city select">×</button>
+              <p class="modal-kicker">City Select</p>
+              <h2>Choose a city.</h2>
+              <div class="story-city-grid" id="story-city-grid"></div>
             </div>
           </div>
           <div class="campaign-race-mount" id="campaign-race-mount"></div>
@@ -527,6 +549,25 @@
           <button class="danger-button" id="tutorial-replay-cancel" type="button">Cancel</button>
         </div>
         <div class="tutorial-scene-select" id="tutorial-scene-options" hidden></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-first-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-first-confirm" role="dialog" aria-modal="true" aria-labelledby="tutorial-first-title">
+        <h2 id="tutorial-first-title">It looks like this is your first time playing. Would you like to play the Tutorial?</h2>
+        <p class="tutorial-first-note">This Tutorial can be replayed from the Settings menu at any time</p>
+        <div class="modal-actions">
+          <button class="success-button" id="tutorial-first-yes" type="button">Yes</button>
+          <button class="danger-button" id="tutorial-first-no" type="button">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="city-unlock-modal" aria-hidden="true">
+      <div class="confirm-modal city-unlock-modal" role="dialog" aria-modal="true" aria-labelledby="city-unlock-title">
+        <div class="city-unlock-icon city-icon" id="city-unlock-icon"></div>
+        <h2 id="city-unlock-title"></h2>
+        <button class="success-button" id="city-unlock-close" type="button">Continue</button>
       </div>
     </div>
 
