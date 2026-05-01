@@ -290,10 +290,10 @@ body.mode-active .main-menu-button {
 .nav {
   display: flex;
   flex: 1 1 560px;
-  gap: 8px;
+  gap: 5px;
   max-width: 100%;
   overflow-x: auto;
-  padding: 5px;
+  padding: 4px;
   border: 1px solid var(--line);
   background: rgba(26, 31, 39, 0.72);
   border-radius: 8px;
@@ -320,8 +320,11 @@ body:not(.mode-active) .nav {
 
 .nav-button {
   flex: 0 0 auto;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 0.82rem;
   font-weight: 1000;
+  line-height: 1.05;
   text-transform: uppercase;
 }
 
@@ -358,8 +361,8 @@ body:not(.mode-active) .nav {
   border: 1px solid var(--line);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 50% 38%, rgba(8, 12, 20, 0.08), rgba(8, 12, 20, 0.34) 62%, rgba(8, 12, 20, 0.68)),
-    url("assets/logo/gearborn-vert-cover.png");
+    radial-gradient(circle at 50% 34%, rgba(8, 12, 20, 0.04), rgba(8, 12, 20, 0.22) 58%, rgba(8, 12, 20, 0.5)),
+    url("assets/menu/mainmenu-bg.png");
   background-position: center;
   background-size: cover;
   box-shadow: 0 26px 76px var(--shadow);
@@ -445,6 +448,19 @@ body:not(.mode-active) .nav {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.menu-card {
+  --card-bg: none;
+  --card-foreground: none;
+  --card-foreground-position: center center;
+  --card-foreground-size: auto 108%;
+  --card-icon: none;
+  --card-text-scrim: linear-gradient(90deg, rgba(8, 12, 18, 0.82), rgba(8, 12, 18, 0.38) 62%, transparent);
+  --card-accent: var(--gold);
+  --card-glow: rgba(255, 200, 87, 0.3);
+  min-height: 168px;
+  isolation: isolate;
+}
+
 .menu-card,
 .menu-utility {
   display: grid;
@@ -455,18 +471,59 @@ body:not(.mode-active) .nav {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.menu-card::before,
+.menu-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.menu-card::before {
+  z-index: 0;
+  background:
+    var(--card-text-scrim),
+    var(--card-icon) 18px 18px / 48px 48px no-repeat,
+    var(--card-foreground) var(--card-foreground-position) / var(--card-foreground-size) no-repeat,
+    var(--card-bg) center / cover no-repeat,
+    linear-gradient(160deg, rgba(34, 41, 54, 0.92), rgba(10, 14, 20, 0.9));
+  opacity: 0.94;
+  transition: opacity 0.2s ease, transform 0.24s ease;
+}
+
+.menu-card::after {
+  z-index: 0;
+  background:
+    linear-gradient(105deg, transparent 0 34%, rgba(255, 255, 255, 0.26) 45%, transparent 56%),
+    radial-gradient(circle at 86% 18%, var(--card-glow), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 28%);
+  opacity: 0;
+  transform: translateX(-55%);
+  transition: opacity 0.24s ease, transform 0.44s ease;
+}
+
 .menu-card:hover,
 .menu-utility:hover,
 .solo-card:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px) scale(1.035);
   border-color: rgba(255, 200, 87, 0.58);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.44), 0 0 28px rgba(255, 200, 87, 0.12);
+}
+
+.menu-card:hover::before {
+  opacity: 1;
+  transform: scale(1.015);
+}
+
+.menu-card:hover::after {
+  opacity: 1;
+  transform: translateX(48%);
 }
 
 .menu-card:active,
 .menu-utility:active,
 .solo-card:active {
-  transform: translateY(0) scale(0.99);
+  transform: translateY(0) scale(0.985);
 }
 
 .hero-menu-card {
@@ -550,42 +607,72 @@ body:not(.mode-active) .nav {
   font-weight: 1000;
 }
 
-.training-card {
-  border-color: rgba(82, 199, 255, 0.38);
-  background:
-    linear-gradient(120deg, rgba(82, 199, 255, 0.18), transparent 42%),
-    repeating-linear-gradient(118deg, transparent 0 18px, rgba(110, 231, 168, 0.08) 18px 21px),
-    linear-gradient(160deg, rgba(24, 48, 58, 0.96), rgba(10, 14, 20, 0.92));
-}
-
-.garage-card {
-  border-color: rgba(255, 200, 87, 0.38);
-  background:
-    radial-gradient(circle at 18% 22%, rgba(255, 200, 87, 0.26), transparent 15%),
-    radial-gradient(circle at 85% 18%, rgba(255, 136, 46, 0.18), transparent 18%),
-    repeating-radial-gradient(circle at 88% 82%, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 12px),
-    linear-gradient(160deg, rgba(65, 45, 25, 0.96), rgba(16, 17, 20, 0.94));
-}
-
-.garage-card::before,
-.training-card::before {
-  content: "";
+.menu-card.garage-card .menu-card-icon,
+.menu-card.training-card .menu-card-icon {
   position: absolute;
-  inset: 0;
-  opacity: 0.48;
-  pointer-events: none;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  width: 54px;
+  height: 54px;
+  border: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  color: transparent;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
 }
 
-.garage-card::before {
-  background:
-    linear-gradient(45deg, transparent 42%, rgba(255, 200, 87, 0.16) 43% 45%, transparent 46%),
-    radial-gradient(circle at 78% 64%, transparent 0 14px, rgba(255, 200, 87, 0.16) 15px 17px, transparent 18px);
+.menu-card.garage-card .menu-card-icon {
+  background-image: url("assets/menu/icon_garage.png");
 }
 
-.training-card::before {
-  background:
-    linear-gradient(90deg, transparent 0 15%, rgba(255, 255, 255, 0.14) 15% 17%, transparent 17% 83%, rgba(255, 255, 255, 0.14) 83% 85%, transparent 85%),
-    radial-gradient(circle at 84% 24%, rgba(110, 231, 168, 0.26), transparent 12%);
+.menu-card.training-card .menu-card-icon {
+  background-image: url("assets/menu/icon_training.png");
+}
+
+.menu-card.training-card {
+  --card-bg: url("assets/menu/training_bg.png");
+  --card-foreground: url("assets/menu/training_foreground.png");
+  --card-foreground-position: 62% 58%;
+  --card-foreground-size: auto 108%;
+  --card-icon: url("assets/menu/icon_training.png");
+  --card-text-scrim: linear-gradient(90deg, rgba(4, 14, 20, 0.9), rgba(8, 25, 32, 0.52) 56%, rgba(8, 25, 32, 0.04));
+  --card-accent: var(--blue);
+  --card-glow: rgba(82, 199, 255, 0.32);
+  border-color: rgba(82, 199, 255, 0.38);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.38), 0 0 24px rgba(82, 199, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.menu-card.garage-card {
+  --card-bg: url("assets/menu/garage_bg.png");
+  --card-foreground: url("assets/menu/garage_foreground.png");
+  --card-foreground-position: 50% 52%;
+  --card-foreground-size: auto 76%;
+  --card-icon: url("assets/menu/icon_garage.png");
+  --card-text-scrim: linear-gradient(90deg, rgba(30, 16, 6, 0.9), rgba(48, 27, 8, 0.5) 56%, rgba(48, 27, 8, 0.03));
+  --card-accent: var(--gold);
+  --card-glow: rgba(255, 200, 87, 0.34);
+  border-color: rgba(255, 200, 87, 0.38);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.38), 0 0 24px rgba(255, 200, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.menu-card.garage-card,
+.menu-card.training-card {
+  align-content: end;
+  min-height: 210px;
+  padding-top: 70px;
+}
+
+.menu-card.garage-card strong,
+.menu-card.training-card strong {
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 0.95;
+}
+
+.menu-card.garage-card small,
+.menu-card.training-card small {
+  font-size: clamp(0.88rem, 2vw, 1rem);
 }
 
 .next-goal-panel {
@@ -1237,6 +1324,12 @@ body:not(.mode-active) .nav {
   align-items: center;
   gap: 12px;
   min-width: 0;
+  max-width: calc(100% - 154px);
+}
+
+.story-city-heading > div {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .city-icon,
@@ -1298,8 +1391,11 @@ body:not(.mode-active) .nav {
 }
 
 .story-city-heading h2 {
+  max-width: 100%;
+  font-size: clamp(1.25rem, 4.8vw, 2.1rem);
   font-weight: 1000;
   letter-spacing: 0;
+  line-height: 1.03;
   text-transform: uppercase;
 }
 
@@ -1370,13 +1466,43 @@ body:not(.mode-active) .nav {
   display: grid;
   gap: 6px;
   justify-items: center;
-  width: 104px;
+  width: clamp(82px, 12vw, 118px);
   transform: translate(-50%, -50%);
   border: 0;
   background: transparent;
   color: var(--ink);
   font-weight: 950;
   text-align: center;
+}
+
+.story-map-node:hover,
+.story-map-node:focus-visible {
+  z-index: 4;
+}
+
+.story-map-node:has(.type-drag) {
+  left: clamp(17%, 18vw, 24%) !important;
+  top: 68% !important;
+}
+
+.story-map-node:has(.type-trial) {
+  left: clamp(76%, 80vw, 83%) !important;
+  top: 68% !important;
+}
+
+.story-map-node:has(.type-battle) {
+  left: 50% !important;
+  top: 57% !important;
+}
+
+.story-map-node:has(.type-boss) {
+  left: 50% !important;
+  top: 20% !important;
+}
+
+.story-map-node:has(.type-pink-slip) {
+  left: clamp(70%, 74vw, 78%) !important;
+  top: 88% !important;
 }
 
 .story-map-node[hidden] {
@@ -1394,8 +1520,8 @@ body:not(.mode-active) .nav {
 
 .story-node-icon {
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: clamp(46px, 6vw, 56px);
+  height: clamp(46px, 6vw, 56px);
   place-items: center;
   border: 0;
   border-radius: 0;
@@ -1423,8 +1549,8 @@ body:not(.mode-active) .nav {
 
 .story-node-icon.type-boss,
 .story-node-icon.type-pink-slip {
-  width: 78px;
-  height: 78px;
+  width: clamp(64px, 8vw, 82px);
+  height: clamp(64px, 8vw, 82px);
 }
 
 .story-node-icon.layered .node-bg {
@@ -1454,13 +1580,13 @@ body:not(.mode-active) .nav {
 }
 
 .story-node-label {
-  max-width: 100%;
+  max-width: min(118px, 100%);
   overflow: visible;
   padding: 4px 7px;
   border-radius: 999px;
   background: rgba(17, 24, 32, 0.78);
   color: var(--ink);
-  font-size: 0.7rem;
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
   text-transform: uppercase;
   white-space: normal;
   overflow-wrap: normal;
@@ -3357,6 +3483,49 @@ small {
   font-weight: 850;
 }
 
+.campaign-button-copy strong,
+.campaign-button-copy small,
+.campaign-detail h2,
+.evolution-switcher strong,
+.playstyle-tag,
+.vindex-button strong,
+.vindex-evolution-card strong,
+.vindex-copy h2,
+.profile-copy h2,
+.garage-info h2,
+.garage-info h3,
+.story-city-heading h2,
+.story-node-label {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.vindex-button,
+.profile-list .vindex-button {
+  min-height: 52px;
+}
+
+.profile-list .vindex-button strong,
+.vindex-list .vindex-button strong {
+  font-size: clamp(0.8rem, 2.8vw, 1rem);
+  line-height: 1.1;
+}
+
+.profile-copy h2,
+.vindex-copy h2 {
+  font-size: clamp(1.45rem, 8cqw, 3.4rem);
+  line-height: 1.04;
+}
+
+.garage-info h2,
+.garage-info h3 {
+  line-height: 1.08;
+}
+
 .character-frame {
   display: grid;
   min-height: 320px;
@@ -4052,6 +4221,31 @@ small {
   .garage-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .story-map-node:has(.type-drag) {
+    left: 20% !important;
+    top: 68% !important;
+  }
+
+  .story-map-node:has(.type-trial) {
+    left: 80% !important;
+    top: 68% !important;
+  }
+
+  .story-map-node:has(.type-battle) {
+    left: 50% !important;
+    top: 56% !important;
+  }
+
+  .story-map-node:has(.type-boss) {
+    left: 50% !important;
+    top: 19% !important;
+  }
+
+  .story-map-node:has(.type-pink-slip) {
+    left: 76% !important;
+    top: 88% !important;
+  }
 }
 
 @media (max-width: 620px) {
@@ -4139,7 +4333,28 @@ small {
 
   .nav {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    flex: 0 0 auto;
+    grid-template-columns: repeat(3, clamp(98px, 28vw, 114px));
+    justify-content: center;
+    align-self: center;
+    gap: 5px;
+    width: fit-content;
+    max-width: 100%;
+    overflow: visible;
+    align-items: start;
+  }
+
+  .nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    height: 40px;
+    padding: 0 7px;
+    font-size: clamp(0.7rem, 2.55vw, 0.8rem);
+    line-height: 1.05;
+    text-align: center;
+    white-space: normal;
   }
 
   .hud {
@@ -4215,36 +4430,87 @@ small {
   }
 
   .story-city-top {
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: flex-start;
     padding: 12px;
   }
 
+  .story-city-heading {
+    max-width: 100%;
+    gap: 8px;
+  }
+
+  .story-city-heading .city-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .story-city-heading h2 {
+    font-size: clamp(1.15rem, 5vw, 1.7rem);
+  }
+
   .city-select-button {
+    justify-self: end;
     min-width: 106px;
+    margin-top: 6px;
     padding-inline: 8px;
   }
 
   .boss-unlock-note {
-    top: 116px;
+    top: 154px;
     font-size: 0.78rem;
   }
 
   .story-map-stage {
-    inset: 150px 8px 66px;
+    inset: 184px 8px 66px;
   }
 
   .story-map-node {
-    width: 82px;
+    width: 76px;
   }
 
   .story-node-icon {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     font-size: 1.25rem;
   }
 
+  .story-node-icon.type-boss,
+  .story-node-icon.type-pink-slip {
+    width: 56px;
+    height: 56px;
+  }
+
   .story-node-label {
-    font-size: 0.62rem;
+    max-width: 76px;
+    font-size: 0.58rem;
+    line-height: 1.05;
+  }
+
+  .story-map-node:has(.type-drag) {
+    left: 19% !important;
+    top: 69% !important;
+  }
+
+  .story-map-node:has(.type-trial) {
+    left: 81% !important;
+    top: 69% !important;
+  }
+
+  .story-map-node:has(.type-battle) {
+    left: 50% !important;
+    top: 55% !important;
+  }
+
+  .story-map-node:has(.type-boss) {
+    left: 50% !important;
+    top: 18% !important;
+  }
+
+  .story-map-node:has(.type-pink-slip) {
+    left: 78% !important;
+    top: 88% !important;
   }
 
   .story-preview-panel,
