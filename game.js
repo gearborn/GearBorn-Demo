@@ -608,11 +608,11 @@ const campaignLevels = bosses.flatMap((boss, index) => {
   return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId }]) : arc;
 }).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
 const storyNodeLayouts = [
-  { key: "drag", x: 20, y: 66 },
-  { key: "trial", x: 80, y: 66 },
-  { key: "battle", x: 50, y: 56 },
-  { key: "boss", x: 50, y: 28 },
-  { key: "pink-slip", x: 50, y: 84 }
+  { key: "drag", x: 18, y: 68 },
+  { key: "trial", x: 82, y: 68 },
+  { key: "battle", x: 50, y: 58 },
+  { key: "boss", x: 50, y: 20 },
+  { key: "pink-slip", x: 76, y: 88 }
 ];
 const storyLevelVisuals = {
   drag: { label: "Drag Race", icon: "assets/items/icon-drag-race.png", color: "#ffc857" },

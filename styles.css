@@ -349,15 +349,16 @@ body:not(.mode-active) .nav {
 
 .main-menu {
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
-  gap: 24px;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
   min-height: min(800px, calc(100svh - 126px));
-  align-items: center;
   padding: clamp(18px, 4vw, 42px);
   border: 1px solid var(--line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12) 48%, rgba(0, 0, 0, 0.62)),
+    radial-gradient(circle at 50% 38%, rgba(8, 12, 20, 0.08), rgba(8, 12, 20, 0.34) 62%, rgba(8, 12, 20, 0.68)),
     url("assets/logo/gearborn-vert-cover.png");
   background-position: center;
   background-size: cover;
@@ -367,9 +368,9 @@ body:not(.mode-active) .nav {
 .menu-logo {
   display: grid;
   justify-items: center;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
-  margin-bottom: 0;
+  margin-bottom: 2px;
 }
 
 .menu-title-box {
@@ -428,8 +429,8 @@ body:not(.mode-active) .nav {
 .menu-dashboard {
   display: grid;
   gap: 14px;
-  width: min(560px, 100%);
-  justify-self: end;
+  width: min(760px, 100%);
+  justify-self: center;
 }
 
 .menu-card,
@@ -451,13 +452,13 @@ body:not(.mode-active) .nav {
   width: 100%;
   padding: 18px;
   text-align: left;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .menu-card:hover,
 .menu-utility:hover,
 .solo-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.03);
   border-color: rgba(255, 200, 87, 0.58);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.44), 0 0 28px rgba(255, 200, 87, 0.12);
 }
@@ -469,12 +470,19 @@ body:not(.mode-active) .nav {
 }
 
 .hero-menu-card {
-  min-height: 190px;
+  min-height: 162px;
   padding: 24px;
   border-color: rgba(110, 231, 168, 0.42);
   background:
     linear-gradient(135deg, rgba(110, 231, 168, 0.28), transparent 45%),
     linear-gradient(160deg, rgba(31, 47, 45, 0.96), rgba(10, 14, 20, 0.92));
+}
+
+.menu-card > *,
+.menu-utility > *,
+.next-goal-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-menu-card strong {
@@ -543,19 +551,54 @@ body:not(.mode-active) .nav {
 }
 
 .training-card {
-  border-color: rgba(255, 200, 87, 0.34);
+  border-color: rgba(82, 199, 255, 0.38);
+  background:
+    linear-gradient(120deg, rgba(82, 199, 255, 0.18), transparent 42%),
+    repeating-linear-gradient(118deg, transparent 0 18px, rgba(110, 231, 168, 0.08) 18px 21px),
+    linear-gradient(160deg, rgba(24, 48, 58, 0.96), rgba(10, 14, 20, 0.92));
 }
 
 .garage-card {
-  border-color: rgba(82, 199, 255, 0.34);
+  border-color: rgba(255, 200, 87, 0.38);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 200, 87, 0.26), transparent 15%),
+    radial-gradient(circle at 85% 18%, rgba(255, 136, 46, 0.18), transparent 18%),
+    repeating-radial-gradient(circle at 88% 82%, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 12px),
+    linear-gradient(160deg, rgba(65, 45, 25, 0.96), rgba(16, 17, 20, 0.94));
+}
+
+.garage-card::before,
+.training-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.garage-card::before {
+  background:
+    linear-gradient(45deg, transparent 42%, rgba(255, 200, 87, 0.16) 43% 45%, transparent 46%),
+    radial-gradient(circle at 78% 64%, transparent 0 14px, rgba(255, 200, 87, 0.16) 15px 17px, transparent 18px);
+}
+
+.training-card::before {
+  background:
+    linear-gradient(90deg, transparent 0 15%, rgba(255, 255, 255, 0.14) 15% 17%, transparent 17% 83%, rgba(255, 255, 255, 0.14) 83% 85%, transparent 85%),
+    radial-gradient(circle at 84% 24%, rgba(110, 231, 168, 0.26), transparent 12%);
 }
 
 .next-goal-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 14px;
+  gap: 8px 18px;
   align-items: center;
-  padding: 16px;
+  padding: 18px;
+  border-color: rgba(255, 200, 87, 0.7);
+  background:
+    linear-gradient(90deg, rgba(255, 200, 87, 0.2), rgba(110, 231, 168, 0.11)),
+    linear-gradient(160deg, rgba(21, 28, 30, 0.98), rgba(9, 13, 18, 0.94));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46), 0 0 34px rgba(255, 200, 87, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .next-goal-panel span,
@@ -566,9 +609,24 @@ body:not(.mode-active) .nav {
 
 .next-goal-panel button {
   grid-column: 2;
-  grid-row: 1 / span 3;
-  min-height: 44px;
-  padding-inline: 18px;
+  grid-row: 1 / span 4;
+  min-height: 54px;
+  padding-inline: 22px;
+  box-shadow: 0 0 26px rgba(110, 231, 168, 0.18);
+}
+
+.next-goal-panel strong {
+  color: #ffffff;
+  font-size: clamp(1.16rem, 2.5vw, 1.58rem);
+  line-height: 1.05;
+}
+
+.next-goal-panel small {
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.86rem;
 }
 
 .creator-credit {
