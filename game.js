@@ -245,6 +245,7 @@ const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
 const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
+const rivalStarterCarIds = defaultUnlockedLines;
 const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, ["rainbowlt", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
@@ -284,6 +285,25 @@ const tutorialSceneSelectOptions = [
   { label: "VINdex", scene: "vindex" }
 ];
 const gearbornKeyImage = "assets/items/item-gearbornkey.png";
+const partTypes = [
+  { id: "rocketFuel", name: "Rocket Fuel", attr: "speed", label: "SPD", image: "assets/items/parts-rocket-fuel.png" },
+  { id: "warpStarter", name: "Warp Starter", attr: "acceleration", label: "ACC", image: "assets/items/parts-warp-starter.png" },
+  { id: "ghostDriftTires", name: "Ghost Drift Tires", attr: "handling", label: "HDL", image: "assets/items/parts-ghost-drift-tires.png" },
+  { id: "earthquakeAxle", name: "Earthquake Axle", attr: "torque", label: "TRQ", image: "assets/items/parts-earthquake-axle.png" },
+  { id: "bouncebackBumper", name: "Bounceback Bumper", attr: "body", label: "BDY", image: "assets/items/parts-bounceback-bumper.png" },
+  { id: "omniCore", name: "Omni Core", attr: "powertrain", label: "PWR", image: "assets/items/parts-omni-core.png" }
+];
+const partLevels = {
+  1: { bonus: 1, stars: "★" },
+  2: { bonus: 3, stars: "★★" }
+};
+const partVariants = partTypes.flatMap((part) => [1, 2].map((level) => ({
+  ...part,
+  level,
+  key: `${part.id}_lvl${level}`,
+  bonus: partLevels[level].bonus,
+  stars: partLevels[level].stars
+})));
 const tutorialDialogue = {
   intro: [
     ["tyree", "Welcome to Spindell Training Academy! My name is Dr. Tyree. I’ll be the one evaluating you today to become a Tuner."],
@@ -587,6 +607,11 @@ const pinkSlipRacePlan = {
   6: { carId: "karate-cow", rankKey: "S", xp: 680, power: 1.95, distance: 1600 },
   7: { carId: "frog", rankKey: "S", xp: 820, power: 2.08, distance: 1600 }
 };
+const rivalRacePlan = {
+  1: { id: "berlin-rival", mechanic: "drag", xp: 300, power: 1.2, distance: 800 },
+  4: { id: "los-angeles-rival", mechanic: "bossVertical", xp: 640, power: 1.56, distance: 500 },
+  7: { id: "bangalore-rival", mechanic: "battle", xp: 1040, power: 1.92 }
+};
 function pinkSlipStageFor(plan) {
   const car = cars.find((item) => item.id === plan.carId);
   const form = car.evolutions[0];
@@ -603,21 +628,28 @@ const campaignLevels = bosses.flatMap((boss, index) => {
   const drag = { type: "drag", title: `${campaignDragStages[index].rankKey} Class Drag: ${campaignDragStages[index].name}`, drag: campaignDragStages[index] };
   const trial = { type: "trial", title: `${boss.track.city} Time Trial`, track: boss.track, bossIndex: index };
   const arena = { type: "battle", title: `${boss.name} Arena Battle`, bossIndex: index };
+  const rival = rivalRacePlan[index]
+    ? { type: "rival", title: `${boss.track.city} Rival Race`, bossIndex: index, track: boss.track, ...rivalRacePlan[index] }
+    : null;
   const battle = { type: "boss", title: `${boss.name} Boss Race`, bossIndex: index };
-  const arc = index % 2 === 0 ? [drag, trial, arena, battle] : [trial, drag, arena, battle];
+  const prelims = index % 2 === 0 ? [drag, trial, arena] : [trial, drag, arena];
+  if (rival) prelims.push(rival);
+  const arc = prelims.concat(battle);
   return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId }]) : arc;
 }).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
 const storyNodeLayouts = [
-  { key: "drag", x: 18, y: 68 },
-  { key: "trial", x: 82, y: 68 },
-  { key: "battle", x: 50, y: 58 },
+  { key: "drag", x: 16, y: 70 },
+  { key: "trial", x: 84, y: 70 },
+  { key: "battle", x: 34, y: 56 },
+  { key: "rival", x: 66, y: 56 },
   { key: "boss", x: 50, y: 20 },
-  { key: "pink-slip", x: 76, y: 88 }
+  { key: "pink-slip", x: 50, y: 88 }
 ];
 const storyLevelVisuals = {
   drag: { label: "Drag Race", icon: "assets/items/icon-drag-race.png", color: "#ffc857" },
   trial: { label: "Time Trial", icon: "assets/items/icon-time-trial.png", color: "#6ee7a8" },
   battle: { label: "Battle", icon: "assets/items/icon-battle.png", color: "#f25f5c" },
+  rival: { label: "Rival Race", icon: "assets/items/icon-rival-race.png", color: "#c084fc" },
   boss: { label: "Boss Battle", icon: "assets/items/icon-boss.png", color: "#52c7ff" },
   "pink-slip": { label: "Pink Slip", icon: "assets/items/icon-pink-slip.png", color: "#f4a7d8" }
 };
@@ -634,7 +666,7 @@ const cityAbbreviations = {
 };
 let storyCursor = 0;
 const storyCities = bosses.map((boss, index) => {
-  const levelCount = 4 + (pinkSlipRacePlan[index] ? 1 : 0);
+  const levelCount = 4 + (rivalRacePlan[index] ? 1 : 0) + (pinkSlipRacePlan[index] ? 1 : 0);
   const levels = campaignLevels.slice(storyCursor, storyCursor + levelCount).map((level, offset) => ({ ...level, campaignIndex: storyCursor + offset }));
   storyCursor += levelCount;
   return { id: boss.track.id, city: boss.track.city, country: boss.track.country, track: boss.track, bossIndex: index, levels, icon: boss.track.cityIcon };
@@ -1076,6 +1108,9 @@ const defaultState = {
   highestCampaignIndex: 0,
   selectedStoryCity: 0,
   completedCampaignLevels: {},
+  bond: {},
+  partsInventory: Object.fromEntries(partVariants.map((part) => [part.key, 0])),
+  equippedParts: {},
   unlockedLines: [...defaultUnlockedLines],
   timeTrials: {},
   storyTimeTrials: {},
@@ -1096,6 +1131,8 @@ let pendingDragRace = null;
 let pendingIntroView = null;
 let pendingPinkSlipContinue = null;
 let upgradeModalCarId = null;
+let selectedInventoryPartKey = partVariants[0]?.key || "";
+let equipPartContext = null;
 const modeFlow = {
   drag: "car",
   time: "car",
@@ -1232,7 +1269,20 @@ const el = {
   upgradeCarName: document.querySelector("#upgrade-car-name"),
   upgradeCarMeta: document.querySelector("#upgrade-car-meta"),
   upgradeStats: document.querySelector("#upgrade-stats"),
+  upgradePartSlots: document.querySelector("#upgrade-part-slots"),
   upgradeCost: document.querySelector("#upgrade-cost"),
+  openInventory: document.querySelector("#open-inventory"),
+  inventoryModal: document.querySelector("#inventory-modal"),
+  closeInventory: document.querySelector("#close-inventory"),
+  partsGrid: document.querySelector("#parts-grid"),
+  partDetail: document.querySelector("#part-detail"),
+  equipPartModal: document.querySelector("#equip-part-modal"),
+  closeEquipPart: document.querySelector("#close-equip-part"),
+  equipPartsGrid: document.querySelector("#equip-parts-grid"),
+  equipPartDetail: document.querySelector("#equip-part-detail"),
+  confirmEquipPart: document.querySelector("#confirm-equip-part"),
+  unequipPart: document.querySelector("#unequip-part"),
+  replacePart: document.querySelector("#replace-part"),
   resetProgress: document.querySelector("#reset-progress"),
   replayTutorial: document.querySelector("#replay-tutorial"),
   tutorialReplayModal: document.querySelector("#tutorial-replay-modal"),
@@ -1339,6 +1389,9 @@ function mergeState(base, saved) {
     timeTrials: { ...base.timeTrials, ...saved.timeTrials },
     storyTimeTrials: { ...base.storyTimeTrials, ...saved.storyTimeTrials },
     completedCampaignLevels: { ...base.completedCampaignLevels, ...saved.completedCampaignLevels },
+    bond: { ...base.bond, ...saved.bond },
+    partsInventory: { ...base.partsInventory, ...saved.partsInventory },
+    equippedParts: { ...base.equippedParts, ...saved.equippedParts },
     garage: { ...base.garage, ...saved.garage }
   };
 }
@@ -1351,6 +1404,15 @@ function sanitizeState() {
   state.sprox = Number.isFinite(Number(state.sprox)) ? Math.max(0, Math.floor(Number(state.sprox))) : 0;
   state.unlimitedSprox = Boolean(state.unlimitedSprox);
   state.unlockedCars = state.unlockedCars || {};
+  state.bond = state.bond && typeof state.bond === "object" ? state.bond : {};
+  state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
+  state.equippedParts = state.equippedParts && typeof state.equippedParts === "object" ? state.equippedParts : {};
+  partVariants.forEach((part) => {
+    state.partsInventory[part.key] = Math.max(0, Math.floor(Number(state.partsInventory[part.key]) || 0));
+  });
+  Object.keys(state.partsInventory).forEach((key) => {
+    if (!partVariants.some((part) => part.key === key)) delete state.partsInventory[key];
+  });
   state.unlockedLines = Array.isArray(state.unlockedLines) ? state.unlockedLines : [...defaultUnlockedLines];
   defaultUnlockedLines.forEach((carId) => {
     if (!state.unlockedLines.includes(carId)) state.unlockedLines.push(carId);
@@ -1446,6 +1508,15 @@ function sanitizeState() {
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
   cars.forEach((car) => {
+    const bond = state.bond[car.id] || {};
+    state.bond[car.id] = {
+      races: Math.max(0, Math.floor(Number(bond.races) || 0)),
+      milestones: Array.isArray(bond.milestones) ? bond.milestones.filter((value, index, list) => [5, 10, 20].includes(Number(value)) && list.indexOf(value) === index).map(Number) : []
+    };
+    state.equippedParts[car.id] = Array.isArray(state.equippedParts[car.id])
+      ? state.equippedParts[car.id].slice(0, 2).map((key) => partVariants.some((part) => part.key === key) ? key : null)
+      : [null, null];
+    while (state.equippedParts[car.id].length < 2) state.equippedParts[car.id].push(null);
     state.garage[car.id] = state.garage[car.id] || { level: 1, xp: 0, evolution: 0, pendingEvolution: null };
     if (!state.unlimitedSprox && state.garage[car.id].xp > 0) {
       state.sprox += Math.max(0, Math.floor(state.garage[car.id].xp));
@@ -1469,6 +1540,12 @@ function sanitizeState() {
       delete state.garage[carId];
     }
   });
+  Object.keys(state.bond).forEach((carId) => {
+    if (!cars.some((car) => car.id === carId)) delete state.bond[carId];
+  });
+  Object.keys(state.equippedParts).forEach((carId) => {
+    if (!cars.some((car) => car.id === carId)) delete state.equippedParts[carId];
+  });
 }
 
 function xpForNextLevel(level) {
@@ -1489,6 +1566,29 @@ function addSprox(amount) {
     state.sprox = Math.max(0, Math.floor((state.sprox || 0) + amount));
   }
   return Math.max(0, Math.floor(amount));
+}
+
+function rollStoryPartReward() {
+  const roll = Math.random();
+  const level = roll < 0.05 ? 2 : roll < 0.25 ? 1 : 0;
+  if (!level) return null;
+  const type = partTypes[Math.floor(Math.random() * partTypes.length)];
+  const part = partVariants.find((item) => item.id === type.id && item.level === level);
+  if (!part) return null;
+  state.partsInventory[part.key] = (state.partsInventory[part.key] || 0) + 1;
+  return part;
+}
+
+function partRewardResultMarkup(part) {
+  if (!part) return "";
+  return `
+    <span class="part-reward-line">You earned Level ${part.level} ${part.name}</span>
+    <span class="part-reward-visual">
+      ${partImageMarkup(part, "part-reward-image")}
+      <span class="part-stars">${partStars(part)}</span>
+      <strong>+${part.bonus} ${part.label}</strong>
+    </span>
+  `;
 }
 
 function canAffordUpgrade(cost) {
@@ -1600,6 +1700,13 @@ function displayedGearbornStats(carId) {
 }
 
 function displayedGearbornStatsAtLevel(carId, level) {
+  const baseStats = baseGearbornStatsAtLevel(carId, level);
+  const boosts = bondBoostsForCar(carId, baseStats);
+  const partBoosts = partBoostsForCar(carId);
+  return Object.fromEntries(Object.entries(baseStats).map(([key, value]) => [key, Math.min(100, value + (boosts[key] || 0) + (partBoosts[key] || 0))]));
+}
+
+function baseGearbornStatsAtLevel(carId, level) {
   const profile = gearbornStatProfiles[carId] || gearbornStatProfiles.bee;
   if (carId === "rainbowlt" && level >= maxCarLevel && (state.garage?.rainbowlt?.evolution || 0) >= 1) {
     return {
@@ -1621,6 +1728,111 @@ function displayedGearbornStatsAtLevel(carId, level) {
     body: Math.min(100, (profile.body ?? 72) + levelGain + evolutionGain),
     powertrain: Math.min(100, (profile.powertrain ?? 78) + levelGain + evolutionGain)
   };
+}
+
+const statLabels = {
+  speed: "SPD",
+  acceleration: "ACC",
+  handling: "HDL",
+  torque: "TRQ",
+  body: "BDY",
+  powertrain: "PWR"
+};
+const bondMilestones = [
+  { count: 5, boosts: { acceleration: 2, handling: 2 } },
+  { count: 10, boosts: { speed: 3, torque: 3 } }
+];
+
+function strongestBondStat(baseStats) {
+  const order = ["speed", "acceleration", "handling", "torque", "powertrain"];
+  return order.reduce((best, key) => (baseStats[key] > baseStats[best] ? key : best), order[0]);
+}
+
+function bondMilestoneBoost(count, baseStats) {
+  if (count === 20) {
+    return {
+      [strongestBondStat(baseStats)]: 5,
+      body: 3
+    };
+  }
+  return bondMilestones.find((milestone) => milestone.count === count)?.boosts || {};
+}
+
+function bondBoostsForCar(carId, baseStats = baseGearbornStatsAtLevel(carId, state.garage[carId]?.level || 1)) {
+  const bond = state.bond?.[carId];
+  const boosts = { speed: 0, acceleration: 0, handling: 0, torque: 0, body: 0, powertrain: 0 };
+  (bond?.milestones || []).forEach((count) => {
+    const milestoneBoost = bondMilestoneBoost(Number(count), baseStats);
+    Object.entries(milestoneBoost).forEach(([key, value]) => {
+      boosts[key] = (boosts[key] || 0) + value;
+    });
+  });
+  return boosts;
+}
+
+function partByKey(key) {
+  return partVariants.find((part) => part.key === key) || null;
+}
+
+function partBoostsForCar(carId) {
+  const boosts = { speed: 0, acceleration: 0, handling: 0, torque: 0, body: 0, powertrain: 0 };
+  (state.equippedParts?.[carId] || []).forEach((key) => {
+    const part = partByKey(key);
+    if (part) boosts[part.attr] = (boosts[part.attr] || 0) + part.bonus;
+  });
+  return boosts;
+}
+
+function equippedPartUsage(key, ignoreCarId = "", ignoreSlot = -1) {
+  return Object.entries(state.equippedParts || {}).reduce((total, [carId, slots]) => total + (slots || []).filter((slotKey, slotIndex) => {
+    if (carId === ignoreCarId && slotIndex === ignoreSlot) return false;
+    return slotKey === key;
+  }).length, 0);
+}
+
+function availablePartCount(key, ignoreCarId = "", ignoreSlot = -1) {
+  return Math.max(0, (state.partsInventory?.[key] || 0) - equippedPartUsage(key, ignoreCarId, ignoreSlot));
+}
+
+function partStars(part) {
+  return part?.stars || "";
+}
+
+function formatBondBoosts(boosts) {
+  return Object.entries(boosts)
+    .filter(([, value]) => value > 0)
+    .map(([key, value]) => `+${value} ${statLabels[key] || key.toUpperCase()}`)
+    .join(", ");
+}
+
+function nextBondMilestone(carId) {
+  const claimed = state.bond?.[carId]?.milestones || [];
+  return [5, 10, 20].find((count) => !claimed.includes(count)) || null;
+}
+
+function recordRaceUsage(carId) {
+  if (!carId || !cars.some((car) => car.id === carId)) return [];
+  state.bond = state.bond || {};
+  const bond = state.bond[carId] || { races: 0, milestones: [] };
+  bond.races = Math.max(0, Math.floor(Number(bond.races) || 0)) + 1;
+  bond.milestones = Array.isArray(bond.milestones) ? bond.milestones.map(Number) : [];
+  const baseStats = baseGearbornStatsAtLevel(carId, state.garage[carId]?.level || 1);
+  const unlocked = [];
+  [5, 10, 20].forEach((count) => {
+    if (bond.races >= count && !bond.milestones.includes(count)) {
+      bond.milestones.push(count);
+      const boosts = bondMilestoneBoost(count, baseStats);
+      unlocked.push({ count, boosts });
+    }
+  });
+  state.bond[carId] = bond;
+  if (unlocked.length) {
+    const form = currentEvolution(carId);
+    unlocked.forEach((milestone) => {
+      showToast("Bond Boost Unlocked!", `${form.name} gained ${formatBondBoosts(milestone.boosts)}!`);
+    });
+  }
+  return unlocked;
 }
 
 function normalizedGearbornStat(value) {
@@ -1893,12 +2105,20 @@ function highestUnlockedStoryCityIndex() {
 }
 
 function cityCoreLevelsCompleted(city) {
-  return city.levels.filter((level) => level.type === "drag" || level.type === "trial" || level.type === "battle").filter((level) => storyLevelCompleted(level.campaignIndex)).length;
+  return city.levels.filter((level) => ["drag", "trial", "battle", "rival"].includes(level.type)).filter((level) => storyLevelCompleted(level.campaignIndex)).length;
+}
+
+function cityCoreLevelsTotal(city) {
+  return city.levels.filter((level) => ["drag", "trial", "battle", "rival"].includes(level.type)).length;
+}
+
+function cityBossRequirement(city) {
+  return city.levels.some((level) => level.type === "rival") ? 3 : 2;
 }
 
 function cityBossUnlocked(city) {
   if (city.final) return storyCityUnlocked(storyCities.indexOf(city));
-  return cityCoreLevelsCompleted(city) >= 2;
+  return cityCoreLevelsCompleted(city) >= cityBossRequirement(city);
 }
 
 function cityBossCompleted(city) {
@@ -1907,7 +2127,7 @@ function cityBossCompleted(city) {
 }
 
 function storyLevelVisible(city, level) {
-  if (level.type === "drag" || level.type === "trial" || level.type === "battle") return true;
+  if (level.type === "drag" || level.type === "trial" || level.type === "battle" || level.type === "rival") return true;
   if (level.type === "boss") return cityBossUnlocked(city);
   if (level.type === "pink-slip") return cityBossCompleted(city);
   return false;
@@ -1936,8 +2156,11 @@ function renderCampaign() {
   el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.cityMap || city.track.map}")`;
   el.storyCityMap.style.backgroundSize = "cover";
   el.storyCityMap.style.backgroundPosition = "center";
-  const remaining = Math.max(0, 2 - cityCoreLevelsCompleted(city));
-  el.bossUnlockNote.textContent = cityUnlocked && !city.final && !cityBossUnlocked(city) ? `Beat ${remaining}/3 Levels to Unlock Boss Race` : "";
+  const completedCore = cityCoreLevelsCompleted(city);
+  const totalCore = cityCoreLevelsTotal(city);
+  el.bossUnlockNote.textContent = cityUnlocked && !city.final && !cityBossUnlocked(city)
+    ? `Beat ${completedCore}/${totalCore} Levels to Unlock Boss Race`
+    : "";
   el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
   renderStoryCityGrid();
   renderStoryLevelPreview();
@@ -1957,6 +2180,37 @@ function storyMapNodeMarkup(city, level) {
   `;
 }
 
+function rivalTuner() {
+  const playerId = selectedTuner().id;
+  return tuners.find((tuner) => tuner.id === (playerId === "cha-cha" ? "mylo" : "cha-cha")) || tuners[1] || tuners[0];
+}
+
+function rivalCarIdForPlayer(playerCarId = state.selectedStoryCar) {
+  const candidates = rivalStarterCarIds.filter((carId) => carId !== playerCarId);
+  const seed = selectedTuner().id === "cha-cha" ? 1 : 0;
+  return candidates[seed % candidates.length] || rivalStarterCarIds[0];
+}
+
+function rivalCarSetup(playerCarId = state.selectedStoryCar) {
+  const rivalCarId = rivalCarIdForPlayer(playerCarId);
+  const playerProgress = state.garage[playerCarId] || { level: 1, evolution: 0 };
+  const rivalCar = cars.find((car) => car.id === rivalCarId) || cars[0];
+  const evolution = Math.min(playerProgress.evolution || 0, rivalCar.evolutions.length - 1);
+  const form = rivalCar.evolutions[evolution] || rivalCar.evolutions[0];
+  const profile = gearbornStatProfiles[rivalCarId] || gearbornStatProfiles.bee;
+  const levelGain = Math.max(0, (playerProgress.level || 1) - 1);
+  const evolutionGain = evolution * 2;
+  const stats = {
+    speed: Math.min(100, profile.speed + levelGain + evolutionGain),
+    acceleration: Math.min(100, profile.acceleration + levelGain + evolutionGain),
+    handling: Math.min(100, profile.handling + levelGain + evolutionGain),
+    torque: Math.min(100, (profile.torque ?? 74) + levelGain + evolutionGain),
+    body: Math.min(100, (profile.body ?? 72) + levelGain + evolutionGain),
+    powertrain: Math.min(100, (profile.powertrain ?? 78) + levelGain + evolutionGain)
+  };
+  return { carId: rivalCarId, car: rivalCar, form, evolution, level: playerProgress.level || 1, stats };
+}
+
 function storyNodeIconMarkup(city, level, visual) {
   if (level.type === "boss") {
     const boss = level.final ? finalBoss : bosses[level.bossIndex];
@@ -1973,6 +2227,15 @@ function storyNodeIconMarkup(city, level, visual) {
       <span class="story-node-icon layered type-pink-slip">
         <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
         <img class="node-subject pink-car" src="${form.displayImage || form.image}" alt="${form.name}" loading="lazy" decoding="async">
+      </span>
+    `;
+  }
+  if (level.type === "rival") {
+    const rival = rivalTuner();
+    return `
+      <span class="story-node-icon layered type-rival">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
+        <img class="node-subject rival-headshot" src="${rival.headshot || rival.image}" alt="${rival.name}" loading="lazy" decoding="async">
       </span>
     `;
   }
@@ -2002,7 +2265,9 @@ function renderStoryLevelPreview() {
   if (!panelOpen || !level) return;
   const locked = storyLevelLocked(storyCities[state.selectedStoryCity], level);
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
-  el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+  el.storyPreviewIcon.innerHTML = level.type === "rival"
+    ? storyNodeIconMarkup(storyCities[state.selectedStoryCity], level, visual)
+    : `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
   el.storyPreviewIcon.style.background = "transparent";
   el.campaignType.textContent = locked ? "Locked" : campaignTypeLabel(level);
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
@@ -2025,6 +2290,13 @@ function storyPreviewArtMarkup(level, locked) {
   }
   if (level.type === "trial") {
     return `<div class="story-map-preview" style="background-image:url('${level.track.map}')"><span>${level.track.city}</span></div>`;
+  }
+  if (level.type === "rival") {
+    const rival = rivalTuner();
+    const rivalCar = rivalCarSetup();
+    if (level.mechanic === "drag") return displayMarkup(imageFor(rivalCar.form, "display"), rivalCar.form.name, rivalCar.car.color);
+    if (level.mechanic === "battle") return `<div class="story-map-preview" style="background-image:url('assets/maps/map-battle-arena.png')"><span>${rival.name}</span></div>`;
+    return characterMarkup({ name: rival.name, image: rival.headshot || rival.image });
   }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
   return characterMarkup({ name: boss.name, image: boss.portrait });
@@ -2083,6 +2355,7 @@ function campaignTypeLabel(level) {
   if (level.type === "pink-slip") return "Pink Slip Race";
   if (level.type === "trial") return "Time Trial";
   if (level.type === "battle") return "Battle";
+  if (level.type === "rival") return "Rival Race";
   return "Boss Battle";
 }
 
@@ -2121,6 +2394,10 @@ function renderCampaignRewards(level, locked) {
     el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${reward} Sprox</strong></div>`;
     return;
   }
+  if (level.type === "rival") {
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>`;
+    return;
+  }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
   el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} Sprox</strong></div>`;
 }
@@ -2157,6 +2434,11 @@ function campaignLevelMeta(level, locked) {
   if (level.type === "battle") {
     const boss = bosses[level.bossIndex];
     return `${boss.name} · ${boss.car} · Arena`;
+  }
+  if (level.type === "rival") {
+    const rival = rivalTuner();
+    const mechanic = { drag: "Drag Race", bossVertical: "City Sprint", battle: "Battle Mode" }[level.mechanic] || "Rival Race";
+    return `${rival.name} · ${mechanic}`;
   }
   return "";
 }
@@ -2272,17 +2554,21 @@ function beginBattle(mode = "battle", options = {}) {
   const player = battleUnitFromStats(playerForm.name, imageFor(playerForm, "race"), displayedGearbornStats(carId), true);
   const opponentStats = options.tutorial
     ? displayedGearbornStatsAtLevel(tutorialOpponentCarId, 1)
-    : bossBattleStats(boss);
-  const opponentImage = options.tutorial ? "assets/cars/tutorque-race.png" : battleCarImageForBoss(boss);
-  const opponentName = options.tutorial ? "Tutorque" : boss.car;
+    : options.opponentStats || bossBattleStats(boss);
+  const opponentImage = options.tutorial ? "assets/cars/tutorque-race.png" : options.opponentImage || battleCarImageForBoss(boss);
+  const opponentName = options.tutorial ? "Tutorque" : options.opponentName || boss.car;
   battleState = {
     mode,
     boss,
+    carId,
     player,
     opponent: battleUnitFromStats(opponentName, opponentImage, opponentStats),
     waitingNext: false,
     finished: false,
-    campaignLevelIndex: options.campaignLevelIndex ?? null
+    campaignLevelIndex: options.campaignLevelIndex ?? null,
+    reward: options.reward ?? null,
+    rival: options.rival || null,
+    restartOptions: options
   };
   setFlowStep("battle", "race");
   renderBattle();
@@ -2390,8 +2676,10 @@ function finishBattle() {
   battleState.finished = true;
   const won = battleState.opponent.hp <= 0 && battleState.player.hp > 0;
   const index = bossChallengeBosses.findIndex((boss) => boss.id === battleState.boss.id);
-  const earned = tutorialActive() && !won ? 0 : won ? battleRewardForBossIndex(index) : Math.round(35 + Math.max(0, index) * 18);
+  const earned = tutorialActive() && !won ? 0 : won ? (battleState.reward ?? battleRewardForBossIndex(index)) : Math.round(35 + Math.max(0, index) * 18);
   addSprox(earned);
+  recordRaceUsage(battleState.carId);
+  const partReward = won && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
   if (tutorialActive() && won) setTutorialScene("post-battle");
   if (won && battleState.campaignLevelIndex !== null) completeCampaignLevel(battleState.campaignLevelIndex);
   saveState();
@@ -2400,7 +2688,7 @@ function finishBattle() {
     won,
     title: tutorialActive() && !won ? "RACE LOST" : undefined,
     sprox: earned,
-    lines: [],
+    lines: partReward ? [partRewardResultMarkup(partReward)] : [],
     hideRaceAgain: tutorialActive() && !won,
     hideSprox: tutorialActive() && !won,
     disableActions: tutorialActive() && won,
@@ -2416,13 +2704,18 @@ function finishBattle() {
         return;
       }
       if (battleState.campaignLevelIndex !== null) {
+        const level = campaignLevels[battleState.campaignLevelIndex];
+        if (won && level?.type === "rival") {
+          openRivalDialogue(level, "post", finishStoryRaceScreen);
+          return;
+        }
         finishStoryRaceScreen();
       } else {
         battleState = null;
         setFlowStep("battle", "match");
       }
     },
-    onRaceAgain: () => beginBattle(battleState.mode, { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex })
+    onRaceAgain: () => beginBattle(battleState.mode, battleState.restartOptions || { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex })
   });
 }
 
@@ -2738,6 +3031,7 @@ function renderGarage() {
           </div>
           ${garageEvolutionControls(car)}
           ${garageStatsMarkup(stats)}
+          ${garageBondMarkup(car.id)}
           <div class="meta-row">
             <span>${maxed ? "Max Level" : `Upgrade: ${upgradeCost} Sprox`}</span>
             <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
@@ -2772,6 +3066,7 @@ function renderTutorialGarage() {
           <span class="evolution">Training</span>
         </div>
         ${garageStatsMarkup(stats)}
+        ${garageBondMarkup(tutorialCarId)}
         <div class="meta-row">
           <span>${maxed ? "Max Level" : "Upgrade: 5000 Sprox"}</span>
           <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
@@ -2780,6 +3075,26 @@ function renderTutorialGarage() {
         ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${tutorialCarId}">Evolve</button>` : ""}
       </div>
     </article>
+  `;
+}
+
+function garageBondMarkup(carId) {
+  const bond = state.bond?.[carId] || { races: 0, milestones: [] };
+  const next = nextBondMilestone(carId);
+  const unlocked = (bond.milestones || [])
+    .map((count) => formatBondBoosts(bondMilestoneBoost(Number(count), baseGearbornStatsAtLevel(carId, state.garage[carId]?.level || 1))))
+    .filter(Boolean);
+  const nextBoost = next
+    ? formatBondBoosts(bondMilestoneBoost(next, baseGearbornStatsAtLevel(carId, state.garage[carId]?.level || 1)))
+    : "All Bond boosts unlocked";
+  return `
+    <div class="bond-panel" aria-label="Bond progress">
+      <div class="bond-title">Bond</div>
+      <div class="bond-row"><span>Races Together</span><strong>${bond.races || 0}</strong></div>
+      <div class="bond-row"><span>Next Bond Boost</span><strong>${next ? `${next} races` : "Complete"}</strong></div>
+      <div class="bond-unlocked">${next ? `Next: ${nextBoost}` : nextBoost}</div>
+      ${unlocked.length ? `<div class="bond-unlocked">Unlocked: ${unlocked.join(" · ")}</div>` : ""}
+    </div>
   `;
 }
 
@@ -2864,6 +3179,7 @@ function renderUpgradeModal() {
   el.upgradeCarMeta.textContent = `${car.family} · ${gearbornStatProfiles[car.id]?.playstyle || ""}`;
   el.upgradeArt.innerHTML = carMarkupForEvolution(carId, progress.evolution, "display");
   el.upgradeStats.innerHTML = upgradeStatsMarkup(carId);
+  renderUpgradePartSlots(carId);
   el.upgradeCost.textContent = maxed ? "This GearBorn is already maxed." : `Price: ${cost} Sprox`;
   el.confirmUpgrade.disabled = maxed || !canAffordUpgrade(cost);
   el.confirmUpgrade.textContent = maxed ? "Max Level" : "Level Up";
@@ -2871,6 +3187,7 @@ function renderUpgradeModal() {
 
 function closeUpgradeModal() {
   upgradeModalCarId = null;
+  closeEquipPartModal();
   el.upgradeModal.classList.remove("active");
   el.upgradeModal.setAttribute("aria-hidden", "true");
 }
@@ -2909,6 +3226,120 @@ function upgradeCarLevel() {
     showPendingEvolution(carId);
     if (tutorialActive() && carId === tutorialCarId) renderTutorial();
   }
+}
+
+function partImageMarkup(part, className = "part-image") {
+  if (!part) return `<div class="${className} part-placeholder">?</div>`;
+  return `<img class="${className}" src="${part.image}" alt="${part.name}" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${className} part-placeholder',textContent:'?' }))">`;
+}
+
+function partTileMarkup(part, options = {}) {
+  const owned = state.partsInventory?.[part.key] || 0;
+  const available = options.availableOnly ? availablePartCount(part.key, options.ignoreCarId, options.ignoreSlot) : owned;
+  const dim = options.availableOnly ? available <= 0 : owned <= 0;
+  return `
+    <button class="part-tile ${dim ? "dim" : ""} ${options.selected === part.key ? "active" : ""}" type="button" data-part-key="${part.key}" ${options.availableOnly && available <= 0 ? "disabled" : ""}>
+      <span class="part-qty">x${options.availableOnly ? available : owned}</span>
+      ${partImageMarkup(part)}
+      <strong>${part.name}</strong>
+      <span class="part-stars">${partStars(part)}</span>
+    </button>
+  `;
+}
+
+function partDetailMarkup(part, availableText = "") {
+  if (!part) return `<p class="empty-detail">Select a part to view its stats.</p>`;
+  const owned = state.partsInventory?.[part.key] || 0;
+  return `
+    <div class="part-detail-art">${partImageMarkup(part)}</div>
+    <h3>${part.name}</h3>
+    <div class="part-stars large">${partStars(part)}</div>
+    <p>${availableText || `Owned: x${owned}`}</p>
+    <p>Boost: <strong>+${part.bonus} ${part.label}</strong></p>
+  `;
+}
+
+function openInventoryModal() {
+  selectedInventoryPartKey = selectedInventoryPartKey || partVariants[0].key;
+  renderInventoryModal();
+  el.inventoryModal.classList.add("active");
+  el.inventoryModal.setAttribute("aria-hidden", "false");
+}
+
+function closeInventoryModal() {
+  el.inventoryModal.classList.remove("active");
+  el.inventoryModal.setAttribute("aria-hidden", "true");
+}
+
+function renderInventoryModal() {
+  const selected = partByKey(selectedInventoryPartKey) || partVariants[0];
+  el.partsGrid.innerHTML = partVariants.map((part) => partTileMarkup(part, { selected: selected.key })).join("");
+  el.partDetail.innerHTML = partDetailMarkup(selected);
+}
+
+function renderUpgradePartSlots(carId) {
+  if (!el.upgradePartSlots) return;
+  const slots = state.equippedParts?.[carId] || [null, null];
+  el.upgradePartSlots.innerHTML = slots.map((key, index) => {
+    const part = partByKey(key);
+    return `
+      <button class="part-slot ${part ? "filled" : "empty"}" type="button" data-part-slot="${index}">
+        ${part ? `${partImageMarkup(part, "slot-part-image")}<span>${partStars(part)}</span><strong>+${part.bonus} ${part.label}</strong>` : `<span class="plus">+</span><strong>Empty Part Slot</strong>`}
+      </button>
+    `;
+  }).join("");
+}
+
+function openEquipPartModal(carId, slotIndex) {
+  equipPartContext = { carId, slotIndex, selectedKey: null, replacing: !state.equippedParts?.[carId]?.[slotIndex] };
+  renderEquipPartModal();
+  el.equipPartModal.classList.add("active");
+  el.equipPartModal.setAttribute("aria-hidden", "false");
+}
+
+function closeEquipPartModal() {
+  equipPartContext = null;
+  el.equipPartModal.classList.remove("active");
+  el.equipPartModal.setAttribute("aria-hidden", "true");
+}
+
+function renderEquipPartModal() {
+  if (!equipPartContext) return;
+  const { carId, slotIndex, selectedKey } = equipPartContext;
+  const equipped = partByKey(state.equippedParts?.[carId]?.[slotIndex]);
+  const availableParts = partVariants.filter((part) => availablePartCount(part.key, carId, slotIndex) > 0);
+  el.equipPartsGrid.innerHTML = availableParts.length
+    ? availableParts.map((part) => partTileMarkup(part, { selected: selectedKey, availableOnly: true, ignoreCarId: carId, ignoreSlot: slotIndex })).join("")
+    : `<p class="empty-detail">No available parts yet. Win Story Mode races to find parts.</p>`;
+  const selected = partByKey(selectedKey) || equipped;
+  const available = selected ? availablePartCount(selected.key, carId, slotIndex) : 0;
+  el.equipPartDetail.innerHTML = partDetailMarkup(selected, selected ? `Available: x${available}` : "");
+  el.confirmEquipPart.disabled = !selectedKey || availablePartCount(selectedKey, carId, slotIndex) <= 0;
+  el.unequipPart.hidden = !equipped;
+  el.replacePart.hidden = !equipped;
+  el.confirmEquipPart.textContent = equipped ? "Replace" : "Equip";
+}
+
+function equipSelectedPart() {
+  if (!equipPartContext?.selectedKey) return;
+  const { carId, slotIndex, selectedKey } = equipPartContext;
+  if (availablePartCount(selectedKey, carId, slotIndex) <= 0) return;
+  state.equippedParts[carId] = state.equippedParts[carId] || [null, null];
+  state.equippedParts[carId][slotIndex] = selectedKey;
+  saveState();
+  render();
+  renderUpgradeModal();
+  closeEquipPartModal();
+}
+
+function unequipSelectedPart() {
+  if (!equipPartContext) return;
+  state.equippedParts[equipPartContext.carId] = state.equippedParts[equipPartContext.carId] || [null, null];
+  state.equippedParts[equipPartContext.carId][equipPartContext.slotIndex] = null;
+  saveState();
+  render();
+  renderUpgradeModal();
+  closeEquipPartModal();
 }
 
 function garageEvolutionControls(car) {
@@ -3078,7 +3509,8 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     rank,
     distance,
     dragStage,
-    campaignLevelIndex
+    campaignLevelIndex,
+    carId: state.selectedCar
   };
   if (dragStage) {
     el.rivalRacer.style.setProperty("--car-color", rank.color);
@@ -3239,6 +3671,18 @@ function renderSproxWallet() {
   if (el.sproxTotal) el.sproxTotal.textContent = formatSprox();
 }
 
+function showToast(title, message) {
+  const toast = document.createElement("div");
+  toast.className = "game-toast";
+  toast.innerHTML = `<strong>${title}</strong><span>${message}</span>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("active"));
+  setTimeout(() => {
+    toast.classList.remove("active");
+    setTimeout(() => toast.remove(), 240);
+  }, 3200);
+}
+
 function useRivalNitro() {
   race.rivalNitroCharge = 0;
   race.rivalNitroActive = true;
@@ -3278,6 +3722,7 @@ function finishRace(playerWon) {
   const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
   const finishedLevel = isStoryRace ? campaignLevels[finishedRace.campaignLevelIndex] : null;
   const pinkSlipCarId = finishedLevel?.type === "pink-slip" ? finishedLevel.pinkSlipCarId : null;
+  let partReward = null;
 
   let earned = 0;
   if (playerWon) {
@@ -3297,6 +3742,8 @@ function finishRace(playerWon) {
     el.raceMessage.textContent = "";
   }
 
+  recordRaceUsage(finishedRace.carId);
+  if (isStoryRace && playerWon) partReward = rollStoryPartReward();
   saveState();
   if (isStoryRace && playerWon) {
     completeCampaignLevel(finishedRace.campaignLevelIndex);
@@ -3306,6 +3753,7 @@ function finishRace(playerWon) {
     won: playerWon,
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
+    lines: partReward ? [partRewardResultMarkup(partReward)] : [],
     primaryLabel: tutorialActive() && !playerWon ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !playerWon,
@@ -3330,6 +3778,10 @@ function finishRace(playerWon) {
         };
         if (playerWon && pinkSlipCarId && !isCarUnlocked(pinkSlipCarId)) {
           showPinkSlipUnlock(pinkSlipCarId, finishStory);
+          return;
+        }
+        if (playerWon && finishedLevel?.type === "rival") {
+          openRivalDialogue(finishedLevel, "post", finishStory);
           return;
         }
         finishStory();
@@ -4146,6 +4598,7 @@ function renderTutorial() {
   el.tutorialBack.hidden = state.tutorialScene === 0 && state.tutorialLine === 0;
   el.tutorialNext.textContent = scene.id === "starters" && state.tutorialLine === lines.length - 1 ? "Continue" : "Next";
   el.tutorialCard.dataset.scene = scene.id;
+  el.tutorialCard.dataset.speaker = line.speaker;
 }
 
 function ensureTunerAndIntro(view) {
@@ -4217,7 +4670,13 @@ function startCampaignLevel() {
   const level = campaignLevels[index];
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   if (!level || storyLevelLocked(city, level) || !storyLevelVisible(city, level)) return;
-  const runLevel = () => startCampaignRace(index, level);
+  const runLevel = () => {
+    if (level.type === "rival") {
+      openRivalDialogue(level, "pre", () => startCampaignRace(index, level));
+      return;
+    }
+    startCampaignRace(index, level);
+  };
   if (shouldShowStoryCutscene(index, level)) {
     openStoryCutscene(level, runLevel);
     return;
@@ -4228,6 +4687,10 @@ function startCampaignLevel() {
 function startCampaignRace(index, level) {
   closeStoryPreview();
   closeCitySelect();
+  if (level.type === "rival") {
+    startRivalCampaignRace(index, level);
+    return;
+  }
   if (level.type === "drag" || level.type === "pink-slip") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
@@ -4269,6 +4732,101 @@ function startCampaignRace(index, level) {
 
 function shouldShowStoryCutscene(index, level) {
   return level.type === "boss";
+}
+
+function rivalDragStage(level) {
+  const rivalCar = rivalCarSetup();
+  return {
+    rankKey: "R",
+    name: rivalCar.form.name,
+    xp: level.xp,
+    power: level.power || 1.2,
+    image: imageFor(rivalCar.form, "race"),
+    displayImage: imageFor(rivalCar.form, "display"),
+    rival: true
+  };
+}
+
+function rivalBossData(level) {
+  const rival = rivalTuner();
+  const rivalCar = rivalCarSetup();
+  const bossIndex = level.bossIndex ?? 0;
+  return {
+    id: `${level.id}-${rival.id}`,
+    name: rival.name,
+    car: rivalCar.form.name,
+    track: level.track,
+    difficulty: 0.92 + bossIndex * 0.12,
+    xp: level.xp,
+    carImage: imageFor(rivalCar.form, "topdown") || imageFor(rivalCar.form, "race"),
+    portrait: rival.headshot || rival.image,
+    headshot: rival.headshot || rival.image
+  };
+}
+
+function startRivalCampaignRace(index, level) {
+  const rivalCar = rivalCarSetup();
+  if (level.mechanic === "drag") {
+    mountCampaignRace("play");
+    state.selectedCar = state.selectedStoryCar;
+    state.selectedDistance = level.distance || 800;
+    saveState();
+    render();
+    prepareDragRace(index, rivalDragStage(level));
+    return;
+  }
+  if (level.mechanic === "battle") {
+    const rival = rivalTuner();
+    mountCampaignRace("battle");
+    saveState();
+    render();
+    beginBattle("campaign-rival-battle", {
+      boss: rivalBossData(level),
+      campaignLevelIndex: index,
+      opponentStats: rivalCar.stats,
+      opponentImage: imageFor(rivalCar.form, "race"),
+      opponentName: rivalCar.form.name,
+      reward: level.xp,
+      rival
+    });
+    return;
+  }
+  const boss = rivalBossData(level);
+  mountCampaignRace("boss");
+  saveState();
+  render();
+  modeFlow.boss = "race";
+  renderFlowScreens();
+  beginVerticalRace("campaign-rival", true, { campaignLevelIndex: index, boss });
+}
+
+function openRivalDialogue(level, phase, onContinue) {
+  const rival = rivalTuner();
+  const pre = rival.id === "cha-cha"
+    ? "Cha Cha pulls up beside you. ‘Let’s see if you can keep up.’"
+    : "Mylo grins from the starting line. ‘Guess we’re doing this.’";
+  const post = rival.id === "cha-cha"
+    ? "Cha Cha folds her arms, trying not to look impressed. ‘Don’t get used to it.’"
+    : "Mylo laughs, breathless. ‘Okay… that was actually awesome.’";
+  const modal = document.createElement("div");
+  modal.className = "rival-dialog";
+  modal.innerHTML = `
+    <div class="rival-dialog-card">
+      <button class="modal-close" type="button" aria-label="Close rival scene">×</button>
+      <div class="selection-preview-art">${characterMarkup({ name: rival.name, image: rival.headshot || rival.image })}</div>
+      <h2>${rival.name}</h2>
+      <p>${phase === "post" ? post : pre}</p>
+      <button class="primary" type="button">Continue</button>
+    </div>
+  `;
+  const close = () => {
+    modal.remove();
+    onContinue?.();
+  };
+  modal.querySelector(".modal-close").addEventListener("click", close);
+  modal.querySelector(".primary").addEventListener("click", close);
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add("active"));
 }
 
 function openStoryCutscene(level, startRaceCallback, phase = "pre") {
@@ -4454,7 +5012,7 @@ function selectTuner(tunerId) {
 }
 
 function beginVerticalRace(mode, waitForStart = false, options = {}) {
-  const isBossRace = mode === "boss" || mode === "campaign-boss";
+  const isBossRace = mode === "boss" || mode === "campaign-boss" || mode === "campaign-rival";
   const isStandaloneTime = mode === "time";
   const isCampaignTime = mode === "campaign-time";
   const trackNode = isBossRace ? el.storyTrack : el.timeTrialTrack;
@@ -4522,7 +5080,7 @@ function startVerticalCountdown() {
   if (!verticalRace || verticalRace.active || verticalRace.countdownStarted) return;
   verticalRace.countdownStarted = true;
   const raceStateRef = verticalRace;
-  const isStory = raceStateRef.mode === "boss" || raceStateRef.mode === "campaign-boss";
+  const isStory = raceStateRef.mode === "boss" || raceStateRef.mode === "campaign-boss" || raceStateRef.mode === "campaign-rival";
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
   if (isStory) {
@@ -4700,7 +5258,7 @@ function updateVerticalPositions() {
     raceState.boss.node.style.top = `${raceState.boss.y}%`;
   }
   const distance = Math.min(raceState.targetDistance, Math.floor(raceState.player.distance));
-  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss" || raceState.mode === "campaign-rival") {
     el.storySpeed.textContent = `${Math.round(raceState.player.speed)} MPH`;
     el.storyDistance.textContent = `${distance} / 500 m`;
   } else {
@@ -4720,7 +5278,8 @@ function finishVerticalRace(playerWon) {
   let resultSprox = 0;
   let resultWon = playerWon;
   const resultLines = [];
-  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+  const isStoryRace = raceState.campaignLevelIndex !== null;
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss" || raceState.mode === "campaign-rival") {
     const sprox = playerWon ? raceState.bossData.xp : Math.floor(raceState.bossData.xp * 0.18);
     addSprox(sprox);
     resultSprox = sprox;
@@ -4771,9 +5330,11 @@ function finishVerticalRace(playerWon) {
     el.timeMessage.textContent = "";
     if (raceState.campaignLevelIndex !== null) completeCampaignLevel(raceState.campaignLevelIndex);
   }
+  recordRaceUsage(raceState.carId);
+  const partReward = isStoryRace && resultWon ? rollStoryPartReward() : null;
+  if (partReward) resultLines.push(partRewardResultMarkup(partReward));
   saveState();
   render();
-  const isStoryRace = raceState.campaignLevelIndex !== null;
   showRaceResult(raceState.trackNode, {
     won: resultWon,
     title: tutorialActive() && !resultWon ? "RACE LOST" : undefined,
@@ -4797,7 +5358,7 @@ function finishVerticalRace(playerWon) {
         advanceTutorial();
         return;
       }
-      if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+      if (raceState.mode === "boss" || raceState.mode === "campaign-boss" || raceState.mode === "campaign-rival") {
         if (playerWon && raceState.mode === "boss" && raceState.bossData.id === "racer-alpha") {
           showRacerAlphaUnmask();
           return;
@@ -4808,6 +5369,10 @@ function finishVerticalRace(playerWon) {
           finishStoryRaceScreen();
         };
         const level = campaignLevels[raceState.campaignLevelIndex];
+        if (playerWon && raceState.mode === "campaign-rival" && level?.type === "rival") {
+          openRivalDialogue(level, "post", finishStory);
+          return;
+        }
         if (playerWon && raceState.mode === "campaign-boss" && shouldShowStoryCutscene(raceState.campaignLevelIndex, level)) {
           openStoryCutscene(level, finishStory, "post");
           return;
@@ -4841,7 +5406,7 @@ function failVerticalRace(title) {
   raceState.countdownStarted = false;
   el.storyMapStart.classList.remove("active");
   el.timeMapStart.classList.remove("active");
-  if (raceState.mode === "boss" || raceState.mode === "campaign-boss") {
+  if (raceState.mode === "boss" || raceState.mode === "campaign-boss" || raceState.mode === "campaign-rival") {
     el.storyMessage.className = "race-message loss";
     el.storyMessage.textContent = "";
   } else {
@@ -5169,7 +5734,34 @@ el.closeUpgrade.addEventListener("click", closeUpgradeModal);
 el.upgradeModal.addEventListener("click", (event) => {
   if (event.target === el.upgradeModal) {
     closeUpgradeModal();
+    return;
   }
+  const slotButton = event.target.closest("[data-part-slot]");
+  if (slotButton && upgradeModalCarId) openEquipPartModal(upgradeModalCarId, Number(slotButton.dataset.partSlot));
+});
+el.openInventory?.addEventListener("click", openInventoryModal);
+el.closeInventory?.addEventListener("click", closeInventoryModal);
+el.inventoryModal?.addEventListener("click", (event) => {
+  if (event.target === el.inventoryModal) closeInventoryModal();
+  const tile = event.target.closest("[data-part-key]");
+  if (!tile || !el.inventoryModal.contains(tile)) return;
+  selectedInventoryPartKey = tile.dataset.partKey;
+  renderInventoryModal();
+});
+el.closeEquipPart?.addEventListener("click", closeEquipPartModal);
+el.equipPartModal?.addEventListener("click", (event) => {
+  if (event.target === el.equipPartModal) closeEquipPartModal();
+  const tile = event.target.closest("[data-part-key]");
+  if (!tile || !el.equipPartModal.contains(tile)) return;
+  equipPartContext.selectedKey = tile.dataset.partKey;
+  renderEquipPartModal();
+});
+el.confirmEquipPart?.addEventListener("click", equipSelectedPart);
+el.unequipPart?.addEventListener("click", unequipSelectedPart);
+el.replacePart?.addEventListener("click", () => {
+  if (!equipPartContext) return;
+  equipPartContext.selectedKey = null;
+  renderEquipPartModal();
 });
 
 el.evolveButton.addEventListener("click", () => {
@@ -5360,6 +5952,14 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Escape" && el.upgradeModal.classList.contains("active")) {
     closeUpgradeModal();
+    return;
+  }
+  if (event.key === "Escape" && el.equipPartModal?.classList.contains("active")) {
+    closeEquipPartModal();
+    return;
+  }
+  if (event.key === "Escape" && el.inventoryModal?.classList.contains("active")) {
+    closeInventoryModal();
     return;
   }
   if (event.key === "Escape" && el.bossModal.classList.contains("active")) {

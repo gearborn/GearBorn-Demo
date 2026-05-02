@@ -525,6 +525,7 @@
             <p>Garage</p>
             <h1 id="garage-title">Your Gearborn lineup.</h1>
           </div>
+          <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
           <div class="garage-status" id="garage-status" hidden></div>
           <div class="garage-grid" id="garage-grid"></div>
         </section>
@@ -757,10 +758,40 @@
             <h3 id="upgrade-car-name"></h3>
             <p id="upgrade-car-meta"></p>
             <div id="upgrade-stats"></div>
+            <div class="part-slots" id="upgrade-part-slots" aria-label="Equipped parts"></div>
           </div>
         </div>
         <button class="primary upgrade-level-button" id="confirm-upgrade" type="button">Level Up</button>
         <p class="upgrade-cost" id="upgrade-cost"></p>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="inventory-modal" aria-hidden="true">
+      <div class="parts-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-title">
+        <button class="modal-close-bubble" id="close-inventory" type="button" aria-label="Close inventory">×</button>
+        <p class="modal-kicker">Garage Inventory</p>
+        <h2 id="inventory-title">GearBorn Parts</h2>
+        <div class="parts-layout">
+          <div class="parts-grid" id="parts-grid"></div>
+          <div class="part-detail" id="part-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="equip-part-modal" aria-hidden="true">
+      <div class="parts-modal equip-modal" role="dialog" aria-modal="true" aria-labelledby="equip-part-title">
+        <button class="modal-close-bubble" id="close-equip-part" type="button" aria-label="Close equip parts">×</button>
+        <p class="modal-kicker">Equip Part</p>
+        <h2 id="equip-part-title">Choose a Part</h2>
+        <div class="parts-layout">
+          <div class="parts-grid" id="equip-parts-grid"></div>
+          <div class="part-detail" id="equip-part-detail"></div>
+        </div>
+        <div class="modal-actions part-equip-actions">
+          <button class="primary" id="confirm-equip-part" type="button" disabled>Equip</button>
+          <button class="danger-button" id="unequip-part" type="button" hidden>Unequip</button>
+          <button class="ghost" id="replace-part" type="button" hidden>Replace</button>
+        </div>
       </div>
     </div>
 
