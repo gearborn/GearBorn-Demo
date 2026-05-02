@@ -1414,6 +1414,7 @@ const el = {
   bossModalKicker: document.querySelector("#boss-modal-kicker"),
   bossModalCopy: document.querySelector("#boss-modal-copy"),
   continueBoss: document.querySelector("#continue-boss"),
+  closeBoss: document.querySelector("#close-boss"),
   tunerModal: document.querySelector("#tuner-modal"),
   tunerOptions: document.querySelector("#tuner-options"),
   settingsTunerOptions: document.querySelector("#settings-tuner-options"),
@@ -1426,6 +1427,7 @@ const el = {
   backCutscene: document.querySelector("#back-cutscene"),
   continueCutscene: document.querySelector("#continue-cutscene"),
   skipCutscene: document.querySelector("#skip-cutscene"),
+  closeCutscene: document.querySelector("#close-cutscene"),
   tutorialOverlay: document.querySelector("#tutorial-overlay"),
   tutorialCard: document.querySelector("#tutorial-card"),
   tutorialPortrait: document.querySelector("#tutorial-portrait"),
@@ -1574,9 +1576,6 @@ function sanitizeState() {
   state.highestCampaignIndex = Math.min(state.highestCampaignIndex || 0, campaignLevels.length - 1);
   state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
   state.completedCampaignLevels = state.completedCampaignLevels || {};
-  for (let index = 0; index < state.highestCampaignIndex; index += 1) {
-    state.completedCampaignLevels[index] = state.completedCampaignLevels[index] ?? true;
-  }
   state.selectedStoryCity = Math.max(0, Math.min(Number(state.selectedStoryCity) || 0, storyCities.length - 1));
   if (!storyCityUnlocked(state.selectedStoryCity)) {
     state.selectedStoryCity = Math.max(0, highestUnlockedStoryCityIndex());
@@ -2416,8 +2415,10 @@ function renderCampaign() {
   el.storyCityMap.style.backgroundPosition = "center";
   const completedCore = cityCoreLevelsCompleted(city);
   const totalCore = cityCoreLevelsTotal(city);
+  const requiredCore = Math.min(cityBossRequirement(city), totalCore);
+  const remainingCore = Math.max(0, requiredCore - completedCore);
   el.bossUnlockNote.textContent = cityUnlocked && !city.final && !cityBossUnlocked(city)
-    ? `Beat ${completedCore}/${totalCore} Levels to Unlock Boss Race`
+    ? `Beat ${remainingCore}/${totalCore} Levels to Unlock Boss Race`
     : "";
   el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
   renderStoryCityGrid();
@@ -2973,6 +2974,7 @@ function finishBattle() {
     hideSprox: tutorialActive() && !won,
     disableActions: tutorialActive() && won,
     primaryLabel: tutorialActive() && !won ? "Try Again" : tutorialActive() ? "Next" : battleState.campaignLevelIndex !== null ? "Next" : "Select Opponent",
+    primaryTone: tutorialActive() && won ? "success" : "",
     raceAgainLabel: "Battle Again",
     onPrimary: () => {
       if (tutorialActive() && !won) {
@@ -4170,7 +4172,8 @@ function finishRace(playerWon) {
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
     lines: [pinkSlipPenaltyLine, partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
-    primaryLabel: tutorialActive() && !playerWon ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
+    primaryLabel: tutorialActive() ? (playerWon ? "Next" : "Try Again") : isStoryRace ? "Next" : "Select Opponent",
+    primaryTone: tutorialActive() && playerWon ? "success" : "",
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !playerWon,
     hideSprox: tutorialActive() && !playerWon,
@@ -4282,7 +4285,7 @@ function showRaceResult(trackNode, result) {
       ${result.hideSprox ? "" : `<p>Sprox Earned: <strong>${sproxAmountMarkup(result.sprox ?? 0)}</strong></p>`}
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       <div class="race-result-actions">
-        <button class="primary" type="button" data-result-action="primary" ${result.disableActions ? "disabled" : ""}>${result.primaryLabel || "Continue"}</button>
+        <button class="primary ${result.primaryTone === "success" ? "success-result" : ""}" type="button" data-result-action="primary" ${result.disableActions ? "disabled" : ""}>${result.primaryLabel || "Continue"}</button>
         ${result.hideRaceAgain ? "" : `<button class="ghost" type="button" data-result-action="again" ${result.disableActions ? "disabled" : ""}>${result.raceAgainLabel || "Race Again"}</button>`}
       </div>
     </div>
@@ -4441,12 +4444,40 @@ function closeResetModal() {
 }
 
 function resetRacingData() {
+  localStorage.removeItem(saveKey);
   state = structuredClone(defaultState);
-  saveState();
+  sanitizeState();
   race = null;
+  verticalRace = null;
+  battleState = null;
+  pendingCutsceneStart = null;
+  activeCutsceneLines = null;
+  activeCutsceneIndex = 0;
+  activeCutsceneContext = null;
+  pendingDragRace = null;
+  pendingIntroView = null;
+  pendingPinkSlipContinue = null;
+  pendingPinkSlipRiskStart = null;
+  pendingBossRaceStart = null;
+  pendingCityUnlock = null;
+  storyReplayOpen = false;
+  modeFlow.drag = "car";
+  modeFlow.time = "car";
+  modeFlow.boss = "car";
+  modeFlow.battle = "car";
+  modeFlow.story = "car";
+  saveState();
   closeResetModal();
   closeEvolutionModal();
   closeUpgradeModal();
+  closeStoryPreview();
+  closeCitySelect();
+  closeBossIntro();
+  restoreEmbeddedCampaignRace();
+  el.cutsceneModal?.classList.remove("active", "single-speaker");
+  el.cutsceneModal?.setAttribute("aria-hidden", "true");
+  el.tutorialOverlay?.classList.remove("active");
+  el.tutorialOverlay?.setAttribute("aria-hidden", "true");
   showView("menu");
   el.playerRacer.style.transform = "translateX(0)";
   el.rivalRacer.style.transform = "translateX(0)";
@@ -4870,10 +4901,13 @@ function normalizeTutorialLine(line) {
 }
 
 function tutorialSpeakerProfile(speaker) {
-  if (speaker === "user") return selectedTuner();
+  if (speaker === "user") {
+    const tuner = selectedTuner();
+    return { ...tuner, image: tuner.headshot || tuner.image };
+  }
   if (speaker === "key") return { name: "GearBorn Key", image: gearbornKeyImage };
   if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
-  return { name: "Dr. Tyree", image: "assets/characters/instructor.png" };
+  return { name: "Dr. Tyree", image: "assets/characters/headshot-dr-tyree.png" };
 }
 
 function setTutorialScene(sceneId) {
@@ -5041,7 +5075,9 @@ function renderTutorial() {
   el.tutorialCopy.innerHTML = line.text;
   el.tutorialPortrait.innerHTML = characterMarkup(speaker);
   el.tutorialBack.hidden = state.tutorialScene === 0 && state.tutorialLine === 0;
-  el.tutorialNext.textContent = scene.id === "starters" && state.tutorialLine === lines.length - 1 ? "Continue" : "Next";
+  const tutorialLineIsLast = state.tutorialLine === lines.length - 1;
+  el.tutorialNext.textContent = tutorialLineIsLast ? "Continue" : "Next";
+  el.tutorialNext.classList.toggle("finish", tutorialLineIsLast);
   el.tutorialCard.dataset.scene = scene.id;
   el.tutorialCard.dataset.speaker = line.speaker;
 }
@@ -5343,7 +5379,12 @@ function renderCutsceneLine() {
 
 function cutsceneCharacterForLine(line) {
   const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
-  if (line.speaker === "user") return tuner;
+  if (line.speaker === "user") {
+    return {
+      ...tuner,
+      image: tuner.headshot || tuner.image
+    };
+  }
   const boss = activeCutsceneContext?.boss || finalBoss;
   const unmaskedAlpha = boss.id === "racer-alpha" && (
     line.unmask ||
@@ -5351,7 +5392,7 @@ function cutsceneCharacterForLine(line) {
   );
   return {
     name: boss.name,
-    image: unmaskedAlpha ? finalBoss.unmaskedPortrait : boss.portrait
+    image: unmaskedAlpha ? (finalBoss.unmaskedHeadshot || finalBoss.unmaskedPortrait) : (boss.headshot || boss.portrait)
   };
 }
 
@@ -5419,7 +5460,7 @@ function openBossIntro(startConfig = { mode: "boss", options: {} }) {
   el.bossModalKicker.textContent = `${boss.track.city}, ${boss.track.country}`;
   el.bossModalTitle.textContent = `${boss.name} challenges you`;
   el.bossModalCopy.textContent = `${boss.name} drives the ${boss.car}. Finish first to earn ${boss.xp} Sprox.`;
-  el.bossPortrait.innerHTML = `<img src="${boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async" onerror="this.remove()">`;
+  el.bossPortrait.innerHTML = `<img src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async" onerror="this.remove()">`;
   el.bossModal.classList.add("active");
   el.bossModal.setAttribute("aria-hidden", "false");
   el.continueBoss.focus();
@@ -5813,7 +5854,8 @@ function finishVerticalRace(playerWon) {
     title: tutorialActive() && !resultWon ? "RACE LOST" : undefined,
     sprox: resultSprox,
     lines: tutorialActive() && !resultWon ? [] : resultLines,
-    primaryLabel: tutorialActive() && !resultWon ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    primaryLabel: tutorialActive() ? (resultWon ? "Next" : "Try Again") : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    primaryTone: tutorialActive() && resultWon ? "success" : "",
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !resultWon,
     hideSprox: tutorialActive() && !resultWon,
@@ -6123,11 +6165,13 @@ el.continueBoss.addEventListener("click", () => {
   renderFlowScreens();
   beginVerticalRace(startConfig.mode, true, startConfig.options || {});
 });
+el.closeBoss?.addEventListener("click", closeBossIntro);
 el.unmaskButton.addEventListener("click", unmaskRacerAlpha);
 el.continueUnmask.addEventListener("click", closeRacerAlphaUnmask);
 el.backCutscene.addEventListener("click", rewindCutscene);
 el.continueCutscene.addEventListener("click", advanceCutscene);
 el.skipCutscene.addEventListener("click", closeStoryCutsceneAndStart);
+el.closeCutscene?.addEventListener("click", closeStoryCutsceneAndStart);
 el.startTimeTrial.addEventListener("click", () => {
   modeFlow.time = "race";
   renderFlowScreens();

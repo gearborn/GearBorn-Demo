@@ -754,12 +754,13 @@ body:not(.mode-active) .nav {
 .achievement-detail-art {
   display: grid;
   min-height: 190px;
+  padding: 14px;
   place-items: center;
   align-items: center;
   justify-items: center;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .achievement-detail-art .car {
@@ -767,12 +768,13 @@ body:not(.mode-active) .nav {
   top: auto;
   right: auto;
   left: auto;
-  width: min(260px, 82%);
-  height: 170px;
+  width: min(240px, 78%);
+  height: 160px;
   transform: none;
 }
 
 .achievement-detail-art .car .car-image {
+  inset: -8px;
   object-fit: contain;
 }
 
@@ -850,11 +852,11 @@ body:not(.mode-active) .nav {
 .menu-card.garage-card .menu-card-icon,
 .menu-card.training-card .menu-card-icon {
   position: absolute;
-  top: 0;
-  left: -18px;
+  top: 8px;
+  left: 8px;
   z-index: 2;
-  width: 122px;
-  height: 122px;
+  width: 94px;
+  height: 94px;
   border: 0;
   background-color: transparent;
   background-repeat: no-repeat;
@@ -864,14 +866,14 @@ body:not(.mode-active) .nav {
 
 .menu-card.garage-card .menu-card-icon {
   background-image: url("assets/menu/icon_garage.png");
-  background-position: -108px -35px;
-  background-size: 300px auto;
+  background-position: -82px -26px;
+  background-size: 228px auto;
 }
 
 .menu-card.training-card .menu-card-icon {
   background-image: url("assets/menu/icon_training.png");
-  background-position: -33px -54px;
-  background-size: 172px auto;
+  background-position: -26px -42px;
+  background-size: 132px auto;
 }
 
 .menu-card.training-card {
@@ -1442,32 +1444,34 @@ body:not(.mode-active) .nav {
   max-height: 98px;
 }
 
-.cutscene-modal {
-  width: min(980px, calc(100vw - 32px));
+.cutscene-modal,
+#boss-modal .evolution-modal {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(440px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   overflow: auto;
-  padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #171c24;
-  box-shadow: 0 28px 80px var(--shadow);
+  padding: 18px;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(31, 22, 54, 0.96), rgba(14, 18, 28, 0.98));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 0 30px rgba(192, 132, 252, 0.22);
   text-align: center;
 }
 
 .cutscene-stage {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 18px;
+  display: block;
+  width: 100%;
+  margin-top: 0;
 }
 
 #cutscene-modal.single-speaker .cutscene-stage {
-  display: flex;
-  justify-content: center;
+  display: block;
 }
 
 #cutscene-modal.single-speaker .cutscene-character:first-child {
-  width: min(520px, 100%);
+  width: 100%;
 }
 
 #cutscene-modal.single-speaker .cutscene-character:last-child,
@@ -1516,38 +1520,80 @@ body:not(.mode-active) .nav {
   color: #082014;
 }
 
-.cutscene-character {
-  display: grid;
-  gap: 12px;
+#boss-modal .modal-kicker {
+  margin: 8px 0 0;
 }
 
-.cutscene-portrait {
-  min-height: 300px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+#boss-modal h2 {
+  margin: 8px 0 4px;
+  color: #d8b4fe;
+}
+
+#boss-modal #boss-modal-copy {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 850;
+}
+
+.cutscene-character {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.cutscene-portrait,
+.boss-portrait {
+  width: min(220px, 72vw);
+  height: 220px;
+  min-height: 0;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.cutscene-portrait .character-frame,
+.boss-portrait {
+  display: grid;
+  place-items: center;
+}
+
+.cutscene-portrait .character-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.cutscene-portrait .character-frame img,
+.boss-portrait img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
 }
 
 .dialogue-box {
   display: grid;
   gap: 8px;
-  min-height: 92px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #111820;
-  color: var(--ink);
-  font-weight: 800;
-  text-align: left;
+  width: 100%;
+  min-height: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 850;
+  text-align: center;
 }
 
 .dialogue-box strong {
-  color: var(--gold);
+  color: #d8b4fe;
   text-transform: uppercase;
 }
 
 .dialogue-box span {
-  color: var(--ink);
+  color: rgba(255, 255, 255, 0.86);
 }
 
 .campaign-layout {
@@ -1848,7 +1894,14 @@ body:not(.mode-active) .nav {
   z-index: 1;
   width: 58%;
   height: 58%;
+  align-self: center;
+  justify-self: center;
   object-fit: contain;
+  transform: translateY(8%);
+}
+
+.story-preview-icon .story-node-icon.layered .node-subject {
+  transform: translateY(14%);
 }
 
 .story-preview-icon {
@@ -3094,6 +3147,12 @@ small {
   min-height: 44px;
 }
 
+.race-result-actions .primary.success-result {
+  border-color: rgba(110, 231, 168, 0.78);
+  background: var(--green);
+  color: #082014;
+}
+
 .race-result-actions button:disabled {
   cursor: default;
   opacity: 0.5;
@@ -3143,16 +3202,20 @@ small {
 }
 
 .boss-portrait {
-  min-height: 260px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  width: min(220px, 72vw);
+  height: 220px;
+  min-height: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 18px;
 }
 
 .boss-portrait img {
   width: 100%;
-  max-height: 360px;
+  height: 100%;
+  max-height: 100%;
   object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
 }
 
 .hud {
@@ -3817,6 +3880,10 @@ small {
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.55);
   color: var(--ink);
+  font-size: 1.18rem;
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
 }
 
 .vindex-layout,
@@ -4443,11 +4510,14 @@ small {
   right: 18px;
   bottom: 18px;
   width: min(420px, calc(100vw - 36px));
-  padding: 16px;
-  border: 1px solid rgba(82, 199, 255, 0.45);
-  border-radius: 8px;
-  background: rgba(17, 24, 32, 0.94);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  display: grid;
+  justify-items: center;
+  padding: 18px;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(31, 22, 54, 0.96), rgba(14, 18, 28, 0.98));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 0 30px rgba(192, 132, 252, 0.22);
+  text-align: center;
   pointer-events: auto;
 }
 
@@ -4486,9 +4556,9 @@ small {
 
 .tutorial-speaker {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 #tutorial-kicker {
@@ -4496,19 +4566,30 @@ small {
 }
 
 .tutorial-portrait .character-frame {
-  min-height: 74px;
+  width: min(180px, 58vw);
+  height: 180px;
+  min-height: 0;
 }
 
 .tutorial-card[data-speaker="key"] .tutorial-speaker {
-  grid-template-columns: 150px minmax(0, 1fr);
+  display: grid;
 }
 
 .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame {
-  min-height: 150px;
+  width: min(220px, 68vw);
+  height: 220px;
+  min-height: 0;
+}
+
+.tutorial-portrait .character-frame img,
+.tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5));
 }
 
 .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame img {
-  max-height: 150px;
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 18px rgba(255, 200, 87, 0.35));
 }
 
@@ -4517,10 +4598,14 @@ small {
   margin: 0;
 }
 
+.tutorial-card h2 {
+  color: #d8b4fe;
+}
+
 .tutorial-card #tutorial-copy {
   margin-top: 12px;
-  color: var(--ink);
-  font-weight: 750;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 850;
   line-height: 1.35;
 }
 
@@ -4530,13 +4615,33 @@ small {
 
 .tutorial-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 132px);
+  justify-content: center;
   gap: 8px;
   margin-top: 14px;
 }
 
 .tutorial-actions button {
-  min-height: 40px;
+  width: 132px;
+  min-height: 44px;
+  border-color: transparent;
+  background: var(--gold);
+  color: #18140a;
+  font-weight: 850;
+}
+
+.tutorial-actions #tutorial-back[hidden] {
+  display: none;
+}
+
+.tutorial-actions:has(#tutorial-back[hidden]) #tutorial-next {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.tutorial-actions #tutorial-next.finish {
+  background: var(--green);
+  color: #082014;
 }
 
 .tutorial-skip {
@@ -5007,6 +5112,32 @@ small {
   font-weight: 700;
 }
 
+#boss-modal .evolution-modal {
+  display: grid;
+  justify-items: center;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(31, 22, 54, 0.96), rgba(14, 18, 28, 0.98));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 0 30px rgba(192, 132, 252, 0.22);
+}
+
+#boss-modal h2 {
+  margin: 8px 0 4px;
+  color: #d8b4fe;
+  font-size: clamp(1.45rem, 5vw, 2.1rem);
+}
+
+#boss-modal #boss-modal-copy {
+  margin: 0 0 14px;
+  max-width: 26rem;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 850;
+}
+
 #evolution-modal.evolution-unlocked #evolve-button {
   display: none !important;
 }
@@ -5459,24 +5590,24 @@ small {
     padding: 12px;
   }
 
-  .tutorial-speaker {
-    grid-template-columns: 58px minmax(0, 1fr);
-  }
-
   .tutorial-portrait .character-frame {
-    min-height: 58px;
+    width: min(140px, 42vw);
+    height: 140px;
+    min-height: 0;
   }
 
   .tutorial-card[data-speaker="key"] .tutorial-speaker {
-    grid-template-columns: 112px minmax(0, 1fr);
+    display: grid;
   }
 
   .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame {
-    min-height: 112px;
+    width: min(180px, 58vw);
+    height: 180px;
+    min-height: 0;
   }
 
   .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame img {
-    max-height: 112px;
+    max-height: 100%;
   }
 
   .tutorial-card #tutorial-copy {
