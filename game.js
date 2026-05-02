@@ -206,12 +206,41 @@ const cars = [
     ]
   },
   {
+    id: "art-van",
+    family: "Art Van",
+    color: "#f6f1e8",
+    trait: "Achievement form mastery",
+    unlockable: true,
+    evolutions: [
+      { name: "Vanvass", style: "Blank Canvas", images: { display: "assets/cars/art-vanvass-display.png", race: "assets/cars/art-vanvass-race.png", topdown: "assets/cars/art-vanvass-topdown.png" } },
+      { name: "Vandinsky", style: "Abstract", formBonus: { torque: 3, powertrain: 3 }, images: { display: "assets/cars/art-vandinsky-display.png", race: "assets/cars/art-vandinsky-race.png", topdown: "assets/cars/art-vandinsky-topdown.png" } },
+      { name: "Vanbrandt", style: "Baroque", formBonus: { body: 3, powertrain: 3 }, images: { display: "assets/cars/art-vanbrandt-display.png", race: "assets/cars/art-vanbrandt-race.png", topdown: "assets/cars/art-vanbrandt-topdown.png" } },
+      { name: "Vancasso", style: "Cubist", formBonus: { body: 3, handling: 3 }, images: { display: "assets/cars/art-vancasso-display.png", race: "assets/cars/art-vancasso-race.png", topdown: "assets/cars/art-vancasso-topdown.png" } },
+      { name: "Vangas", style: "Impressionist", formBonus: { acceleration: 3, torque: 3 }, images: { display: "assets/cars/art-vangas-display.png", race: "assets/cars/art-vangas-race.png", topdown: "assets/cars/art-vangas-topdown.png" } },
+      { name: "Vandy-Warhol", style: "Pop Art", formBonus: { speed: 3, acceleration: 3 }, images: { display: "assets/cars/art-vandy-warhaul-display.png", race: "assets/cars/art-vandy-warhaul-race.png", topdown: "assets/cars/art-vandy-warhaul-topdown.png" } },
+      { name: "Vanksy", style: "Graffiti", formBonus: { handling: 3, acceleration: 3 }, images: { display: "assets/cars/art-vanksy-display.png", race: "assets/cars/art-vanksy-race.png", topdown: "assets/cars/art-vanksy-topdown.png" } },
+      { name: "Vanst", style: "Surrealist", formBonus: { speed: 3, powertrain: 3 }, images: { display: "assets/cars/art-vanst-display.png", race: "assets/cars/art-vanst-race.png", topdown: "assets/cars/art-vanst-topdown.png" } }
+    ]
+  },
+  {
+    id: "cake-train",
+    family: "Cake Train",
+    color: "#f8c8dc",
+    trait: "Sugar juggernaut",
+    unlockable: true,
+    evolutions: [
+      { name: "Cuptrack", images: { display: "assets/cars/cake-cuptrack-display.png", race: "assets/cars/cake-cuptrack-race.png", topdown: "assets/cars/cake-cuptrack-topdown.png" } },
+      { name: "Isittrain", images: { display: "assets/cars/cake-isittrain-display.png", race: "assets/cars/cake-isittrain-race.png", topdown: "assets/cars/cake-isittrain-topdown.png" } },
+      { name: "Fonductor", images: { display: "assets/cars/cake-fonductor-display.png", race: "assets/cars/cake-fonductor-race.png", topdown: "assets/cars/cake-fonductor-topdown.png" } }
+    ]
+  },
+  {
     id: "rainbowlt",
     family: "Secret",
     color: "#c084fc",
     trait: "Unlocked by mastering every starter line",
     unlockable: true,
-    unlockInstruction: "Evolve all 11 GearBorn lines to their final forms to unlock",
+    unlockInstruction: "Evolve all the cars to unlock",
     evolutions: [
       { name: "Rainbowlt", images: { display: "assets/cars/unlock-rainbowlt-display.png", race: "assets/cars/unlock-rainbowlt-race.png", topdown: "assets/story/unlock-rainbowlt-topdown.png" } },
       { name: "Hornula1", images: { display: "assets/cars/rival-hornula1-display.png", race: "assets/cars/rival-hornula1-race.png", topdown: "assets/story/unlock-hornula1-topdown.png" } }
@@ -246,7 +275,8 @@ const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const rivalStarterCarIds = defaultUnlockedLines;
-const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, ["rainbowlt", "metal-snake", "training-car"]);
+const achievementUnlockOrder = ["art-van", "cake-train"];
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, ["rainbowlt", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -304,6 +334,29 @@ const partVariants = partTypes.flatMap((part) => [1, 2].map((level) => ({
   bonus: partLevels[level].bonus,
   stars: partLevels[level].stars
 })));
+const artVanUnlockByAchievement = {
+  streak5: 0,
+  allBattles: 1,
+  vindex100: 2,
+  allRivals: 3,
+  allBosses: 4,
+  allPinkSlips: 5,
+  allDrags: 6,
+  allTrials: 7
+};
+const achievementDefs = [
+  { id: "streak5", name: "Hot Streak", requirement: "Win 5 races in a row", reward: "Unlock Vanvass", type: "streak", target: 5 },
+  { id: "allDrags", name: "Drag Dominator", requirement: "Win all Drag Races in Story Mode", reward: "Unlock Vanksy", type: "storyType", raceType: "drag" },
+  { id: "allTrials", name: "Clock Breaker", requirement: "Win all Time Trials in Story Mode", reward: "Unlock Vanst", type: "storyType", raceType: "trial" },
+  { id: "allBattles", name: "Arena Artist", requirement: "Win all Battles in Story Mode", reward: "Unlock Vandinsky", type: "storyType", raceType: "battle" },
+  { id: "allRivals", name: "Friendly Fire", requirement: "Win all Rival Races in Story Mode", reward: "Unlock Vancasso", type: "storyType", raceType: "rival" },
+  { id: "allBosses", name: "Boss Canvas", requirement: "Win all Boss Races in Story Mode", reward: "Unlock Vangas", type: "storyType", raceType: "boss" },
+  { id: "allPinkSlips", name: "Pink Slip Collector", requirement: "Win all Pink Slip Races in Story Mode", reward: "Unlock Vandy-Warhol", type: "storyType", raceType: "pink-slip" },
+  { id: "vindex25", name: "VINdex Scout", requirement: "Encounter 25% of the VINdex", reward: "1000 Sprox", type: "vindex", percent: 25 },
+  { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
+  { id: "vindex75", name: "VINdex Archivist", requirement: "Encounter 75% of the VINdex", reward: "3 Level 2 parts", type: "vindex", percent: 75 },
+  { id: "vindex100", name: "VINdex Master", requirement: "Encounter 100% of the VINdex", reward: "Unlock Vanbrandt", type: "vindex", percent: 100 }
+];
 const tutorialDialogue = {
   intro: [
     ["tyree", "Welcome to Spindell Training Academy! My name is Dr. Tyree. I’ll be the one evaluating you today to become a Tuner."],
@@ -540,6 +593,8 @@ const gearbornStatProfiles = {
   "florida-gator": { speed: 80, acceleration: 82, handling: 76, torque: 80, body: 87, powertrain: 87, playstyle: "Swamp Striker" },
   "grunge-fish": { speed: 74, acceleration: 72, handling: 87, torque: 87, body: 64, powertrain: 82, playstyle: "Dirty Thrasher" },
   "karate-cow": { speed: 72, acceleration: 86, handling: 74, torque: 87, body: 87, powertrain: 84, playstyle: "Deceptive Powerhouse" },
+  "art-van": { speed: 78, acceleration: 78, handling: 78, torque: 78, body: 78, powertrain: 78, playstyle: "Blank Canvas" },
+  "cake-train": { speed: 68, acceleration: 72, handling: 60, torque: 87, body: 87, powertrain: 84, playstyle: "Sugar Juggernaut" },
   rainbowlt: { speed: 87, acceleration: 87, handling: 87, torque: 87, body: 87, powertrain: 87, playstyle: "Perfect Ascension" },
   "metal-snake": { speed: 100, acceleration: 98, handling: 78, torque: 100, body: 80, powertrain: 92, playstyle: "Heavy Burner" },
   "training-car": { speed: 60, acceleration: 60, handling: 60, torque: 60, body: 60, powertrain: 60, playstyle: "Student Driver" }
@@ -719,6 +774,14 @@ const vindexEntries = [
   ["154", "Gladigator", "Florida Gator Line", "assets/cars/florida-gator-gladigator-display.png"],
   ["155", "Swampagne", "Florida Gator Line", "assets/cars/florida-gator-swampagne-display.png"],
   ["156", "Fourcroco", "Florida Gator Line", "assets/cars/florida-gator-fourcroco-display.png"],
+  ["157", "Vanvass", "Art Van Line", "assets/cars/art-vanvass-display.png"],
+  ["158", "Vandinsky", "Art Van Line", "assets/cars/art-vandinsky-display.png"],
+  ["159", "Vanbrandt", "Art Van Line", "assets/cars/art-vanbrandt-display.png"],
+  ["160", "Vancasso", "Art Van Line", "assets/cars/art-vancasso-display.png"],
+  ["161", "Vangas", "Art Van Line", "assets/cars/art-vangas-display.png"],
+  ["162", "Vandy-Warhol", "Art Van Line", "assets/cars/art-vandy-warhaul-display.png"],
+  ["163", "Vanksy", "Art Van Line", "assets/cars/art-vanksy-display.png"],
+  ["164", "Vanst", "Art Van Line", "assets/cars/art-vanst-display.png"],
   ["198", "Elepledge", "Sorority Elephant Line", "assets/cars/sorority-elephant-elepledge-display.png"],
   ["199", "Sororitrunk", "Sorority Elephant Line", "assets/cars/sorority-elephant-sororitrunk-display.png"],
   ["200", "Plaidonna", "Sorority Elephant Line", "assets/cars/sorority-elephant-plaidonna-display.png"],
@@ -726,6 +789,9 @@ const vindexEntries = [
   ["231", "Rivvir", "Exulted Frog Line", "assets/cars/frog-rivvir-display.png"],
   ["232", "Croakra", "Exulted Frog Line", "assets/cars/frog-croakra-display.png"],
   ["233", "Kermajesty", "Exulted Frog Line", "assets/cars/frog-kermajesty-display.png"],
+  ["243", "Cuptrack", "Cake Train Line", "assets/cars/cake-cuptrack-display.png"],
+  ["244", "Isittrain", "Cake Train Line", "assets/cars/cake-isittrain-display.png"],
+  ["245", "Fonductor", "Cake Train Line", "assets/cars/cake-fonductor-display.png"],
   ["251", "Inflewenze", "Influencer Line", "assets/story/inflewenze-display.png"],
   ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/rival-sponsore-display.png"],
   ["296", "Baronessex", "German Discipline Line", "assets/story/baronessex-display.png"],
@@ -1111,6 +1177,10 @@ const defaultState = {
   bond: {},
   partsInventory: Object.fromEntries(partVariants.map((part) => [part.key, 0])),
   equippedParts: {},
+  achievements: {},
+  winStreak: 0,
+  selectedAchievement: achievementDefs[0].id,
+  unlockedArtVanForms: [],
   unlockedLines: [...defaultUnlockedLines],
   timeTrials: {},
   storyTimeTrials: {},
@@ -1133,6 +1203,7 @@ let pendingPinkSlipContinue = null;
 let upgradeModalCarId = null;
 let selectedInventoryPartKey = partVariants[0]?.key || "";
 let equipPartContext = null;
+let pendingPinkSlipRiskStart = null;
 const modeFlow = {
   drag: "car",
   time: "car",
@@ -1242,6 +1313,8 @@ const el = {
   profileName: document.querySelector("#profile-name"),
   profileMeta: document.querySelector("#profile-meta"),
   profileBio: document.querySelector("#profile-bio"),
+  achievementList: document.querySelector("#achievement-list"),
+  achievementDetail: document.querySelector("#achievement-detail"),
   playerPreviewArt: document.querySelector("#player-preview-art"),
   playerPreviewName: document.querySelector("#player-preview-name"),
   playerPreviewMeta: document.querySelector("#player-preview-meta"),
@@ -1297,6 +1370,10 @@ const el = {
   cityUnlockIcon: document.querySelector("#city-unlock-icon"),
   cityUnlockTitle: document.querySelector("#city-unlock-title"),
   cityUnlockClose: document.querySelector("#city-unlock-close"),
+  pinkSlipWarningModal: document.querySelector("#pink-slip-warning-modal"),
+  pinkSlipWarningCopy: document.querySelector("#pink-slip-warning-copy"),
+  confirmPinkSlipRisk: document.querySelector("#confirm-pink-slip-risk"),
+  cancelPinkSlipRisk: document.querySelector("#cancel-pink-slip-risk"),
   resetModal: document.querySelector("#reset-modal"),
   confirmReset: document.querySelector("#confirm-reset"),
   cancelReset: document.querySelector("#cancel-reset"),
@@ -1392,6 +1469,7 @@ function mergeState(base, saved) {
     bond: { ...base.bond, ...saved.bond },
     partsInventory: { ...base.partsInventory, ...saved.partsInventory },
     equippedParts: { ...base.equippedParts, ...saved.equippedParts },
+    achievements: { ...base.achievements, ...saved.achievements },
     garage: { ...base.garage, ...saved.garage }
   };
 }
@@ -1407,6 +1485,22 @@ function sanitizeState() {
   state.bond = state.bond && typeof state.bond === "object" ? state.bond : {};
   state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
   state.equippedParts = state.equippedParts && typeof state.equippedParts === "object" ? state.equippedParts : {};
+  state.achievements = state.achievements && typeof state.achievements === "object" ? state.achievements : {};
+  state.winStreak = Math.max(0, Math.floor(Number(state.winStreak) || 0));
+  const artVanFormCount = cars.find((car) => car.id === "art-van")?.evolutions.length || 0;
+  state.unlockedArtVanForms = Array.isArray(state.unlockedArtVanForms)
+    ? state.unlockedArtVanForms.map(Number).filter((index, pos, list) => index >= 0 && index < artVanFormCount && list.indexOf(index) === pos)
+    : [];
+  achievementDefs.forEach((achievement) => {
+    state.achievements[achievement.id] = {
+      complete: Boolean(state.achievements[achievement.id]?.complete),
+      granted: Boolean(state.achievements[achievement.id]?.granted)
+    };
+  });
+  Object.keys(state.achievements).forEach((id) => {
+    if (!achievementDefs.some((achievement) => achievement.id === id)) delete state.achievements[id];
+  });
+  if (!achievementDefs.some((achievement) => achievement.id === state.selectedAchievement)) state.selectedAchievement = achievementDefs[0].id;
   partVariants.forEach((part) => {
     state.partsInventory[part.key] = Math.max(0, Math.floor(Number(state.partsInventory[part.key]) || 0));
   });
@@ -1431,6 +1525,10 @@ function sanitizeState() {
   if (state.unlimitedSprox) {
     state.unlockedLines = cars.map((car) => car.id);
     state.completedCampaignLevels = Object.fromEntries(campaignLevels.map((_, index) => [index, true]));
+    state.unlockedArtVanForms = cars.find((car) => car.id === "art-van")?.evolutions.map((_, index) => index) || [];
+    achievementDefs.forEach((achievement) => {
+      state.achievements[achievement.id] = { complete: true, granted: true };
+    });
     cars.forEach((car) => {
       state.garage[car.id] = {
         level: maxCarLevel,
@@ -1442,6 +1540,7 @@ function sanitizeState() {
     });
   }
   state.unlockedLines = state.unlockedLines.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index);
+  if (state.unlockedLines.includes("art-van") && !state.unlockedArtVanForms.length) state.unlockedArtVanForms.push(0);
   state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
   state.timeTrials = state.timeTrials || {};
   state.storyTimeTrials = state.storyTimeTrials || {};
@@ -1449,7 +1548,7 @@ function sanitizeState() {
     ...defaultState.settings.verticalKeys,
     ...(state.settings.verticalKeys || {})
   };
-  if (allStarterFinalFormsUnlocked() && !state.unlockedLines.includes("rainbowlt")) {
+  if (allPlayableFinalFormsUnlocked() && !state.unlockedLines.includes("rainbowlt")) {
     state.unlockedLines.push("rainbowlt");
     state.unlockedCars.rainbowlt = true;
   }
@@ -1610,6 +1709,7 @@ function evolutionIndexForLevel(level) {
 
 function maxEligibleEvolutionForCar(carId, level) {
   const car = cars.find((item) => item.id === carId);
+  if (carId === "art-van") return 0;
   if (carId === "rainbowlt") {
     return level >= 10 ? 1 : 0;
   }
@@ -1630,11 +1730,14 @@ function orderedCarList(list) {
   });
 }
 
-function allStarterFinalFormsUnlocked() {
-  return starterCarIds.every((carId) => {
+function allPlayableFinalFormsUnlocked() {
+  const ids = cars.filter((car) => !car.tutorialOnly && car.id !== "rainbowlt").map((car) => car.id);
+  return ids.every((carId) => {
     const car = cars.find((item) => item.id === carId);
     const progress = state.garage?.[carId];
-    return progress && unlockedEvolutionIndex(carId) >= car.evolutions.length - 1;
+    if (!isCarUnlocked(carId) || !progress) return false;
+    if (carId === "art-van") return (state.unlockedArtVanForms || []).some((index) => index > 0);
+    return unlockedEvolutionIndex(carId) >= car.evolutions.length - 1;
   });
 }
 
@@ -1650,7 +1753,7 @@ function garageGodModeActive() {
 function unlockSecretCars() {
   state.unlockedCars = state.unlockedCars || {};
   state.unlockedLines = state.unlockedLines || [...defaultUnlockedLines];
-  if (!state.unlockedLines.includes("rainbowlt") && allStarterFinalFormsUnlocked()) {
+  if (!state.unlockedLines.includes("rainbowlt") && allPlayableFinalFormsUnlocked()) {
     state.unlockedLines.push("rainbowlt");
     state.unlockedCars.rainbowlt = true;
     state.garage.rainbowlt = state.garage.rainbowlt || { level: 1, xp: 0, evolution: 0, pendingEvolution: null };
@@ -1662,12 +1765,16 @@ function unlockSecretCars() {
 function currentEvolution(carId) {
   const car = cars.find((item) => item.id === carId);
   const progress = state.garage[carId];
+  if (carId === "art-van" && !(state.unlockedArtVanForms || []).includes(progress.evolution)) {
+    progress.evolution = (state.unlockedArtVanForms || [0])[0] || 0;
+  }
   return car.evolutions[progress.evolution] || car.evolutions[0];
 }
 
 function unlockedEvolutionIndex(carId) {
   const car = cars.find((item) => item.id === carId);
   const progress = state.garage[carId];
+  if (carId === "art-van") return Math.max(...(state.unlockedArtVanForms || [0]));
   return Math.min(progress.unlockedEvolution ?? progress.evolution ?? 0, car.evolutions.length - 1);
 }
 
@@ -1703,7 +1810,11 @@ function displayedGearbornStatsAtLevel(carId, level) {
   const baseStats = baseGearbornStatsAtLevel(carId, level);
   const boosts = bondBoostsForCar(carId, baseStats);
   const partBoosts = partBoostsForCar(carId);
-  return Object.fromEntries(Object.entries(baseStats).map(([key, value]) => [key, Math.min(100, value + (boosts[key] || 0) + (partBoosts[key] || 0))]));
+  const formBoosts = formBoostsForCar(carId);
+  return Object.fromEntries(Object.entries(baseStats).map(([key, value]) => [
+    key,
+    Math.min(100, value + (boosts[key] || 0) + (partBoosts[key] || 0) + (formBoosts[key] || 0))
+  ]));
 }
 
 function baseGearbornStatsAtLevel(carId, level) {
@@ -1718,7 +1829,7 @@ function baseGearbornStatsAtLevel(carId, level) {
       powertrain: 100
     };
   }
-  const evolutionGain = Math.max(0, state.garage?.[carId]?.evolution || 0) * 2;
+  const evolutionGain = carId === "art-van" ? 0 : Math.max(0, state.garage?.[carId]?.evolution || 0) * 2;
   const levelGain = Math.max(0, Math.max(1, level) - 1);
   return {
     speed: Math.min(100, profile.speed + levelGain + evolutionGain),
@@ -1783,6 +1894,16 @@ function partBoostsForCar(carId) {
   return boosts;
 }
 
+function formBoostsForCar(carId) {
+  const boosts = { speed: 0, acceleration: 0, handling: 0, torque: 0, body: 0, powertrain: 0 };
+  if (carId !== "art-van") return boosts;
+  const bonus = currentEvolution(carId)?.formBonus || {};
+  Object.entries(bonus).forEach(([key, value]) => {
+    boosts[key] = value;
+  });
+  return boosts;
+}
+
 function equippedPartUsage(key, ignoreCarId = "", ignoreSlot = -1) {
   return Object.entries(state.equippedParts || {}).reduce((total, [carId, slots]) => total + (slots || []).filter((slotKey, slotIndex) => {
     if (carId === ignoreCarId && slotIndex === ignoreSlot) return false;
@@ -1833,6 +1954,142 @@ function recordRaceUsage(carId) {
     });
   }
   return unlocked;
+}
+
+function recordStoryRaceOutcome(won, isStoryRace) {
+  if (!isStoryRace) return;
+  state.winStreak = won ? Math.max(0, Math.floor(Number(state.winStreak) || 0)) + 1 : 0;
+  if (!won) checkAchievements();
+}
+
+function unlockNextTrainingBossFromBoss(bossId) {
+  const bossIndex = bossChallengeBosses.findIndex((boss) => boss.id === bossId);
+  if (bossIndex < 0) return "";
+  const targetIndex = Math.min(bossChallengeBosses.length - 1, bossIndex + 1);
+  if (targetIndex > state.highestBossIndex) {
+    state.highestBossIndex = targetIndex;
+    return bossChallengeBosses[state.highestBossIndex]?.name || "";
+  }
+  return "";
+}
+
+function storyLevelsOfType(raceType) {
+  return campaignLevels
+    .map((level, index) => ({ level, index }))
+    .filter(({ level }) => level.type === raceType);
+}
+
+function vindexCompletionStats() {
+  const eligibleEntries = vindexEntries.filter((entry) => entry.name !== "Vanbrandt");
+  const encountered = eligibleEntries.filter((entry) => isVindexDiscovered(entry)).length;
+  return {
+    encountered,
+    total: eligibleEntries.length,
+    percent: eligibleEntries.length ? Math.floor((encountered / eligibleEntries.length) * 100) : 0
+  };
+}
+
+function achievementProgress(achievement) {
+  if (achievement.type === "streak") {
+    const current = Math.min(state.winStreak || 0, achievement.target);
+    return { current, total: achievement.target, percent: Math.floor((current / achievement.target) * 100), complete: current >= achievement.target, label: `${current}/${achievement.target} wins` };
+  }
+  if (achievement.type === "storyType") {
+    const levels = storyLevelsOfType(achievement.raceType);
+    const current = levels.filter(({ index }) => storyLevelCompleted(index)).length;
+    const total = levels.length;
+    return { current, total, percent: total ? Math.floor((current / total) * 100) : 0, complete: total > 0 && current >= total, label: `${current}/${total} complete` };
+  }
+  if (achievement.type === "vindex") {
+    const stats = vindexCompletionStats();
+    const current = Math.min(stats.percent, achievement.percent);
+    return {
+      current: stats.encountered,
+      total: stats.total,
+      percent: Math.min(100, Math.floor((stats.percent / achievement.percent) * 100)),
+      complete: stats.percent >= achievement.percent,
+      label: `${stats.percent}% encountered`
+    };
+  }
+  return { current: 0, total: 1, percent: 0, complete: false, label: "0%" };
+}
+
+function unlockCarLine(carId) {
+  if (!cars.some((car) => car.id === carId)) return false;
+  state.unlockedLines = state.unlockedLines || [...defaultUnlockedLines];
+  const newlyUnlocked = !state.unlockedLines.includes(carId);
+  if (newlyUnlocked) state.unlockedLines.push(carId);
+  state.unlockedCars = state.unlockedCars || {};
+  state.unlockedCars[carId] = true;
+  state.garage[carId] = state.garage[carId] || { level: 1, xp: 0, evolution: 0, unlockedEvolution: 0, pendingEvolution: null };
+  return newlyUnlocked;
+}
+
+function unlockArtVanForm(index) {
+  const car = cars.find((item) => item.id === "art-van");
+  if (!car || !car.evolutions[index]) return null;
+  unlockCarLine("art-van");
+  state.unlockedArtVanForms = Array.isArray(state.unlockedArtVanForms) ? state.unlockedArtVanForms : [];
+  if (!state.unlockedArtVanForms.includes(0)) state.unlockedArtVanForms.push(0);
+  if (!state.unlockedArtVanForms.includes(index)) state.unlockedArtVanForms.push(index);
+  state.unlockedArtVanForms.sort((a, b) => a - b);
+  const progress = state.garage["art-van"];
+  if (!state.unlockedArtVanForms.includes(progress.evolution)) progress.evolution = index;
+  progress.unlockedEvolution = Math.max(progress.unlockedEvolution || 0, index);
+  return car.evolutions[index];
+}
+
+function grantRandomLevelTwoParts(count = 3) {
+  const awarded = [];
+  for (let index = 0; index < count; index += 1) {
+    const type = partTypes[Math.floor(Math.random() * partTypes.length)];
+    const part = partVariants.find((item) => item.id === type.id && item.level === 2);
+    if (part) {
+      state.partsInventory[part.key] = (state.partsInventory[part.key] || 0) + 1;
+      awarded.push(part.name);
+    }
+  }
+  return awarded;
+}
+
+function grantAchievementReward(achievement, silent = false) {
+  const record = state.achievements?.[achievement.id];
+  if (!record || record.granted) return;
+  let message = achievement.reward;
+  const artFormIndex = artVanUnlockByAchievement[achievement.id];
+  if (Number.isInteger(artFormIndex)) {
+    const form = unlockArtVanForm(artFormIndex);
+    if (form) message = `${form.name} has answered your call.`;
+  } else if (achievement.id === "vindex25") {
+    addSprox(1000);
+    message = "1000 Sprox awarded.";
+  } else if (achievement.id === "vindex50") {
+    unlockCarLine("cake-train");
+    message = "Cuptrack has joined your Garage.";
+  } else if (achievement.id === "vindex75") {
+    const parts = grantRandomLevelTwoParts(3);
+    message = `Level 2 parts awarded: ${parts.join(", ")}`;
+  }
+  record.granted = true;
+  if (!silent) showToast(`Achievement Unlocked: ${achievement.name}`, message);
+}
+
+function checkAchievements(silent = false) {
+  let changed = false;
+  achievementDefs.forEach((achievement) => {
+    const record = state.achievements[achievement.id] || { complete: false, granted: false };
+    const progress = achievementProgress(achievement);
+    if (progress.complete && !record.complete) {
+      record.complete = true;
+      changed = true;
+    }
+    state.achievements[achievement.id] = record;
+    if (record.complete && !record.granted) {
+      grantAchievementReward(achievement, silent);
+      changed = true;
+    }
+  });
+  return changed;
 }
 
 function normalizedGearbornStat(value) {
@@ -1963,7 +2220,7 @@ function carSelectPreviewMarkup(carId) {
       <h3>${form.name}</h3>
       <p>${playstyle}</p>
       <small>Level ${progress.level} · Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</small>
-      ${garageStatsMarkup(stats)}
+      ${garageStatsMarkup(stats, car.id)}
     </div>
   `;
 }
@@ -2044,6 +2301,7 @@ function render() {
   }
   if (viewIsActive("vindex")) renderVindex();
   if (viewIsActive("profiles")) renderProfiles();
+  if (viewIsActive("achievements")) renderAchievements();
   if (viewIsActive("settings") || el.tunerModal?.classList.contains("active")) renderTuners();
   if (needsDrag) {
     renderDistanceOptions();
@@ -2265,9 +2523,8 @@ function renderStoryLevelPreview() {
   if (!panelOpen || !level) return;
   const locked = storyLevelLocked(storyCities[state.selectedStoryCity], level);
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
-  el.storyPreviewIcon.innerHTML = level.type === "rival"
-    ? storyNodeIconMarkup(storyCities[state.selectedStoryCity], level, visual)
-    : `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+  el.storyPreviewIcon.innerHTML = storyNodeIconMarkup(storyCities[state.selectedStoryCity], level, visual);
+  el.storyPreviewIcon.className = `story-level-icon story-preview-icon type-${level.type}`;
   el.storyPreviewIcon.style.background = "transparent";
   el.campaignType.textContent = locked ? "Locked" : campaignTypeLabel(level);
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
@@ -2382,24 +2639,42 @@ function renderCampaignRewards(level, locked) {
         <span class="medal-text ${medal.key}">${medal.label}</span>
         <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} Sprox</strong>
       </div>
-    `).join("") + bestResult;
+    `).join("") + bestResult + possiblePartRewardMarkup();
     return;
   }
   if (level.type === "drag" || level.type === "pink-slip") {
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} Sprox</strong></div>`;
+    const safeReplay = level.type === "pink-slip" && !isPinkSlipRiskActive(level)
+      ? `<div class="reward-row compact"><span>Pink Slip</span><strong>Reward already unlocked. Replay is safe.</strong></div>`
+      : "";
+    const riskRow = isPinkSlipRiskActive(level)
+      ? `<div class="reward-row compact pink-risk-row"><span>Risk</span><strong>Lose: Level 1 reset and equipped parts taken.</strong></div>`
+      : "";
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} Sprox</strong></div>${riskRow}${safeReplay}${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "battle") {
     const reward = battleRewardForBossIndex(level.bossIndex);
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${reward} Sprox</strong></div>`;
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${reward} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "rival") {
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>`;
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
-  el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} Sprox</strong></div>`;
+  el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
+}
+
+function possiblePartRewardMarkup() {
+  return `
+    <div class="reward-row possible-part-reward">
+      <span>Possible Reward</span>
+      <strong>
+        <span class="part-silhouette one-star"><i>?</i><em>★</em></span>
+        <span class="part-silhouette two-star"><i>?</i><em>★★</em></span>
+      </strong>
+    </div>
+  `;
 }
 
 function renderStoryLoadout() {
@@ -2680,6 +2955,11 @@ function finishBattle() {
   addSprox(earned);
   recordRaceUsage(battleState.carId);
   const partReward = won && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
+  recordStoryRaceOutcome(won, battleState.campaignLevelIndex !== null);
+  let unlockedBossName = "";
+  if (won && battleState.mode === "battle") {
+    unlockedBossName = unlockNextTrainingBossFromBoss(battleState.boss.id);
+  }
   if (tutorialActive() && won) setTutorialScene("post-battle");
   if (won && battleState.campaignLevelIndex !== null) completeCampaignLevel(battleState.campaignLevelIndex);
   saveState();
@@ -2688,7 +2968,7 @@ function finishBattle() {
     won,
     title: tutorialActive() && !won ? "RACE LOST" : undefined,
     sprox: earned,
-    lines: partReward ? [partRewardResultMarkup(partReward)] : [],
+    lines: [unlockedBossName ? `Boss Unlocked: ${unlockedBossName}` : "", partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
     hideRaceAgain: tutorialActive() && !won,
     hideSprox: tutorialActive() && !won,
     disableActions: tutorialActive() && won,
@@ -2831,6 +3111,9 @@ function isVindexDiscovered(entry) {
     if ([tutorialCarId, tutorialOpponentCarId].includes(playable.car.id)) {
       return state.tutorialComplete || tutorialActive();
     }
+    if (playable.car.id === "art-van") {
+      return isCarUnlocked("art-van") && (state.unlockedArtVanForms || []).includes(playable.index);
+    }
     return isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= playable.index;
   }
   const rankIndex = ranks.findIndex((rank) => rank.name === entry.name);
@@ -2863,7 +3146,9 @@ function evolutionLineMarkup(entry) {
       items = playable.car.evolutions.map((evolution, index) => ({
         name: evolution.name,
         image: imageFor(evolution, "display"),
-        discovered: playable.car.id === tutorialOpponentCarId
+        discovered: playable.car.id === "art-van"
+          ? isCarUnlocked("art-van") && (state.unlockedArtVanForms || []).includes(index)
+          : playable.car.id === tutorialOpponentCarId
           ? (state.tutorialComplete || tutorialActive())
           : isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= index
       }));
@@ -2919,6 +3204,57 @@ function renderProfiles() {
   const boss = bossChallengeBosses.find((item) => item.id === profile.id);
   el.profileCarArt.innerHTML = boss ? `<img src="${bossCarDisplayImage(boss)}" alt="${boss.car}" loading="lazy" decoding="async">` : "";
   el.profileBio.textContent = profile.bio;
+}
+
+function achievementRewardArt(achievement) {
+  const artFormIndex = artVanUnlockByAchievement[achievement.id];
+  if (Number.isInteger(artFormIndex)) {
+    const form = cars.find((car) => car.id === "art-van")?.evolutions[artFormIndex];
+    return form ? carMarkupForEvolution("art-van", artFormIndex, "display") : silhouetteMarkup();
+  }
+  if (achievement.id === "vindex50") return carMarkupForEvolution("cake-train", 0, "display");
+  if (achievement.id === "vindex75") return `<div class="achievement-reward-parts">${partTypes.slice(0, 3).map((part) => partImageMarkup({ ...part, level: 2, bonus: 3, stars: "★★" }, "achievement-part-image")).join("")}</div>`;
+  if (achievement.id === "vindex25") return `<span class="achievement-sprox-preview sprox-coin" aria-label="Sprox reward"></span>`;
+  return `<div class="achievement-trophy">★</div>`;
+}
+
+function renderAchievements() {
+  if (!el.achievementList || !el.achievementDetail) return;
+  if (checkAchievements(true)) saveState();
+  const selected = achievementDefs.find((achievement) => achievement.id === state.selectedAchievement) || achievementDefs[0];
+  el.achievementList.innerHTML = achievementDefs.map((achievement) => {
+    const progress = achievementProgress(achievement);
+    const record = state.achievements[achievement.id] || {};
+    return `
+      <button class="achievement-card ${achievement.id === selected.id ? "active" : ""} ${record.complete ? "complete" : ""}" type="button" data-achievement="${achievement.id}">
+        <span class="achievement-card-copy">
+          <strong>${achievement.name}</strong>
+          <small>${achievement.requirement}</small>
+          <em>${record.granted ? "Reward unlocked" : achievement.reward}</em>
+        </span>
+        <span class="achievement-progress">
+          <strong>${record.complete ? "Complete" : `${progress.percent}%`}</strong>
+          <small>${progress.label}</small>
+        </span>
+      </button>
+    `;
+  }).join("");
+  const progress = achievementProgress(selected);
+  const record = state.achievements[selected.id] || {};
+  el.achievementDetail.innerHTML = `
+    <div class="achievement-detail-art">${achievementRewardArt(selected)}</div>
+    <p class="achievement-kicker">${record.complete ? "Unlocked" : "In Progress"}</p>
+    <h2>${selected.name}</h2>
+    <p>${selected.requirement}</p>
+    <div class="achievement-meter" aria-label="${progress.percent}% complete">
+      <i style="width:${Math.min(100, progress.percent)}%"></i>
+    </div>
+    <div class="achievement-detail-grid">
+      <span>Progress</span><strong>${progress.label}</strong>
+      <span>Reward</span><strong>${selected.reward}</strong>
+      <span>Status</span><strong>${record.complete ? "Complete" : "Incomplete"}</strong>
+    </div>
+  `;
 }
 
 function racerAlphaProfileToggle(profile) {
@@ -3020,6 +3356,7 @@ function renderGarage() {
       <article class="garage-card">
         <div class="garage-art">
           ${carMarkupForEvolution(car.id, progress.evolution, "display")}
+          ${garageArtPartSlots(car.id)}
         </div>
         <div class="garage-info">
           <h2>${currentEvolution(car.id).name}</h2>
@@ -3030,13 +3367,14 @@ function renderGarage() {
             <span class="evolution">Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</span>
           </div>
           ${garageEvolutionControls(car)}
-          ${garageStatsMarkup(stats)}
+          ${artVanFormBonusMarkup(car.id)}
+          ${garageStatsMarkup(stats, car.id)}
           ${garageBondMarkup(car.id)}
           <div class="meta-row">
             <span>${maxed ? "Max Level" : `Upgrade: ${upgradeCost} Sprox`}</span>
             <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
           </div>
-          ${!maxed ? `<button class="garage-upgrade" type="button" data-upgrade-car="${car.id}">Upgrade</button>` : ""}
+          <button class="garage-upgrade" type="button" data-upgrade-car="${car.id}">${maxed ? "Parts / Stats" : "Upgrade"}</button>
           ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${car.id}">Evolve</button>` : ""}
         </div>
       </article>
@@ -3056,6 +3394,7 @@ function renderTutorialGarage() {
     <article class="garage-card">
       <div class="garage-art">
         ${carMarkupForEvolution(tutorialCarId, progress.evolution, "display")}
+        ${garageArtPartSlots(tutorialCarId)}
       </div>
       <div class="garage-info">
         <h2>${currentEvolution(tutorialCarId).name}</h2>
@@ -3065,13 +3404,13 @@ function renderTutorialGarage() {
           <span>Level ${progress.level}</span>
           <span class="evolution">Training</span>
         </div>
-        ${garageStatsMarkup(stats)}
+        ${garageStatsMarkup(stats, tutorialCarId)}
         ${garageBondMarkup(tutorialCarId)}
         <div class="meta-row">
           <span>${maxed ? "Max Level" : "Upgrade: 5000 Sprox"}</span>
           <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
         </div>
-        ${!maxed ? `<button class="garage-upgrade" type="button" data-upgrade-car="${tutorialCarId}">Upgrade</button>` : ""}
+        <button class="garage-upgrade" type="button" data-upgrade-car="${tutorialCarId}">${maxed ? "Parts / Stats" : "Upgrade"}</button>
         ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${tutorialCarId}">Evolve</button>` : ""}
       </div>
     </article>
@@ -3098,26 +3437,79 @@ function garageBondMarkup(carId) {
   `;
 }
 
-function garageStatsMarkup(stats) {
+function artVanFormBonusMarkup(carId) {
+  if (carId !== "art-van") return "";
+  const bonus = currentEvolution(carId)?.formBonus;
+  if (!bonus) return "";
+  return `<p class="form-bonus">Form Bonus: ${formatBondBoosts(bonus)}</p>`;
+}
+
+function garageArtPartSlots(carId) {
+  const slots = state.equippedParts?.[carId] || [null, null];
   return `
-    <div class="garage-stat-grid" aria-label="GearBorn stats">
-      ${garageStatBar("SPD", stats.speed)}
-      ${garageStatBar("ACC", stats.acceleration)}
-      ${garageStatBar("HDL", stats.handling)}
-      ${garageStatBar("TRQ", stats.torque)}
-      ${garageStatBar("BDY", stats.body)}
-      ${garageStatBar("PWR", stats.powertrain)}
+    <div class="garage-art-part-slots" aria-label="Equipped part slots">
+      ${[0, 1].map((slotIndex) => {
+        const part = partByKey(slots[slotIndex]);
+        return `
+          <div class="garage-art-part-slot ${part ? "filled" : "empty"}">
+            ${part ? `${partImageMarkup(part, "garage-art-part-image")}<span>${partStars(part)}</span>` : `<span class="empty-plus">+</span>`}
+          </div>
+        `;
+      }).join("")}
     </div>
   `;
 }
 
-function garageStatBar(label, value) {
-  const pct = normalizedGearbornStat(value) * 100;
+const statBarConfig = [
+  ["SPD", "speed"],
+  ["ACC", "acceleration"],
+  ["HDL", "handling"],
+  ["TRQ", "torque"],
+  ["BDY", "body"],
+  ["PWR", "powertrain"]
+];
+
+function statBarSegments(carId, statKey, level = state.garage?.[carId]?.level || 1) {
+  if (!carId || !state.garage?.[carId]) return null;
+  const baseStats = baseGearbornStatsAtLevel(carId, level);
+  const bondBoosts = bondBoostsForCar(carId, baseStats);
+  const partBoosts = partBoostsForCar(carId);
+  const formBoosts = formBoostsForCar(carId);
+  const basePct = normalizedGearbornStat(Math.min(100, baseStats[statKey])) * 100;
+  const bondPct = Math.min(Math.max(0, (bondBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct));
+  const partPct = Math.min(Math.max(0, (partBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct));
+  const formPct = Math.min(Math.max(0, (formBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct - partPct));
+  return { basePct, bondPct, partPct, formPct };
+}
+
+function garageStatsMarkup(stats, carId = "") {
+  return `
+    <div class="garage-stat-grid" aria-label="GearBorn stats">
+      ${statBarConfig.map(([label, key]) => garageStatBar(label, stats[key], statBarSegments(carId, key))).join("")}
+    </div>
+  `;
+}
+
+function garageStatBar(label, value, segments = null) {
   return `
     <div class="garage-stat">
       <span>${label}</span>
-      <div class="garage-stat-bar"><div style="width:${pct}%"></div></div>
+      <div class="garage-stat-bar">${statFillMarkup(value, segments)}</div>
     </div>
+  `;
+}
+
+function statFillMarkup(value, segments = null) {
+  const pct = normalizedGearbornStat(value) * 100;
+  const basePct = segments ? Math.min(segments.basePct, pct) : pct;
+  const bondPct = segments ? Math.min(segments.bondPct, Math.max(0, pct - basePct)) : 0;
+  const partPct = segments ? Math.min(segments.partPct, Math.max(0, pct - basePct - bondPct)) : 0;
+  const formPct = segments ? Math.min(segments.formPct || 0, Math.max(0, pct - basePct - bondPct - partPct)) : 0;
+  return `
+    <div class="stat-base" style="width:${basePct}%"></div>
+    ${bondPct > 0 ? `<i class="stat-bond" style="left:${basePct}%; width:${bondPct}%"></i>` : ""}
+    ${partPct > 0 ? `<i class="stat-parts" style="left:${basePct + bondPct}%; width:${partPct}%"></i>` : ""}
+    ${formPct > 0 ? `<i class="stat-form" style="left:${basePct + bondPct + partPct}%; width:${formPct}%"></i>` : ""}
   `;
 }
 
@@ -3131,17 +3523,12 @@ function upgradeStatsMarkup(carId) {
   }));
   return `
     <div class="garage-stat-grid upgrade-stat-grid" aria-label="Upgrade preview stats">
-      ${upgradeStatBar("SPD", currentStats.speed, nextStats.speed)}
-      ${upgradeStatBar("ACC", currentStats.acceleration, nextStats.acceleration)}
-      ${upgradeStatBar("HDL", currentStats.handling, nextStats.handling)}
-      ${upgradeStatBar("TRQ", currentStats.torque, nextStats.torque)}
-      ${upgradeStatBar("BDY", currentStats.body, nextStats.body)}
-      ${upgradeStatBar("PWR", currentStats.powertrain, nextStats.powertrain)}
+      ${statBarConfig.map(([label, key]) => upgradeStatBar(label, currentStats[key], nextStats[key], statBarSegments(carId, key))).join("")}
     </div>
   `;
 }
 
-function upgradeStatBar(label, current, next) {
+function upgradeStatBar(label, current, next, segments = null) {
   const currentPct = normalizedGearbornStat(current) * 100;
   const nextPct = normalizedGearbornStat(next) * 100;
   const gainPct = Math.max(0, nextPct - currentPct);
@@ -3149,7 +3536,7 @@ function upgradeStatBar(label, current, next) {
     <div class="garage-stat upgrade-stat">
       <span>${label}</span>
       <div class="garage-stat-bar upgrade-stat-bar">
-        <div class="upgrade-current" style="width:${currentPct}%"></div>
+        ${statFillMarkup(current, segments)}
         <i style="left:${currentPct}%; width:${gainPct}%"></i>
       </div>
     </div>
@@ -3344,6 +3731,18 @@ function unequipSelectedPart() {
 
 function garageEvolutionControls(car) {
   const progress = state.garage[car.id];
+  if (car.id === "art-van") {
+    const unlockedForms = (state.unlockedArtVanForms || [0]).filter((index) => car.evolutions[index]);
+    const currentPosition = Math.max(0, unlockedForms.indexOf(progress.evolution));
+    if (unlockedForms.length < 2) return "";
+    return `
+      <div class="evolution-switcher" aria-label="${car.family} form selector">
+        <button type="button" data-evolution-step="${car.id}:previous" ${currentPosition <= 0 ? "disabled" : ""}>←</button>
+        <strong>${currentEvolution(car.id).name}</strong>
+        <button type="button" data-evolution-step="${car.id}:next" ${currentPosition >= unlockedForms.length - 1 ? "disabled" : ""}>→</button>
+      </div>
+    `;
+  }
   const unlocked = unlockedEvolutionIndex(car.id);
   if (unlocked < 1) return "";
   return `
@@ -3359,6 +3758,16 @@ function changeGarageEvolution(carId, direction) {
   const car = cars.find((item) => item.id === carId);
   if (!car || !isCarUnlocked(carId)) return;
   const progress = state.garage[carId];
+  if (carId === "art-van") {
+    const unlockedForms = (state.unlockedArtVanForms || [0]).filter((index) => car.evolutions[index]);
+    const currentPosition = Math.max(0, unlockedForms.indexOf(progress.evolution));
+    const delta = direction === "next" ? 1 : -1;
+    const nextPosition = Math.max(0, Math.min(unlockedForms.length - 1, currentPosition + delta));
+    progress.evolution = unlockedForms[nextPosition] ?? 0;
+    saveState();
+    render();
+    return;
+  }
   const delta = direction === "next" ? 1 : -1;
   progress.evolution = Math.max(0, Math.min(unlockedEvolutionIndex(carId), progress.evolution + delta));
   saveState();
@@ -3723,6 +4132,8 @@ function finishRace(playerWon) {
   const finishedLevel = isStoryRace ? campaignLevels[finishedRace.campaignLevelIndex] : null;
   const pinkSlipCarId = finishedLevel?.type === "pink-slip" ? finishedLevel.pinkSlipCarId : null;
   let partReward = null;
+  let pinkSlipPenaltyLine = "";
+  const riskyPinkSlipLoss = !playerWon && isPinkSlipRiskActive(finishedLevel);
 
   let earned = 0;
   if (playerWon) {
@@ -3743,6 +4154,11 @@ function finishRace(playerWon) {
   }
 
   recordRaceUsage(finishedRace.carId);
+  recordStoryRaceOutcome(playerWon, isStoryRace);
+  if (riskyPinkSlipLoss) {
+    applyPinkSlipLossPenalty(finishedRace.carId);
+    pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
+  }
   if (isStoryRace && playerWon) partReward = rollStoryPartReward();
   saveState();
   if (isStoryRace && playerWon) {
@@ -3753,7 +4169,7 @@ function finishRace(playerWon) {
     won: playerWon,
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
-    lines: partReward ? [partRewardResultMarkup(partReward)] : [],
+    lines: [pinkSlipPenaltyLine, partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
     primaryLabel: tutorialActive() && !playerWon ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !playerWon,
@@ -3808,6 +4224,14 @@ function failDragRace(title) {
   drawRace();
   const failedRace = race;
   const isStoryRace = failedRace.campaignLevelIndex !== null && failedRace.campaignLevelIndex !== undefined;
+  const failedLevel = isStoryRace ? campaignLevels[failedRace.campaignLevelIndex] : null;
+  let pinkSlipPenaltyLine = "";
+  if (isPinkSlipRiskActive(failedLevel)) {
+    applyPinkSlipLossPenalty(failedRace.carId);
+    pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
+  }
+  recordStoryRaceOutcome(false, isStoryRace);
+  saveState();
   el.raceMessage.className = "race-message loss";
   el.raceMessage.textContent = "";
   showRaceResult(el.dragTrack, {
@@ -3816,6 +4240,7 @@ function failDragRace(title) {
     sprox: 0,
     primaryLabel: tutorialActive() ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
+    lines: pinkSlipPenaltyLine ? [pinkSlipPenaltyLine] : [],
     hideRaceAgain: tutorialActive(),
     hideSprox: tutorialActive(),
     onPrimary: () => {
@@ -3978,6 +4403,22 @@ function showPinkSlipUnlock(carId, onContinue) {
   el.closeEvolution.focus();
 }
 
+function applyPinkSlipLossPenalty(carId) {
+  const car = cars.find((item) => item.id === carId);
+  const progress = state.garage?.[carId];
+  if (!car || !progress) return;
+  (state.equippedParts?.[carId] || []).forEach((key) => {
+    if (!key) return;
+    state.partsInventory[key] = Math.max(0, (state.partsInventory[key] || 0) - 1);
+  });
+  state.equippedParts[carId] = [null, null];
+  progress.level = 1;
+  progress.xp = 0;
+  progress.evolution = 0;
+  progress.unlockedEvolution = 0;
+  progress.pendingEvolution = null;
+}
+
 function closeEvolutionModal() {
   const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
   pendingPinkSlipContinue = null;
@@ -4086,6 +4527,10 @@ function activateGodMode() {
   state.unlimitedSprox = true;
   state.unlockedLines = cars.map((car) => car.id);
   state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
+  state.unlockedArtVanForms = cars.find((car) => car.id === "art-van")?.evolutions.map((_, index) => index) || [];
+  achievementDefs.forEach((achievement) => {
+    state.achievements[achievement.id] = { complete: true, granted: true };
+  });
   cars.forEach((car) => {
     state.garage[car.id] = {
       level: maxCarLevel,
@@ -4658,6 +5103,8 @@ function completeCampaignLevel(index) {
       pendingCityUnlock = storyCities[nextCityIndex];
     }
   }
+  if (completedLevel?.type === "boss") unlockNextTrainingBossFromBoss((completedLevel.final ? finalBoss : bosses[completedLevel.bossIndex])?.id);
+  checkAchievements();
   saveState();
 }
 
@@ -4671,6 +5118,10 @@ function startCampaignLevel() {
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   if (!level || storyLevelLocked(city, level) || !storyLevelVisible(city, level)) return;
   const runLevel = () => {
+    if (isPinkSlipRiskActive(level)) {
+      openPinkSlipWarning(level, () => startCampaignRace(index, level));
+      return;
+    }
     if (level.type === "rival") {
       openRivalDialogue(level, "pre", () => startCampaignRace(index, level));
       return;
@@ -4682,6 +5133,31 @@ function startCampaignLevel() {
     return;
   }
   runLevel();
+}
+
+function isPinkSlipRiskActive(level) {
+  return level?.type === "pink-slip" && level.pinkSlipCarId && !isCarUnlocked(level.pinkSlipCarId);
+}
+
+function openPinkSlipWarning(level, onConfirm) {
+  const rewardName = level?.drag?.name || cars.find((car) => car.id === level?.pinkSlipCarId)?.evolutions[0]?.name || "this GearBorn";
+  pendingPinkSlipRiskStart = onConfirm;
+  el.pinkSlipWarningCopy.textContent = `Pink Slip races risk your car and your parts. If you lose, your car will return to Level 1 and you will lose any equipped parts. Do you want to risk your car to unlock ${rewardName}?`;
+  el.pinkSlipWarningModal.classList.add("active");
+  el.pinkSlipWarningModal.setAttribute("aria-hidden", "false");
+  el.cancelPinkSlipRisk.focus();
+}
+
+function closePinkSlipWarning() {
+  pendingPinkSlipRiskStart = null;
+  el.pinkSlipWarningModal.classList.remove("active");
+  el.pinkSlipWarningModal.setAttribute("aria-hidden", "true");
+}
+
+function confirmPinkSlipRisk() {
+  const start = pendingPinkSlipRiskStart;
+  closePinkSlipWarning();
+  start?.();
 }
 
 function startCampaignRace(index, level) {
@@ -5288,11 +5764,7 @@ function finishVerticalRace(playerWon) {
       if (raceState.bossData.id === "racer-alpha") {
         state.racerAlphaUnmasked = true;
       }
-      const bossIndex = bossChallengeBosses.findIndex((boss) => boss.id === raceState.bossData.id);
-      if (bossIndex === state.highestBossIndex && state.highestBossIndex < bossChallengeBosses.length - 1) {
-        state.highestBossIndex += 1;
-        unlockedBossName = bossChallengeBosses[state.highestBossIndex]?.name || "";
-      }
+      unlockedBossName = unlockNextTrainingBossFromBoss(raceState.bossData.id);
     }
     el.storyMessage.className = `race-message ${playerWon ? "win" : "loss"}`;
     const unlockText = unlockedBossName ? ` ${unlockedBossName} is now unlocked.` : "";
@@ -5333,6 +5805,7 @@ function finishVerticalRace(playerWon) {
   recordRaceUsage(raceState.carId);
   const partReward = isStoryRace && resultWon ? rollStoryPartReward() : null;
   if (partReward) resultLines.push(partRewardResultMarkup(partReward));
+  recordStoryRaceOutcome(resultWon, isStoryRace);
   saveState();
   render();
   showRaceResult(raceState.trackNode, {
@@ -5414,6 +5887,8 @@ function failVerticalRace(title) {
     el.timeMessage.textContent = "";
   }
   const isStoryRace = raceState.campaignLevelIndex !== null;
+  recordStoryRaceOutcome(false, isStoryRace);
+  saveState();
   showRaceResult(raceState.trackNode, {
     won: false,
     title: tutorialActive() ? "RACE LOST" : title,
@@ -5706,6 +6181,14 @@ el.profileArt.addEventListener("click", (event) => {
   renderProfiles();
 });
 
+el.achievementList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-achievement]");
+  if (!button) return;
+  state.selectedAchievement = button.dataset.achievement;
+  saveState();
+  renderAchievements();
+});
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-tuner]");
   if (!button) return;
@@ -5816,6 +6299,8 @@ el.tutorialFirstNo.addEventListener("click", () => {
   render();
 });
 el.cityUnlockClose.addEventListener("click", closeCityUnlockModal);
+el.confirmPinkSlipRisk?.addEventListener("click", confirmPinkSlipRisk);
+el.cancelPinkSlipRisk?.addEventListener("click", closePinkSlipWarning);
 el.tutorialBack.addEventListener("click", rewindTutorial);
 el.tutorialNext.addEventListener("click", advanceTutorial);
 el.tutorialSkip.addEventListener("click", skipTutorial);
@@ -5860,6 +6345,12 @@ el.tutorialFirstModal.addEventListener("click", (event) => {
 el.cityUnlockModal.addEventListener("click", (event) => {
   if (event.target === el.cityUnlockModal) {
     closeCityUnlockModal();
+  }
+});
+
+el.pinkSlipWarningModal?.addEventListener("click", (event) => {
+  if (event.target === el.pinkSlipWarningModal) {
+    closePinkSlipWarning();
   }
 });
 
@@ -5948,6 +6439,10 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Escape" && el.cityUnlockModal.classList.contains("active")) {
     closeCityUnlockModal();
+    return;
+  }
+  if (event.key === "Escape" && el.pinkSlipWarningModal?.classList.contains("active")) {
+    closePinkSlipWarning();
     return;
   }
   if (event.key === "Escape" && el.upgradeModal.classList.contains("active")) {
@@ -6040,6 +6535,8 @@ function startLoadingExperience() {
 }
 
 const loadingExperience = startLoadingExperience();
+checkAchievements(true);
+saveState();
 render();
 if (!state.tutorialComplete && !state.tutorialActive) {
   openFirstTutorialModal();

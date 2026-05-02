@@ -48,6 +48,7 @@
           <button class="nav-button" data-view="garage" type="button">Garage</button>
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
+          <button class="nav-button" data-view="achievements" type="button">Achievements</button>
           <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
       </header>
@@ -98,6 +99,10 @@
                 <button class="menu-utility" data-view="profiles" type="button">
                   <strong>Racer Profiles</strong>
                   <small>Meet the rivals.</small>
+                </button>
+                <button class="menu-utility" data-view="achievements" type="button">
+                  <strong>Achievements</strong>
+                  <small>Unlock rare rewards.</small>
                 </button>
                 <button class="menu-utility" data-view="settings" type="button">
                   <strong>Settings</strong>
@@ -394,6 +399,18 @@
           </div>
         </section>
 
+        <section class="view" id="achievements-view" aria-labelledby="achievements-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading">
+            <p>Achievements</p>
+            <h1 id="achievements-title">Track big wins and rare unlocks.</h1>
+          </div>
+          <div class="achievement-layout">
+            <div class="achievement-list" id="achievement-list"></div>
+            <div class="achievement-detail" id="achievement-detail"></div>
+          </div>
+        </section>
+
         <section class="view" id="play-view" aria-labelledby="play-title">
           <button class="back-link" data-mode-back="drag" type="button">Back</button>
           <div class="race-panel">
@@ -685,6 +702,17 @@
         <div class="city-unlock-icon city-icon" id="city-unlock-icon"></div>
         <h2 id="city-unlock-title"></h2>
         <button class="success-button" id="city-unlock-close" type="button">Continue</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="pink-slip-warning-modal" aria-hidden="true">
+      <div class="confirm-modal pink-slip-warning-modal" role="dialog" aria-modal="true" aria-labelledby="pink-slip-warning-title">
+        <p class="pink-slip-warning-title" id="pink-slip-warning-title">WARNING</p>
+        <p id="pink-slip-warning-copy"></p>
+        <div class="modal-actions">
+          <button class="danger-button" id="confirm-pink-slip-risk" type="button">Yes</button>
+          <button class="success-button" id="cancel-pink-slip-risk" type="button">No</button>
+        </div>
       </div>
     </div>
 
