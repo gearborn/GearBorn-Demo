@@ -49,6 +49,7 @@
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
           <button class="nav-button" data-view="achievements" type="button">Achievements</button>
+          <button class="nav-button beta-dev-nav" data-view="beta" type="button">Beta Mode</button>
           <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
       </header>
@@ -246,10 +247,22 @@
                 <div class="countdown" id="story-countdown"></div>
               </div>
               <div class="race-message" id="story-message">Select a boss and start the race.</div>
-              <div class="touch-controls" aria-label="Story steering controls">
-                <button class="steer-button" data-steer="left" type="button" aria-label="Steer left">←</button>
-                <button class="steer-button" data-steer="up" type="button" aria-label="Steer up">↑</button>
-                <button class="steer-button" data-steer="right" type="button" aria-label="Steer right">→</button>
+              <div class="touch-controls" aria-label="Story driving controls">
+                <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <div class="control-wheel" aria-hidden="true">
+                  <img src="assets/training/wheel-neutral.png" alt="">
+                </div>
+                <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
               </div>
             </div>
           </div>
@@ -347,10 +360,22 @@
                 <div class="countdown" id="time-countdown"></div>
               </div>
               <div class="race-message" id="time-message">Pick a track and chase your best run.</div>
-              <div class="touch-controls" aria-label="Time Trial steering controls">
-                <button class="steer-button" data-steer="left" type="button" aria-label="Steer left">←</button>
-                <button class="steer-button" data-steer="up" type="button" aria-label="Steer up">↑</button>
-                <button class="steer-button" data-steer="right" type="button" aria-label="Steer right">→</button>
+              <div class="touch-controls" aria-label="Time Trial driving controls">
+                <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <div class="control-wheel" aria-hidden="true">
+                  <img src="assets/training/wheel-neutral.png" alt="">
+                </div>
+                <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
               </div>
             </div>
           </div>
@@ -608,6 +633,152 @@
                 <button class="tutorial-replay-button" id="replay-tutorial" type="button">Replay Tutorial</button>
                 <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="beta-view" aria-labelledby="beta-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="beta-mode" id="beta-mode">
+            <div class="beta-intro" id="beta-intro">
+              <p class="modal-kicker">Experimental</p>
+              <h1 id="beta-title">Beta Mode</h1>
+              <h2>Pseudo-3D Racing Prototype</h2>
+              <p>Experimental behind-the-car racing test. Progress and rewards are disabled.</p>
+              <button class="primary beta-3d-start" id="beta-3d-start" type="button">Start Baybee Test Run</button>
+              <div class="beta-option-grid beta-legacy-options" id="beta-options">
+                <button class="beta-option-card" data-beta-mode="time" type="button">
+                  <strong>Solo Time Trial</strong>
+                  <span>Race your best time against Phantaxi.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="race4" type="button">
+                  <strong>4-Car Circuit Race</strong>
+                  <span>Place Top 2 against three GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="race6" type="button">
+                  <strong>6-Car Circuit Race</strong>
+                  <span>Place Top 3 against five GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="duel" type="button">
+                  <strong>Head-to-Head Race</strong>
+                  <span>Beat one rival GearBorn.</span>
+                </button>
+              </div>
+            </div>
+            <div class="beta-3d-race" id="beta-3d-race" hidden>
+              <div class="beta-3d-hud">
+                <div class="beta-3d-speed">
+                  <img src="assets/beta3d/ui_speedometer.png" alt="">
+                  <strong id="beta-3d-speed">0 MPH</strong>
+                </div>
+                <div>
+                  <span>Time</span>
+                  <strong id="beta-3d-time">0.00</strong>
+                </div>
+                <div class="beta-3d-progress">
+                  <span>Progress</span>
+                  <div class="beta-3d-progress-frame">
+                    <img src="assets/beta3d/ui_progress_bar.png" alt="">
+                    <div class="beta-3d-progress-fill" id="beta-3d-progress-fill"></div>
+                    <img class="beta-3d-marker" id="beta-3d-marker" src="assets/beta3d/ui_player_marker.png" alt="">
+                  </div>
+                </div>
+                <button class="danger-button" id="beta-3d-exit" type="button">Exit</button>
+              </div>
+              <div class="beta-3d-stage">
+                <canvas id="beta-3d-canvas" width="960" height="620" aria-label="Beta Mode pseudo-3D racing prototype"></canvas>
+                <div class="beta-results" id="beta-3d-results" hidden>
+                  <h2>Finished!</h2>
+                  <p id="beta-3d-final-time">Final time: 0.00 s</p>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-3d-restart" type="button">Restart</button>
+                    <button class="ghost" id="beta-3d-finish-exit" type="button">Back</button>
+                  </div>
+                </div>
+              </div>
+              <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Beta Mode pseudo-3D driving controls">
+                <button class="steer-button arrow-control left-control" data-beta3d-control="left" type="button" aria-label="Steer left">←</button>
+                <div class="control-wheel" aria-hidden="true">
+                  <img src="assets/training/wheel-neutral.png" alt="">
+                </div>
+                <button class="steer-button arrow-control right-control" data-beta3d-control="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-beta3d-control="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-beta3d-control="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+              </div>
+            </div>
+            <div class="beta-race" id="beta-race" hidden>
+              <div class="beta-hud">
+                <div>
+                  <span>Time</span>
+                  <strong id="beta-time">0.00</strong>
+                </div>
+                <div>
+                  <span>Lap</span>
+                  <strong id="beta-lap">1 / 2</strong>
+                </div>
+                <div>
+                  <span>Checkpoint</span>
+                  <strong id="beta-checkpoint">0 / 4</strong>
+                </div>
+                <div>
+                  <span>Speed</span>
+                  <strong id="beta-speed">0 MPH</strong>
+                </div>
+                <div>
+                  <span>Position</span>
+                  <strong id="beta-position">1st / 1</strong>
+                </div>
+                <div class="beta-item-slot" id="beta-item-slot">
+                  <span>Item</span>
+                  <div class="beta-item-readout">
+                    <b id="beta-item-icon">?</b>
+                    <strong id="beta-item-name">Empty</strong>
+                  </div>
+                  <em id="beta-item-prompt">Space / E</em>
+                </div>
+                <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
+                <button class="danger-button" id="beta-exit" type="button">Exit</button>
+              </div>
+              <div class="beta-stage">
+                <canvas id="beta-canvas" width="960" height="620" aria-label="Beta Mode circuit"></canvas>
+                <canvas id="beta-minimap" width="180" height="140" aria-label="Beta Mode mini-map"></canvas>
+                <div class="countdown beta-countdown" id="beta-countdown"></div>
+                <div class="beta-results" id="beta-results" hidden>
+                  <h2>Finished!</h2>
+                  <p id="beta-final-time">Final time: 0.00 s</p>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-restart" type="button">Restart</button>
+                    <button class="ghost" id="beta-finish-exit" type="button">Exit Beta Mode</button>
+                  </div>
+                </div>
+              </div>
+              <div class="touch-controls beta-touch-controls" aria-label="Beta Mode driving controls">
+                <button class="steer-button arrow-control left-control" data-beta-control="left" type="button" aria-label="Steer left">←</button>
+                <div class="control-wheel" aria-hidden="true">
+                  <img src="assets/training/wheel-neutral.png" alt="">
+                </div>
+                <button class="steer-button arrow-control right-control" data-beta-control="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-beta-control="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-beta-control="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+                <button class="steer-button beta-item-control" data-beta-item-button type="button" aria-label="Use item">Space</button>
+              </div>
+              <p class="beta-note">WASD or Arrow Keys. Press T to toggle the debug grid.</p>
             </div>
           </div>
         </section>
