@@ -288,11 +288,12 @@ body.mode-active .main-menu-button {
 }
 
 .nav {
-  display: flex;
+  display: grid;
   flex: 1 1 560px;
-  gap: 5px;
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  gap: 6px;
   max-width: 100%;
-  overflow-x: auto;
+  overflow: visible;
   padding: 4px;
   border: 1px solid var(--line);
   background: rgba(26, 31, 39, 0.72);
@@ -319,13 +320,20 @@ body:not(.mode-active) .nav {
 }
 
 .nav-button {
-  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 34px;
   padding: 0 10px;
   font-size: 0.82rem;
   font-weight: 1000;
   line-height: 1.05;
   text-transform: uppercase;
+  text-align: center;
+}
+
+.nav-button.beta-nav {
+  grid-column: 2;
 }
 
 .nav-button.active,
@@ -359,14 +367,6 @@ body:not(.mode-active) .nav {
   border-color: var(--gold);
   color: var(--gold);
   transform: translateY(-1px);
-}
-
-.beta-dev-nav {
-  display: none;
-}
-
-body.beta-dev-enabled .beta-dev-nav {
-  display: inline-flex;
 }
 
 .view {
@@ -582,12 +582,18 @@ body.beta-dev-enabled .beta-dev-nav {
 }
 
 .hero-menu-card {
-  min-height: 162px;
-  padding: 24px;
+  --card-bg: url("assets/menu/story-mode-card.png");
+  --card-text-scrim: radial-gradient(ellipse at center, rgba(8, 12, 18, 0.72), rgba(8, 12, 18, 0.24) 34%, transparent 58%);
+  min-height: 190px;
+  aspect-ratio: 2 / 1;
+  padding: 22px 24px;
   border-color: rgba(110, 231, 168, 0.42);
   background:
     linear-gradient(135deg, rgba(110, 231, 168, 0.28), transparent 45%),
     linear-gradient(160deg, rgba(31, 47, 45, 0.96), rgba(10, 14, 20, 0.92));
+  align-content: center;
+  justify-items: center;
+  text-align: center;
 }
 
 .menu-card > *,
@@ -618,8 +624,9 @@ body.beta-dev-enabled .beta-dev-nav {
 
 .menu-card.hero-menu-card > strong {
   color: #ffffff;
-  font-size: clamp(2.15rem, 5.8vw, 3.55rem);
-  line-height: 0.92;
+  font-size: clamp(3rem, 8vw, 5.6rem);
+  line-height: 0.82;
+  text-shadow: 0 5px 18px rgba(0, 0, 0, 0.68), 0 0 20px rgba(255, 200, 87, 0.24);
 }
 
 .menu-utility[data-view="achievements"] {
@@ -879,11 +886,11 @@ body.beta-dev-enabled .beta-dev-nav {
 .menu-card.garage-card .menu-card-icon,
 .menu-card.training-card .menu-card-icon {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 10px;
+  left: 10px;
   z-index: 2;
-  width: 94px;
-  height: 94px;
+  width: 86px;
+  height: 86px;
   border: 0;
   background-color: transparent;
   background-repeat: no-repeat;
@@ -893,14 +900,14 @@ body.beta-dev-enabled .beta-dev-nav {
 
 .menu-card.garage-card .menu-card-icon {
   background-image: url("assets/menu/icon_garage.png");
-  background-position: -82px -26px;
-  background-size: 228px auto;
+  background-position: center;
+  background-size: contain;
 }
 
 .menu-card.training-card .menu-card-icon {
   background-image: url("assets/menu/icon_training.png");
-  background-position: -26px -42px;
-  background-size: 132px auto;
+  background-position: center;
+  background-size: contain;
 }
 
 .menu-card.training-card {
@@ -1304,7 +1311,7 @@ body.beta-dev-enabled .beta-dev-nav {
   position: relative;
   min-height: 190px;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .car-select-preview-art .car {
@@ -1315,13 +1322,14 @@ body.beta-dev-enabled .beta-dev-nav {
   top: 50%;
   width: min(290px, 100%);
   height: 210px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -46%);
 }
 
 .car-select-preview-art .car-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center center;
 }
 
 .car-select-preview-copy {
@@ -1363,6 +1371,23 @@ body.beta-dev-enabled .beta-dev-nav {
 
 .car-select-preview .garage-stat-grid {
   margin: 8px 0 0;
+}
+
+.car-select-form-switcher {
+  width: min(100%, 340px);
+  margin: -4px auto 2px;
+  justify-self: center;
+  text-align: center;
+}
+
+.beta-car-select-toggle {
+  justify-self: center;
+  min-width: 156px;
+}
+
+.beta-car-select-panel {
+  width: min(900px, 100%);
+  margin: 4px auto 16px;
 }
 
 .mini-stat-grid {
@@ -1914,6 +1939,8 @@ body.beta-dev-enabled .beta-dev-nav {
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .story-node-icon.layered .node-subject {
@@ -1924,11 +1951,12 @@ body.beta-dev-enabled .beta-dev-nav {
   align-self: center;
   justify-self: center;
   object-fit: contain;
-  transform: translateY(8%);
+  object-position: center center;
+  transform: none;
 }
 
 .story-preview-icon .story-node-icon.layered .node-subject {
-  transform: translateY(14%);
+  transform: none;
 }
 
 .story-preview-icon {
@@ -4851,13 +4879,11 @@ small {
   margin-top: 8px;
 }
 
-.beta-legacy-options {
-  display: none;
-}
-
 .beta-3d-start {
-  justify-self: center;
-  min-width: min(320px, 100%);
+  margin-top: 10px;
+  width: 100%;
+  border-color: rgba(82, 199, 255, 0.36);
+  background: linear-gradient(145deg, rgba(82, 199, 255, 0.16), rgba(17, 24, 32, 0.88));
 }
 
 .beta-option-card {
@@ -6096,7 +6122,7 @@ small {
   .nav {
     display: grid;
     flex: 0 0 auto;
-    grid-template-columns: repeat(4, clamp(74px, 22vw, 102px));
+    grid-template-columns: repeat(3, clamp(82px, 28vw, 116px));
     justify-content: center;
     align-self: center;
     gap: 5px;

@@ -1252,11 +1252,15 @@ const el = {
   bossCarGrid: document.querySelector("#boss-car-grid"),
   battleCarGrid: document.querySelector("#battle-car-grid"),
   storyCarGrid: document.querySelector("#story-car-grid"),
+  betaCarGrid: document.querySelector("#beta-car-grid"),
   dragCarSelectPreview: document.querySelector("#drag-car-select-preview"),
   timeCarSelectPreview: document.querySelector("#time-car-select-preview"),
   bossCarSelectPreview: document.querySelector("#boss-car-select-preview"),
   battleCarSelectPreview: document.querySelector("#battle-car-select-preview"),
   storyCarSelectPreview: document.querySelector("#story-car-select-preview"),
+  betaCarSelectPreview: document.querySelector("#beta-car-select-preview"),
+  betaCarSelectPanel: document.querySelector("#beta-car-select-panel"),
+  betaCarSelectToggle: document.querySelector("#beta-car-select-toggle"),
   playerCar: document.querySelector("#player-car"),
   storyCar: document.querySelector("#story-car"),
   campaignCar: document.querySelector("#campaign-car"),
@@ -2202,6 +2206,7 @@ function difficultyMultiplier() {
 function selectedCarIdForMode(mode) {
   if (mode === "drag") return state.selectedCar;
   if (mode === "time") return state.selectedTimeCar;
+  if (mode === "beta") return state.selectedCar;
   if (mode === "battle") return state.selectedStoryCar;
   return state.selectedStoryCar;
 }
@@ -2301,12 +2306,39 @@ function carSelectPreviewMarkup(carId) {
     <div class="car-select-preview-art">
       ${carMarkupForEvolution(car.id, progress.evolution, "display")}
     </div>
+    ${carSelectEvolutionControls(car)}
     <div class="car-select-preview-copy">
       <span>${car.family}</span>
       <h3>${form.name}</h3>
       <p>${playstyle}</p>
       <small>Level ${progress.level} · Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</small>
       ${garageStatsMarkup(stats, car.id)}
+    </div>
+  `;
+}
+
+function carSelectEvolutionControls(car) {
+  if (!car || !state.garage[car.id]) return "";
+  const progress = state.garage[car.id];
+  if (car.id === "art-van") {
+    const unlockedForms = (state.unlockedArtVanForms || [0]).filter((index) => car.evolutions[index]);
+    const currentPosition = Math.max(0, unlockedForms.indexOf(progress.evolution));
+    if (unlockedForms.length < 2) return "";
+    return `
+      <div class="evolution-switcher car-select-form-switcher" aria-label="${car.family} form selector">
+        <button type="button" data-car-select-evolution-step="${car.id}:previous" ${currentPosition <= 0 ? "disabled" : ""}>←</button>
+        <strong>${currentEvolution(car.id).name}</strong>
+        <button type="button" data-car-select-evolution-step="${car.id}:next" ${currentPosition >= unlockedForms.length - 1 ? "disabled" : ""}>→</button>
+      </div>
+    `;
+  }
+  const unlocked = unlockedEvolutionIndex(car.id);
+  if (unlocked < 1) return "";
+  return `
+    <div class="evolution-switcher car-select-form-switcher" aria-label="${car.family} form selector">
+      <button type="button" data-car-select-evolution-step="${car.id}:previous" ${progress.evolution <= 0 ? "disabled" : ""}>←</button>
+      <strong>${currentEvolution(car.id).name}</strong>
+      <button type="button" data-car-select-evolution-step="${car.id}:next" ${progress.evolution >= unlocked ? "disabled" : ""}>→</button>
     </div>
   `;
 }
@@ -2325,11 +2357,13 @@ function renderCarTiles() {
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
   if (el.battleCarGrid) el.battleCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "battle")).join("");
   if (el.storyCarGrid) el.storyCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "story")).join("");
+  if (el.betaCarGrid) el.betaCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "beta")).join("");
   renderCarSelectPreview("drag", el.dragCarSelectPreview);
   renderCarSelectPreview("time", el.timeCarSelectPreview);
   renderCarSelectPreview("boss", el.bossCarSelectPreview);
   renderCarSelectPreview("battle", el.battleCarSelectPreview);
   renderCarSelectPreview("story", el.storyCarSelectPreview);
+  renderCarSelectPreview("beta", el.betaCarSelectPreview);
 }
 
 function activeViewId() {
@@ -6512,6 +6546,20 @@ document.addEventListener("click", (event) => {
   setSelectedCarForMode(carButton.dataset.carTarget, carButton.dataset.carId);
 });
 
+document.addEventListener("click", (event) => {
+  const stepButton = event.target.closest("[data-car-select-evolution-step]");
+  if (!stepButton) return;
+  const [carId, direction] = stepButton.dataset.carSelectEvolutionStep.split(":");
+  changeGarageEvolution(carId, direction);
+});
+
+el.betaCarSelectToggle?.addEventListener("click", () => {
+  if (!el.betaCarSelectPanel) return;
+  el.betaCarSelectPanel.hidden = !el.betaCarSelectPanel.hidden;
+  el.betaCarSelectToggle.textContent = el.betaCarSelectPanel.hidden ? "Car Select" : "Hide Car Select";
+  renderCarTiles();
+});
+
 el.playerCar.addEventListener("change", (event) => {
   setSelectedCarForMode("drag", event.target.value);
 });
@@ -8737,7 +8785,7 @@ const beta3dAssets = Object.fromEntries(Object.entries(beta3dAssetList).map(([ke
 }));
 
 const beta3dKeys = {};
-const beta3dTrackLength = 6800;
+const beta3dTrackLength = 14000;
 const beta3dDrawDistance = 2300;
 const beta3dSegmentLength = 70;
 let beta3dState = null;
@@ -8756,7 +8804,19 @@ const beta3dObjects = [
   { type: "tree", z: 4380, side: -1.55 },
   { type: "oil", z: 4820, lane: -0.26 },
   { type: "barrel", z: 5520, lane: -0.44 },
-  { type: "boost", z: 6100, lane: 0.1 }
+  { type: "boost", z: 6100, lane: 0.1 },
+  { type: "tree", z: 6820, side: 1.52 },
+  { type: "wall", z: 7340, side: -1.16 },
+  { type: "cone", z: 7780, lane: 0.36 },
+  { type: "boost", z: 8420, lane: -0.12 },
+  { type: "oil", z: 9020, lane: 0.2 },
+  { type: "tree", z: 9540, side: -1.56 },
+  { type: "barrel", z: 10160, lane: -0.38 },
+  { type: "wall", z: 10830, side: 1.16 },
+  { type: "boost", z: 11580, lane: 0.18 },
+  { type: "cone", z: 12280, lane: -0.3 },
+  { type: "tree", z: 13000, side: 1.56 },
+  { type: "oil", z: 13540, lane: 0.24 }
 ];
 
 function beta3dDevEnabled() {
@@ -8773,7 +8833,12 @@ function beta3dCurveAt(z) {
   if (d < 4100) return 0.5;
   if (d < 5000) return Math.sin((d - 4100) / 900 * Math.PI * 2) * 0.52;
   if (d < 5900) return -0.22;
-  return 0.12;
+  if (d < 7200) return 0.28;
+  if (d < 8500) return -0.5;
+  if (d < 9800) return Math.sin((d - 8500) / 1300 * Math.PI * 2) * 0.46;
+  if (d < 11400) return 0.58;
+  if (d < 12800) return -0.34;
+  return 0.1;
 }
 
 function beta3dStats() {

@@ -41,6 +41,7 @@
             <strong id="sprox-total">0 Sprox</strong>
             <span class="sprox-coin" aria-hidden="true">●</span>
           </div>
+          <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">⚙</button>
         </div>
         <nav class="nav" aria-label="Main navigation">
           <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
@@ -49,9 +50,8 @@
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
           <button class="nav-button" data-view="achievements" type="button">Achievements</button>
-          <button class="nav-button beta-dev-nav" data-view="beta" type="button">Beta Mode</button>
+          <button class="nav-button beta-nav" data-view="beta" type="button">Beta Mode</button>
         </nav>
-        <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">⚙</button>
       </header>
 
       <main>
@@ -69,7 +69,6 @@
             </div>
             <div class="menu-dashboard" aria-label="Menu choices">
               <button class="menu-card hero-menu-card" data-view="story" type="button">
-                <span class="menu-card-kicker">Play</span>
                 <strong>Story Mode</strong>
                 <small>Race. Evolve. Prove yourself.</small>
                 <span class="menu-card-cta">Start Story</span>
@@ -687,10 +686,18 @@
             <div class="beta-intro" id="beta-intro">
               <p class="modal-kicker">Experimental</p>
               <h1 id="beta-title">Beta Mode</h1>
-              <h2>Pseudo-3D Racing Prototype</h2>
-              <p>Experimental behind-the-car racing test. Progress and rewards are disabled.</p>
-              <button class="primary beta-3d-start" id="beta-3d-start" type="button">Start Baybee Test Run</button>
-              <div class="beta-option-grid beta-legacy-options" id="beta-options">
+              <h2>Choose a racing prototype.</h2>
+              <p>Experimental test modes. Progress and rewards are disabled.</p>
+              <button class="ghost beta-car-select-toggle" id="beta-car-select-toggle" type="button">Car Select</button>
+              <div class="car-select-layout beta-car-select-panel" id="beta-car-select-panel" hidden>
+                <div class="icon-grid compact-car-grid" id="beta-car-grid"></div>
+                <div class="car-select-preview" id="beta-car-select-preview"></div>
+              </div>
+              <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
+                <strong>Pseudo-3D Baybee Run</strong>
+                <span>Behind-the-car test on a longer prototype track.</span>
+              </button>
+              <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
                   <strong>Solo Time Trial</strong>
                   <span>Race your best time against Phantaxi.</span>
