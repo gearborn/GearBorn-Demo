@@ -1214,6 +1214,34 @@ const modeFlow = {
 };
 let battleState = null;
 let storyReplayOpen = false;
+const customTracksKey = "gearborn_custom_tracks";
+const builderGridSize = 12;
+let builderAllowLeave = false;
+let pendingBuilderLeaveView = null;
+const builderState = {
+  mode: "menu",
+  id: null,
+  name: "Untitled Track",
+  grid: [],
+  selectedTile: "grass",
+  rotation: 0,
+  dirty: false,
+  modalMode: null,
+  pendingName: ""
+};
+
+const builderTileDefs = [
+  { id: "grass", label: "Grass", asset: "assets/tracks/grass.png", accent: "transparent" },
+  { id: "road_straight", label: "Road Straight", asset: "assets/tracks/road_straight_horizontal.png", accent: "transparent" },
+  { id: "road_turn", label: "Road Turn", asset: "assets/tracks/road_turn.png", accent: "transparent" },
+  { id: "road_t_intersection", label: "T Intersection", asset: "assets/tracks/road_t_intersection.png", accent: "transparent" },
+  { id: "road_cross", label: "Road Cross", asset: "assets/tracks/road_cross.png", accent: "transparent" },
+  { id: "road_curve_wide", label: "Wide Curve", asset: "assets/tracks/road_curve_wide.png", accent: "transparent" },
+  { id: "wall_straight", label: "Wall Straight", asset: "assets/tracks/wall_straight.png", accent: "transparent" },
+  { id: "wall_corner", label: "Wall Corner", asset: "assets/tracks/wall_corner.png", accent: "transparent" },
+  { id: "start_finish", label: "Start / Finish", asset: "assets/tracks/road_straight_horizontal.png", accent: "repeating-linear-gradient(90deg,#fff 0 7px,#111 7px 14px)" },
+  { id: "checkpoint", label: "Checkpoint", asset: "assets/tracks/road_straight_horizontal.png", accent: "rgba(82,199,255,.42)" }
+];
 
 const el = {
   views: document.querySelectorAll(".view"),
@@ -1313,6 +1341,29 @@ const el = {
   betaCountdown: document.querySelector("#beta-countdown"),
   betaResults: document.querySelector("#beta-results"),
   betaFinalTime: document.querySelector("#beta-final-time"),
+  builderMenu: document.querySelector("#builder-menu"),
+  builderEditor: document.querySelector("#builder-editor"),
+  builderLoadPanel: document.querySelector("#builder-load-panel"),
+  builderNew: document.querySelector("#builder-new"),
+  builderLoad: document.querySelector("#builder-load"),
+  builderMenuNote: document.querySelector("#builder-menu-note"),
+  builderPalette: document.querySelector("#builder-palette"),
+  builderGrid: document.querySelector("#builder-grid"),
+  builderCurrentName: document.querySelector("#builder-current-name"),
+  builderDirtyState: document.querySelector("#builder-dirty-state"),
+  builderRotate: document.querySelector("#builder-rotate"),
+  builderClear: document.querySelector("#builder-clear"),
+  builderSave: document.querySelector("#builder-save"),
+  builderExit: document.querySelector("#builder-exit"),
+  builderLoadBack: document.querySelector("#builder-load-back"),
+  builderTrackList: document.querySelector("#builder-track-list"),
+  deleteTracks: document.querySelector("#delete-tracks"),
+  builderModal: document.querySelector("#builder-modal"),
+  builderModalTitle: document.querySelector("#builder-modal-title"),
+  builderModalCopy: document.querySelector("#builder-modal-copy"),
+  builderModalSubcopy: document.querySelector("#builder-modal-subcopy"),
+  builderModalInput: document.querySelector("#builder-modal-input"),
+  builderModalActions: document.querySelector("#builder-modal-actions"),
   campaignList: document.querySelector("#campaign-list"),
   storyCityMap: document.querySelector("#story-city-map"),
   storyCityIcon: document.querySelector("#story-city-icon"),
@@ -2345,6 +2396,7 @@ function render() {
   }
   if (viewIsActive("garage")) renderGarage();
   if (viewIsActive("settings")) renderSettings();
+  if (viewIsActive("builder")) renderBuilder();
   paintCars();
 }
 
@@ -4758,7 +4810,337 @@ function selectedBoss() {
   return bossChallengeBosses.find((boss) => boss.id === state.selectedBoss);
 }
 
+function loadCustomTracks() {
+  try {
+    const tracks = JSON.parse(localStorage.getItem(customTracksKey) || "[]");
+    return Array.isArray(tracks) ? tracks : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomTracks(tracks) {
+  localStorage.setItem(customTracksKey, JSON.stringify(tracks));
+}
+
+function createBlankBuilderGrid() {
+  return Array.from({ length: builderGridSize }, () => Array.from({ length: builderGridSize }, () => ({ type: "grass", rotation: 0 })));
+}
+
+function cloneBuilderGrid(grid) {
+  return Array.from({ length: builderGridSize }, (_, y) => Array.from({ length: builderGridSize }, (_, x) => {
+    const tile = grid?.[y]?.[x] || { type: "grass", rotation: 0 };
+    return { type: tile.type || "grass", rotation: Number(tile.rotation) || 0 };
+  }));
+}
+
+function builderTileDef(type) {
+  return builderTileDefs.find((tile) => tile.id === type) || builderTileDefs[0];
+}
+
+function builderEscape(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+}
+
+function tileIsRoadLike(type) {
+  return type?.startsWith("road_") || type === "start_finish" || type === "checkpoint";
+}
+
+function builderTrackValid() {
+  let hasStart = false;
+  let roadTiles = 0;
+  builderState.grid.forEach((row) => row.forEach((tile) => {
+    if (tile.type === "start_finish") hasStart = true;
+    if (tileIsRoadLike(tile.type)) roadTiles += 1;
+  }));
+  return hasStart && roadTiles >= 8;
+}
+
+function renderBuilderMenu() {
+  if (!el.builderMenu) return;
+  const tracks = loadCustomTracks();
+  el.builderLoad.hidden = tracks.length === 0;
+  el.builderMenuNote.textContent = tracks.length ? `${tracks.length} custom track${tracks.length === 1 ? "" : "s"} saved locally.` : "No custom tracks saved yet.";
+}
+
+function renderBuilderPalette() {
+  if (!el.builderPalette) return;
+  el.builderPalette.innerHTML = builderTileDefs.map((tile) => `
+    <button class="tile-palette-button ${tile.id === builderState.selectedTile ? "active" : ""}" data-builder-tile="${tile.id}" type="button">
+      <span class="tile-preview" style="background-image:url('${tile.asset}');--tile-accent:${tile.accent};"></span>
+      <span>${tile.label}</span>
+    </button>
+  `).join("");
+}
+
+function renderBuilderGrid() {
+  if (!el.builderGrid) return;
+  el.builderGrid.innerHTML = builderState.grid.map((row, y) => row.map((tile, x) => {
+    const def = builderTileDef(tile.type);
+    const rotation = Number(tile.rotation) || 0;
+    return `
+      <button class="builder-cell" data-builder-x="${x}" data-builder-y="${y}" type="button"
+        style="--tile-accent:${def.accent};"
+        aria-label="${def.label} at ${x + 1}, ${y + 1}">
+        <span class="builder-cell-tile" style="background-image:url('${def.asset}');transform:rotate(${rotation}deg);"></span>
+      </button>
+    `;
+  }).join("")).join("");
+}
+
+function renderBuilder() {
+  if (!el.builderMenu) return;
+  const editorOpen = builderState.mode === "editor";
+  const loadOpen = builderState.mode === "load";
+  el.builderMenu.hidden = editorOpen || loadOpen;
+  el.builderEditor.hidden = !editorOpen;
+  el.builderLoadPanel.hidden = !loadOpen;
+  renderBuilderMenu();
+  if (editorOpen) {
+    el.builderCurrentName.textContent = builderState.name || "Untitled Track";
+    el.builderDirtyState.textContent = builderState.dirty ? "Unsaved changes" : "Saved";
+    el.builderRotate.textContent = `Rotate ${builderState.rotation}°`;
+    renderBuilderPalette();
+    renderBuilderGrid();
+  }
+  if (loadOpen) renderBuilderTrackList();
+}
+
+function openBuilderMenu() {
+  builderState.mode = "menu";
+  renderBuilder();
+}
+
+function startNewBuilderTrack() {
+  builderState.mode = "editor";
+  builderState.id = null;
+  builderState.name = "Untitled Track";
+  builderState.grid = createBlankBuilderGrid();
+  builderState.selectedTile = "grass";
+  builderState.rotation = 0;
+  builderState.dirty = false;
+  renderBuilder();
+}
+
+function openBuilderLoadPanel() {
+  builderState.mode = "load";
+  renderBuilder();
+}
+
+function loadBuilderTrack(id) {
+  const track = loadCustomTracks().find((item) => item.id === id);
+  if (!track) return;
+  builderState.mode = "editor";
+  builderState.id = track.id;
+  builderState.name = track.name || "Untitled Track";
+  builderState.grid = cloneBuilderGrid(track.grid);
+  builderState.selectedTile = "grass";
+  builderState.rotation = 0;
+  builderState.dirty = false;
+  renderBuilder();
+}
+
+function markBuilderDirty() {
+  builderState.dirty = true;
+  if (el.builderDirtyState) el.builderDirtyState.textContent = "Unsaved changes";
+}
+
+function placeBuilderTile(x, y) {
+  if (!builderState.grid[y]?.[x]) return;
+  builderState.grid[y][x] = { type: builderState.selectedTile, rotation: builderState.rotation };
+  markBuilderDirty();
+  renderBuilderGrid();
+}
+
+function rotateBuilderTile() {
+  builderState.rotation = (builderState.rotation + 90) % 360;
+  renderBuilderPalette();
+  renderBuilder();
+}
+
+function clearBuilderGrid() {
+  builderState.grid = createBlankBuilderGrid();
+  markBuilderDirty();
+  renderBuilder();
+}
+
+function openBuilderModal({ title, copy, subcopy = "", input = false, inputValue = "", actions = [] }) {
+  if (!el.builderModal) return;
+  el.builderModalTitle.textContent = title;
+  el.builderModalCopy.textContent = copy;
+  el.builderModalSubcopy.textContent = subcopy;
+  el.builderModalSubcopy.hidden = !subcopy;
+  el.builderModalInput.hidden = !input;
+  el.builderModalInput.value = inputValue;
+  el.builderModalActions.innerHTML = actions.map((action) => `<button class="${action.className || "ghost"}" data-builder-modal-action="${action.action}" type="button">${action.label}</button>`).join("");
+  el.builderModal.classList.add("active");
+  el.builderModal.setAttribute("aria-hidden", "false");
+  if (input) el.builderModalInput.focus();
+}
+
+function closeBuilderModal() {
+  if (!el.builderModal) return;
+  el.builderModal.classList.remove("active");
+  el.builderModal.setAttribute("aria-hidden", "true");
+  builderState.modalMode = null;
+  builderState.pendingName = "";
+}
+
+function beginBuilderSave() {
+  if (!builderTrackValid()) {
+    openBuilderModal({
+      title: "Track Not Ready",
+      copy: "Track needs a start/finish line and enough road tiles before saving.",
+      actions: [{ action: "close", label: "OK", className: "primary" }]
+    });
+    builderState.modalMode = "info";
+    return;
+  }
+  builderState.modalMode = "name";
+  openBuilderModal({
+    title: "Save Track",
+    copy: "Name your custom track.",
+    input: true,
+    inputValue: builderState.name === "Untitled Track" ? "" : builderState.name,
+    actions: [
+      { action: "save-name-next", label: "Next", className: "primary" },
+      { action: "close", label: "Cancel", className: "ghost" }
+    ]
+  });
+}
+
+function confirmBuilderSaveName() {
+  const name = el.builderModalInput.value.trim();
+  if (!name) {
+    el.builderModalCopy.textContent = "Please enter a track name.";
+    return;
+  }
+  builderState.pendingName = name;
+  builderState.modalMode = "save-confirm";
+  openBuilderModal({
+    title: "Confirm Save",
+    copy: `Save this track as '${name}'?`,
+    actions: [
+      { action: "save-confirm", label: "Yes", className: "success-button" },
+      { action: "close", label: "No", className: "ghost" }
+    ]
+  });
+}
+
+function saveBuilderTrack() {
+  const now = new Date().toISOString();
+  const tracks = loadCustomTracks();
+  const id = builderState.id || `track-${Date.now()}`;
+  const record = {
+    id,
+    name: builderState.pendingName || builderState.name,
+    grid: cloneBuilderGrid(builderState.grid),
+    createdAt: tracks.find((track) => track.id === id)?.createdAt || now,
+    updatedAt: now
+  };
+  const nextTracks = tracks.filter((track) => track.id !== id).concat(record);
+  saveCustomTracks(nextTracks);
+  builderState.id = id;
+  builderState.name = record.name;
+  builderState.dirty = false;
+  closeBuilderModal();
+  renderBuilder();
+}
+
+function renderBuilderTrackList() {
+  if (!el.builderTrackList) return;
+  const tracks = loadCustomTracks();
+  if (!tracks.length) {
+    el.builderTrackList.innerHTML = `<p class="empty-note">No custom tracks saved.</p>`;
+    return;
+  }
+  el.builderTrackList.innerHTML = tracks
+    .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
+    .map((track) => `
+      <button class="builder-track-item" data-builder-load-track="${track.id}" type="button">
+        <span>
+          <strong>${builderEscape(track.name)}</strong>
+          <small>Updated ${new Date(track.updatedAt || track.createdAt || Date.now()).toLocaleDateString()}</small>
+        </span>
+        <span>Load</span>
+      </button>
+    `).join("");
+}
+
+function requestBuilderExit(targetView = "menu") {
+  if (builderState.mode === "editor" && builderState.dirty) {
+    pendingBuilderLeaveView = targetView;
+    builderState.modalMode = "leave";
+    openBuilderModal({
+      title: "Leave Track Builder?",
+      copy: "Are you sure you want to leave Track Builder?",
+      subcopy: "Your creation will be deleted unless you saved it.",
+      actions: [
+        { action: "leave", label: "Leave", className: "danger-button" },
+        { action: "close", label: "Stay", className: "success-button" }
+      ]
+    });
+    return false;
+  }
+  return true;
+}
+
+function leaveBuilderConfirmed() {
+  const target = pendingBuilderLeaveView || "menu";
+  pendingBuilderLeaveView = null;
+  builderState.dirty = false;
+  closeBuilderModal();
+  if (target === "builder-menu") {
+    openBuilderMenu();
+    return;
+  }
+  builderAllowLeave = true;
+  showView(target);
+  builderAllowLeave = false;
+}
+
+function openDeleteTracksPanel() {
+  const tracks = loadCustomTracks();
+  builderState.modalMode = "delete-list";
+  openBuilderModal({
+    title: "Delete Tracks",
+    copy: tracks.length ? "Choose a custom track to delete." : "No custom tracks saved.",
+    actions: tracks.length
+      ? tracks.map((track) => ({ action: `delete-pick:${track.id}`, label: builderEscape(track.name), className: "ghost" })).concat([{ action: "close", label: "Cancel", className: "danger-button" }])
+      : [{ action: "close", label: "OK", className: "primary" }]
+  });
+}
+
+function askDeleteTrack(id) {
+  const track = loadCustomTracks().find((item) => item.id === id);
+  if (!track) return;
+  builderState.modalMode = "delete-confirm";
+  builderState.deleteTrackId = id;
+  openBuilderModal({
+    title: "Delete Track?",
+    copy: `Are you sure you want to delete '${track.name}'?`,
+    subcopy: "This cannot be undone.",
+    actions: [
+      { action: "delete-confirm", label: "Delete", className: "danger-button" },
+      { action: "close", label: "Cancel", className: "ghost" }
+    ]
+  });
+}
+
+function deleteSelectedTrack() {
+  const id = builderState.deleteTrackId;
+  saveCustomTracks(loadCustomTracks().filter((track) => track.id !== id));
+  if (builderState.id === id) {
+    builderState.id = null;
+    builderState.name = "Untitled Track";
+    builderState.dirty = true;
+  }
+  closeBuilderModal();
+  if (viewIsActive("builder")) renderBuilder();
+}
+
 function showView(view) {
+  if (view !== "builder" && !builderAllowLeave && viewIsActive("builder") && !requestBuilderExit(view)) return;
   if (view !== "beta") stopBetaDemo(false);
   if (view !== "beta") stopBeta3d(false);
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
@@ -4783,6 +5165,7 @@ function showView(view) {
   if (view === "boss") setFlowStep("boss", "car");
   if (view === "battle") setFlowStep("battle", "car");
   if (view === "beta") openBetaIntro();
+  if (view === "builder" && builderState.mode === "menu") renderBuilder();
   if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
 }
 
@@ -6380,6 +6763,50 @@ el.godMode.addEventListener("click", openGodModal);
 el.confirmGod.addEventListener("click", activateGodMode);
 el.cancelGod.addEventListener("click", closeGodModal);
 el.replayTutorial.addEventListener("click", openTutorialReplayModal);
+el.deleteTracks?.addEventListener("click", openDeleteTracksPanel);
+el.builderNew?.addEventListener("click", startNewBuilderTrack);
+el.builderLoad?.addEventListener("click", openBuilderLoadPanel);
+el.builderLoadBack?.addEventListener("click", openBuilderMenu);
+el.builderExit?.addEventListener("click", () => {
+  if (requestBuilderExit("builder-menu")) openBuilderMenu();
+});
+el.builderRotate?.addEventListener("click", rotateBuilderTile);
+el.builderClear?.addEventListener("click", clearBuilderGrid);
+el.builderSave?.addEventListener("click", beginBuilderSave);
+el.builderPalette?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-builder-tile]");
+  if (!button) return;
+  builderState.selectedTile = button.dataset.builderTile;
+  renderBuilderPalette();
+});
+el.builderGrid?.addEventListener("click", (event) => {
+  const cell = event.target.closest("[data-builder-x][data-builder-y]");
+  if (!cell) return;
+  placeBuilderTile(Number(cell.dataset.builderX), Number(cell.dataset.builderY));
+});
+el.builderTrackList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-builder-load-track]");
+  if (!button) return;
+  loadBuilderTrack(button.dataset.builderLoadTrack);
+});
+el.builderModal?.addEventListener("click", (event) => {
+  if (event.target === el.builderModal) {
+    closeBuilderModal();
+    return;
+  }
+  const button = event.target.closest("[data-builder-modal-action]");
+  if (!button) return;
+  const action = button.dataset.builderModalAction;
+  if (action === "close") closeBuilderModal();
+  else if (action === "save-name-next") confirmBuilderSaveName();
+  else if (action === "save-confirm") saveBuilderTrack();
+  else if (action === "leave") leaveBuilderConfirmed();
+  else if (action.startsWith("delete-pick:")) askDeleteTrack(action.split(":")[1]);
+  else if (action === "delete-confirm") deleteSelectedTrack();
+});
+el.builderModalInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && builderState.modalMode === "name") confirmBuilderSaveName();
+});
 el.tutorialReplayYes.addEventListener("click", () => {
   closeTutorialReplayModal();
   startTutorial("intro");

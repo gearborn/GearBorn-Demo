@@ -50,8 +50,8 @@
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
           <button class="nav-button" data-view="achievements" type="button">Achievements</button>
           <button class="nav-button beta-dev-nav" data-view="beta" type="button">Beta Mode</button>
-          <button class="nav-button" data-view="settings" type="button">Settings</button>
         </nav>
+        <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">⚙</button>
       </header>
 
       <main>
@@ -105,9 +105,9 @@
                   <strong>Achievements</strong>
                   <small>Unlock rare rewards.</small>
                 </button>
-                <button class="menu-utility" data-view="settings" type="button">
-                  <strong>Settings</strong>
-                  <small>Tune your experience.</small>
+                <button class="menu-utility" data-view="builder" type="button">
+                  <strong>Builder</strong>
+                  <small>Create your own tracks.</small>
                 </button>
               </div>
               <p class="creator-credit">Created by Corey Hanley</p>
@@ -631,8 +631,52 @@
               <div class="danger-zone">
                 <button class="god-button" id="god-mode" type="button">God Mode</button>
                 <button class="tutorial-replay-button" id="replay-tutorial" type="button">Replay Tutorial</button>
+                <button class="builder-delete-button" id="delete-tracks" type="button">Delete Tracks</button>
                 <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="builder-view" aria-labelledby="builder-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="builder-shell">
+            <div class="section-heading">
+              <p>Track Builder</p>
+              <h1 id="builder-title">Create your own tracks.</h1>
+            </div>
+            <div class="builder-menu" id="builder-menu">
+              <button class="primary" id="builder-new" type="button">New Track</button>
+              <button class="ghost" id="builder-load" type="button">Load Saved Track</button>
+              <button class="ghost" data-view="menu" type="button">Back</button>
+              <p id="builder-menu-note"></p>
+            </div>
+            <div class="builder-editor" id="builder-editor" hidden>
+              <div class="builder-toolbar">
+                <div>
+                  <strong id="builder-current-name">Untitled Track</strong>
+                  <span id="builder-dirty-state">Unsaved</span>
+                </div>
+                <div class="builder-actions">
+                  <button class="ghost" id="builder-rotate" type="button">Rotate 0°</button>
+                  <button class="ghost" id="builder-clear" type="button">Clear Grid</button>
+                  <button class="primary" id="builder-save" type="button">Save</button>
+                  <button class="danger-button" id="builder-exit" type="button">Back</button>
+                </div>
+              </div>
+              <div class="builder-workbench">
+                <aside class="tile-palette" id="builder-palette" aria-label="Tile palette"></aside>
+                <div class="builder-grid-wrap">
+                  <div class="builder-grid" id="builder-grid" aria-label="Track editor grid"></div>
+                </div>
+              </div>
+            </div>
+            <div class="builder-load-panel" id="builder-load-panel" hidden>
+              <div class="builder-toolbar">
+                <strong>Saved Tracks</strong>
+                <button class="ghost" id="builder-load-back" type="button">Back</button>
+              </div>
+              <div class="builder-track-list" id="builder-track-list"></div>
             </div>
           </div>
         </section>
@@ -928,6 +972,16 @@
           <button class="god-button" id="confirm-god" type="button">Activate God Mode</button>
           <button class="ghost" id="cancel-god" type="button">Cancel</button>
         </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="builder-modal" aria-hidden="true">
+      <div class="confirm-modal builder-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="builder-modal-title">
+        <h2 id="builder-modal-title"></h2>
+        <p id="builder-modal-copy"></p>
+        <small id="builder-modal-subcopy"></small>
+        <input id="builder-modal-input" class="builder-modal-input" type="text" maxlength="40" hidden>
+        <div class="modal-actions" id="builder-modal-actions"></div>
       </div>
     </div>
 
