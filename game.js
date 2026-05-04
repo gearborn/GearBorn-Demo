@@ -1193,6 +1193,7 @@ sanitizeState();
 let race = null;
 let lastFrame = 0;
 let evolutionModal = null;
+let evolutionAnimationActive = false;
 let verticalRace = null;
 let pendingCutsceneStart = null;
 let activeCutsceneLines = null;
@@ -1327,6 +1328,12 @@ const el = {
   beta3dSpeed: document.querySelector("#beta-3d-speed"),
   beta3dProgressFill: document.querySelector("#beta-3d-progress-fill"),
   beta3dMarker: document.querySelector("#beta-3d-marker"),
+  betaTrackSelect: document.querySelector("#beta-track-select"),
+  betaTrackList: document.querySelector("#beta-track-list"),
+  betaTrackPreview: document.querySelector("#beta-track-preview"),
+  betaTrackStart: document.querySelector("#beta-track-start"),
+  betaTrackBack: document.querySelector("#beta-track-back"),
+  betaLoading: document.querySelector("#beta-loading"),
   betaExit: document.querySelector("#beta-exit"),
   betaFinishExit: document.querySelector("#beta-finish-exit"),
   betaRestart: document.querySelector("#beta-restart"),
@@ -1497,6 +1504,9 @@ const el = {
   evolutionCopy: document.querySelector("#evolution-copy"),
   evolveButton: document.querySelector("#evolve-button"),
   closeEvolution: document.querySelector("#close-evolution"),
+  evolutionAnimation: document.querySelector("#evolution-animation"),
+  evolutionAnimationCurrent: document.querySelector("#evolution-animation-current"),
+  evolutionAnimationNext: document.querySelector("#evolution-animation-next"),
   bossModal: document.querySelector("#boss-modal"),
   bossPortrait: document.querySelector("#boss-portrait"),
   bossModalTitle: document.querySelector("#boss-modal-title"),
@@ -4488,6 +4498,39 @@ function revealEvolution(carId, evolutionIndex) {
   render();
 }
 
+function preloadImage(src) {
+  if (!src) return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+}
+
+async function playEvolutionAnimation(carId, evolutionIndex) {
+  if (!el.evolutionAnimation || evolutionAnimationActive) return;
+  const currentForm = currentEvolution(carId);
+  const nextForm = evolutionByIndex(carId, evolutionIndex);
+  const currentImage = imageFor(currentForm, "display");
+  const nextImage = imageFor(nextForm, "display");
+  evolutionAnimationActive = true;
+  el.evolutionAnimationCurrent.src = currentImage;
+  el.evolutionAnimationCurrent.alt = currentForm?.name || "";
+  el.evolutionAnimationNext.src = nextImage;
+  el.evolutionAnimationNext.alt = nextForm?.name || "";
+  await Promise.all([preloadImage(currentImage), preloadImage(nextImage)]);
+  el.evolutionAnimation.classList.remove("run");
+  el.evolutionAnimation.setAttribute("aria-hidden", "false");
+  el.evolutionAnimation.classList.add("active");
+  void el.evolutionAnimation.offsetWidth;
+  el.evolutionAnimation.classList.add("run");
+  await new Promise((resolve) => window.setTimeout(resolve, 3300));
+  el.evolutionAnimation.classList.remove("active", "run");
+  el.evolutionAnimation.setAttribute("aria-hidden", "true");
+  evolutionAnimationActive = false;
+}
+
 function unlockGearbornLine(carId) {
   if (isCarUnlocked(carId)) return false;
   state.unlockedLines = state.unlockedLines || [...defaultUnlockedLines];
@@ -6783,17 +6826,29 @@ el.replacePart?.addEventListener("click", () => {
   renderEquipPartModal();
 });
 
-el.evolveButton.addEventListener("click", () => {
-  if (!evolutionModal) return;
+el.evolveButton.addEventListener("click", async () => {
+  if (!evolutionModal || evolutionAnimationActive) return;
   const tutorialEvolving = tutorialActive() && currentTutorialScene().id === "evolve" && evolutionModal.carId === tutorialCarId;
+  const carId = evolutionModal.carId;
+  const evolutionIndex = evolutionModal.evolution;
   el.evolveButton.hidden = true;
-  revealEvolution(evolutionModal.carId, evolutionModal.evolution);
+  el.closeEvolution.hidden = true;
+  el.evolutionModal.classList.remove("active");
+  el.evolutionModal.setAttribute("aria-hidden", "true");
+  await playEvolutionAnimation(carId, evolutionIndex);
+  revealEvolution(carId, evolutionIndex);
   if (tutorialEvolving) {
     state.tutorialAwaitingEvolve = false;
     state.tutorialLine = 7;
     saveState();
     renderTutorial();
+  } else {
+    closeEvolutionModal();
+    showView("garage");
+    el.raceMessage.className = "race-message win";
+    el.raceMessage.textContent = "Evolution Complete!";
   }
+  el.closeEvolution.hidden = false;
 });
 
 el.closeEvolution.addEventListener("click", closeEvolutionModal);
@@ -7123,7 +7178,7 @@ const betaTileAssets = {
   grass: "assets/tracks/grass.png",
   wall_straight: "assets/tracks/wall_straight.png",
   wall_corner: "assets/tracks/wall_corner.png",
-  road_turn: "assets/tracks/road_turn.png",
+  road_turn: "assets/tracks/track-turn.png",
   road_t_intersection: "assets/tracks/road_t_intersection.png",
   road_cross: "assets/tracks/road_cross.png",
   road_curve_wide: "assets/tracks/road_curve_wide.png",
@@ -7136,39 +7191,81 @@ Object.entries(betaTileAssets).forEach(([key, src]) => {
   betaTileImages[key] = img;
 });
 
-const betaTrack = (() => {
-  const width = 10;
-  const height = 8;
-  const grid = Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => {
+function betaEmptyTrackGrid(width = 16, height = 12) {
+  return Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => {
     if (y === 0) return { type: "wall_straight", rotation: 180 };
     if (y === height - 1) return { type: "wall_straight", rotation: 0 };
     if (x === 0) return { type: "wall_straight", rotation: 90 };
     if (x === width - 1) return { type: "wall_straight", rotation: 270 };
     return { type: "grass", rotation: 0 };
   }));
-  const set = (x, y, type, rotation = 0) => { grid[y][x] = { type, rotation }; };
-  set(1, 1, "road_turn", 0);
-  for (let x = 2; x <= 7; x += 1) set(x, 1, "road_straight", 0);
-  set(8, 1, "road_turn", 90);
-  for (let y = 2; y <= 5; y += 1) set(8, y, "road_straight", 90);
-  set(8, 6, "road_turn", 180);
-  for (let x = 2; x <= 7; x += 1) set(x, 6, "road_straight", 0);
-  set(1, 6, "road_turn", 270);
-  for (let y = 2; y <= 5; y += 1) set(1, y, "road_straight", 90);
+}
+
+function betaExpandCorners(corners) {
+  const points = [];
+  const addPoint = (x, y) => points.push({ x, y });
+  corners.forEach((corner, index) => {
+    const next = corners[(index + 1) % corners.length];
+    const dx = Math.sign(next.x - corner.x);
+    const dy = Math.sign(next.y - corner.y);
+    const steps = Math.max(Math.abs(next.x - corner.x), Math.abs(next.y - corner.y));
+    for (let step = 0; step < steps; step += 1) addPoint(corner.x + dx * step, corner.y + dy * step);
+  });
+  return points.filter((point, index) => index === 0 || point.x !== points[index - 1].x || point.y !== points[index - 1].y);
+}
+
+function betaDirection(a, b) {
+  if (b.x > a.x) return "E";
+  if (b.x < a.x) return "W";
+  if (b.y > a.y) return "S";
+  return "N";
+}
+
+function betaRoadTileFor(prev, current, next) {
+  const dirs = [betaDirection(current, prev), betaDirection(current, next)].sort().join("");
+  if (dirs === "EW") return { type: "road_straight", rotation: 0 };
+  if (dirs === "NS") return { type: "road_straight", rotation: 90 };
+  const turnRotations = { ES: 0, SW: 90, NW: 180, EN: 270 };
+  return { type: "road_turn", rotation: turnRotations[dirs] ?? 0 };
+}
+
+function betaMakeTrack(id, name, corners, width = 20, height = 15) {
+  const path = betaExpandCorners(corners);
+  const grid = betaEmptyTrackGrid(width, height);
+  path.forEach((point, index) => {
+    const prev = path[(index - 1 + path.length) % path.length];
+    const next = path[(index + 1) % path.length];
+    grid[point.y][point.x] = betaRoadTileFor(prev, point, next);
+  });
+  const checkpointIndexes = [0.25, 0.5, 0.75].map((pct) => Math.floor(path.length * pct));
+  const checkpoints = checkpointIndexes.map((index) => path[index]);
+  const next = path[1] || path[0];
   return {
+    id,
+    name,
     width,
     height,
     grid,
-    startTile: { x: 2, y: 6 },
-    startAngle: 0,
-    checkpoints: [
-      { x: 5, y: 6 },
-      { x: 8, y: 4 },
-      { x: 5, y: 1 },
-      { x: 1, y: 3 }
-    ]
+    path,
+    aiLine: path.map((point) => ({ x: (point.x + 0.5) * betaTileSize, y: (point.y + 0.5) * betaTileSize })),
+    startTile: path[0],
+    startAngle: Math.atan2(next.y - path[0].y, next.x - path[0].x),
+    checkpoints
   };
-})();
+}
+
+const betaTracks = [
+  betaMakeTrack("sunset-loop", "Sunset Loop", [{ x: 2, y: 12 }, { x: 9, y: 12 }, { x: 9, y: 9 }, { x: 16, y: 9 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 2, y: 5 }]),
+  betaMakeTrack("switchback", "Switchback", [{ x: 2, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 7 }, { x: 15, y: 7 }, { x: 15, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 6 }, { x: 2, y: 6 }]),
+  betaMakeTrack("skyline", "Skyline", [{ x: 1, y: 11 }, { x: 11, y: 11 }, { x: 11, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 2 }, { x: 1, y: 2 }]),
+  betaMakeTrack("river-run", "River Run", [{ x: 2, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 9 }, { x: 18, y: 9 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 6 }, { x: 2, y: 6 }]),
+  betaMakeTrack("canyon-cut", "Canyon Cut", [{ x: 1, y: 13 }, { x: 8, y: 13 }, { x: 8, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 12 }, { x: 18, y: 12 }, { x: 18, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 5 }, { x: 1, y: 5 }]),
+  betaMakeTrack("neon-mile", "Neon Mile", [{ x: 2, y: 7 }, { x: 5, y: 7 }, { x: 5, y: 2 }, { x: 18, y: 2 }, { x: 18, y: 6 }, { x: 11, y: 6 }, { x: 11, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 13 }, { x: 2, y: 13 }]),
+  betaMakeTrack("gearbox", "Gearbox", [{ x: 2, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 9 }, { x: 13, y: 9 }, { x: 13, y: 5 }, { x: 17, y: 5 }, { x: 17, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 9 }, { x: 2, y: 9 }]),
+  betaMakeTrack("clover", "Clover", [{ x: 2, y: 12 }, { x: 6, y: 12 }, { x: 6, y: 8 }, { x: 10, y: 8 }, { x: 10, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 4 }, { x: 10, y: 4 }, { x: 10, y: 1 }, { x: 2, y: 1 }])
+];
+let betaSelectedTrackId = betaTracks[0].id;
+let betaTrack = betaTracks[0];
 
 let betaState = null;
 let betaCarImage = null;
@@ -7185,6 +7282,45 @@ function betaTileClass(tile) {
   if (tile.type.startsWith("wall")) return "wall";
   if (tile.type === "grass") return "grass";
   return "road";
+}
+
+function betaRoadMaskContains(tile, localX, localY) {
+  if (!tile || betaTileClass(tile) !== "road") return false;
+  const band = 0.28;
+  if (tile.type === "road_straight") {
+    return tile.rotation === 90 || tile.rotation === 270
+      ? Math.abs(localX - 0.5) <= band
+      : Math.abs(localY - 0.5) <= band;
+  }
+  if (tile.type !== "road_turn") return true;
+  const rotations = {
+    0: ["E", "S"],
+    90: ["S", "W"],
+    180: ["N", "W"],
+    270: ["N", "E"]
+  };
+  const dirs = rotations[((tile.rotation || 0) + 360) % 360] || rotations[0];
+  const horizontal = dirs.includes("E")
+    ? localX >= 0.42 && Math.abs(localY - 0.5) <= 0.34
+    : localX <= 0.58 && Math.abs(localY - 0.5) <= 0.34;
+  const vertical = dirs.includes("S")
+    ? localY >= 0.42 && Math.abs(localX - 0.5) <= 0.34
+    : localY <= 0.58 && Math.abs(localX - 0.5) <= 0.34;
+  const cornerCenters = { "E,S": [0.5, 0.5], "S,W": [0.5, 0.5], "N,W": [0.5, 0.5], "N,E": [0.5, 0.5] };
+  const center = cornerCenters[dirs.join(",")] || [0.5, 0.5];
+  const radius = Math.hypot(localX - center[0], localY - center[1]);
+  return horizontal || vertical || radius <= 0.48;
+}
+
+function betaSurfaceAt(x, y) {
+  const tile = betaTileAt(x, y);
+  const baseClass = betaTileClass(tile);
+  if (baseClass !== "road") return baseClass;
+  const tx = Math.floor(x / betaTileSize);
+  const ty = Math.floor(y / betaTileSize);
+  const localX = (x - tx * betaTileSize) / betaTileSize;
+  const localY = (y - ty * betaTileSize) / betaTileSize;
+  return betaRoadMaskContains(tile, localX, localY) ? "road" : "grass";
 }
 
 function betaCurrentCarId() {
@@ -7512,10 +7648,19 @@ const betaModeConfigs = {
   duel: { id: "duel", label: "Head-to-Head Race", opponents: 1, goalRank: 1, goalLabel: "Win required", itemsEnabled: true, boostPadsEnabled: true, obstaclesEnabled: true }
 };
 
-const betaWaypointPath = betaTrack.checkpoints.concat([betaTrack.startTile]).map((tile) => ({
+let betaPendingMode = "time";
+let betaWaypointPath = betaTrack.checkpoints.concat([betaTrack.startTile]).map((tile) => ({
   x: (tile.x + 0.5) * betaTileSize,
   y: (tile.y + 0.5) * betaTileSize
 }));
+
+function syncBetaTrackDerived() {
+  betaWaypointPath = betaTrack.checkpoints.concat([betaTrack.startTile]).map((tile) => ({
+    x: (tile.x + 0.5) * betaTileSize,
+    y: (tile.y + 0.5) * betaTileSize
+  }));
+  betaAiRacingLine = betaTrack.aiLine;
+}
 
 function betaRatingsForCar(carId, level = state.garage?.[carId]?.level || 1, evolution = state.garage?.[carId]?.evolution || 0, includePlayerBonuses = false) {
   if (includePlayerBonuses) return displayedGearbornStats(carId);
@@ -7582,6 +7727,89 @@ function betaMakeImage(src) {
   return img;
 }
 
+function betaImageReady(img) {
+  if (!img || (img.complete && img.naturalWidth)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => resolve();
+    img.addEventListener("load", done, { once: true });
+    img.addEventListener("error", done, { once: true });
+    window.setTimeout(done, 1400);
+  });
+}
+
+async function preloadBetaRaceAssets() {
+  const images = [
+    ...Object.values(betaTileImages),
+    ...Object.values(betaTrackImages || {}),
+    ...(betaState?.racers || []).map((racer) => racer.image)
+  ].filter(Boolean);
+  await Promise.all(images.map(betaImageReady));
+}
+
+function selectBetaTrack(trackId) {
+  betaSelectedTrackId = betaTracks.some((track) => track.id === trackId) ? trackId : betaTracks[0].id;
+  betaTrack = betaTracks.find((track) => track.id === betaSelectedTrackId) || betaTracks[0];
+  syncBetaTrackDerived();
+  renderBetaTrackSelect();
+}
+
+function drawBetaTrackPreview(track = betaTrack) {
+  if (!el.betaTrackPreview) return;
+  const ctx = el.betaTrackPreview.getContext("2d");
+  const ratio = window.devicePixelRatio || 1;
+  const rect = el.betaTrackPreview.getBoundingClientRect();
+  el.betaTrackPreview.width = Math.max(1, Math.floor(rect.width * ratio));
+  el.betaTrackPreview.height = Math.max(1, Math.floor(rect.height * ratio));
+  const w = el.betaTrackPreview.width / ratio;
+  const h = el.betaTrackPreview.height / ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const scale = Math.min(w / track.width, h / track.height) * 0.92;
+  const tile = scale;
+  const offsetX = (w - track.width * tile) / 2;
+  const offsetY = (h - track.height * tile) / 2;
+  ctx.fillStyle = "#14341d";
+  ctx.fillRect(0, 0, w, h);
+  track.grid.forEach((row, y) => row.forEach((cell, x) => {
+    const cls = betaTileClass(cell);
+    if (cls === "grass") {
+      ctx.fillStyle = "#245d38";
+    } else if (cls === "wall") {
+      ctx.fillStyle = "rgba(255,255,255,.2)";
+    } else {
+      ctx.fillStyle = "#24282f";
+    }
+    ctx.fillRect(offsetX + x * tile, offsetY + y * tile, Math.ceil(tile), Math.ceil(tile));
+  }));
+  ctx.fillStyle = "#ffc857";
+  ctx.fillRect(offsetX + track.startTile.x * tile, offsetY + track.startTile.y * tile, tile, tile);
+}
+
+function renderBetaTrackSelect() {
+  if (!el.betaTrackList) return;
+  el.betaTrackList.innerHTML = betaTracks.map((track) => `
+    <button class="beta-track-button ${track.id === betaSelectedTrackId ? "active" : ""}" data-beta-track="${track.id}" type="button">
+      <span>${track.name}</span>
+      <small>${track.path.length} tiles</small>
+    </button>
+  `).join("");
+  drawBetaTrackPreview(betaTrack);
+}
+
+function openBetaTrackSelect(mode = "time") {
+  betaPendingMode = mode;
+  if (el.betaOptions) el.betaOptions.hidden = true;
+  if (el.beta3dStart) el.beta3dStart.hidden = true;
+  if (el.betaTrackSelect) el.betaTrackSelect.hidden = false;
+  renderBetaTrackSelect();
+}
+
+function closeBetaTrackSelect() {
+  if (el.betaTrackSelect) el.betaTrackSelect.hidden = true;
+  if (el.betaOptions) el.betaOptions.hidden = false;
+  if (el.beta3dStart) el.beta3dStart.hidden = false;
+}
+
 function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0, ai = false, skill = 1, ghost = false }) {
   return {
     id,
@@ -7612,11 +7840,14 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
 }
 
 function betaStartPosition(index) {
-  const baseX = (betaTrack.startTile.x + 0.5) * betaTileSize;
-  const baseY = (betaTrack.startTile.y + 0.5) * betaTileSize;
+  const point = betaTrack.path[Math.min(index, betaTrack.path.length - 1)] || betaTrack.startTile;
+  const baseX = (point.x + 0.5) * betaTileSize;
+  const baseY = (point.y + 0.5) * betaTileSize;
+  const lateralX = -Math.sin(betaTrack.startAngle) * (index % 2 === 0 ? -34 : 34);
+  const lateralY = Math.cos(betaTrack.startAngle) * (index % 2 === 0 ? -34 : 34);
   return {
-    x: baseX - Math.floor(index / 2) * 78,
-    y: baseY + (index % 2 === 0 ? -30 : 32)
+    x: baseX + lateralX,
+    y: baseY + lateralY
   };
 }
 
@@ -7831,11 +8062,11 @@ function finishBetaDemo() {
   const elapsed = betaState.elapsed;
   let resultLine = `Final time: ${elapsed.toFixed(2)} s`;
   if (betaState.config.id === "time") {
-    const previous = state.betaTimeTrials?.testTrack?.bestTime;
+    const previous = state.betaTimeTrials?.[betaTrack.id]?.bestTime;
     const isBest = !previous || elapsed < previous;
     if (isBest) {
       state.betaTimeTrials = state.betaTimeTrials || {};
-      state.betaTimeTrials.testTrack = {
+      state.betaTimeTrials[betaTrack.id] = {
         bestTime: elapsed,
         ghost: betaState.player.record.slice(0, 900)
       };
@@ -7977,7 +8208,21 @@ function drawBetaMiniMap() {
 el.betaOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-mode]");
   if (!button) return;
-  startBetaDemo(button.dataset.betaMode);
+  openBetaTrackSelect(button.dataset.betaMode);
+});
+
+el.betaTrackList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-beta-track]");
+  if (!button) return;
+  selectBetaTrack(button.dataset.betaTrack);
+});
+
+el.betaTrackStart?.addEventListener("click", () => {
+  startBetaDemo(betaPendingMode);
+});
+
+el.betaTrackBack?.addEventListener("click", () => {
+  closeBetaTrackSelect();
 });
 
 const betaItemDefinitions = [
@@ -7997,50 +8242,29 @@ const betaTrackImages = {
   cone: betaMakeImage("assets/tracks/traffic_cone.png")
 };
 
-const betaItemBoxSpawns = [
-  { x: 4.5, y: 6.5 },
-  { x: 8.5, y: 3.35 },
-  { x: 5.5, y: 1.5 },
-  { x: 1.5, y: 4.5 }
-];
-
-const betaBoostPadSpawns = [
-  { x: 6.5, y: 6.5, angle: Math.PI / 2 },
-  { x: 3.5, y: 1.5, angle: -Math.PI / 2 },
-  { x: 8.5, y: 5.5, angle: 0 }
-];
-
-const betaObstacleSpawns = [
-  { x: 2.15, y: 1.88, kind: "cone" },
-  { x: 7.88, y: 6.16, kind: "barrel" },
-  { x: 1.72, y: 3.2, kind: "cone" },
-  { x: 8.2, y: 2.7, kind: "barrel" }
-];
-
-const betaAiRacingLine = [
-  { x: 2.5, y: 6.5 },
-  { x: 5.2, y: 6.5 },
-  { x: 7.55, y: 6.5 },
-  { x: 8.5, y: 5.55 },
-  { x: 8.5, y: 3.4 },
-  { x: 8.5, y: 1.65 },
-  { x: 7.55, y: 1.5 },
-  { x: 4.6, y: 1.5 },
-  { x: 1.55, y: 1.5 },
-  { x: 1.5, y: 3.55 },
-  { x: 1.5, y: 5.45 },
-  { x: 2.45, y: 6.5 }
-].map(betaWorldPoint);
+let betaAiRacingLine = betaTrack.aiLine;
 
 function betaWorldPoint(point) {
   return { x: point.x * betaTileSize, y: point.y * betaTileSize };
 }
 
 function createBetaObjects(config) {
+  const points = betaTrack.path || [];
+  const trackPoint = (fraction, offset = 0) => {
+    const point = points[Math.max(0, Math.min(points.length - 1, Math.floor(points.length * fraction) + offset))] || betaTrack.startTile;
+    return { x: point.x + 0.5, y: point.y + 0.5 };
+  };
+  const itemSpawns = [trackPoint(0.14), trackPoint(0.38), trackPoint(0.62), trackPoint(0.84)];
+  const boostSpawns = [trackPoint(0.22), trackPoint(0.52), trackPoint(0.76)].map((point, index) => {
+    const line = betaTrack.aiLine[Math.floor((betaTrack.aiLine.length - 1) * [0.22, 0.52, 0.76][index])] || betaTrack.aiLine[0];
+    const next = betaTrack.aiLine[Math.min(betaTrack.aiLine.length - 1, Math.floor((betaTrack.aiLine.length - 1) * [0.22, 0.52, 0.76][index]) + 1)] || line;
+    return { ...point, angle: Math.atan2(next.y - line.y, next.x - line.x) + Math.PI / 2 };
+  });
+  const obstacleSpawns = [trackPoint(0.3), trackPoint(0.7)].map((point, index) => ({ ...point, kind: index % 2 ? "barrel" : "cone" }));
   return {
-    itemBoxes: config.itemsEnabled ? betaItemBoxSpawns.map((point, index) => ({ id: `box-${index}`, ...betaWorldPoint(point), active: true, respawnAt: 0 })) : [],
-    boostPads: config.boostPadsEnabled ? betaBoostPadSpawns.map((point, index) => ({ id: `pad-${index}`, ...betaWorldPoint(point), angle: point.angle || 0 })) : [],
-    obstacles: config.obstaclesEnabled ? betaObstacleSpawns.map((point, index) => ({ id: `hazard-${index}`, ...betaWorldPoint(point), kind: point.kind, lastHit: {} })) : [],
+    itemBoxes: config.itemsEnabled ? itemSpawns.map((point, index) => ({ id: `box-${index}`, ...betaWorldPoint(point), active: true, respawnAt: 0 })) : [],
+    boostPads: config.boostPadsEnabled ? boostSpawns.map((point, index) => ({ id: `pad-${index}`, ...betaWorldPoint(point), angle: point.angle || 0 })) : [],
+    obstacles: config.obstaclesEnabled ? obstacleSpawns.map((point, index) => ({ id: `hazard-${index}`, ...betaWorldPoint(point), kind: point.kind, lastHit: {} })) : [],
     traps: [],
     projectiles: []
   };
@@ -8261,7 +8485,7 @@ function betaUpdateProjectiles(dt, now) {
   objects.projectiles.forEach((projectile) => {
     projectile.x += projectile.vx * dt;
     projectile.y += projectile.vy * dt;
-    if (betaTileClass(betaTileAt(projectile.x, projectile.y)) === "wall") projectile.expired = true;
+    if (betaSurfaceAt(projectile.x, projectile.y) === "wall") projectile.expired = true;
     betaState.racers.forEach((racer) => {
       if (projectile.expired || racer.id === projectile.owner || racer.finished || betaDistance(racer, projectile) > 34) return;
       betaApplyHit(racer, "burst", projectile.power || 1, "projectile");
@@ -8464,24 +8688,28 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
 
 function betaAiControls(racer) {
   const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
-  if (Math.hypot(target.x - racer.x, target.y - racer.y) < 62) {
+  if (Math.hypot(target.x - racer.x, target.y - racer.y) < 74) {
     racer.aiWaypoint = ((racer.aiWaypoint || 0) + 1) % betaAiRacingLine.length;
   }
   const nextTarget = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
   const desired = Math.atan2(nextTarget.y - racer.y, nextTarget.x - racer.x);
   const delta = Math.atan2(Math.sin(desired - racer.angle), Math.cos(desired - racer.angle));
-  const currentTile = betaTileAt(racer.x, racer.y);
-  const onRoad = betaTileClass(currentTile) === "road";
+  const aheadX = racer.x + Math.cos(racer.angle) * 72;
+  const aheadY = racer.y + Math.sin(racer.angle) * 72;
+  const onRoad = betaSurfaceAt(racer.x, racer.y) === "road";
+  const aheadRoad = betaSurfaceAt(aheadX, aheadY) === "road";
   return {
-    up: onRoad && (Math.abs(delta) < 0.96 || racer.speed < 150),
-    down: Math.abs(delta) > 1.02 && racer.speed > 110,
+    up: onRoad && aheadRoad && (Math.abs(delta) < 0.82 || racer.speed < 135),
+    down: !aheadRoad || (Math.abs(delta) > 0.92 && racer.speed > 95),
     left: delta < -0.07,
     right: delta > 0.07
   };
 }
 
-function startBetaDemo(mode = betaState?.config?.id || "time") {
+async function startBetaDemo(mode = betaState?.config?.id || "time") {
   if (!el.betaCanvas) return;
+  betaTrack = betaTracks.find((track) => track.id === betaSelectedTrackId) || betaTracks[0];
+  syncBetaTrackDerived();
   const config = betaModeConfigs[mode] || betaModeConfigs.time;
   betaResizeCanvas();
   const carId = betaCurrentCarId();
@@ -8515,7 +8743,7 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
       skill: opponent.skill
     });
   });
-  const savedGhost = config.id === "time" ? state.betaTimeTrials?.testTrack?.ghost || null : null;
+  const savedGhost = config.id === "time" ? state.betaTimeTrials?.[betaTrack.id]?.ghost || null : null;
   betaState = {
     config,
     player,
@@ -8538,8 +8766,13 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
   el.betaIntro.hidden = true;
   el.betaRace.hidden = false;
   el.betaResults.hidden = true;
+  if (el.betaLoading) el.betaLoading.hidden = false;
   el.betaDebug.textContent = "Debug: Off";
   updateBetaItemHud();
+  drawBetaFrame();
+  await preloadBetaRaceAssets();
+  if (!betaState || betaState.config.id !== config.id) return;
+  if (el.betaLoading) el.betaLoading.hidden = true;
   drawBetaFrame();
   runCountdown(el.betaCountdown, () => {
     if (!betaState || betaState.finished) return;
@@ -8557,7 +8790,7 @@ function betaDriveRacer(racer, dt, controls = {}) {
     racer.speed *= Math.max(0, 1 - dt * 1.8);
     controls = {};
   }
-  const currentClass = betaTileClass(betaTileAt(racer.x, racer.y));
+  const currentClass = betaSurfaceAt(racer.x, racer.y);
   const boosted = racer.boostUntil > now;
   const slowed = racer.slowUntil > now;
   const grassFactor = currentClass === "grass" ? Math.min(0.82, 0.56 + racer.physics.torque / 420) : 1;
@@ -8582,13 +8815,13 @@ function betaDriveRacer(racer, dt, controls = {}) {
   racer.prevY = racer.y;
   racer.x += Math.cos(racer.angle) * racer.speed * dt;
   racer.y += Math.sin(racer.angle) * racer.speed * dt;
-  const nextClass = betaTileClass(betaTileAt(racer.x, racer.y));
+  const nextClass = betaSurfaceAt(racer.x, racer.y);
   if (nextClass === "wall" || (racer.ai && nextClass === "grass")) {
     racer.x = racer.prevX;
     racer.y = racer.prevY;
     racer.speed *= racer.ai ? 0.38 : -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
     if (racer.ai && nextClass === "grass") {
-      const target = betaWaypointPath[racer.checkpoint] || betaWaypointPath[0];
+      const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
   }
@@ -8900,6 +9133,10 @@ function openBetaIntro() {
   el.betaIntro.hidden = false;
   el.betaRace.hidden = true;
   if (el.beta3dRace) el.beta3dRace.hidden = true;
+  if (el.betaTrackSelect) el.betaTrackSelect.hidden = true;
+  if (el.betaOptions) el.betaOptions.hidden = false;
+  if (el.beta3dStart) el.beta3dStart.hidden = false;
+  if (el.betaLoading) el.betaLoading.hidden = true;
   stopBetaDemo(false);
   stopBeta3d(false);
 }

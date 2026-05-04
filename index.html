@@ -715,6 +715,16 @@
                   <span>Beat one rival GearBorn.</span>
                 </button>
               </div>
+              <div class="beta-track-select" id="beta-track-select" hidden>
+                <div class="beta-track-list" id="beta-track-list"></div>
+                <div class="beta-track-preview">
+                  <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected Beta Mode track preview"></canvas>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-track-start" type="button">Start Race</button>
+                    <button class="ghost" id="beta-track-back" type="button">Back</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="beta-3d-race" id="beta-3d-race" hidden>
               <div class="beta-3d-hud">
@@ -767,26 +777,32 @@
             </div>
             <div class="beta-race" id="beta-race" hidden>
               <div class="beta-hud">
-                <div>
+                <div class="beta-hud-time">
                   <span>Time</span>
                   <strong id="beta-time">0.00</strong>
                 </div>
-                <div>
+                <div class="beta-hud-lap">
                   <span>Lap</span>
                   <strong id="beta-lap">1 / 2</strong>
                 </div>
-                <div>
+                <div class="beta-hud-checkpoint">
                   <span>Checkpoint</span>
                   <strong id="beta-checkpoint">0 / 4</strong>
                 </div>
-                <div>
+                <div class="beta-hud-speed">
                   <span>Speed</span>
                   <strong id="beta-speed">0 MPH</strong>
                 </div>
-                <div>
+                <div class="beta-hud-position">
                   <span>Position</span>
                   <strong id="beta-position">1st / 1</strong>
                 </div>
+                <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
+                <button class="danger-button" id="beta-exit" type="button">Exit</button>
+              </div>
+              <div class="beta-stage">
+                <canvas id="beta-canvas" width="960" height="620" aria-label="Beta Mode circuit"></canvas>
+                <canvas id="beta-minimap" width="180" height="140" aria-label="Beta Mode mini-map"></canvas>
                 <div class="beta-item-slot" id="beta-item-slot">
                   <span>Item</span>
                   <div class="beta-item-readout">
@@ -795,12 +811,10 @@
                   </div>
                   <em id="beta-item-prompt">Space / E</em>
                 </div>
-                <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
-                <button class="danger-button" id="beta-exit" type="button">Exit</button>
-              </div>
-              <div class="beta-stage">
-                <canvas id="beta-canvas" width="960" height="620" aria-label="Beta Mode circuit"></canvas>
-                <canvas id="beta-minimap" width="180" height="140" aria-label="Beta Mode mini-map"></canvas>
+                <div class="beta-loading" id="beta-loading" hidden>
+                  <strong>Loading Track...</strong>
+                  <span>Warming up engines and loading full-quality assets.</span>
+                </div>
                 <div class="countdown beta-countdown" id="beta-countdown"></div>
                 <div class="beta-results" id="beta-results" hidden>
                   <h2>Finished!</h2>
@@ -1002,6 +1016,20 @@
           <button class="primary" id="evolve-button" type="button">Evolve</button>
           <button class="ghost" id="close-evolution" type="button">Continue</button>
         </div>
+      </div>
+    </div>
+
+    <div class="evolution-animation-overlay" id="evolution-animation" aria-hidden="true">
+      <div class="evolution-animation-bg"></div>
+      <div class="evolution-animation-flash"></div>
+      <div class="evolution-animation-core">
+        <div class="evolution-energy-ring"></div>
+        <div class="evolution-glow"></div>
+        <div class="evolution-vehicle">
+          <img class="evolution-vehicle-current" id="evolution-animation-current" alt="">
+          <img class="evolution-vehicle-next" id="evolution-animation-next" alt="">
+        </div>
+        <div class="evolution-floor-shadow"></div>
       </div>
     </div>
 
