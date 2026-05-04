@@ -5244,6 +5244,10 @@ small {
   text-align: center;
 }
 
+.beta-loading[hidden] {
+  display: none !important;
+}
+
 .beta-loading strong {
   color: var(--gold);
   font-size: clamp(1.4rem, 5vw, 2.8rem);
@@ -6007,31 +6011,31 @@ small {
 }
 
 .evolution-animation-overlay.run .evolution-glow {
-  animation: evolutionGlow 3.3s ease-in-out forwards;
+  animation: evolutionGlow 5.6s ease-in-out forwards;
 }
 
 .evolution-animation-overlay.run .evolution-energy-ring {
-  animation: evolutionRing 1s ease-out 0.25s forwards, evolutionRingPeak 0.55s ease-out 1.75s forwards;
+  animation: evolutionRing 1.4s ease-out 0.35s forwards, evolutionRingPeak 0.85s ease-out 3.65s forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle {
-  animation: evolutionVehicleShake 3.3s linear forwards;
+  animation: evolutionVehicleShake 5.6s linear forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle-current {
-  animation: evolutionCurrentFlicker 3.3s steps(1, end) forwards;
+  animation: evolutionCurrentFlicker 5.6s steps(1, end) forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle-next {
-  animation: evolutionNextFlicker 3.3s steps(1, end) forwards;
+  animation: evolutionNextFlicker 5.6s steps(1, end) forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle img {
-  animation: evolutionImageGlow 3.3s ease-in-out forwards;
+  animation: evolutionImageGlow 5.6s ease-in-out forwards;
 }
 
 .evolution-animation-overlay.run .evolution-animation-flash {
-  animation: evolutionFlash 3.3s ease-in-out forwards;
+  animation: evolutionFlash 5.6s ease-in-out forwards;
 }
 
 @keyframes evolutionGlow {
@@ -6070,17 +6074,17 @@ small {
 }
 
 @keyframes evolutionCurrentFlicker {
-  0%, 28% { opacity: 1; }
-  34%, 42%, 50%, 58%, 66%, 72% { opacity: 0; }
-  38%, 46%, 54%, 62%, 69%, 75% { opacity: 1; }
-  80%, 100% { opacity: 0; }
+  0%, 20% { opacity: 1; }
+  25%, 33%, 41%, 49%, 57%, 64%, 70%, 74% { opacity: 0; }
+  29%, 37%, 45%, 53%, 61%, 67%, 72%, 76% { opacity: 1; }
+  81%, 100% { opacity: 0; }
 }
 
 @keyframes evolutionNextFlicker {
-  0%, 28% { opacity: 0; }
-  34%, 42%, 50%, 58%, 66%, 72% { opacity: 1; }
-  38%, 46%, 54%, 62%, 69%, 75% { opacity: 0; }
-  80%, 100% { opacity: 1; }
+  0%, 20% { opacity: 0; }
+  25%, 33%, 41%, 49%, 57%, 64%, 70%, 74% { opacity: 1; }
+  29%, 37%, 45%, 53%, 61%, 67%, 72%, 76% { opacity: 0; }
+  81%, 100% { opacity: 1; }
 }
 
 @keyframes evolutionImageGlow {

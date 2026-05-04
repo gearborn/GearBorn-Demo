@@ -4508,12 +4508,21 @@ function preloadImage(src) {
   });
 }
 
-async function playEvolutionAnimation(carId, evolutionIndex) {
-  if (!el.evolutionAnimation || evolutionAnimationActive) return;
+async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
+  if (!el.evolutionAnimation || evolutionAnimationActive) {
+    onReveal?.();
+    return;
+  }
   const currentForm = currentEvolution(carId);
   const nextForm = evolutionByIndex(carId, evolutionIndex);
   const currentImage = imageFor(currentForm, "display");
   const nextImage = imageFor(nextForm, "display");
+  let revealed = false;
+  const revealOnce = () => {
+    if (revealed) return;
+    revealed = true;
+    onReveal?.();
+  };
   evolutionAnimationActive = true;
   el.evolutionAnimationCurrent.src = currentImage;
   el.evolutionAnimationCurrent.alt = currentForm?.name || "";
@@ -4525,7 +4534,10 @@ async function playEvolutionAnimation(carId, evolutionIndex) {
   el.evolutionAnimation.classList.add("active");
   void el.evolutionAnimation.offsetWidth;
   el.evolutionAnimation.classList.add("run");
-  await new Promise((resolve) => window.setTimeout(resolve, 3300));
+  const revealTimer = window.setTimeout(revealOnce, 5050);
+  await new Promise((resolve) => window.setTimeout(resolve, 5600));
+  window.clearTimeout(revealTimer);
+  revealOnce();
   el.evolutionAnimation.classList.remove("active", "run");
   el.evolutionAnimation.setAttribute("aria-hidden", "true");
   evolutionAnimationActive = false;
@@ -6835,20 +6847,25 @@ el.evolveButton.addEventListener("click", async () => {
   el.closeEvolution.hidden = true;
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
-  await playEvolutionAnimation(carId, evolutionIndex);
-  revealEvolution(carId, evolutionIndex);
-  if (tutorialEvolving) {
-    state.tutorialAwaitingEvolve = false;
-    state.tutorialLine = 7;
+  await playEvolutionAnimation(carId, evolutionIndex, () => {
+    revealEvolution(carId, evolutionIndex);
+    state.garage[carId].evolution = evolutionIndex;
+    state.garage[carId].unlockedEvolution = Math.max(state.garage[carId].unlockedEvolution ?? 0, evolutionIndex);
     saveState();
-    renderTutorial();
-  } else {
-    closeEvolutionModal();
-    showView("garage");
-    el.raceMessage.className = "race-message win";
-    el.raceMessage.textContent = "Evolution Complete!";
-  }
-  el.closeEvolution.hidden = false;
+    if (tutorialEvolving) {
+      state.tutorialAwaitingEvolve = false;
+      state.tutorialLine = 7;
+      saveState();
+      renderTutorial();
+    } else {
+      closeEvolutionModal();
+      showView("garage");
+      render();
+      el.raceMessage.className = "race-message win";
+      el.raceMessage.textContent = "Evolution Complete!";
+    }
+    el.closeEvolution.hidden = false;
+  });
 });
 
 el.closeEvolution.addEventListener("click", closeEvolutionModal);
@@ -7389,9 +7406,15 @@ function startBetaDemo() {
 }
 
 function stopBetaDemo(showIntro = true) {
+  betaLoadToken += 1;
   if (betaState?.raf) cancelAnimationFrame(betaState.raf);
   betaState = null;
   Object.keys(betaKeys).forEach((key) => delete betaKeys[key]);
+  setBetaLoading(false);
+  if (el.betaCountdown) {
+    el.betaCountdown.classList.remove("active");
+    el.betaCountdown.textContent = "";
+  }
   if (showIntro && el.betaIntro && el.betaRace) {
     el.betaIntro.hidden = false;
     el.betaRace.hidden = true;
@@ -7649,6 +7672,7 @@ const betaModeConfigs = {
 };
 
 let betaPendingMode = "time";
+let betaLoadToken = 0;
 let betaWaypointPath = betaTrack.checkpoints.concat([betaTrack.startTile]).map((tile) => ({
   x: (tile.x + 0.5) * betaTileSize,
   y: (tile.y + 0.5) * betaTileSize
@@ -7743,7 +7767,16 @@ async function preloadBetaRaceAssets() {
     ...Object.values(betaTrackImages || {}),
     ...(betaState?.racers || []).map((racer) => racer.image)
   ].filter(Boolean);
-  await Promise.all(images.map(betaImageReady));
+  await Promise.race([
+    Promise.all(images.map(betaImageReady)),
+    new Promise((resolve) => window.setTimeout(resolve, 2600))
+  ]);
+}
+
+function setBetaLoading(active) {
+  if (!el.betaLoading) return;
+  el.betaLoading.hidden = !active;
+  el.betaLoading.classList.toggle("active", active);
 }
 
 function selectBetaTrack(trackId) {
@@ -8708,6 +8741,7 @@ function betaAiControls(racer) {
 
 async function startBetaDemo(mode = betaState?.config?.id || "time") {
   if (!el.betaCanvas) return;
+  const loadToken = ++betaLoadToken;
   betaTrack = betaTracks.find((track) => track.id === betaSelectedTrackId) || betaTracks[0];
   syncBetaTrackDerived();
   const config = betaModeConfigs[mode] || betaModeConfigs.time;
@@ -8766,13 +8800,20 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
   el.betaIntro.hidden = true;
   el.betaRace.hidden = false;
   el.betaResults.hidden = true;
-  if (el.betaLoading) el.betaLoading.hidden = false;
+  if (el.betaCountdown) {
+    el.betaCountdown.classList.remove("active");
+    el.betaCountdown.textContent = "";
+  }
+  setBetaLoading(true);
   el.betaDebug.textContent = "Debug: Off";
   updateBetaItemHud();
   drawBetaFrame();
-  await preloadBetaRaceAssets();
-  if (!betaState || betaState.config.id !== config.id) return;
-  if (el.betaLoading) el.betaLoading.hidden = true;
+  try {
+    await preloadBetaRaceAssets();
+  } finally {
+    if (loadToken === betaLoadToken) setBetaLoading(false);
+  }
+  if (!betaState || betaState.config.id !== config.id || loadToken !== betaLoadToken) return;
   drawBetaFrame();
   runCountdown(el.betaCountdown, () => {
     if (!betaState || betaState.finished) return;
@@ -9136,7 +9177,7 @@ function openBetaIntro() {
   if (el.betaTrackSelect) el.betaTrackSelect.hidden = true;
   if (el.betaOptions) el.betaOptions.hidden = false;
   if (el.beta3dStart) el.beta3dStart.hidden = false;
-  if (el.betaLoading) el.betaLoading.hidden = true;
+  setBetaLoading(false);
   stopBetaDemo(false);
   stopBeta3d(false);
 }
