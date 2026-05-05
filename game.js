@@ -289,6 +289,22 @@ const tutorialMedals = [
   { key: "bronze", label: "Bronze", difficulty: "Easy", xp: 150, base: 23.0 }
 ];
 
+// Tutorial-exclusive city with 3 levels shown on the training city map
+const tutorialCityLevels = [
+  { type: "drag",   title: "F Class Drag Race: Tutorque",          tutorialLevel: "drag",   campaignIndex: -1 },
+  { type: "trial",  title: "Spindell Training Academy Time Trial",  tutorialLevel: "trial",  campaignIndex: -2 },
+  { type: "battle", title: "Training Battle: Tutorque",             tutorialLevel: "battle", campaignIndex: -3 }
+];
+const tutorialCity = {
+  id: tutorialTrack.id,
+  city: tutorialTrack.city,
+  country: tutorialTrack.country,
+  track: tutorialTrack,
+  tutorialOnly: true,
+  levels: tutorialCityLevels,
+  icon: tutorialTrack.cityIcon
+};
+
 // Tutorial scene IDs — each maps to a dialogue block and a view/flow
 const tutorialScenes = [
   // ── Intro ───────────────────────────────────────────────────────────────────
@@ -1473,6 +1489,8 @@ const el = {
   builderModalActions: document.querySelector("#builder-modal-actions"),
   campaignList: document.querySelector("#campaign-list"),
   storyCityMap: document.querySelector("#story-city-map"),
+  storyCitySelect: document.querySelector("#story-city-select"),
+  changeStoryCar: document.querySelector("#change-story-car"),
   storyCityIcon: document.querySelector("#story-city-icon"),
   storyCityTitle: document.querySelector("#story-city-title"),
   storyCitySelect: document.querySelector("#story-city-select"),
@@ -2679,6 +2697,22 @@ function firstPlayableStoryLevelForCity(cityIndex) {
 
 function renderCampaign() {
   if (!el.storyCityMap) return;
+  // During tutorial, use the special training city map
+  if (tutorialActive()) {
+    const city = tutorialCity;
+    el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
+    el.storyCityTitle.textContent = city.city.toUpperCase();
+    el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.map}")`;
+    el.storyCityMap.style.backgroundSize = "cover";
+    el.storyCityMap.style.backgroundPosition = "center";
+    el.bossUnlockNote.textContent = "";
+    el.storyMapStage.innerHTML = city.levels.map((level) => tutorialMapNodeMarkup(level)).join("");
+    // Hide city-select and change-car controls during tutorial
+    if (el.storyCitySelect) el.storyCitySelect.hidden = true;
+    if (el.changeStoryCar) el.changeStoryCar.hidden = true;
+    renderTutorialLevelPreview();
+    return;
+  }
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   const cityUnlocked = storyCityUnlocked(state.selectedStoryCity);
   el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
@@ -2694,6 +2728,8 @@ function renderCampaign() {
     ? `Beat ${remainingCore}/${totalCore} Levels to Unlock Boss Race`
     : "";
   el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
+  if (el.storyCitySelect) el.storyCitySelect.hidden = false;
+  if (el.changeStoryCar) el.changeStoryCar.hidden = false;
   renderStoryCityGrid();
   renderStoryLevelPreview();
 }
@@ -4605,7 +4641,11 @@ function showPendingEvolution(carId) {
   el.evolutionTitle.textContent = `${currentForm.name} is ready to evolve`;
   el.evolutionCopy.textContent = "The next Gearborn form is charged and waiting.";
   el.evolveButton.hidden = false;
+  // During tutorial evolve scene, disable evolve button until dialogue finishes
+  el.evolveButton.disabled = tutorialActive() && !state.tutorialAwaitingEvolve;
   el.closeEvolution.textContent = "Later";
+  // In tutorial, "Later" is hidden — you must evolve
+  el.closeEvolution.hidden = tutorialActive();
   el.evolutionStage.innerHTML = carMarkupForEvolution(carId, progress.evolution, "display");
   el.evolutionModal.classList.add("active");
   el.evolutionModal.setAttribute("aria-hidden", "false");
@@ -4901,7 +4941,6 @@ async function runForgeAnimation(carId) {
 
   area.innerHTML = `
     <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion">
-    <img class="forge-anim-layer forge-anim-glow"     src="assets/forge/forge_glow.png" alt="">
     <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="">
     <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform.png" alt="">
     <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
@@ -4917,7 +4956,6 @@ async function runForgeAnimation(carId) {
   const coverEl     = get("forge-anim-cover");
   const magnetEl    = get("forge-anim-magnet");
   const carEl       = get("forge-anim-car-reveal");
-  const glowEl      = get("forge-anim-glow");
   const smokeEl     = get("forge-anim-smoke");
 
   // ── Step 1: Medallion appears above the vat ──────────────────────────────
@@ -4954,9 +4992,8 @@ async function runForgeAnimation(carId) {
   coverEl.classList.add("step-gone");
   magnetEl.classList.add("step-gone");
 
-  // ── Step 7: GearBorn revealed with glow halo ─────────────────────────────
+  // ── Step 7: GearBorn revealed ─────────────────────────────────────────────
   carEl.classList.add("step-reveal");
-  glowEl.classList.add("step-glow");
   await step(2400);
 
   // ── Unlock and close overlay ──────────────────────────────────────────────
@@ -5026,6 +5063,7 @@ function applyPinkSlipLossPenalty(carId) {
 function closeEvolutionModal() {
   const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
   const wasJustEvolved = evolutionModal?.mode === "unlocked" && !tutorialActive();
+  const tutorialEvolved = tutorialActive() && currentTutorialScene()?.id === "evolved-form";
   pendingPinkSlipContinue = null;
   evolutionModal = null;
   el.evolutionModal.classList.remove("evolution-unlocked");
@@ -5033,6 +5071,9 @@ function closeEvolutionModal() {
   el.evolutionModal.setAttribute("aria-hidden", "true");
   if (continueAfterPinkSlip) {
     continueAfterPinkSlip();
+  } else if (tutorialEvolved) {
+    // Tutorial: advance to vindex scene after player closes evolved form modal
+    advanceTutorial();
   } else if (wasJustEvolved) {
     showView("garage");
     render();
@@ -5665,6 +5706,11 @@ function showView(view) {
   if (view !== "beta") stopBetaDemo(false);
   if (view !== "beta") stopBeta3d(false);
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
+  // Always reset forge panel when navigating to garage from anywhere
+  if (view === "garage") {
+    if (el.forgePanel) el.forgePanel.hidden = true;
+    if (el.garageContent) el.garageContent.hidden = false;
+  }
   el.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}-view`));
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
   document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === view));
@@ -5941,34 +5987,79 @@ function ensureTutorialCarState(options = {}) {
   state.selectedTimeCar = tutorialCarId;
 }
 
+function tutorialMapNodeMarkup(level) {
+  const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
+  const layout = storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
+  return `
+    <button class="story-map-node" type="button" data-tutorial-level="${level.tutorialLevel}"
+      style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}">
+      <span class="story-node-icon">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+      </span>
+      <span class="story-node-label">${visual.label}</span>
+    </button>
+  `;
+}
+
+function renderTutorialLevelPreview() {
+  // During tutorial, only show preview if a specific scene wants it
+  const scene = currentTutorialScene();
+  const previewScene = ["drag-race-intro", "time-trial-intro", "battle-intro"].includes(scene?.id);
+  if (!previewScene || !el.storyPreviewPanel) {
+    if (el.storyPreviewPanel) el.storyPreviewPanel.setAttribute("aria-hidden", "true");
+    return;
+  }
+  // Show level preview panel for the relevant tutorial level
+  const levelType = scene.id === "drag-race-intro" ? "drag"
+    : scene.id === "time-trial-intro" ? "trial"
+    : "battle";
+  const level = tutorialCityLevels.find((l) => l.tutorialLevel === levelType);
+  if (!level) return;
+  const visual = storyLevelVisuals[levelType];
+  el.storyPreviewPanel.setAttribute("aria-hidden", "false");
+  el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+  if (el.campaignType) el.campaignType.textContent = visual.label;
+  if (el.campaignTitle) el.campaignTitle.textContent = level.title;
+  if (el.campaignMeta) el.campaignMeta.textContent = "";
+  if (el.storyPreviewArt) {
+    if (levelType === "drag") {
+      el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialOpponentCarId, 0, "display")}</div>`;
+    } else if (levelType === "trial") {
+      el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialCarId, 0, "display")}</div>`;
+    } else {
+      el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialOpponentCarId, 0, "display")}</div>`;
+    }
+  }
+  if (el.campaignRewards) el.campaignRewards.innerHTML = "";
+  if (el.storyLoadout) el.storyLoadout.innerHTML = `<p>Your GearBorn: <strong>Mamburn</strong></p>`;
+  // Relabel the start button
+  const startBtn = document.getElementById("start-campaign");
+  if (startBtn) startBtn.textContent = "Start Level";
+}
+
 function showTutorialCityMap() {
-  // Show the tutorial story city using the training track/icon
   showView("story");
-  // Render a minimal city map overlay pointing at Spindell Training Academy
+  setFlowStep("story", "next");
+  // Close any open preview panel
+  if (el.storyPreviewPanel) el.storyPreviewPanel.setAttribute("aria-hidden", "true");
   render();
 }
 
 function showTutorialDragPreview() {
-  // Show drag race level preview (story view with the drag level highlighted)
   showView("story");
-  setFlowStep("story", "match");
+  setFlowStep("story", "next");
   render();
 }
 
 function showTutorialTimeTrialPreview() {
-  showView("time-trial");
-  setFlowStep("time", "match");
-  state.selectedTimeCar = tutorialCarId;
-  state.selectedTimeTrack = tutorialTrack.id;
+  showView("story");
+  setFlowStep("story", "next");
   render();
 }
 
 function showTutorialBattlePreview() {
-  showView("battle");
-  setFlowStep("battle", "match");
-  state.selectedStoryCar = tutorialCarId;
-  state.selectedBattleBoss = bosses[0].id;
-  battleState = null;
+  showView("story");
+  setFlowStep("story", "next");
   render();
 }
 
@@ -6030,6 +6121,8 @@ function advanceTutorial() {
   // ── Awaiting user actions (upgrade click, evolve click) ──────────────────
   if (scene.id === "evolve" && state.tutorialLine === tutorialEvolvePromptIndex()) {
     state.tutorialAwaitingEvolve = true;
+    // Re-enable the evolve button now that dialogue is done
+    if (el.evolveButton) el.evolveButton.disabled = false;
     saveState();
     renderTutorial();
     return;
@@ -6077,10 +6170,12 @@ function advanceTutorial() {
       break;
 
     case "drag-race-intro":
-      // Auto-click start → prepare drag race and move to drag-race scene
+      // Start Level → go to drag race with match preview showing Tutorque
       setTutorialScene("drag-race");
-      prepareDragRace(null, tutorialDragStage());
-      setupTutorialScene();
+      ensureTutorialCarState();
+      setupTutorialDragMenu();
+      setFlowStep("drag", "match");
+      showView("play");
       saveState();
       renderTutorial();
       break;
@@ -6118,9 +6213,12 @@ function advanceTutorial() {
       break;
 
     case "time-trial-intro":
-      // Auto-click start → move to time trial
+      // Start Level → go to time trial view
       setTutorialScene("time-trial");
-      setupTutorialScene();
+      state.selectedTimeCar = tutorialCarId;
+      state.selectedTimeTrack = tutorialTrack.id;
+      setFlowStep("time", "match");
+      showView("time-trial");
       saveState();
       renderTutorial();
       break;
@@ -6165,11 +6263,12 @@ function advanceTutorial() {
       break;
 
     case "battle-intro":
-      // Auto-click start → move to battle
+      // Start Level → go to battle view
       state.selectedStoryCar = tutorialCarId;
       state.selectedBattleBoss = bosses[0].id;
       setTutorialScene("battle");
-      setupTutorialScene();
+      setFlowStep("battle", "match");
+      showView("battle");
       saveState();
       renderTutorial();
       break;
@@ -6312,8 +6411,8 @@ function renderTutorial() {
     el.tutorialOverlay.classList.remove("active");
     return;
   }
-  if ((scene.id === "evolve" && state.tutorialAwaitingEvolve) || scene.id === "evolved-form") {
-    // Hide tutorial overlay while evolution modal is prominent
+  if (scene.id === "evolve" && state.tutorialAwaitingEvolve) {
+    // Hide tutorial overlay while evolution modal is being interacted with
     el.tutorialOverlay.classList.remove("active");
     return;
   }
@@ -7421,12 +7520,20 @@ el.startRace.addEventListener("click", startRace);
 el.dragMapStart.addEventListener("click", startPendingDragRace);
 el.shiftButton.addEventListener("click", shift);
 el.nitroButton.addEventListener("click", useNitro);
-el.startCampaign.addEventListener("click", startCampaignLevel);
-el.changeStoryCar.addEventListener("click", () => setFlowStep("story", "car"));
-el.storyCitySelect.addEventListener("click", openCitySelect);
+el.startCampaign.addEventListener("click", () => {
+  if (tutorialActive()) {
+    // Tutorial dialogue controls the flow — Start Level just calls advanceTutorial
+    advanceTutorial();
+    return;
+  }
+  startCampaignLevel();
+});
+el.changeStoryCar.addEventListener("click", () => { if (!tutorialActive()) setFlowStep("story", "car"); });
+el.storyCitySelect.addEventListener("click", () => { if (!tutorialActive()) openCitySelect(); });
 el.closeStoryPreview.addEventListener("click", closeStoryPreview);
 el.closeCitySelect.addEventListener("click", closeCitySelect);
 el.storyMapStage.addEventListener("click", (event) => {
+  if (tutorialActive()) return; // tutorial controls map navigation
   const button = event.target.closest("[data-story-level]");
   if (!button || button.disabled) return;
   openStoryPreview(Number(button.dataset.storyLevel));

@@ -4753,9 +4753,10 @@ small {
 }
 
 .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame {
-  width: min(220px, 68vw);
-  height: 220px;
+  width: min(160px, 52vw);
+  height: 160px;
   min-height: 0;
+  margin-bottom: 8px;
 }
 
 .tutorial-portrait .character-frame img,
@@ -7187,51 +7188,51 @@ small {
 
 /* Platform: rises from below vat to midscreen (bottom:48% of screen) */
 .forge-anim-platform {
-  width: clamp(260px, 38vw, 480px);
+  width: clamp(208px, 30vw, 384px);
   bottom: -20%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
   object-fit: contain;
-  z-index: 12;   /* behind vat (z:20) but above bg */
+  z-index: 12;
   transition: none;
 }
 .forge-anim-platform.step-rise {
-  bottom: 30%;
+  /* Top of platform stays at or below 50% of screen height */
+  bottom: 20%;
   opacity: 1;
   transition: bottom 1.0s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
 }
 
-/* Cover: rides directly on top of platform; same bottom offset + platform height.
-   Platform height ≈ 160px at standard size. Cover sits right on top. */
+/* Cover: same width as platform, sits directly on top.
+   Platform rests at bottom:20%. At ~30vw width, platform image height ≈ 96px.
+   Cover bottom = 20% + 96px so it starts right where the platform top is. */
 .forge-anim-cover {
-  width: clamp(240px, 34vw, 420px);
-  bottom: -20%;        /* matches platform start */
+  width: clamp(208px, 30vw, 384px);
+  bottom: -20%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
   object-fit: contain;
-  z-index: 13;   /* just above platform */
+  z-index: 13;
   transition: none;
 }
 .forge-anim-cover.step-rise {
-  /* Rises exactly with platform - same bottom + offset for platform height */
-  bottom: calc(30% + 120px);
+  bottom: calc(20% + 96px);
   opacity: 1;
   transition: bottom 1.0s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
 }
 .forge-anim-cover.step-lift {
-  /* Lifts off screen upward with magnet */
   bottom: 120%;
   opacity: 1;
   transition: bottom 0.7s cubic-bezier(0.44,0,1,0.56);
 }
 .forge-anim-cover.step-gone { bottom: 130%; opacity: 0; transition: none; }
 
-/* Car: hidden under cover; centered on platform, revealed when cover lifts */
+/* Car: sits on platform top, centered. Same bottom anchor as cover. */
 .forge-anim-car-reveal {
-  width: clamp(220px, 30vw, 380px);
-  bottom: calc(30% + 118px);  /* sits directly on platform top */
+  width: clamp(176px, 24vw, 307px);
+  bottom: calc(20% + 96px);
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
@@ -7240,35 +7241,32 @@ small {
 }
 .forge-anim-car-reveal .car {
   width: 100%;
-  height: clamp(140px, 22vw, 260px);
+  height: clamp(112px, 18vw, 208px);
 }
 .forge-anim-car-reveal.step-reveal {
   opacity: 1;
   transition: opacity 0.6s ease;
 }
 
-/* Magnet: descends from top until it touches cover top edge */
+/* Magnet: descends from top to just above cover top edge */
 .forge-anim-magnet {
-  width: clamp(60px, 8vw, 100px);
+  width: clamp(48px, 6vw, 80px);
   top: -16%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
   object-fit: contain;
-  z-index: 16;   /* above cover */
+  z-index: 16;
   transition: none;
 }
 .forge-anim-magnet.step-magnet-drop {
-  /* descend until bottom of magnet touches top of cover:
-     cover top is at calc(30% + 120px + coverHeight). 
-     We position by `top` from screen top. 
-     Target: cover top edge ≈ 65vh from top when fully risen */
-  top: calc(100% - 30% - 120px - clamp(180px,26vw,300px) - clamp(60px,8vw,100px));
+  /* Cover top from bottom = calc(20% + 96px + coverHeight ≈ 96px) = 20% + 192px.
+     From top of screen: top = 100% - 20% - 192px - magnetHeight */
+  top: calc(100% - 20% - 192px - clamp(48px, 6vw, 80px));
   opacity: 1;
   transition: top 0.65s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
 }
 .forge-anim-magnet.step-magnet-lift {
-  /* lifts off screen upward in sync with cover */
   top: -20%;
   opacity: 1;
   transition: top 0.7s cubic-bezier(0.44,0,1,0.56);
@@ -7278,12 +7276,12 @@ small {
 /* Smoke: erupts from vat during shake */
 .forge-anim-smoke {
   width: clamp(300px, 50vw, 600px);
-  bottom: 38%;
+  bottom: 30%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
   object-fit: contain;
-  z-index: 19;   /* just below vat front */
+  z-index: 19;
   transition: none;
   pointer-events: none;
 }
@@ -7296,26 +7294,7 @@ small {
   100% { opacity: 0;   transform: translateX(-50%) translateY(-80px) scale(1.4); }
 }
 
-/* Glow: orange halo around car */
-.forge-anim-glow {
-  width: clamp(300px, 44vw, 520px);
-  bottom: calc(30% + 80px);
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  object-fit: contain;
-  z-index: 11;
-  transition: none;
-}
-.forge-anim-glow.step-glow {
-  animation: forgeGlowPulse 2.4s ease-in-out forwards;
-}
-@keyframes forgeGlowPulse {
-  0%   { opacity: 0;    transform: translateX(-50%) scale(0.5); }
-  30%  { opacity: 0.9;  transform: translateX(-50%) scale(1.05); }
-  70%  { opacity: 0.75; transform: translateX(-50%) scale(1.0); }
-  100% { opacity: 0;    transform: translateX(-50%) scale(1.15); }
-}
+/* Glow removed */
 
 /* ── Legacy small-scene vat (kept for non-animation idle state) ─────────── */
 .forge-vat-img {
