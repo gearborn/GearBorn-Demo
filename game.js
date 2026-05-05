@@ -280,7 +280,7 @@ const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achieve
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
-const tutorialTrack = { id: "training-school", city: "Training School", country: "Tuner Academy", map: "assets/maps/map-training-academy.png" };
+const tutorialTrack = { id: "training-school", city: "Spindell Training Academy", country: "Training", map: "assets/maps/training-bg.png", cityMap: "assets/maps/training-bg.png", cityIcon: "assets/maps/cityicon-training.png" };
 const tutorialDistance = { meters: 400, label: "400 m", xp: 80, difficulty: 0.55 };
 const tutorialRank = { key: "F", name: "Tutorque", xpBonus: 1, power: 0.28, color: "#9aa7b7", images: { display: "assets/cars/tutorque-display.png", race: "assets/cars/tutorque-race.png" } };
 const tutorialMedals = [
@@ -288,31 +288,56 @@ const tutorialMedals = [
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 19.0 },
   { key: "bronze", label: "Bronze", difficulty: "Easy", xp: 150, base: 23.0 }
 ];
+
+// Tutorial scene IDs — each maps to a dialogue block and a view/flow
 const tutorialScenes = [
-  { id: "intro", label: "Intro", view: "menu", copy: "Tutorial placeholder: Dr. Tyree welcomes you to GearBorn." },
-  { id: "mode-select", label: "Mode Select", view: "solo", copy: "Tutorial placeholder: Training Academy holds practice races." },
-  { id: "mamburn", label: "Drag Race - Mamburn", view: "play", flow: "car", copy: "Tutorial placeholder: Select Mamburn for your first training run." },
-  { id: "drag-race", label: "Drag Race", view: "play", flow: "match", copy: "Tutorial placeholder: Race Tutorque in a 400 m drag race." },
-  { id: "dr-controls", label: "DR Controls", view: "play", flow: "race", copy: "Tutorial placeholder: Use Shift to hit clean gear changes, then fire Nitro when your bar is charged." },
-  { id: "sprox", label: "Sprox", view: "play", wait: true, copy: "Tutorial placeholder: Winning races earns Sprox." },
-  { id: "time-trial", label: "Time Trial", view: "time-trial", flow: "match", copy: "Tutorial placeholder: Time Trials test clean driving." },
-  { id: "tt-controls", label: "TT Controls", view: "time-trial", flow: "race", copy: "Tutorial placeholder: Steer toward boosts, avoid obstacles, and keep your run clean." },
-  { id: "tt-after", label: "TT After", view: "time-trial", wait: true, copy: "Tutorial placeholder: Nice time trial run." },
-  { id: "battle", label: "Battle", view: "battle", flow: "match", copy: "Tutorial placeholder: Battle Mode is a turn-based arena challenge." },
-  { id: "pre-battle", label: "Pre Battle", view: "battle", flow: "race", copy: "Tutorial placeholder: Choose attacks, defend to reduce damage, and save SP for specials." },
-  { id: "post-battle", label: "Post Battle", view: "battle", wait: true, copy: "Tutorial placeholder: Winning battles earns more Sprox." },
-  { id: "garage", label: "Garage", view: "garage", copy: "Tutorial placeholder: The Garage is where upgrades happen." },
-  { id: "upgrade", label: "Upgrade", view: "garage", copy: "Tutorial placeholder: Spend Sprox to level Mamburn from 9 to 10." },
-  { id: "evolve", label: "Evolve", view: "garage", wait: true, copy: "Tutorial placeholder: Level 10 unlocks Snaytan." },
-  { id: "vindex", label: "VINdex", view: "vindex", copy: "Tutorial placeholder: The VINdex tracks discovered GearBorn." },
-  { id: "starters", label: "Starters", view: "garage", copy: "Tutorial placeholder: Your starter Garage is ready." }
+  // ── Intro ───────────────────────────────────────────────────────────────────
+  { id: "intro",           label: "Intro",           view: "menu" },
+  // ── Car select (tutorial-exclusive, Mamburn only) ─────────────────────────
+  { id: "mamburn",         label: "Mamburn",          view: "play",       flow: "car" },
+  // ── City map (Spindell Training Academy) ──────────────────────────────────
+  { id: "city-map",        label: "City Map",         view: "story" },
+  // ── Drag race ─────────────────────────────────────────────────────────────
+  { id: "drag-race-intro", label: "Drag Race Intro",  view: "story" },
+  { id: "drag-race",       label: "Drag Race",        view: "play",       flow: "match" },
+  { id: "dr-controls",     label: "DR Controls",      view: "play",       flow: "race" },
+  { id: "sprox",           label: "Drag Race Win",    view: "play",       wait: true },
+  // ── Time trial ────────────────────────────────────────────────────────────
+  { id: "drag2tt",         label: "Drag→TT",          view: "story" },
+  { id: "time-trial-intro",label: "Time Trial Intro", view: "story" },
+  { id: "time-trial",      label: "Time Trial",       view: "time-trial", flow: "match" },
+  { id: "tt-controls",     label: "TT Controls",      view: "time-trial", flow: "race" },
+  { id: "tt-after",        label: "Time Trial Win",   view: "time-trial", wait: true },
+  // ── Battle ────────────────────────────────────────────────────────────────
+  { id: "tt2battle",       label: "TT→Battle",        view: "story" },
+  { id: "battle-intro",    label: "Battle Intro",     view: "story" },
+  { id: "battle",          label: "Battle",           view: "battle",     flow: "match" },
+  { id: "pre-battle",      label: "Pre-Battle",       view: "battle",     flow: "race" },
+  { id: "post-battle",     label: "Battle Win",       view: "battle",     wait: true },
+  // ── Garage / Upgrade / Evolve ─────────────────────────────────────────────
+  { id: "garage",          label: "Garage",           view: "garage" },
+  { id: "upgrade",         label: "Upgrade",          view: "garage" },
+  { id: "evolve",          label: "Evolve",           view: "garage",     wait: true },
+  { id: "evolved-form",    label: "Evolved Form",     view: "garage" },
+  // ── VINdex ────────────────────────────────────────────────────────────────
+  { id: "vindex",          label: "VINdex",           view: "vindex" },
+  // ── The Forge ─────────────────────────────────────────────────────────────
+  { id: "achievements",    label: "Achievements",     view: "achievements" },
+  { id: "the-forge",       label: "The Forge",        view: "garage" },
+  // ── Post-forge unlock ─────────────────────────────────────────────────────
+  { id: "unlocked",        label: "Unlocked",         view: "garage" },
+  // ── End ───────────────────────────────────────────────────────────────────
+  { id: "starters",        label: "Starters",         view: "garage" }
 ];
+
+// Scene-select options shown in Replay Tutorial modal
 const tutorialSceneSelectOptions = [
-  { label: "Drag Race", scene: "mamburn" },
-  { label: "Time Trial", scene: "time-trial" },
-  { label: "Battle", scene: "battle" },
-  { label: "Garage", scene: "garage" },
-  { label: "VINdex", scene: "vindex" }
+  { label: "Drag Race",   scene: "drag-race-intro" },
+  { label: "Time Trial",  scene: "time-trial-intro" },
+  { label: "Battle",      scene: "battle-intro" },
+  { label: "Garage",      scene: "garage" },
+  { label: "VINdex",      scene: "vindex" },
+  { label: "The Forge",   scene: "the-forge" }
 ];
 const gearbornKeyImage = "assets/items/item-gearbornkey.png";
 const partTypes = [
@@ -366,7 +391,64 @@ const tutorialDialogue = {
     ["tyree", "I wouldn’t talk such a big game just yet. You haven’t even started the test."],
     ["tyree", "Follow me."]
   ],
-  "mode-select": [
+  "city-map": [
+    ["tyree", "Welcome to Spindell Training Academy, your training ground. This is where you'll run through the three core race types: Drag Race, Time Trial, and Battle."],
+    ["user", "Cool. Where do I start?"],
+    ["tyree", "We'll go in order. First up — Drag Race. I'm clicking it for you."]
+  ],
+  "drag-race-intro": [
+    ["tyree", "This is the level preview. You can see your car — Mamburn — and your opponent. Today that's the one and only Tutorque."],
+    ["tutorque", "HONK! HONK!"],
+    ["user", "*giggles* That?"],
+    ["tyree", "You're confident now, but what about on the track? Let me click Start Level."]
+  ],
+  "drag2tt": [
+    ["tyree", () => `Nice race! You earned ${formatSprox(state.tutorialDragSprox || tutorialDistance.xp)} Sprox for that win, but we're not done yet.`],
+    ["user", "What's next?"],
+    ["tyree", "Time Trial. Let me pull it up."]
+  ],
+  "time-trial-intro": [
+    ["tyree", "This is the Time Trial level preview. You'll be on the academy track trying to beat the Bronze, Silver, or Gold times."],
+    ["user", "I'll go for Gold."],
+    ["tyree", "Sure you will. Your car's Mamburn — ready to roll. I'll click Start Level."]
+  ],
+  "tt2battle": [
+    ["tyree", () => `Jeez… you got a ${state.tutorialTimeMedal || "medal"}?! That's pretty impressive.`],
+    ["user", "I told you this is easy. Can I battle now?"],
+    ["tyree", "Last race type — Battle. Coming right up."]
+  ],
+  "battle-intro": [
+    ["tyree", "Battle Mode. Your opponent: Tutorque. Again."],
+    ["user", "Agaiiiiiiiin? Come on!"],
+    ["tyree", "Show me you can handle all three and you'll get your key. Starting the level now."]
+  ],
+  "evolved-form": [
+    ["user", "WHOA. Mamburn evolved into... Snaytan?"],
+    ["tyree", "Every GearBorn has evolved forms unlocked by leveling up. Snaytan is Mamburn's Level 10 form."],
+    ["user", "That's actually sick."],
+    ["tyree", "I know. Come on — there's more to show you."]
+  ],
+  achievements: [
+    ["tyree", "This is the Achievements page. Complete challenges to earn special rewards — including rare GearBorn forms."],
+    ["user", "Like what?"],
+    ["tyree", "Discover 100% of the VINdex and you'll unlock Vanbrandt. Win all Bosses and you get Vangas. There are eight total."],
+    ["user", "I'm going to get all of them."],
+    ["tyree", "I don't doubt it. One more thing to show you."]
+  ],
+  "the-forge": [
+    ["tyree", "This is THE FORGE. Pink Slip races earn you a Medallion instead of instantly unlocking a car."],
+    ["user", "So I have to come here to actually get them?"],
+    ["tyree", "Exactly. And I've just loaded three Medallions into your inventory — Baybee, Murrka, and Bunnae."],
+    ["user", "My starter GearBorn?"],
+    ["tyree", "The Forge is how you make them yours. Open your Medallion Inventory, pick one, and hit Unlock."]
+  ],
+  unlocked: [
+    ["tyree", "And there you have it. Your new GearBorn is in the Garage."],
+    ["user", "This is actually incredible."],
+    ["tyree", "The rest of the roster? Pink Slip races, achievements, and The Forge are how you fill out your garage."],
+    ["user", "I'm going to get all of them."],
+    ["tyree", "Good luck. Now get out of my training academy."]
+  ],
     ["tyree", "There are four types of races you can choose from - Drag Races, Time Trials, Boss Races, and Battle Mode."],
     ["user", "Battle Mode?? Sick."],
     ["tyree", "Drag Races are about speed and acceleration - a head-to-head matchup where your goal is to get from start to finish as fast as possible in a test of your gear-shifting ability."],
@@ -4657,17 +4739,17 @@ function showMedallionEarnedPopup(carId, onContinue) {
   const imgEl = popup.querySelector("#medallion-earned-img");
   imgEl.src = forgeMedallionSrc(carId);
   imgEl.alt = form.name + " Medallion";
-  popup.removeAttribute("hidden");
+  popup.classList.add("active");
   popup.setAttribute("aria-hidden", "false");
   const handleForge = () => {
-    popup.setAttribute("hidden", "");
+    popup.classList.remove("active");
     popup.setAttribute("aria-hidden", "true");
     onContinue?.();
     showView("garage");
     openForge();
   };
   const handleLater = () => {
-    popup.setAttribute("hidden", "");
+    popup.classList.remove("active");
     popup.setAttribute("aria-hidden", "true");
     onContinue?.();
   };
@@ -4852,10 +4934,10 @@ function showForgeUnlockedPopup(carId) {
   const imgEl = popup.querySelector("#forge-unlocked-img");
   imgEl.src = imageFor(form, "display");
   imgEl.alt = form?.name || carId;
-  popup.removeAttribute("hidden");
+  popup.classList.add("active");
   popup.setAttribute("aria-hidden", "false");
   popup.querySelector("#forge-unlocked-close").addEventListener("click", () => {
-    popup.setAttribute("hidden", "");
+    popup.classList.remove("active");
     popup.setAttribute("aria-hidden", "true");
     closeForge();
     renderForgeInventory();
@@ -4864,6 +4946,13 @@ function showForgeUnlockedPopup(carId) {
     el.forgeUnlockBtn.textContent = "Select a Medallion";
     if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
     if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+    // If the tutorial is at the-forge scene, advance to unlocked
+    if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
+      setTutorialScene("unlocked");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+    }
   }, { once: true });
 }
 
@@ -5624,42 +5713,129 @@ function skipTutorial() {
 function setupTutorialScene() {
   const scene = currentTutorialScene();
   if (!scene) return;
+
+  // Set up car state first
   if (scene.id === "upgrade") {
     ensureTutorialCarState({ level: 9 });
+  } else if (scene.id === "evolved-form") {
+    ensureTutorialCarState({ level: 10 });
   } else {
     ensureTutorialCarState();
   }
+
+  // Apply view
   if (scene.view) showView(scene.view);
+
+  // Apply flow
   if (scene.flow) {
-    if (scene.view === "play") setFlowStep("drag", scene.flow);
-    if (scene.view === "time-trial") setFlowStep("time", scene.flow);
-    if (scene.view === "battle") setFlowStep("battle", scene.flow);
+    if (scene.view === "play")        setFlowStep("drag", scene.flow);
+    if (scene.view === "time-trial")  setFlowStep("time", scene.flow);
+    if (scene.view === "battle")      setFlowStep("battle", scene.flow);
   }
-  if (scene.id === "drag-race") setupTutorialDragMenu();
-  if (scene.id === "time-trial") setupTutorialTimeMenu();
-  if (scene.id === "battle") {
-    state.selectedStoryCar = tutorialCarId;
-    state.selectedBattleBoss = bosses[0].id;
-    battleState = null;
-  }
-  if (scene.id === "pre-battle" && (!battleState || battleState.finished || battleState.mode !== "tutorial-battle")) {
-    beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
-  }
-  if (scene.id === "garage") showView("garage");
-  if (scene.id === "upgrade") openUpgradeModal(tutorialCarId);
-  if (scene.id === "vindex") {
-    closeUpgradeModal();
-    if (el.evolutionModal) {
-      evolutionModal = null;
-      el.evolutionModal.classList.remove("evolution-unlocked");
-      el.evolutionModal.classList.remove("active");
-      el.evolutionModal.setAttribute("aria-hidden", "true");
-    }
-    state.selectedVindex = "110";
-    showView("vindex");
-  }
-  if (scene.id === "starters") {
-    showView("garage");
+
+  // Scene-specific setup
+  switch (scene.id) {
+    case "intro":
+      showView("menu");
+      break;
+
+    case "mamburn":
+      // Tutorial-exclusive car select: only Mamburn selectable
+      state.selectedCar = tutorialCarId;
+      setFlowStep("drag", "car");
+      render();
+      break;
+
+    case "city-map":
+    case "drag2tt":
+    case "tt2battle":
+      // Show tutorial story city map
+      showTutorialCityMap();
+      break;
+
+    case "drag-race-intro":
+      // Show level preview for the drag race
+      showTutorialDragPreview();
+      break;
+
+    case "drag-race":
+      state.selectedCar = tutorialCarId;
+      setupTutorialDragMenu();
+      setFlowStep("drag", "match");
+      render();
+      break;
+
+    case "time-trial-intro":
+      showTutorialTimeTrialPreview();
+      break;
+
+    case "time-trial":
+      state.selectedTimeCar = tutorialCarId;
+      state.selectedTimeTrack = tutorialTrack.id;
+      setFlowStep("time", "match");
+      render();
+      break;
+
+    case "battle-intro":
+      showTutorialBattlePreview();
+      break;
+
+    case "battle":
+      state.selectedStoryCar = tutorialCarId;
+      state.selectedBattleBoss = bosses[0].id;
+      battleState = null;
+      setFlowStep("battle", "match");
+      render();
+      break;
+
+    case "pre-battle":
+      if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
+        beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
+      }
+      break;
+
+    case "garage":
+    case "unlocked":
+    case "starters":
+      showView("garage");
+      break;
+
+    case "upgrade":
+      showView("garage");
+      openUpgradeModal(tutorialCarId);
+      break;
+
+    case "evolved-form":
+      // Return to garage showing Snaytan
+      showView("garage");
+      if (el.evolutionModal) {
+        evolutionModal = null;
+        el.evolutionModal.classList.remove("evolution-unlocked", "active");
+        el.evolutionModal.setAttribute("aria-hidden", "true");
+      }
+      break;
+
+    case "vindex":
+      closeUpgradeModal();
+      if (el.evolutionModal) {
+        evolutionModal = null;
+        el.evolutionModal.classList.remove("evolution-unlocked", "active");
+        el.evolutionModal.setAttribute("aria-hidden", "true");
+      }
+      state.selectedVindex = "110";
+      showView("vindex");
+      break;
+
+    case "achievements":
+      showView("achievements");
+      break;
+
+    case "the-forge":
+      // Award the three starter medallions and open The Forge
+      ["bee", "pickup", "rabbit"].forEach((id) => awardMedallion(id));
+      showView("garage");
+      openForge();
+      break;
   }
 }
 
@@ -5678,6 +5854,37 @@ function ensureTutorialCarState(options = {}) {
   state.selectedCar = tutorialCarId;
   state.selectedStoryCar = tutorialCarId;
   state.selectedTimeCar = tutorialCarId;
+}
+
+function showTutorialCityMap() {
+  // Show the tutorial story city using the training track/icon
+  showView("story");
+  // Render a minimal city map overlay pointing at Spindell Training Academy
+  render();
+}
+
+function showTutorialDragPreview() {
+  // Show drag race level preview (story view with the drag level highlighted)
+  showView("story");
+  setFlowStep("story", "match");
+  render();
+}
+
+function showTutorialTimeTrialPreview() {
+  showView("time-trial");
+  setFlowStep("time", "match");
+  state.selectedTimeCar = tutorialCarId;
+  state.selectedTimeTrack = tutorialTrack.id;
+  render();
+}
+
+function showTutorialBattlePreview() {
+  showView("battle");
+  setFlowStep("battle", "match");
+  state.selectedStoryCar = tutorialCarId;
+  state.selectedBattleBoss = bosses[0].id;
+  battleState = null;
+  render();
 }
 
 function setupTutorialDragMenu() {
@@ -5730,14 +5937,19 @@ function tutorialEvolvePromptIndex() {
 function advanceTutorial() {
   const scene = currentTutorialScene();
   const lines = tutorialLinesForScene(scene);
+
+  // ── Awaiting user actions (upgrade click, evolve click) ──────────────────
   if (scene.id === "evolve" && state.tutorialLine === tutorialEvolvePromptIndex()) {
     state.tutorialAwaitingEvolve = true;
     saveState();
     renderTutorial();
     return;
   }
+
+  // ── Advance within current scene's dialogue ───────────────────────────────
   if (state.tutorialLine < lines.length - 1) {
     state.tutorialLine += 1;
+    // Tyree fronts Sprox on line 2 of upgrade scene
     if (scene.id === "upgrade" && state.tutorialLine >= 2 && !state.unlimitedSprox) {
       state.sprox = Math.max(state.sprox || 0, 5000);
       openUpgradeModal(tutorialCarId);
@@ -5746,81 +5958,236 @@ function advanceTutorial() {
     renderTutorial();
     return;
   }
+
+  // ── End of scene dialogue — transition to next ───────────────────────────
   state.tutorialLine = 0;
-  if (scene.id === "starters") {
-    finishTutorial();
-    return;
-  }
-  if (scene.id === "upgrade") {
-    state.tutorialAwaitingUpgrade = true;
-    saveState();
-    renderTutorial();
-    return;
-  }
-  if (scene.id === "mamburn") {
-    state.selectedCar = tutorialCarId;
-    setFlowStep("drag", "match");
-  }
-  if (scene.id === "drag-race") {
-    prepareDragRace(null, tutorialDragStage());
-    setTutorialScene("dr-controls");
-    saveState();
-    renderTutorial();
-    return;
-  }
-  if (scene.id === "dr-controls") {
-    startPendingDragRace();
-    setTutorialScene("sprox");
-    saveState();
-    renderTutorial();
-    return;
-  }
-  if (scene.id === "time-trial") {
-    modeFlow.time = "race";
-    renderFlowScreens();
-    beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-    setTutorialScene("tt-controls");
-    saveState();
-    renderTutorial();
-    return;
-  }
-  if (scene.id === "tt-controls") {
-    modeFlow.time = "race";
-    renderFlowScreens();
-    if (!verticalRace || verticalRace.finished || verticalRace.mode !== "tutorial-time") {
+
+  switch (scene.id) {
+    case "intro":
+      // Move to tutorial car select (Mamburn only)
+      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "mamburn");
+      ensureTutorialCarState();
+      setFlowStep("drag", "car");
+      saveState();
+      render();
+      break;
+
+    case "mamburn":
+      // Move to training city map
+      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "city-map");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "city-map":
+      // Auto-click drag race → show drag-race-intro level preview
+      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "drag-race-intro");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "drag-race-intro":
+      // Auto-click start → move to drag race
+      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "drag-race");
+      prepareDragRace(null, tutorialDragStage());
+      setTutorialScene("drag-race");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "drag-race":
+      // Continue → prepare the race (show controls scene)
+      prepareDragRace(null, tutorialDragStage());
+      setTutorialScene("dr-controls");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "dr-controls":
+      // Continue → start the actual countdown
+      startPendingDragRace();
+      setTutorialScene("sprox");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "sprox":
+      // Drag race win → transition scene back to city map
+      setTutorialScene("drag2tt");
+      showTutorialCityMap();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "drag2tt":
+      // Auto-click time trial → show time-trial-intro level preview
+      setTutorialScene("time-trial-intro");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "time-trial-intro":
+      // Auto-click start → move to time trial
+      setTutorialScene("time-trial");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "time-trial":
+      // Continue → start the time trial
+      modeFlow.time = "race";
+      renderFlowScreens();
       beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-    }
-    startVerticalCountdown();
-    setTutorialScene("tt-after");
-    saveState();
-    renderTutorial();
-    return;
+      setTutorialScene("tt-controls");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "tt-controls":
+      // Continue → start the countdown
+      modeFlow.time = "race";
+      renderFlowScreens();
+      if (!verticalRace || verticalRace.finished || verticalRace.mode !== "tutorial-time") {
+        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
+      }
+      startVerticalCountdown();
+      setTutorialScene("tt-after");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "tt-after":
+      // Time trial win → back to city map
+      setTutorialScene("tt2battle");
+      showTutorialCityMap();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "tt2battle":
+      // Auto-click battle → show battle-intro level preview
+      setTutorialScene("battle-intro");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "battle-intro":
+      // Auto-click start → move to battle
+      state.selectedStoryCar = tutorialCarId;
+      state.selectedBattleBoss = bosses[0].id;
+      setTutorialScene("battle");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "battle":
+      // Continue → set up and start battle
+      state.selectedStoryCar = tutorialCarId;
+      state.selectedBattleBoss = bosses[0].id;
+      setTutorialScene("pre-battle");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "pre-battle":
+      // Continue → actually start battle
+      if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
+        beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
+      }
+      setTutorialScene("post-battle");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "post-battle":
+      // Battle win → go to garage
+      setTutorialScene("garage");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "garage":
+      // Continue → go to upgrade screen
+      setTutorialScene("upgrade");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "upgrade":
+      // Await user clicking Level Up button
+      state.tutorialAwaitingUpgrade = true;
+      saveState();
+      renderTutorial();
+      break;
+
+    case "evolve":
+      // Await user clicking Evolve button (handled above via tutorialEvolvePromptIndex)
+      state.tutorialAwaitingEvolve = true;
+      saveState();
+      renderTutorial();
+      break;
+
+    case "evolved-form":
+      // After evolution → go to VINdex
+      setTutorialScene("vindex");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "vindex":
+      // VINdex done → go to Achievements
+      setTutorialScene("achievements");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "achievements":
+      // Achievements done → go to The Forge
+      setTutorialScene("the-forge");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "the-forge":
+      // The Forge — wait for user to unlock via animation (handled by forge completion)
+      // Tutorial stays here; completion hook in showForgeUnlockedPopup will advance
+      saveState();
+      renderTutorial();
+      break;
+
+    case "unlocked":
+      // Post-unlock → go to starters/end
+      setTutorialScene("starters");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "starters":
+      finishTutorial();
+      break;
+
+    default:
+      // Fallback: advance to next scene
+      state.tutorialScene = Math.min(tutorialScenes.length - 1, state.tutorialScene + 1);
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
   }
-  if (scene.id === "battle") {
-    state.selectedStoryCar = tutorialCarId;
-    state.selectedBattleBoss = bosses[0].id;
-    setTutorialScene("pre-battle");
-    setupTutorialScene();
-    saveState();
-    render();
-    return;
-  }
-  if (scene.id === "pre-battle") {
-    if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
-      beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
-    }
-    setTutorialScene("post-battle");
-    saveState();
-    renderTutorial();
-    return;
-  }
-  if (scene.id === "upgrade") {
-    openUpgradeModal(tutorialCarId);
-  }
-  state.tutorialScene = Math.min(tutorialScenes.length - 1, state.tutorialScene + 1);
-  setupTutorialScene();
-  saveState();
-  render();
 }
 
 function rewindTutorial() {
@@ -5857,7 +6224,8 @@ function renderTutorial() {
     el.tutorialOverlay.classList.remove("active");
     return;
   }
-  if (scene.id === "evolve" && state.tutorialAwaitingEvolve) {
+  if ((scene.id === "evolve" && state.tutorialAwaitingEvolve) || scene.id === "evolved-form") {
+    // Hide tutorial overlay while evolution modal is prominent
     el.tutorialOverlay.classList.remove("active");
     return;
   }
@@ -7149,7 +7517,9 @@ el.evolveButton.addEventListener("click", async () => {
     el.evolutionModal.setAttribute("aria-hidden", "false");
     if (tutorialEvolving) {
       state.tutorialAwaitingEvolve = false;
-      state.tutorialLine = 7;
+      // Advance to evolved-form scene so player sees Snaytan before we continue
+      setTutorialScene("evolved-form");
+      state.tutorialLine = 0;
       saveState();
       renderTutorial();
     }
