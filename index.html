@@ -568,7 +568,51 @@
           </div>
           <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
           <div class="garage-status" id="garage-status" hidden></div>
+
+          <!-- THE FORGE card — same card system as garage-card / training-card -->
+          <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
+            <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
+            <span class="menu-card-icon">🔥</span>
+            <strong>The Forge</strong>
+            <small>Unlock GearBorn with your Medallions.</small>
+          </button>
+
           <div class="garage-grid" id="garage-grid"></div>
+        </section>
+
+        <!-- THE FORGE sub-view (lives alongside other views) -->
+        <section class="view forge-view" id="forge-view" hidden aria-label="The Forge">
+          <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
+          <div class="section-heading">
+            <p>The Forge</p>
+            <h1>Unlock your GearBorn.</h1>
+          </div>
+
+          <div class="forge-layout">
+            <!-- Left: scene with vat, animation layers -->
+            <div class="forge-scene">
+              <img class="forge-bg-img" src="assets/forge/forge_bg.png" alt="">
+              <div class="forge-animation-area" id="forge-animation-area"></div>
+              <img class="forge-vat-img" id="forge-vat-img" src="assets/forge/forge_vat.png" alt="The Forge vat">
+            </div>
+
+            <!-- Right: controls -->
+            <div class="forge-panel">
+              <div class="forge-selection-display" id="forge-selection-display">
+                <img id="forge-selected-medallion" class="forge-selected-medallion-img" src="" alt="" hidden>
+                <p id="forge-selected-name" class="forge-selected-name-text">Select a Medallion to unlock</p>
+              </div>
+              <button class="success-button forge-unlock-btn" id="forge-unlock-btn" type="button" disabled>
+                Select a Medallion
+              </button>
+              <button class="ghost forge-inventory-btn" id="forge-inventory-btn" type="button">
+                🧿 Medallion Inventory
+              </button>
+              <div class="forge-inventory-panel" id="forge-inventory-panel" hidden>
+                <div class="forge-medallion-grid" id="forge-medallion-grid"></div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="view" id="settings-view" aria-labelledby="settings-title">
@@ -1104,5 +1148,33 @@
     </div>
 
     <script src="game.js"></script>
+    <!-- MEDALLION EARNED POPUP -->
+    <div class="modal-overlay" id="medallion-earned-popup" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="medallion-earned-name">
+      <div class="forge-popup">
+        <p class="modal-kicker">Pink Slip Won!</p>
+        <img id="medallion-earned-img" class="forge-popup-medallion" src="" alt="">
+        <p id="medallion-earned-name" class="forge-popup-copy"></p>
+        <p class="forge-popup-sub">Head to <span class="forge-orange">THE FORGE</span> to unlock your GearBorn.</p>
+        <div class="modal-actions">
+          <button class="success-button" id="medallion-go-forge" type="button">🔥 Go to The Forge</button>
+          <button class="ghost" id="medallion-later" type="button">Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORGE UNLOCKED POPUP -->
+    <div class="modal-overlay" id="forge-unlocked-popup" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="forge-unlocked-name">
+      <div class="forge-popup">
+        <p class="modal-kicker">Forged! 🔥</p>
+        <div class="forge-popup-car-art" id="forge-unlocked-car-art">
+          <img id="forge-unlocked-img" src="" alt="" class="forge-popup-car-img">
+        </div>
+        <p id="forge-unlocked-name" class="forge-popup-copy"></p>
+        <div class="modal-actions">
+          <button class="success-button" id="forge-unlocked-close" type="button">View in Garage</button>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

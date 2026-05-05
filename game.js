@@ -1183,6 +1183,7 @@ const defaultState = {
   selectedAchievement: achievementDefs[0].id,
   unlockedArtVanForms: [],
   unlockedLines: [...defaultUnlockedLines],
+  medallionsOwned: [],
   timeTrials: {},
   storyTimeTrials: {},
   garage: Object.fromEntries(cars.map((car) => [car.id, { level: 1, xp: 0, evolution: 0, pendingEvolution: null }]))
@@ -1505,6 +1506,16 @@ const el = {
   verticalLeftKey: document.querySelector("#vertical-left-key"),
   verticalRightKey: document.querySelector("#vertical-right-key"),
   evolutionModal: document.querySelector("#evolution-modal"),
+  forgeView: document.querySelector("#forge-view"),
+  forgeVatImg: document.querySelector("#forge-vat-img"),
+  forgeMedallionGrid: document.querySelector("#forge-medallion-grid"),
+  forgeInventoryPanel: document.querySelector("#forge-inventory-panel"),
+  forgeAnimationArea: document.querySelector("#forge-animation-area"),
+  forgeSelectedName: document.querySelector("#forge-selected-name"),
+  forgeSelectedMedallion: document.querySelector("#forge-selected-medallion"),
+  forgeUnlockBtn: document.querySelector("#forge-unlock-btn"),
+  forgeUnlockedPopup: document.querySelector("#forge-unlocked-popup"),
+  medallionEarnedPopup: document.querySelector("#medallion-earned-popup"),
   evolutionStage: document.querySelector("#evolution-stage"),
   evolutionKicker: document.querySelector("#evolution-kicker"),
   evolutionTitle: document.querySelector("#evolution-title"),
@@ -4543,7 +4554,7 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
   el.evolutionAnimation.classList.add("active");
   void el.evolutionAnimation.offsetWidth;
   el.evolutionAnimation.classList.add("run");
-  const revealTimer = window.setTimeout(revealOnce, 9200);
+  const revealTimer = window.setTimeout(revealOnce, 8030);
   await new Promise((resolve) => window.setTimeout(resolve, 11000));
   window.clearTimeout(revealTimer);
   revealOnce();
@@ -4570,26 +4581,229 @@ function unlockGearbornLine(carId) {
   return true;
 }
 
+function awardMedallion(carId) {
+  state.medallionsOwned = state.medallionsOwned || [];
+  if (!state.medallionsOwned.includes(carId)) state.medallionsOwned.push(carId);
+  saveState();
+}
+
+function hasMedallion(carId) {
+  return (state.medallionsOwned || []).includes(carId);
+}
+
 function showPinkSlipUnlock(carId, onContinue) {
   const car = cars.find((item) => item.id === carId);
-  if (!car) {
-    onContinue?.();
-    return;
-  }
-  unlockGearbornLine(carId);
-  const form = car.evolutions[0];
+  if (!car) { onContinue?.(); return; }
+  awardMedallion(carId);
   pendingPinkSlipContinue = onContinue;
-  evolutionModal = { mode: "pink-slip", carId, evolution: 0 };
-  el.evolutionModal.classList.add("evolution-unlocked");
-  el.evolutionKicker.textContent = "Pink Slip Won";
-  el.evolutionTitle.textContent = `${form.name} is Unlocked`;
-  el.evolutionCopy.textContent = "and is parked in your Garage";
-  el.evolveButton.hidden = true;
-  el.closeEvolution.textContent = "Continue";
-  el.evolutionStage.innerHTML = carMarkupForEvolution(carId, 0, "display");
-  el.evolutionModal.classList.add("active");
-  el.evolutionModal.setAttribute("aria-hidden", "false");
-  el.closeEvolution.focus();
+  showMedallionEarnedPopup(carId, onContinue);
+}
+
+// ─── MEDALLION EARNED POPUP ──────────────────────────────────────────────────
+function showMedallionEarnedPopup(carId, onContinue) {
+  const car = cars.find((c) => c.id === carId);
+  if (!car) { onContinue?.(); return; }
+  const form = car.evolutions[0];
+  const popup = el.medallionEarnedPopup;
+  if (!popup) { onContinue?.(); return; }
+  popup.querySelector("#medallion-earned-name").innerHTML =
+    `You have earned the <strong>${form.name}</strong> <span class="medallion-gold">Medallion</span>.`;
+  const imgEl = popup.querySelector("#medallion-earned-img");
+  imgEl.src = forgeMedallionSrc(carId);
+  imgEl.alt = form.name + " Medallion";
+  popup.removeAttribute("hidden");
+  popup.setAttribute("aria-hidden", "false");
+  const handleForge = () => {
+    popup.setAttribute("hidden", "");
+    popup.setAttribute("aria-hidden", "true");
+    onContinue?.();
+    showView("garage");
+    openForge();
+  };
+  const handleLater = () => {
+    popup.setAttribute("hidden", "");
+    popup.setAttribute("aria-hidden", "true");
+    onContinue?.();
+  };
+  popup.querySelector("#medallion-go-forge").addEventListener("click", handleForge, { once: true });
+  popup.querySelector("#medallion-later").addEventListener("click", handleLater, { once: true });
+}
+
+// ─── THE FORGE ───────────────────────────────────────────────────────────────
+const forgeMedallionMap = {
+  "bee":                "assets/medallions/medallion-baybee.png",
+  "pickup":             "assets/medallions/medallion-murrka.png",
+  "pig":                "assets/medallions/medallion-hogson.png",
+  "rabbit":             "assets/medallions/medallion-bunnae.png",
+  "whale":              "assets/medallions/medallion-totorca.png",
+  "frog":               "assets/medallions/medallion-rivvir.png",
+  "techno-dinosaur":    "assets/medallions/medallion-shufflodon.png",
+  "sorority-elephant":  "assets/medallions/medallion-elepledge.png",
+  "florida-gator":      "assets/medallions/medallion-gladigator.png",
+  "grunge-fish":        "assets/medallions/medallion-moshfin.png",
+  "karate-cow":         "assets/medallions/medallion-udderlee.png",
+  "art-van":            "assets/medallions/medallion-vanvass.png",
+  "cake-train":         "assets/medallions/medallion-cuptrack.png",
+  "hornula1":           "assets/medallions/medallion-hornula1.png",
+};
+
+function forgeMedallionSrc(carId) {
+  return forgeMedallionMap[carId] || "";
+}
+
+let forgeSelectedCarId = null;
+let forgeAnimating = false;
+
+function openForge() {
+  if (!el.forgeView) return;
+  forgeSelectedCarId = null;
+  forgeAnimating = false;
+  renderForgeInventory();
+  el.forgeView.removeAttribute("hidden");
+  el.forgeView.setAttribute("aria-hidden", "false");
+  if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
+  el.forgeUnlockBtn.disabled = true;
+  el.forgeUnlockBtn.textContent = "Select a Medallion";
+  el.forgeAnimationArea.innerHTML = "";
+  el.forgeAnimationArea.classList.remove("animating");
+  if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
+  if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+}
+
+function closeForge() {
+  if (!el.forgeView) return;
+  el.forgeView.setAttribute("hidden", "");
+  el.forgeView.setAttribute("aria-hidden", "true");
+}
+
+function renderForgeInventory() {
+  if (!el.forgeMedallionGrid) return;
+  const owned = (state.medallionsOwned || []).filter((id) => !isCarUnlocked(id));
+  el.forgeMedallionGrid.innerHTML = owned.length
+    ? owned.map((carId) => {
+        const car = cars.find((c) => c.id === carId);
+        const form = car?.evolutions?.[0];
+        const src = forgeMedallionSrc(carId);
+        const active = forgeSelectedCarId === carId ? " active" : "";
+        return `<button class="forge-medallion-tile${active}" data-forge-car="${carId}" type="button" aria-label="${form?.name || carId} Medallion">
+          ${src ? `<img src="${src}" alt="${form?.name || carId}" onerror="this.style.opacity='.3'">` : ""}
+          <span>${form?.name || carId}</span>
+        </button>`;
+      }).join("")
+    : `<p class="forge-empty">No medallions yet. Win Pink Slip races to earn them.</p>`;
+}
+
+function selectForgeMedallion(carId) {
+  forgeSelectedCarId = carId;
+  renderForgeInventory();
+  const car = cars.find((c) => c.id === carId);
+  const form = car?.evolutions?.[0];
+  if (el.forgeSelectedName) el.forgeSelectedName.textContent = form?.name || carId;
+  if (el.forgeSelectedMedallion) {
+    el.forgeSelectedMedallion.src = forgeMedallionSrc(carId);
+    el.forgeSelectedMedallion.alt = (form?.name || carId) + " Medallion";
+    el.forgeSelectedMedallion.removeAttribute("hidden");
+  }
+  el.forgeUnlockBtn.disabled = false;
+  el.forgeUnlockBtn.textContent = `Unlock ${form?.name || carId}`;
+}
+
+async function runForgeAnimation(carId) {
+  if (forgeAnimating) return;
+  forgeAnimating = true;
+  el.forgeUnlockBtn.disabled = true;
+  const area = el.forgeAnimationArea;
+  area.innerHTML = "";
+  area.classList.add("animating");
+  const car = cars.find((c) => c.id === carId);
+  const form = car?.evolutions?.[0];
+
+  area.innerHTML = `
+    <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion">
+    <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform.png" alt="">
+    <img class="forge-anim-layer forge-anim-cover" src="assets/forge/forge_cover.png" alt="">
+    <img class="forge-anim-layer forge-anim-magnet" src="assets/forge/forge_magnet.png" alt="">
+    <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
+    <img class="forge-anim-layer forge-anim-glow" src="assets/forge/forge_glow.png" alt="">
+    <img class="forge-anim-layer forge-anim-smoke" src="assets/forge/forge_smoke.png" alt="">
+  `;
+
+  const step = (ms) => new Promise((r) => setTimeout(r, ms));
+  const get = (cls) => area.querySelector("." + cls);
+  const medallionEl = get("forge-anim-medallion");
+  const platformEl  = get("forge-anim-platform");
+  const coverEl     = get("forge-anim-cover");
+  const magnetEl    = get("forge-anim-magnet");
+  const carEl       = get("forge-anim-car-reveal");
+  const glowEl      = get("forge-anim-glow");
+  const smokeEl     = get("forge-anim-smoke");
+  const vatEl       = el.forgeVatImg;
+
+  // 1. Medallion appears above vat
+  await step(80);
+  medallionEl.classList.add("step-appear");
+  await step(700);
+  // 2. Medallion drops into vat
+  medallionEl.classList.add("step-drop");
+  await step(850);
+  medallionEl.classList.add("step-gone");
+  // 3. Vat shake + smoke (2.4s)
+  if (vatEl) vatEl.classList.add("forge-shake");
+  smokeEl.classList.add("step-smoke");
+  await step(2400);
+  if (vatEl) vatEl.classList.remove("forge-shake");
+  // 4. Platform + cover rise
+  platformEl.classList.add("step-rise");
+  coverEl.classList.add("step-rise");
+  await step(900);
+  // 5. Magnet drops
+  magnetEl.classList.add("step-magnet-drop");
+  await step(700);
+  // 6. Cover lifts with magnet
+  coverEl.classList.add("step-lift");
+  magnetEl.classList.add("step-magnet-lift");
+  await step(800);
+  coverEl.classList.add("step-gone");
+  magnetEl.classList.add("step-gone");
+  // 7. GearBorn revealed + glow pulse
+  carEl.classList.add("step-reveal");
+  glowEl.classList.add("step-glow");
+  await step(2200);
+
+  // Unlock the car, remove medallion from inventory
+  unlockGearbornLine(carId);
+  state.medallionsOwned = (state.medallionsOwned || []).filter((id) => id !== carId);
+  saveState();
+  render();
+
+  forgeAnimating = false;
+  area.classList.remove("animating");
+  showForgeUnlockedPopup(carId);
+}
+
+function showForgeUnlockedPopup(carId) {
+  const car = cars.find((c) => c.id === carId);
+  const form = car?.evolutions?.[0];
+  const popup = el.forgeUnlockedPopup;
+  if (!popup) return;
+  popup.querySelector("#forge-unlocked-name").innerHTML =
+    `<strong>${form?.name || carId}</strong> is now available in the <span class="forge-orange">GARAGE</span>.`;
+  const imgEl = popup.querySelector("#forge-unlocked-img");
+  imgEl.src = imageFor(form, "display");
+  imgEl.alt = form?.name || carId;
+  popup.removeAttribute("hidden");
+  popup.setAttribute("aria-hidden", "false");
+  popup.querySelector("#forge-unlocked-close").addEventListener("click", () => {
+    popup.setAttribute("hidden", "");
+    popup.setAttribute("aria-hidden", "true");
+    closeForge();
+    renderForgeInventory();
+    forgeSelectedCarId = null;
+    el.forgeUnlockBtn.disabled = true;
+    el.forgeUnlockBtn.textContent = "Select a Medallion";
+    if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
+    if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+  }, { once: true });
 }
 
 function applyPinkSlipLossPenalty(carId) {
@@ -9864,6 +10078,32 @@ document.addEventListener("keyup", (event) => {
     beta3dKeys[map[key]] = false;
     updateBeta3dControlVisuals();
   }
+});
+
+// ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────
+document.querySelector("#forge-back-btn")?.addEventListener("click", closeForge);
+
+document.querySelector("#forge-inventory-btn")?.addEventListener("click", () => {
+  const panel = el.forgeInventoryPanel;
+  if (!panel) return;
+  const isOpen = !panel.hasAttribute("hidden");
+  if (isOpen) panel.setAttribute("hidden", "");
+  else panel.removeAttribute("hidden");
+  renderForgeInventory();
+});
+
+document.querySelector("#forge-medallion-grid")?.addEventListener("click", (e) => {
+  const tile = e.target.closest("[data-forge-car]");
+  if (tile) selectForgeMedallion(tile.dataset.forgeCar);
+});
+
+document.querySelector("#forge-unlock-btn")?.addEventListener("click", () => {
+  if (forgeSelectedCarId && !forgeAnimating) runForgeAnimation(forgeSelectedCarId);
+});
+
+document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
+  showView("garage");
+  openForge();
 });
 
 if (beta3dDevEnabled()) document.body.classList.add("beta-dev-enabled");
