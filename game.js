@@ -449,6 +449,7 @@ const tutorialDialogue = {
     ["user", "I'm going to get all of them."],
     ["tyree", "Good luck. Now get out of my training academy."]
   ],
+  "mode-select": [
     ["tyree", "There are four types of races you can choose from - Drag Races, Time Trials, Boss Races, and Battle Mode."],
     ["user", "Battle Mode?? Sick."],
     ["tyree", "Drag Races are about speed and acceleration - a head-to-head matchup where your goal is to get from start to finish as fast as possible in a test of your gear-shifting ability."],
