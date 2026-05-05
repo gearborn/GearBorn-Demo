@@ -5000,12 +5000,22 @@ async function runForgeAnimation(carId) {
   unlockGearbornLine(carId);
   state.medallionsOwned = (state.medallionsOwned || []).filter((id) => id !== carId);
   saveState();
-  render();
 
   overlay.classList.remove("active");
   overlay.setAttribute("aria-hidden", "true");
   area.innerHTML = "";
   forgeAnimating = false;
+
+  // During tutorial forge, advance tutorial first then show popup
+  if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
+    state.tutorialAwaitingForge = false;
+    // Close forge panel and return to garage content
+    if (el.forgePanel) el.forgePanel.hidden = true;
+    if (el.garageContent) el.garageContent.hidden = false;
+    saveState();
+  }
+
+  render();
   showForgeUnlockedPopup(carId);
 }
 
@@ -5014,32 +5024,47 @@ function showForgeUnlockedPopup(carId) {
   const form = car?.evolutions?.[0];
   const popup = el.forgeUnlockedPopup;
   if (!popup) return;
+
+  // Capture tutorial state now — before anything else changes it
+  const isForTutorial = tutorialActive();
+
   popup.querySelector("#forge-unlocked-name").innerHTML =
     `<strong>${form?.name || carId}</strong> is now available in the <span class="forge-orange">GARAGE</span>.`;
   const imgEl = popup.querySelector("#forge-unlocked-img");
   imgEl.src = imageFor(form, "display");
   imgEl.alt = form?.name || carId;
-  popup.classList.add("active");
+
+  // Remove hidden attr FIRST so display:flex from .active can work
   popup.removeAttribute("hidden");
+  popup.classList.add("active");
   popup.setAttribute("aria-hidden", "false");
-  popup.querySelector("#forge-unlocked-close").addEventListener("click", () => {
+
+  // If tutorial: advance to unlocked scene immediately so dialogue also shows
+  if (isForTutorial) {
+    setTutorialScene("unlocked");
+    setupTutorialScene();
+    renderTutorial();
+  }
+
+  // Replace button to avoid stale listeners
+  const closeBtn = popup.querySelector("#forge-unlocked-close");
+  const freshBtn = closeBtn.cloneNode(true);
+  closeBtn.replaceWith(freshBtn);
+
+  freshBtn.addEventListener("click", () => {
     popup.classList.remove("active");
     popup.setAttribute("hidden", "");
     popup.setAttribute("aria-hidden", "true");
-    closeForge();
-    renderForgeInventory();
     forgeSelectedCarId = null;
-    el.forgeUnlockBtn.disabled = true;
-    el.forgeUnlockBtn.textContent = "Select a Medallion";
+    if (el.forgeUnlockBtn) {
+      el.forgeUnlockBtn.disabled = true;
+      el.forgeUnlockBtn.textContent = "Select a Medallion";
+    }
     if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
     if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
-    // If the tutorial is at the-forge scene, advance to unlocked
-    if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
-      state.tutorialAwaitingForge = false;
-      setTutorialScene("unlocked");
-      setupTutorialScene();
-      saveState();
-      renderTutorial();
+    if (!isForTutorial) {
+      closeForge();
+      renderForgeInventory();
     }
   }, { once: true });
 }
