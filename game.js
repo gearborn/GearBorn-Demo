@@ -653,14 +653,14 @@ const campaignDragStages = [
   { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png" }
 ];
 const pinkSlipRacePlan = {
-  0: { carId: "pig", rankKey: "D", xp: 180, power: 1.08, distance: 400 },
-  1: { carId: "sorority-elephant", rankKey: "C", xp: 240, power: 1.2, distance: 800 },
-  2: { carId: "grunge-fish", rankKey: "C", xp: 300, power: 1.32, distance: 800 },
-  3: { carId: "florida-gator", rankKey: "B", xp: 360, power: 1.45, distance: 800 },
-  4: { carId: "whale", rankKey: "B", xp: 420, power: 1.55, distance: 800 },
-  5: { carId: "techno-dinosaur", rankKey: "A", xp: 540, power: 1.74, distance: 1600 },
-  6: { carId: "karate-cow", rankKey: "S", xp: 680, power: 1.95, distance: 1600 },
-  7: { carId: "frog", rankKey: "S", xp: 820, power: 2.08, distance: 1600 }
+  0: { carId: "pig",                rankKey: "D", xp: 180, power: 0.88, distance: 400 },
+  1: { carId: "sorority-elephant",  rankKey: "C", xp: 240, power: 0.90, distance: 800 },
+  2: { carId: "grunge-fish",        rankKey: "C", xp: 300, power: 0.94, distance: 800 },
+  3: { carId: "florida-gator",      rankKey: "B", xp: 360, power: 0.96, distance: 800 },
+  4: { carId: "whale",              rankKey: "B", xp: 420, power: 0.98, distance: 800 },
+  5: { carId: "techno-dinosaur",    rankKey: "A", xp: 540, power: 1.02, distance: 1600 },
+  6: { carId: "karate-cow",         rankKey: "S", xp: 680, power: 1.06, distance: 1600 },
+  7: { carId: "frog",               rankKey: "S", xp: 820, power: 1.08, distance: 1600 }
 };
 const rivalRacePlan = {
   1: { id: "berlin-rival", mechanic: "drag", xp: 300, power: 1.2, distance: 800 },
@@ -4545,20 +4545,65 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
     onReveal?.();
   };
   evolutionAnimationActive = true;
+
+  // Load images into the overlay
   el.evolutionAnimationCurrent.src = currentImage;
   el.evolutionAnimationCurrent.alt = currentForm?.name || "";
   el.evolutionAnimationNext.src = nextImage;
   el.evolutionAnimationNext.alt = nextForm?.name || "";
   await Promise.all([preloadImage(currentImage), preloadImage(nextImage)]);
+
+  // Reset and start the CSS animation (glow, shake, flash, ring)
   el.evolutionAnimation.classList.remove("run");
   el.evolutionAnimation.setAttribute("aria-hidden", "false");
   el.evolutionAnimation.classList.add("active");
-  void el.evolutionAnimation.offsetWidth;
+  void el.evolutionAnimation.offsetWidth; // force reflow to restart animation
   el.evolutionAnimation.classList.add("run");
+
+  // Ensure starting state: current visible, next hidden
+  el.evolutionAnimationCurrent.style.opacity = "1";
+  el.evolutionAnimationNext.style.opacity = "0";
+
+  // JS-driven flicker schedule (milliseconds from animation start)
+  // Slow blinks start at 4s, build to rapid strobe, flash+lock at 8s
+  const flickerSchedule = [
+    // [time_ms, showNext_bool]  — each entry swaps which form is shown
+    [4000, true],  [4350, false], [4700, true],  [5050, false], // slow (350ms each)
+    [5200, true],  [5420, false], [5640, true],  [5860, false], // medium (220ms)
+    [6000, true],  [6180, false], [6360, true],  [6540, false], // faster (180ms)
+    [6680, true],  [6820, false], [6960, true],  [7100, false], // fast (140ms)
+    [7220, true],  [7330, false], [7440, true],  [7550, false], // rapid (110ms)
+    [7650, true],  [7740, false], [7830, true],  [7920, false], // strobe (90ms)
+    [8000, true],  [8060, false], [8120, true],  [8180, false], [8240, true], // very fast
+    // Flash fires at ~8030ms via CSS. Lock evolved form on after:
+    [8300, true],  // lock: show evolved form permanently
+  ];
+
+  const startTime = performance.now();
+  const timers = [];
+
+  flickerSchedule.forEach(([delay, showNext]) => {
+    timers.push(window.setTimeout(() => {
+      el.evolutionAnimationCurrent.style.opacity = showNext ? "0" : "1";
+      el.evolutionAnimationNext.style.opacity = showNext ? "1" : "0";
+    }, delay));
+  });
+
+  // Trigger onReveal callback at 8030ms (matches CSS flash timing)
   const revealTimer = window.setTimeout(revealOnce, 8030);
+
+  // Wait for full 11s animation to complete
   await new Promise((resolve) => window.setTimeout(resolve, 11000));
+
+  // Cleanup
+  timers.forEach((t) => window.clearTimeout(t));
   window.clearTimeout(revealTimer);
   revealOnce();
+
+  // Ensure evolved form is shown at the end
+  el.evolutionAnimationCurrent.style.opacity = "0";
+  el.evolutionAnimationNext.style.opacity = "1";
+
   el.evolutionAnimation.classList.remove("active", "run");
   el.evolutionAnimation.setAttribute("aria-hidden", "true");
   evolutionAnimationActive = false;

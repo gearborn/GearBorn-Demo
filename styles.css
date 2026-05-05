@@ -6177,12 +6177,14 @@ small {
   animation: evolutionVehicleShake 11s linear forwards;
 }
 
+/* Opacity is now driven by JS setInterval for reliable cross-browser flicker.
+   CSS animations for glow, shake, flash, ring remain. */
 .evolution-animation-overlay.run .evolution-vehicle-current {
-  animation: evolutionCurrentFlicker 11s steps(1, end) forwards;
+  /* opacity controlled by JS */
 }
 
 .evolution-animation-overlay.run .evolution-vehicle-next {
-  animation: evolutionNextFlicker 11s steps(1, end) forwards;
+  /* opacity controlled by JS */
 }
 
 .evolution-animation-overlay.run .evolution-vehicle img {
@@ -6236,55 +6238,8 @@ small {
 }
 
 /* Current form: visible until flicker, off for good at 84% */
-/* Current: solid → slow flicker → faster → strobe → off at 73% (flash) */
-@keyframes evolutionCurrentFlicker {
-  0%, 36% { opacity: 1; }
-  38% { opacity: 0; }
-  40% { opacity: 1; }
-  43% { opacity: 0; }
-  45% { opacity: 1; }
-  47% { opacity: 0; }
-  49% { opacity: 1; }
-  51% { opacity: 0; }
-  53% { opacity: 1; }
-  55% { opacity: 0; }
-  57% { opacity: 1; }
-  59% { opacity: 0; }
-  61% { opacity: 1; }
-  63% { opacity: 0; }
-  65% { opacity: 1; }
-  67% { opacity: 0; }
-  68.5% { opacity: 1; }
-  70% { opacity: 0; }
-  71.5% { opacity: 1; }
-  73% { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-/* Next: inverse — invisible until flicker, fully visible after 73% flash */
-@keyframes evolutionNextFlicker {
-  0%, 36% { opacity: 0; }
-  38% { opacity: 1; }
-  40% { opacity: 0; }
-  43% { opacity: 1; }
-  45% { opacity: 0; }
-  47% { opacity: 1; }
-  49% { opacity: 0; }
-  51% { opacity: 1; }
-  53% { opacity: 0; }
-  55% { opacity: 1; }
-  57% { opacity: 0; }
-  59% { opacity: 1; }
-  61% { opacity: 0; }
-  63% { opacity: 1; }
-  65% { opacity: 0; }
-  67% { opacity: 1; }
-  68.5% { opacity: 0; }
-  70% { opacity: 1; }
-  71.5% { opacity: 0; }
-  73% { opacity: 1; }
-  100% { opacity: 1; }
-}
+/* evolutionCurrentFlicker and evolutionNextFlicker keyframes removed —
+   opacity is now driven by JS setInterval for reliable cross-browser behaviour. */
 
 @keyframes evolutionImageGlow {
   0% {
