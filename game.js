@@ -1255,6 +1255,7 @@ const defaultState = {
   tutorialSnapshotGarage: null,
   tutorialSnapshotUnlockedLines: null,
   tutorialSnapshotMedallions: null,
+  tutorialSnapshotComplete: null,
   storyCarChosen: false,
   highestBossIndex: 0,
   selectedCampaign: 0,
@@ -1825,6 +1826,11 @@ function sanitizeState() {
     if (state.tutorialSnapshotMedallions) {
       state.medallionsOwned = [...state.tutorialSnapshotMedallions];
     }
+    // Restore tutorialComplete from snapshot so a mid-tutorial reload doesn't
+    // cause the first-time modal to reappear for players who already finished it
+    if (typeof state.tutorialSnapshotComplete === "boolean") {
+      state.tutorialComplete = state.tutorialSnapshotComplete;
+    }
     // Reset all tutorial state so the game loads normally
     state.tutorialActive = false;
     state.tutorialScene = 0;
@@ -1836,6 +1842,7 @@ function sanitizeState() {
     state.tutorialSnapshotGarage = null;
     state.tutorialSnapshotUnlockedLines = null;
     state.tutorialSnapshotMedallions = null;
+    state.tutorialSnapshotComplete = null;
   }
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
@@ -4773,9 +4780,11 @@ function showMedallionEarnedPopup(carId, onContinue) {
   imgEl.src = forgeMedallionSrc(carId);
   imgEl.alt = form.name + " Medallion";
   popup.classList.add("active");
+  popup.removeAttribute("hidden");
   popup.setAttribute("aria-hidden", "false");
   const handleForge = () => {
     popup.classList.remove("active");
+    popup.setAttribute("hidden", "");
     popup.setAttribute("aria-hidden", "true");
     onContinue?.();
     showView("garage");
@@ -4783,6 +4792,7 @@ function showMedallionEarnedPopup(carId, onContinue) {
   };
   const handleLater = () => {
     popup.classList.remove("active");
+    popup.setAttribute("hidden", "");
     popup.setAttribute("aria-hidden", "true");
     onContinue?.();
   };
@@ -4973,9 +4983,11 @@ function showForgeUnlockedPopup(carId) {
   imgEl.src = imageFor(form, "display");
   imgEl.alt = form?.name || carId;
   popup.classList.add("active");
+  popup.removeAttribute("hidden");
   popup.setAttribute("aria-hidden", "false");
   popup.querySelector("#forge-unlocked-close").addEventListener("click", () => {
     popup.classList.remove("active");
+    popup.setAttribute("hidden", "");
     popup.setAttribute("aria-hidden", "true");
     closeForge();
     renderForgeInventory();
@@ -5729,6 +5741,7 @@ function startTutorial(sceneId = "intro") {
   state.tutorialSnapshotGarage = JSON.parse(JSON.stringify(state.garage || {}));
   state.tutorialSnapshotUnlockedLines = [...(state.unlockedLines || [])];
   state.tutorialSnapshotMedallions = [...(state.medallionsOwned || [])];
+  state.tutorialSnapshotComplete = Boolean(state.tutorialComplete);
   setupTutorialScene();
   saveState();
   render();
@@ -5760,6 +5773,7 @@ function finishTutorial() {
   state.tutorialSnapshotGarage = null;
   state.tutorialSnapshotUnlockedLines = null;
   state.tutorialSnapshotMedallions = null;
+  state.tutorialSnapshotComplete = null;
   state.tutorialTimeMedal = "";
   state.selectedCar = defaultUnlockedLines.includes(state.selectedCar) ? state.selectedCar : defaultUnlockedLines[0];
   state.selectedStoryCar = defaultUnlockedLines.includes(state.selectedStoryCar) ? state.selectedStoryCar : state.selectedCar;
@@ -10622,7 +10636,14 @@ checkAchievements(true);
 saveState();
 render();
 if (beta3dDevEnabled()) showView("beta");
-if (!beta3dDevEnabled() && !state.tutorialComplete && !state.tutorialActive) {
+// Only show first-time modal if truly a new player: no tutorial complete flag,
+// no story progress, no sprox earned, and no unlocked cars beyond the defaults.
+const hasAnyProgress = state.tutorialComplete
+  || state.sprox > 0
+  || state.highestCampaignIndex > 0
+  || Object.keys(state.completedCampaignLevels || {}).length > 0
+  || (state.unlockedLines || []).some((id) => !defaultUnlockedLines.includes(id));
+if (!beta3dDevEnabled() && !hasAnyProgress && !state.tutorialActive) {
   openFirstTutorialModal();
 } else if (!beta3dDevEnabled() && state.tutorialActive) {
   setupTutorialScene();
