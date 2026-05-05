@@ -6962,13 +6962,14 @@ small {
 .forge-menu-card {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 4px;
-  min-height: 120px;
-  padding: 18px 20px;
+  grid-template-rows: 1fr auto auto;
+  gap: 6px;
+  width: min(340px, 100%);
+  min-height: 260px;
+  padding: 20px 22px 22px;
   border: 1px solid rgba(255, 140, 30, 0.44);
   border-radius: 20px;
-  background: linear-gradient(145deg, rgba(255, 100, 20, 0.18), rgba(17, 24, 32, 0.92));
+  background: linear-gradient(175deg, rgba(255, 100, 20, 0.22), rgba(17, 24, 32, 0.96));
   color: var(--ink);
   text-align: left;
   overflow: hidden;
@@ -6976,13 +6977,12 @@ small {
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   cursor: pointer;
   margin-bottom: 16px;
-  width: 100%;
 }
 
 .forge-menu-card:hover {
-  transform: translateY(-3px) scale(1.005);
+  transform: translateY(-3px) scale(1.015);
   border-color: rgba(255, 140, 30, 0.72);
-  box-shadow: 0 22px 56px rgba(0,0,0,0.44), 0 0 32px rgba(255,100,20,0.18);
+  box-shadow: 0 22px 56px rgba(0,0,0,0.44), 0 0 32px rgba(255,100,20,0.22);
 }
 
 .forge-menu-card-bg {
@@ -6991,7 +6991,8 @@ small {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.12;
+  object-position: center 30%;
+  opacity: 0.28;
   pointer-events: none;
   border-radius: inherit;
 }
@@ -6999,9 +7000,9 @@ small {
 .forge-menu-card .menu-card-icon {
   position: relative;
   z-index: 1;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   line-height: 1;
-  margin-bottom: 4px;
+  align-self: end;
 }
 
 .forge-menu-card strong {
