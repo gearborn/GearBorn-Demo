@@ -5946,6 +5946,9 @@ function advanceTutorial() {
   const scene = currentTutorialScene();
   const lines = tutorialLinesForScene(scene);
 
+  // ── Already waiting for user to act — ignore button presses ──────────────
+  if (state.tutorialAwaitingForge) return;
+
   // ── Awaiting user actions (upgrade click, evolve click) ──────────────────
   if (scene.id === "evolve" && state.tutorialLine === tutorialEvolvePromptIndex()) {
     state.tutorialAwaitingEvolve = true;
