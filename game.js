@@ -1250,6 +1250,7 @@ const defaultState = {
   tutorialTimeMedal: "",
   tutorialAwaitingUpgrade: false,
   tutorialAwaitingEvolve: false,
+  tutorialAwaitingForge: false,
   tutorialStartingSprox: 0,
   storyCarChosen: false,
   highestBossIndex: 0,
@@ -1804,6 +1805,7 @@ function sanitizeState() {
   state.tutorialTimeMedal = typeof state.tutorialTimeMedal === "string" ? state.tutorialTimeMedal : "";
   state.tutorialAwaitingUpgrade = Boolean(state.tutorialAwaitingUpgrade);
   state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
+  state.tutorialAwaitingForge = Boolean(state.tutorialAwaitingForge);
   state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
@@ -4949,6 +4951,7 @@ function showForgeUnlockedPopup(carId) {
     if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
     // If the tutorial is at the-forge scene, advance to unlocked
     if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
+      state.tutorialAwaitingForge = false;
       setTutorialScene("unlocked");
       setupTutorialScene();
       saveState();
@@ -5673,6 +5676,7 @@ function startTutorial(sceneId = "intro") {
   state.tutorialLine = 0;
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
+  state.tutorialAwaitingForge = false;
   state.tutorialStartingSprox = state.unlimitedSprox ? 0 : Math.max(0, Math.floor(state.sprox || 0));
   if (sceneId === "intro") {
     state.sprox = 0;
@@ -5692,6 +5696,7 @@ function finishTutorial() {
   state.tutorialLine = 0;
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
+  state.tutorialAwaitingForge = false;
   state.tutorialStartingSprox = 0;
   state.tutorialTimeMedal = "";
   state.selectedCar = defaultUnlockedLines.includes(state.selectedCar) ? state.selectedCar : defaultUnlockedLines[0];
@@ -5834,6 +5839,7 @@ function setupTutorialScene() {
     case "the-forge":
       // Award the three starter medallions and open The Forge
       ["bee", "pickup", "rabbit"].forEach((id) => awardMedallion(id));
+      state.tutorialAwaitingForge = false;  // reset — dialogue plays first
       showView("garage");
       openForge();
       break;
@@ -5926,6 +5932,7 @@ function setTutorialScene(sceneId) {
   state.tutorialLine = 0;
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
+  state.tutorialAwaitingForge = false;
 }
 
 function tutorialEvolvePromptIndex() {
@@ -6163,8 +6170,8 @@ function advanceTutorial() {
       break;
 
     case "the-forge":
-      // The Forge — wait for user to unlock via animation (handled by forge completion)
-      // Tutorial stays here; completion hook in showForgeUnlockedPopup will advance
+      // Dialogue done — hide tutorial overlay so user can interact with The Forge
+      state.tutorialAwaitingForge = true;
       saveState();
       renderTutorial();
       break;
@@ -6194,6 +6201,7 @@ function advanceTutorial() {
 function rewindTutorial() {
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
+  state.tutorialAwaitingForge = false;
   if (state.tutorialLine > 0) {
     state.tutorialLine -= 1;
     saveState();
@@ -6227,6 +6235,11 @@ function renderTutorial() {
   }
   if ((scene.id === "evolve" && state.tutorialAwaitingEvolve) || scene.id === "evolved-form") {
     // Hide tutorial overlay while evolution modal is prominent
+    el.tutorialOverlay.classList.remove("active");
+    return;
+  }
+  if (scene.id === "the-forge" && state.tutorialAwaitingForge) {
+    // Hide tutorial overlay so user can freely interact with The Forge
     el.tutorialOverlay.classList.remove("active");
     return;
   }
