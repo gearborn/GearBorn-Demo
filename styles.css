@@ -794,17 +794,18 @@ body:not(.mode-active) .nav {
   justify-items: center;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .achievement-detail-art .car {
   position: relative;
-  top: auto;
+  top: 0;
   right: auto;
   left: auto;
   width: min(240px, 78%);
   height: 160px;
   transform: none;
+  margin: 0 auto;
 }
 
 .achievement-detail-art .car .car-image {
@@ -1381,13 +1382,12 @@ body:not(.mode-active) .nav {
 }
 
 .beta-car-select-toggle {
-  justify-self: center;
-  min-width: 156px;
+  display: none;
 }
 
 .beta-car-select-panel {
   width: min(900px, 100%);
-  margin: 4px auto 16px;
+  margin: 4px auto 0;
 }
 
 .mini-stat-grid {
@@ -1944,19 +1944,22 @@ body:not(.mode-active) .nav {
 }
 
 .story-node-icon.layered .node-subject {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   width: 58%;
   height: 58%;
-  align-self: center;
-  justify-self: center;
   object-fit: contain;
   object-position: center center;
-  transform: none;
 }
 
 .story-preview-icon .story-node-icon.layered .node-subject {
-  transform: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .story-preview-icon {
@@ -4881,38 +4884,99 @@ small {
 
 .beta-track-select {
   display: grid;
-  grid-template-columns: minmax(190px, 0.8fr) minmax(280px, 1.2fr);
+  grid-template-columns: minmax(200px, 1fr) minmax(280px, 1.2fr);
   gap: 14px;
-  align-items: stretch;
+  align-items: start;
   margin-top: 8px;
 }
 
 .beta-track-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
+  gap: 10px;
   align-content: start;
-  max-height: 330px;
-  overflow: auto;
-  padding-right: 4px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
-.beta-track-button {
-  min-height: 68px;
-  padding: 10px;
-  border: 1px solid rgba(82, 199, 255, 0.24);
+/* City icon tiles for track selection */
+.beta-city-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 2px solid rgba(82, 199, 255, 0.22);
   border-radius: 14px;
-  background: linear-gradient(145deg, rgba(82, 199, 255, 0.12), rgba(17, 24, 32, 0.9));
+  background: linear-gradient(145deg, rgba(82, 199, 255, 0.08), rgba(17, 24, 32, 0.88));
   color: var(--ink);
-  font-weight: 1000;
-  text-align: left;
+  font-weight: 900;
+  font-size: 0.72rem;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 90px;
 }
 
-.beta-track-button.active {
-  border-color: rgba(255, 200, 87, 0.72);
+.beta-city-tile img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.beta-city-tile span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.beta-city-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(82, 199, 255, 0.55);
+  box-shadow: 0 4px 18px rgba(82, 199, 255, 0.2);
+}
+
+.beta-city-tile.active {
+  border-color: rgba(255, 200, 87, 0.8);
+  background: linear-gradient(145deg, rgba(255, 200, 87, 0.18), rgba(17, 24, 32, 0.9));
   color: var(--gold);
-  box-shadow: 0 0 20px rgba(255, 200, 87, 0.16);
+  box-shadow: 0 0 20px rgba(255, 200, 87, 0.2);
+}
+
+/* Beta car select open button */
+.beta-car-select-open {
+  justify-self: center;
+  min-width: 180px;
+  background: linear-gradient(135deg, #3ab26e, #28834f);
+  border-color: rgba(58, 178, 110, 0.6);
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+}
+
+.beta-car-select-open:hover {
+  background: linear-gradient(135deg, #44cc80, #32a060);
+  box-shadow: 0 0 22px rgba(58, 178, 110, 0.42);
+}
+
+/* Beta screens layout */
+#beta-main-screen {
+  display: grid;
+  gap: 12px;
+}
+
+#beta-car-select-screen {
+  display: grid;
+  gap: 12px;
+}
+
+#beta-track-select-screen {
+  display: grid;
+  gap: 12px;
 }
 
 .beta-track-preview {
@@ -5259,6 +5323,8 @@ small {
 
 #beta-canvas {
   display: block;
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: min(720px, 72svh);
   min-height: 520px;

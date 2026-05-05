@@ -1262,6 +1262,13 @@ const el = {
   betaCarSelectPreview: document.querySelector("#beta-car-select-preview"),
   betaCarSelectPanel: document.querySelector("#beta-car-select-panel"),
   betaCarSelectToggle: document.querySelector("#beta-car-select-toggle"),
+  betaCarSelectOpen: document.querySelector("#beta-car-select-open"),
+  betaCarSelectScreen: document.querySelector("#beta-car-select-screen"),
+  betaCarSelectConfirm: document.querySelector("#beta-car-select-confirm"),
+  betaCarSelectBack: document.querySelector("#beta-car-select-back"),
+  betaMainScreen: document.querySelector("#beta-main-screen"),
+  betaTrackSelectScreen: document.querySelector("#beta-track-select-screen"),
+  betaTrackSelectTitle: document.querySelector("#beta-track-select-title"),
   playerCar: document.querySelector("#player-car"),
   storyCar: document.querySelector("#story-car"),
   campaignCar: document.querySelector("#campaign-car"),
@@ -6618,12 +6625,10 @@ document.addEventListener("click", (event) => {
   changeGarageEvolution(carId, direction);
 });
 
-el.betaCarSelectToggle?.addEventListener("click", () => {
-  if (!el.betaCarSelectPanel) return;
-  el.betaCarSelectPanel.hidden = !el.betaCarSelectPanel.hidden;
-  el.betaCarSelectToggle.textContent = el.betaCarSelectPanel.hidden ? "Car Select" : "Hide Car Select";
-  renderCarTiles();
-});
+// Beta car select screen
+el.betaCarSelectOpen?.addEventListener("click", openBetaCarSelect);
+el.betaCarSelectConfirm?.addEventListener("click", closeBetaCarSelect);
+el.betaCarSelectBack?.addEventListener("click", closeBetaCarSelect);
 
 el.playerCar.addEventListener("change", (event) => {
   setSelectedCarForMode("drag", event.target.value);
@@ -7283,16 +7288,16 @@ function betaMakeTrack(id, name, corners, width = 20, height = 15) {
 }
 
 const betaTracks = [
-  betaMakeTrack("training", "Training", [{ x: 1, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 1 }, { x: 1, y: 1 }]),
-  betaMakeTrack("indy", "Indy", [{ x: 2, y: 12 }, { x: 9, y: 12 }, { x: 9, y: 9 }, { x: 16, y: 9 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 2, y: 5 }]),
-  betaMakeTrack("berlin", "Berlin", [{ x: 2, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 7 }, { x: 15, y: 7 }, { x: 15, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 6 }, { x: 2, y: 6 }]),
-  betaMakeTrack("dubai", "Dubai", [{ x: 1, y: 11 }, { x: 11, y: 11 }, { x: 11, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 2 }, { x: 1, y: 2 }]),
-  betaMakeTrack("rio", "Rio", [{ x: 2, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 9 }, { x: 18, y: 9 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 6 }, { x: 2, y: 6 }]),
-  betaMakeTrack("la", "LA", [{ x: 1, y: 13 }, { x: 8, y: 13 }, { x: 8, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 12 }, { x: 18, y: 12 }, { x: 18, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 5 }, { x: 1, y: 5 }]),
-  betaMakeTrack("seoul", "Seoul", [{ x: 2, y: 7 }, { x: 5, y: 7 }, { x: 5, y: 2 }, { x: 18, y: 2 }, { x: 18, y: 6 }, { x: 11, y: 6 }, { x: 11, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 13 }, { x: 2, y: 13 }]),
-  betaMakeTrack("safrica", "S. Africa", [{ x: 2, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 9 }, { x: 13, y: 9 }, { x: 13, y: 5 }, { x: 17, y: 5 }, { x: 17, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 9 }, { x: 2, y: 9 }]),
-  betaMakeTrack("india", "India", [{ x: 2, y: 12 }, { x: 6, y: 12 }, { x: 6, y: 8 }, { x: 10, y: 8 }, { x: 10, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 4 }, { x: 10, y: 4 }, { x: 10, y: 1 }, { x: 2, y: 1 }]),
-  betaMakeTrack("space", "Space", [{ x: 2, y: 13 }, { x: 9, y: 13 }, { x: 9, y: 11 }, { x: 4, y: 11 }, { x: 4, y: 8 }, { x: 7, y: 8 }, { x: 7, y: 4 }, { x: 12, y: 4 }, { x: 12, y: 7 }, { x: 16, y: 7 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 12 }, { x: 14, y: 12 }, { x: 14, y: 10 }, { x: 11, y: 10 }, { x: 11, y: 13 }, { x: 2, y: 13 }])
+  betaMakeTrack("training", "Training", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 13 }]),
+  betaMakeTrack("indy", "Indy", [{ x: 5, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 12 }]),
+  betaMakeTrack("berlin", "Berlin", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 9, y: 9 }, { x: 9, y: 6 }, { x: 17, y: 6 }, { x: 17, y: 3 }, { x: 5, y: 3 }, { x: 5, y: 6 }, { x: 3, y: 6 }, { x: 3, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }]),
+  betaMakeTrack("dubai", "Dubai", [{ x: 5, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 3 }, { x: 13, y: 3 }, { x: 13, y: 7 }, { x: 7, y: 7 }, { x: 7, y: 3 }, { x: 1, y: 3 }, { x: 1, y: 12 }]),
+  betaMakeTrack("rio", "Rio", [{ x: 5, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 10 }, { x: 18, y: 10 }, { x: 18, y: 3 }, { x: 12, y: 3 }, { x: 12, y: 7 }, { x: 8, y: 7 }, { x: 8, y: 3 }, { x: 2, y: 3 }, { x: 2, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }]),
+  betaMakeTrack("la", "LA", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 6 }, { x: 9, y: 6 }, { x: 9, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 9 }, { x: 6, y: 9 }, { x: 6, y: 11 }, { x: 1, y: 11 }, { x: 1, y: 13 }]),
+  betaMakeTrack("seoul", "Seoul", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 12, y: 9 }, { x: 12, y: 7 }, { x: 17, y: 7 }, { x: 17, y: 3 }, { x: 6, y: 3 }, { x: 6, y: 7 }, { x: 2, y: 7 }, { x: 2, y: 11 }, { x: 1, y: 11 }, { x: 1, y: 13 }]),
+  betaMakeTrack("safrica", "S. Africa", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 5 }, { x: 18, y: 5 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 9, y: 5 }, { x: 9, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 13 }]),
+  betaMakeTrack("india", "India", [{ x: 5, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 16, y: 8 }, { x: 16, y: 6 }, { x: 15, y: 6 }, { x: 15, y: 2 }, { x: 7, y: 2 }, { x: 7, y: 6 }, { x: 3, y: 6 }, { x: 3, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 13 }]),
+  betaMakeTrack("space", "Space", [{ x: 5, y: 13 }, { x: 15, y: 13 }, { x: 15, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 14, y: 8 }, { x: 14, y: 5 }, { x: 18, y: 5 }, { x: 18, y: 2 }, { x: 10, y: 2 }, { x: 10, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 7 }, { x: 6, y: 7 }, { x: 6, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }])
 ];
 let betaSelectedTrackId = betaTracks[0].id;
 let betaTrack = betaTracks[0];
@@ -7571,7 +7576,7 @@ function drawBetaMarkersSimple(ctx) {
   if (sfImg?.complete && sfImg.naturalWidth) {
     ctx.save();
     ctx.translate(sx + ts / 2, sy + ts / 2);
-    if (!startIsHoriz) ctx.rotate(Math.PI / 2);
+    if (startIsHoriz) ctx.rotate(Math.PI / 2);
     ctx.drawImage(sfImg, -ts / 2, -ts * 0.275, ts, ts * 0.55);
     ctx.restore();
   } else {
@@ -7588,7 +7593,7 @@ function drawBetaMarkersSimple(ctx) {
     if (img?.complete && img.naturalWidth) {
       ctx.save();
       ctx.translate(cx + ts / 2, cy + ts / 2);
-      if (!cpIsHoriz) ctx.rotate(Math.PI / 2);
+      if (cpIsHoriz) ctx.rotate(Math.PI / 2);
       ctx.drawImage(img, -ts / 2, -ts * 0.275, ts, ts * 0.55);
       ctx.restore();
     } else {
@@ -7728,13 +7733,13 @@ function betaRatingsForCar(carId, level = state.garage?.[carId]?.level || 1, evo
 
 function betaPhysicsFromRatings(ratings, skill = 1) {
   return {
-    maxSpeed: (320 + (ratings.speed || 70) * 3.5 + (ratings.powertrain || 70) * 0.45) * skill,
-    acceleration: (280 + (ratings.acceleration || 70) * 5) * skill,
-    brake: 520 + (ratings.torque || 70) * 2,
-    turnRate: (1.9 + (ratings.handling || 70) / 36) * skill,
-    torque: ratings.torque || 70,
-    body: ratings.body || 70,
-    powertrain: ratings.powertrain || 70,
+    maxSpeed:     (240 + (ratings.speed || 70) * 2.8  + (ratings.powertrain || 70) * 0.35) * skill,
+    acceleration: (200 + (ratings.acceleration || 70) * 4.0) * skill,
+    brake:        460 + (ratings.torque || 70) * 1.8,
+    turnRate:     (1.9 + (ratings.handling || 70) / 36) * skill,
+    torque:       ratings.torque || 70,
+    body:         ratings.body  || 70,
+    powertrain:   ratings.powertrain || 70,
     pwrMultiplier: 1 + ((ratings.powertrain || 70) / 100) * 0.25
   };
 }
@@ -7878,29 +7883,59 @@ function drawBetaTrackPreview(track = betaTrack) {
   ctx.fillRect(offsetX + track.startTile.x * tile, offsetY + track.startTile.y * tile, tile, tile);
 }
 
+// City icon mapping for each track
+const betaTrackCityIcons = {
+  training: "assets/maps/cityicon-training.png",
+  indy:     "assets/maps/cityicon-indianapolis.png",
+  berlin:   "assets/maps/cityicon-berlin.png",
+  dubai:    "assets/maps/cityicon-dubai.png",
+  rio:      "assets/maps/cityicon-rio.png",
+  la:       "assets/maps/cityicon-los-angeles.png",
+  seoul:    "assets/maps/cityicon-seoul.png",
+  safrica:  "assets/maps/cityicon-cape-town.png",
+  india:    "assets/maps/cityicon-bangalore.png",
+  space:    "assets/maps/cityicon-space.png",
+};
+
 function renderBetaTrackSelect() {
   if (!el.betaTrackList) return;
-  el.betaTrackList.innerHTML = betaTracks.map((track) => `
-    <button class="beta-track-button ${track.id === betaSelectedTrackId ? "active" : ""}" data-beta-track="${track.id}" type="button">
-      <span>${track.name}</span>
-      <small>${track.path.length} tiles</small>
-    </button>
-  `).join("");
+  el.betaTrackList.innerHTML = betaTracks.map((track) => {
+    const icon = betaTrackCityIcons[track.id] || "";
+    const isActive = track.id === betaSelectedTrackId;
+    return `
+      <button class="beta-city-tile ${isActive ? "active" : ""}" data-beta-track="${track.id}" type="button" aria-label="${track.name}">
+        ${icon ? `<img src="${icon}" alt="${track.name}" loading="lazy" onerror="this.style.display='none'">` : ""}
+        <span>${track.name}</span>
+      </button>
+    `;
+  }).join("");
   drawBetaTrackPreview(betaTrack);
 }
 
 function openBetaTrackSelect(mode = "time") {
   betaPendingMode = mode;
-  if (el.betaOptions) el.betaOptions.hidden = true;
-  if (el.beta3dStart) el.beta3dStart.hidden = true;
-  if (el.betaTrackSelect) el.betaTrackSelect.hidden = false;
+  const modeLabels = { time: "Solo Time Trial", race4: "4-Car Race", race6: "6-Car Race", duel: "Head-to-Head" };
+  if (el.betaTrackSelectTitle) el.betaTrackSelectTitle.textContent = `Choose a Track — ${modeLabels[mode] || "Race"}`;
+  if (el.betaMainScreen) el.betaMainScreen.hidden = true;
+  if (el.betaTrackSelectScreen) el.betaTrackSelectScreen.hidden = false;
   renderBetaTrackSelect();
 }
 
 function closeBetaTrackSelect() {
-  if (el.betaTrackSelect) el.betaTrackSelect.hidden = true;
-  if (el.betaOptions) el.betaOptions.hidden = false;
-  if (el.beta3dStart) el.beta3dStart.hidden = false;
+  if (el.betaTrackSelectScreen) el.betaTrackSelectScreen.hidden = true;
+  if (el.betaMainScreen) el.betaMainScreen.hidden = false;
+}
+
+function openBetaCarSelect() {
+  if (el.betaMainScreen) el.betaMainScreen.hidden = true;
+  if (el.betaCarSelectScreen) el.betaCarSelectScreen.hidden = false;
+  renderCarTiles();
+  renderCarSelectPreview("beta", el.betaCarSelectPreview);
+}
+
+function closeBetaCarSelect() {
+  if (el.betaCarSelectScreen) el.betaCarSelectScreen.hidden = true;
+  if (el.betaMainScreen) el.betaMainScreen.hidden = false;
 }
 
 function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0, ai = false, skill = 1, ghost = false }) {
@@ -8229,14 +8264,12 @@ function drawBetaMarkers(ctx) {
   if (sfImg?.complete && sfImg.naturalWidth) {
     ctx.save();
     ctx.translate(sx + ts / 2, sy + ts / 2);
-    if (!startIsHoriz) ctx.rotate(Math.PI / 2);
-    // Draw centered on tile, full-width of road portion only
-    const imgW = startIsHoriz ? ts : ts * 0.55;
-    const imgH = startIsHoriz ? ts * 0.55 : ts;
-    ctx.drawImage(sfImg, -imgW / 2, -imgH / 2, imgW, imgH);
+    // Image is a horizontal strip; to cross a horizontal road it must rotate 90°;
+    // to cross a vertical road it stays at 0° (already perpendicular)
+    if (startIsHoriz) ctx.rotate(Math.PI / 2);
+    ctx.drawImage(sfImg, -ts / 2, -ts * 0.275, ts, ts * 0.55);
     ctx.restore();
   } else {
-    // Fallback checkerboard
     ctx.fillStyle = "rgba(255,255,255,.9)";
     for (let i = 0; i < 8; i += 1) ctx.fillRect(sx + i * 32, sy + 92, 16, 72);
   }
@@ -8252,10 +8285,9 @@ function drawBetaMarkers(ctx) {
     if (img?.complete && img.naturalWidth) {
       ctx.save();
       ctx.translate(cx + ts / 2, cy + ts / 2);
-      if (!cpIsHoriz) ctx.rotate(Math.PI / 2);
-      const imgW = cpIsHoriz ? ts : ts * 0.55;
-      const imgH = cpIsHoriz ? ts * 0.55 : ts;
-      ctx.drawImage(img, -imgW / 2, -imgH / 2, imgW, imgH);
+      // Same logic: horizontal road → rotate 90° so line crosses it perpendicularly
+      if (cpIsHoriz) ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -ts / 2, -ts * 0.275, ts, ts * 0.55);
       ctx.restore();
     } else {
       ctx.strokeStyle = playerPassed ? "rgba(255,200,87,.86)" : "rgba(82,199,255,.56)";
@@ -8905,7 +8937,8 @@ function betaDrawTrackObjects(ctx) {
   objects.projectiles.forEach((proj) => {
     ctx.save();
     ctx.translate(proj.x, proj.y);
-    ctx.rotate(proj.angle);
+    // +PI flips 180° so the wave faces the direction of travel
+    ctx.rotate(proj.angle + Math.PI);
     const empImg = betaTrackImages.empWave;
     if (empImg?.complete && empImg.naturalWidth) {
       ctx.drawImage(empImg, -36, -20, 72, 40);
@@ -8948,14 +8981,16 @@ function betaDrawStatusEffects(ctx, racer) {
     const bx = racer.x - Math.cos(racer.angle) * 50;
     const by = racer.y - Math.sin(racer.angle) * 50;
     ctx.translate(bx, by);
-    ctx.rotate(racer.angle + Math.PI / 2);
+    // car is drawn at angle + PI/2 (top-down sprite); flames need to face backward
+    // an extra +PI/2 rotates the flame image so it shoots out the back correctly
+    ctx.rotate(racer.angle + Math.PI);
     if (flameImg?.complete && flameImg.naturalWidth) {
       ctx.globalAlpha = 0.88;
       ctx.drawImage(flameImg, -32, -20, 64, 56);
     } else {
       // Fallback: two streaks
       ctx.globalAlpha = 0.75;
-      ctx.fillStyle = "rgba(82,199,255,.8)";
+      ctx.fillStyle = "rgba(255,120,30,.8)";
       ctx.fillRect(-44, -15, 72, 7);
       ctx.fillRect(-34, 8, 62, 7);
     }
@@ -9039,10 +9074,12 @@ function betaAiControls(racer) {
   const aheadX = racer.x + Math.cos(racer.angle) * 72;
   const aheadY = racer.y + Math.sin(racer.angle) * 72;
   const onRoad = betaSurfaceAt(racer.x, racer.y) === "road";
-  const aheadRoad = betaSurfaceAt(aheadX, aheadY) === "road";
+  const aheadWall = betaSurfaceAt(aheadX, aheadY) === "wall";
+  // Always keep driving — only brake when heading straight into a wall
+  // On grass, keep going and steer back to track (handled in betaDriveRacer)
   return {
-    up: onRoad && aheadRoad && (Math.abs(delta) < 0.82 || racer.speed < 135),
-    down: !aheadRoad || (Math.abs(delta) > 0.92 && racer.speed > 95),
+    up: !aheadWall,
+    down: aheadWall && racer.speed > 60,
     left: delta < -0.07,
     right: delta > 0.07
   };
@@ -9169,15 +9206,22 @@ function betaDriveRacer(racer, dt, controls = {}) {
   racer.x += Math.cos(racer.angle) * racer.speed * dt;
   racer.y += Math.sin(racer.angle) * racer.speed * dt;
   const nextClass = betaSurfaceAt(racer.x, racer.y);
-  if (nextClass === "wall" || (racer.ai && nextClass === "grass")) {
+  if (nextClass === "wall") {
+    // Wall collision: reverse both player and AI
     racer.x = racer.prevX;
     racer.y = racer.prevY;
-    racer.speed *= racer.ai ? -0.28 : -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
+    racer.speed *= -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
     if (racer.ai) {
-      // Steer toward next waypoint to escape
+      // Immediately re-aim toward next waypoint to escape the wall
       const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
+  } else if (racer.ai && nextClass === "grass") {
+    // AI on grass: don't revert position — allow them to drive through it
+    // but steer hard back toward the racing line so they recover quickly
+    const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
+    racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
+    // Slight speed reduction on grass is already handled by the grassFactor above
   }
 }
 
