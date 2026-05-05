@@ -4759,24 +4759,29 @@ async function runForgeAnimation(carId) {
   if (forgeAnimating) return;
   forgeAnimating = true;
   el.forgeUnlockBtn.disabled = true;
-  const area = el.forgeAnimationArea;
+
+  const overlay = document.getElementById("forge-fullscreen");
+  const area    = document.getElementById("forge-fs-anim-area");
+  const fsVat   = document.getElementById("forge-fs-vat");
+  if (!overlay || !area) { forgeAnimating = false; return; }
+
   area.innerHTML = "";
-  area.classList.add("animating");
-  const car = cars.find((c) => c.id === carId);
-  const form = car?.evolutions?.[0];
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
 
   area.innerHTML = `
     <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion">
+    <img class="forge-anim-layer forge-anim-glow"     src="assets/forge/forge_glow.png" alt="">
+    <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="">
     <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform.png" alt="">
-    <img class="forge-anim-layer forge-anim-cover" src="assets/forge/forge_cover.png" alt="">
-    <img class="forge-anim-layer forge-anim-magnet" src="assets/forge/forge_magnet.png" alt="">
     <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
-    <img class="forge-anim-layer forge-anim-glow" src="assets/forge/forge_glow.png" alt="">
-    <img class="forge-anim-layer forge-anim-smoke" src="assets/forge/forge_smoke.png" alt="">
+    <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover.png" alt="">
+    <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet.png" alt="">
   `;
 
   const step = (ms) => new Promise((r) => setTimeout(r, ms));
-  const get = (cls) => area.querySelector("." + cls);
+  const get  = (cls) => area.querySelector("." + cls);
+
   const medallionEl = get("forge-anim-medallion");
   const platformEl  = get("forge-anim-platform");
   const coverEl     = get("forge-anim-cover");
@@ -4784,47 +4789,56 @@ async function runForgeAnimation(carId) {
   const carEl       = get("forge-anim-car-reveal");
   const glowEl      = get("forge-anim-glow");
   const smokeEl     = get("forge-anim-smoke");
-  const vatEl       = el.forgeVatImg;
 
-  // 1. Medallion appears above vat
-  await step(80);
+  // ── Step 1: Medallion appears above the vat ──────────────────────────────
+  await step(120);
   medallionEl.classList.add("step-appear");
-  await step(700);
-  // 2. Medallion drops into vat
+  await step(750);
+
+  // ── Step 2: Medallion drops into the vat ─────────────────────────────────
   medallionEl.classList.add("step-drop");
-  await step(850);
+  await step(800);
   medallionEl.classList.add("step-gone");
-  // 3. Vat shake + smoke (2.4s)
-  if (vatEl) vatEl.classList.add("forge-shake");
+
+  // ── Step 3: Vat shakes, smoke erupts (2.6s) ──────────────────────────────
+  if (fsVat) fsVat.classList.add("forge-shake");
   smokeEl.classList.add("step-smoke");
-  await step(2400);
-  if (vatEl) vatEl.classList.remove("forge-shake");
-  // 4. Platform + cover rise
+  await step(2600);
+  if (fsVat) fsVat.classList.remove("forge-shake");
+
+  // ── Step 4: Platform + cover rise together from the lava ─────────────────
+  // Platform and cover transition use the same duration so they move in lock-step
   platformEl.classList.add("step-rise");
   coverEl.classList.add("step-rise");
-  await step(900);
-  // 5. Magnet drops
+  await step(1100);  // let the 1.0s rise transition finish
+
+  // ── Step 5: Magnet descends from top until it meets the cover ────────────
   magnetEl.classList.add("step-magnet-drop");
   await step(700);
-  // 6. Cover lifts with magnet
+
+  // ── Step 6: Magnet lifts — cover moves in perfect sync upward ────────────
+  // Both use the same transition duration (0.7s) so they exit together
   coverEl.classList.add("step-lift");
   magnetEl.classList.add("step-magnet-lift");
-  await step(800);
+  await step(750);
   coverEl.classList.add("step-gone");
   magnetEl.classList.add("step-gone");
-  // 7. GearBorn revealed + glow pulse
+
+  // ── Step 7: GearBorn revealed with glow halo ─────────────────────────────
   carEl.classList.add("step-reveal");
   glowEl.classList.add("step-glow");
-  await step(2200);
+  await step(2400);
 
-  // Unlock the car, remove medallion from inventory
+  // ── Unlock and close overlay ──────────────────────────────────────────────
   unlockGearbornLine(carId);
   state.medallionsOwned = (state.medallionsOwned || []).filter((id) => id !== carId);
   saveState();
   render();
 
+  overlay.classList.remove("active");
+  overlay.setAttribute("aria-hidden", "true");
+  area.innerHTML = "";
   forgeAnimating = false;
-  area.classList.remove("animating");
   showForgeUnlockedPopup(carId);
 }
 
