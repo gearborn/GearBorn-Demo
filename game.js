@@ -438,7 +438,7 @@ const tutorialDialogue = {
   "the-forge": [
     ["tyree", "This is THE FORGE. Pink Slip races earn you a Medallion instead of instantly unlocking a car."],
     ["user", "So I have to come here to actually get them?"],
-    ["tyree", "Exactly. And I've just loaded three Medallions into your inventory — Hogson, Elepledge, and Moshfin."],
+    ["tyree", "Exactly. And I've just loaded three Medallions into your inventory — Baybee, Murrka, and Bunnae."],
     ["user", "How do I unlock one?"],
     ["tyree", "Open your Medallion Inventory, pick one, and hit Unlock. Give it a try."]
   ],
@@ -1810,19 +1810,32 @@ function sanitizeState() {
   state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
   state.tutorialAwaitingForge = Boolean(state.tutorialAwaitingForge);
   state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
-  // On page reload mid-tutorial, restore the real pre-tutorial values from snapshots
-  if (state.tutorialActive && !state.unlimitedSprox) {
-    // Always restore real sprox from the saved snapshot value
-    state.sprox = state.tutorialStartingSprox;
-  }
-  if (state.tutorialActive && state.tutorialSnapshotGarage) {
-    state.garage = JSON.parse(JSON.stringify(state.tutorialSnapshotGarage));
-  }
-  if (state.tutorialActive && state.tutorialSnapshotUnlockedLines) {
-    state.unlockedLines = [...state.tutorialSnapshotUnlockedLines];
-  }
-  if (state.tutorialActive && state.tutorialSnapshotMedallions) {
-    state.medallionsOwned = [...state.tutorialSnapshotMedallions];
+  // Tutorial cannot survive a page reload — always restore pre-tutorial state from snapshots
+  // and force tutorialActive=false. The tutorial will restart from intro if replayed.
+  if (state.tutorialActive) {
+    if (!state.unlimitedSprox && state.tutorialStartingSprox >= 0) {
+      state.sprox = state.tutorialStartingSprox;
+    }
+    if (state.tutorialSnapshotGarage) {
+      state.garage = JSON.parse(JSON.stringify(state.tutorialSnapshotGarage));
+    }
+    if (state.tutorialSnapshotUnlockedLines) {
+      state.unlockedLines = [...state.tutorialSnapshotUnlockedLines];
+    }
+    if (state.tutorialSnapshotMedallions) {
+      state.medallionsOwned = [...state.tutorialSnapshotMedallions];
+    }
+    // Reset all tutorial state so the game loads normally
+    state.tutorialActive = false;
+    state.tutorialScene = 0;
+    state.tutorialLine = 0;
+    state.tutorialAwaitingUpgrade = false;
+    state.tutorialAwaitingEvolve = false;
+    state.tutorialAwaitingForge = false;
+    state.tutorialStartingSprox = 0;
+    state.tutorialSnapshotGarage = null;
+    state.tutorialSnapshotUnlockedLines = null;
+    state.tutorialSnapshotMedallions = null;
   }
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
@@ -4827,9 +4840,12 @@ function closeForge() {
 
 function renderForgeInventory() {
   if (!el.forgeMedallionGrid) return;
-  // During tutorial forge scene, show all awarded medallions regardless of unlock state
+  // During tutorial forge scene, show only the 3 demo medallions awarded for this demo
+  const tutorialForgeDemoIds = ["bee", "pickup", "rabbit"];
   const tutorialForge = tutorialActive() && state.tutorialAwaitingForge;
-  const owned = (state.medallionsOwned || []).filter((id) => tutorialForge || !isCarUnlocked(id));
+  const owned = tutorialForge
+    ? tutorialForgeDemoIds
+    : (state.medallionsOwned || []).filter((id) => !isCarUnlocked(id));
   el.forgeMedallionGrid.innerHTML = owned.length
     ? owned.map((carId) => {
         const car = cars.find((c) => c.id === carId);
@@ -5883,9 +5899,10 @@ function setupTutorialScene() {
       break;
 
     case "the-forge":
-      // Award three medallions for unlockable (not-yet-unlocked) cars so they show in inventory
-      // pig, sorority-elephant, grunge-fish are the first pink slip cars — never auto-unlocked
-      ["pig", "sorority-elephant", "grunge-fish"].forEach((id) => awardMedallion(id));
+      // Award Baybee, Murrka, Bunnae medallions for the tutorial forge demo.
+      // The renderForgeInventory bypass (tutorialAwaitingForge) shows these
+      // regardless of unlock state, so they always appear in the inventory.
+      ["bee", "pickup", "rabbit"].forEach((id) => awardMedallion(id));
       state.tutorialAwaitingForge = false;  // reset — dialogue plays first
       showView("garage");
       openForge();
