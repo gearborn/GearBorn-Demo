@@ -438,9 +438,9 @@ const tutorialDialogue = {
   "the-forge": [
     ["tyree", "This is THE FORGE. Pink Slip races earn you a Medallion instead of instantly unlocking a car."],
     ["user", "So I have to come here to actually get them?"],
-    ["tyree", "Exactly. And I've just loaded three Medallions into your inventory — Baybee, Murrka, and Bunnae."],
-    ["user", "My starter GearBorn?"],
-    ["tyree", "The Forge is how you make them yours. Open your Medallion Inventory, pick one, and hit Unlock."]
+    ["tyree", "Exactly. And I've just loaded three Medallions into your inventory — Hogson, Elepledge, and Moshfin."],
+    ["user", "How do I unlock one?"],
+    ["tyree", "Open your Medallion Inventory, pick one, and hit Unlock. Give it a try."]
   ],
   unlocked: [
     ["tyree", "And there you have it. Your new GearBorn is in the Garage."],
@@ -1252,6 +1252,9 @@ const defaultState = {
   tutorialAwaitingEvolve: false,
   tutorialAwaitingForge: false,
   tutorialStartingSprox: 0,
+  tutorialSnapshotGarage: null,
+  tutorialSnapshotUnlockedLines: null,
+  tutorialSnapshotMedallions: null,
   storyCarChosen: false,
   highestBossIndex: 0,
   selectedCampaign: 0,
@@ -1807,6 +1810,20 @@ function sanitizeState() {
   state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
   state.tutorialAwaitingForge = Boolean(state.tutorialAwaitingForge);
   state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
+  // If the page was reloaded mid-tutorial, restore real sprox from snapshot
+  if (state.tutorialActive && state.tutorialStartingSprox > 0 && !state.unlimitedSprox) {
+    state.sprox = state.tutorialStartingSprox;
+  }
+  // Restore garage/unlock/medallion snapshots on mid-tutorial reload
+  if (state.tutorialActive && state.tutorialSnapshotGarage) {
+    state.garage = JSON.parse(JSON.stringify(state.tutorialSnapshotGarage));
+  }
+  if (state.tutorialActive && state.tutorialSnapshotUnlockedLines) {
+    state.unlockedLines = [...state.tutorialSnapshotUnlockedLines];
+  }
+  if (state.tutorialActive && state.tutorialSnapshotMedallions) {
+    state.medallionsOwned = [...state.tutorialSnapshotMedallions];
+  }
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
@@ -5670,6 +5687,8 @@ function startTutorial(sceneId = "intro") {
     openTunerModal();
     return;
   }
+  // Snapshot the real wallet BEFORE touching anything
+  const realSprox = state.unlimitedSprox ? 0 : Math.max(0, Math.floor(state.sprox || 0));
   state.tutorialActive = true;
   state.tutorialComplete = false;
   state.tutorialScene = sceneIndex;
@@ -5677,19 +5696,37 @@ function startTutorial(sceneId = "intro") {
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
-  state.tutorialStartingSprox = state.unlimitedSprox ? 0 : Math.max(0, Math.floor(state.sprox || 0));
+  state.tutorialStartingSprox = realSprox;
   if (sceneId === "intro") {
+    // Give tutorial its own zeroed sprox budget — real wallet is preserved in tutorialStartingSprox
     state.sprox = 0;
     state.tutorialDragSprox = 0;
     state.tutorialTimeMedal = "";
   }
+  // Snapshot garage + medallion state so finishTutorial can fully restore it
+  state.tutorialSnapshotGarage = JSON.parse(JSON.stringify(state.garage || {}));
+  state.tutorialSnapshotUnlockedLines = [...(state.unlockedLines || [])];
+  state.tutorialSnapshotMedallions = [...(state.medallionsOwned || [])];
   setupTutorialScene();
   saveState();
   render();
 }
 
 function finishTutorial() {
-  if (!state.unlimitedSprox) state.sprox = Math.max(0, Math.floor(state.tutorialStartingSprox || 0));
+  // Restore everything that existed before the tutorial started
+  if (!state.unlimitedSprox) {
+    state.sprox = Math.max(0, Math.floor(state.tutorialStartingSprox || 0));
+  }
+  // Restore garage, unlock list, and medallions from pre-tutorial snapshot
+  if (state.tutorialSnapshotGarage) {
+    state.garage = JSON.parse(JSON.stringify(state.tutorialSnapshotGarage));
+  }
+  if (state.tutorialSnapshotUnlockedLines) {
+    state.unlockedLines = [...state.tutorialSnapshotUnlockedLines];
+  }
+  if (state.tutorialSnapshotMedallions) {
+    state.medallionsOwned = [...state.tutorialSnapshotMedallions];
+  }
   state.tutorialActive = false;
   state.tutorialComplete = true;
   state.tutorialScene = 0;
@@ -5698,6 +5735,9 @@ function finishTutorial() {
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
   state.tutorialStartingSprox = 0;
+  state.tutorialSnapshotGarage = null;
+  state.tutorialSnapshotUnlockedLines = null;
+  state.tutorialSnapshotMedallions = null;
   state.tutorialTimeMedal = "";
   state.selectedCar = defaultUnlockedLines.includes(state.selectedCar) ? state.selectedCar : defaultUnlockedLines[0];
   state.selectedStoryCar = defaultUnlockedLines.includes(state.selectedStoryCar) ? state.selectedStoryCar : state.selectedCar;
@@ -5837,8 +5877,9 @@ function setupTutorialScene() {
       break;
 
     case "the-forge":
-      // Award the three starter medallions and open The Forge
-      ["bee", "pickup", "rabbit"].forEach((id) => awardMedallion(id));
+      // Award three medallions for unlockable (not-yet-unlocked) cars so they show in inventory
+      // pig, sorority-elephant, grunge-fish are the first pink slip cars — never auto-unlocked
+      ["pig", "sorority-elephant", "grunge-fish"].forEach((id) => awardMedallion(id));
       state.tutorialAwaitingForge = false;  // reset — dialogue plays first
       showView("garage");
       openForge();
@@ -5975,12 +6016,11 @@ function advanceTutorial() {
 
   switch (scene.id) {
     case "intro":
-      // Move to tutorial car select (Mamburn only)
-      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "mamburn");
-      ensureTutorialCarState();
-      setFlowStep("drag", "car");
+      // Move to tutorial-exclusive car select (Mamburn only)
+      setTutorialScene("mamburn");
+      setupTutorialScene();
       saveState();
-      render();
+      renderTutorial();
       break;
 
     case "mamburn":
@@ -6000,10 +6040,9 @@ function advanceTutorial() {
       break;
 
     case "drag-race-intro":
-      // Auto-click start → move to drag race
-      state.tutorialScene = tutorialScenes.findIndex((s) => s.id === "drag-race");
-      prepareDragRace(null, tutorialDragStage());
+      // Auto-click start → prepare drag race and move to drag-race scene
       setTutorialScene("drag-race");
+      prepareDragRace(null, tutorialDragStage());
       setupTutorialScene();
       saveState();
       renderTutorial();
@@ -7041,19 +7080,21 @@ function finishVerticalRace(playerWon) {
   recordStoryRaceOutcome(resultWon, isStoryRace);
   saveState();
   render();
+  // Only apply tutorial overrides when tutorial is specifically running this time trial
+  const tutorialInTime = tutorialActive() && raceState.mode === "tutorial-time";
   showRaceResult(raceState.trackNode, {
     won: resultWon,
     title: tutorialActive() && !resultWon ? "RACE LOST" : undefined,
     sprox: resultSprox,
     lines: tutorialActive() && !resultWon ? [] : resultLines,
-    primaryLabel: tutorialActive() ? (resultWon ? "Next" : "Try Again") : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
-    primaryTone: tutorialActive() && resultWon ? "success" : "",
+    primaryLabel: tutorialInTime && resultWon ? "Next" : tutorialInTime && !resultWon ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    primaryTone: tutorialInTime && resultWon ? "success" : "",
     raceAgainLabel: "Race Again",
-    hideRaceAgain: tutorialActive() && !resultWon,
-    hideSprox: tutorialActive() && !resultWon,
-    disableActions: tutorialActive() && resultWon,
+    hideRaceAgain: tutorialInTime && !resultWon,
+    hideSprox: tutorialInTime && !resultWon,
+    disableActions: tutorialInTime && resultWon,
     onPrimary: () => {
-      if (tutorialActive() && !resultWon) {
+      if (tutorialInTime && !resultWon) {
         beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
         startVerticalCountdown();
         setTutorialScene("tt-after");
@@ -7061,7 +7102,7 @@ function finishVerticalRace(playerWon) {
         renderTutorial();
         return;
       }
-      if (tutorialActive() && resultWon && currentTutorialScene().id === "tt-after") {
+      if (tutorialInTime && resultWon && currentTutorialScene().id === "tt-after") {
         advanceTutorial();
         return;
       }
@@ -7125,16 +7166,17 @@ function failVerticalRace(title) {
   const isStoryRace = raceState.campaignLevelIndex !== null;
   recordStoryRaceOutcome(false, isStoryRace);
   saveState();
+  const tutorialInTime = tutorialActive() && raceState.mode === "tutorial-time";
   showRaceResult(raceState.trackNode, {
     won: false,
-    title: tutorialActive() ? "RACE LOST" : title,
+    title: tutorialInTime ? "RACE LOST" : title,
     sprox: 0,
-    primaryLabel: tutorialActive() ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
+    primaryLabel: tutorialInTime ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     raceAgainLabel: "Race Again",
-    hideRaceAgain: tutorialActive(),
-    hideSprox: tutorialActive(),
+    hideRaceAgain: tutorialInTime,
+    hideSprox: tutorialInTime,
     onPrimary: () => {
-      if (tutorialActive()) {
+      if (tutorialInTime) {
         beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
         startVerticalCountdown();
         setTutorialScene("tt-after");
@@ -7622,10 +7664,7 @@ el.tutorialFirstYes.addEventListener("click", () => {
 });
 el.tutorialFirstNo.addEventListener("click", () => {
   closeFirstTutorialModal();
-  state.tutorialActive = false;
-  state.tutorialComplete = true;
-  saveState();
-  render();
+  finishTutorial();
 });
 el.cityUnlockClose.addEventListener("click", closeCityUnlockModal);
 el.confirmPinkSlipRisk?.addEventListener("click", confirmPinkSlipRisk);
@@ -7664,10 +7703,7 @@ el.tutorialReplayModal.addEventListener("click", (event) => {
 el.tutorialFirstModal.addEventListener("click", (event) => {
   if (event.target === el.tutorialFirstModal) {
     closeFirstTutorialModal();
-    state.tutorialActive = false;
-    state.tutorialComplete = true;
-    saveState();
-    render();
+    finishTutorial();
   }
 });
 
@@ -7761,10 +7797,7 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Escape" && el.tutorialFirstModal.classList.contains("active")) {
     closeFirstTutorialModal();
-    state.tutorialActive = false;
-    state.tutorialComplete = true;
-    saveState();
-    render();
+    finishTutorial();
     return;
   }
   if (event.key === "Escape" && el.cityUnlockModal.classList.contains("active")) {
