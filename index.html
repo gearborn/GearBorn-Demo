@@ -776,37 +776,33 @@
               </div>
             </div>
             <div class="beta-race" id="beta-race" hidden>
-              <div class="beta-hud">
-                <div class="beta-hud-time">
-                  <span>Time</span>
-                  <strong id="beta-time">0.00</strong>
-                </div>
-                <div class="beta-hud-lap">
-                  <span>Lap</span>
-                  <strong id="beta-lap">1 / 2</strong>
-                </div>
-                <div class="beta-hud-checkpoint">
-                  <span>Checkpoint</span>
-                  <strong id="beta-checkpoint">0 / 4</strong>
-                </div>
-                <div class="beta-hud-speed">
-                  <span>Speed</span>
-                  <strong id="beta-speed">0 MPH</strong>
-                </div>
-                <div class="beta-hud-position">
-                  <span>Position</span>
-                  <strong id="beta-position">1st / 1</strong>
-                </div>
+              <div class="beta-hud-exit-row">
                 <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
                 <button class="danger-button" id="beta-exit" type="button">Exit</button>
+                <span id="beta-checkpoint" style="display:none">0 / 4</span>
+                <span id="beta-speed" style="display:none">0 MPH</span>
               </div>
               <div class="beta-stage">
                 <canvas id="beta-canvas" width="960" height="620" aria-label="Beta Mode circuit"></canvas>
                 <canvas id="beta-minimap" width="180" height="140" aria-label="Beta Mode mini-map"></canvas>
+                <div class="beta-canvas-hud" id="beta-canvas-hud" aria-label="Race HUD">
+                  <div class="beta-canvas-hud-panel" id="beta-hud-lap-panel">
+                    <span>Lap</span>
+                    <strong id="beta-lap">1 / 2</strong>
+                  </div>
+                  <div class="beta-canvas-hud-panel center" id="beta-hud-time-panel">
+                    <span>Time</span>
+                    <strong id="beta-time">0.00</strong>
+                  </div>
+                  <div class="beta-canvas-hud-panel right" id="beta-hud-pos-panel">
+                    <span>Place</span>
+                    <strong id="beta-position">1st / 1</strong>
+                  </div>
+                </div>
                 <div class="beta-item-slot" id="beta-item-slot">
                   <span>Item</span>
                   <div class="beta-item-readout">
-                    <b id="beta-item-icon">?</b>
+                    <b id="beta-item-icon" class="beta-item-icon-cell">?</b>
                     <strong id="beta-item-name">Empty</strong>
                   </div>
                   <em id="beta-item-prompt">Space / E</em>

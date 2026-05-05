@@ -4980,19 +4980,73 @@ small {
 }
 
 .beta-hud {
-  display: grid;
-  grid-template-columns: minmax(112px, 0.8fr) minmax(118px, 0.9fr) minmax(120px, 1.2fr) auto auto minmax(118px, 0.9fr);
-  grid-template-areas: "lap speed time debug exit position";
-  gap: 8px;
-  align-items: stretch;
+  display: none;
 }
 
-.beta-hud-lap { grid-area: lap; }
-.beta-hud-speed { grid-area: speed; }
-.beta-hud-time { grid-area: time; justify-items: center; text-align: center; }
-.beta-hud-position { grid-area: position; justify-items: end; text-align: right; }
+.beta-hud-lap { display: none; }
+.beta-hud-speed { display: none; }
+.beta-hud-time { display: none; }
+.beta-hud-position { display: none; }
 .beta-hud-checkpoint { display: none !important; }
 .beta-hud .beta-item-slot { display: none; }
+
+/* In-canvas HUD overlay - rendered via JS onto canvas overlay divs */
+.beta-canvas-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  pointer-events: none;
+}
+
+.beta-canvas-hud-panel {
+  display: grid;
+  gap: 2px;
+  min-width: 90px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(10, 14, 20, 0.76);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.beta-canvas-hud-panel.center {
+  text-align: center;
+  justify-items: center;
+}
+
+.beta-canvas-hud-panel.right {
+  text-align: right;
+  justify-items: end;
+}
+
+.beta-canvas-hud-panel span {
+  color: rgba(153, 165, 183, 0.9);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.beta-canvas-hud-panel strong {
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 1000;
+}
+
+.beta-hud-exit-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 0;
+  pointer-events: auto;
+}
 
 .beta-hud > div,
 .beta-hud button {
@@ -5042,15 +5096,23 @@ small {
 .beta-item-readout b {
   display: grid;
   place-items: center;
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
   border-radius: 9px;
   color: #12151b;
-  font-size: 1rem;
+  font-size: 0.72rem;
   font-weight: 1000;
-  background: linear-gradient(135deg, #fff3a2, #ff9c2b);
+  overflow: hidden;
+  background: rgba(255, 200, 87, 0.18);
   box-shadow: 0 0 13px rgba(255, 166, 43, 0.42);
+}
+
+.beta-item-readout b img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
 }
 
 .beta-item-slot.is-empty .beta-item-readout b {
@@ -5238,14 +5300,41 @@ small {
   inset: 0;
   z-index: 8;
   display: grid;
-  place-content: center;
-  gap: 8px;
-  background: rgba(8, 12, 18, 0.82);
-  text-align: center;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 8, 12, 0.92);
+  backdrop-filter: blur(12px);
 }
 
 .beta-loading[hidden] {
   display: none !important;
+}
+
+.beta-loading-card {
+  width: min(480px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255, 200, 87, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(28, 35, 46, 0.92), rgba(10, 14, 20, 0.92));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.beta-loading-card h1 {
+  margin: 0;
+  color: var(--gold);
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.beta-loading-card .loading-tip {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .beta-loading strong {
@@ -6011,40 +6100,42 @@ small {
 }
 
 .evolution-animation-overlay.run .evolution-glow {
-  animation: evolutionGlow 5.6s ease-in-out forwards;
+  animation: evolutionGlow 11s ease-in-out forwards;
 }
 
 .evolution-animation-overlay.run .evolution-energy-ring {
-  animation: evolutionRing 1.4s ease-out 0.35s forwards, evolutionRingPeak 0.85s ease-out 3.65s forwards;
+  animation: evolutionRing 1.4s ease-out 0.35s forwards, evolutionRingPeak 0.85s ease-out 4.5s forwards, evolutionRingPeak 0.85s ease-out 7.2s forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle {
-  animation: evolutionVehicleShake 5.6s linear forwards;
+  animation: evolutionVehicleShake 11s linear forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle-current {
-  animation: evolutionCurrentFlicker 5.6s steps(1, end) forwards;
+  animation: evolutionCurrentFlicker 11s steps(1, end) forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle-next {
-  animation: evolutionNextFlicker 5.6s steps(1, end) forwards;
+  animation: evolutionNextFlicker 11s steps(1, end) forwards;
 }
 
 .evolution-animation-overlay.run .evolution-vehicle img {
-  animation: evolutionImageGlow 5.6s ease-in-out forwards;
+  animation: evolutionImageGlow 11s ease-in-out forwards;
 }
 
 .evolution-animation-overlay.run .evolution-animation-flash {
-  animation: evolutionFlash 5.6s ease-in-out forwards;
+  animation: evolutionFlash 11s ease-in-out forwards;
 }
 
 @keyframes evolutionGlow {
   0% { opacity: 0.12; transform: scale(0.72); }
-  22% { opacity: 0.34; transform: scale(0.9); }
-  55% { opacity: 0.66; transform: scale(1.06); }
-  72% { opacity: 0.98; transform: scale(1.2); }
-  80% { opacity: 0.94; transform: scale(1.34); }
-  100% { opacity: 0.22; transform: scale(0.96); }
+  14% { opacity: 0.34; transform: scale(0.9); }
+  36% { opacity: 0.58; transform: scale(1.02); }
+  50% { opacity: 0.82; transform: scale(1.12); }
+  66% { opacity: 0.98; transform: scale(1.24); }
+  76% { opacity: 0.94; transform: scale(1.38); }
+  84% { opacity: 0.72; transform: scale(1.28); }
+  100% { opacity: 0.24; transform: scale(0.96); }
 }
 
 @keyframes evolutionRing {
@@ -6059,53 +6150,64 @@ small {
   100% { opacity: 0; transform: scale(1.46); }
 }
 
+/* Shake: intense flicker phase 30-84%, then ends on evolved form */
 @keyframes evolutionVehicleShake {
-  0%, 18% { transform: translate(0, 0) scale(1); }
-  22% { transform: translate(-2px, 1px) scale(1.01); }
-  30% { transform: translate(2px, -1px) scale(1.03); }
-  38% { transform: translate(-3px, -2px) scale(1.02); }
-  48% { transform: translate(3px, 2px) scale(1.05); }
-  58% { transform: translate(-4px, 1px) scale(1.04); }
-  68% { transform: translate(4px, -3px) scale(1.07); }
-  76% { transform: translate(-5px, 3px) scale(1.09); }
-  82% { transform: translate(0, 0) scale(1.12); }
-  90% { transform: translate(0, -8px) scale(1.05); }
+  0%, 12% { transform: translate(0, 0) scale(1); }
+  16% { transform: translate(-2px, 1px) scale(1.01); }
+  22% { transform: translate(2px, -1px) scale(1.02); }
+  28% { transform: translate(-3px, -2px) scale(1.02); }
+  34% { transform: translate(3px, 2px) scale(1.04); }
+  40% { transform: translate(-4px, 1px) scale(1.05); }
+  46% { transform: translate(4px, -3px) scale(1.06); }
+  52% { transform: translate(-5px, 2px) scale(1.08); }
+  58% { transform: translate(5px, -2px) scale(1.09); }
+  64% { transform: translate(-6px, 3px) scale(1.11); }
+  70% { transform: translate(6px, -4px) scale(1.13); }
+  76% { transform: translate(-7px, 4px) scale(1.14); }
+  82% { transform: translate(0, 0) scale(1.16); }
+  90% { transform: translate(0, -10px) scale(1.06); }
   100% { transform: translate(0, 0) scale(1); }
 }
 
+/* Current form: visible until flicker, off for good at 84% */
 @keyframes evolutionCurrentFlicker {
-  0%, 20% { opacity: 1; }
-  25%, 33%, 41%, 49%, 57%, 64%, 70%, 74% { opacity: 0; }
-  29%, 37%, 45%, 53%, 61%, 67%, 72%, 76% { opacity: 1; }
-  81%, 100% { opacity: 0; }
+  0%, 14% { opacity: 1; }
+  18%, 26%, 34%, 42%, 50%, 57%, 63%, 68%, 72%, 76%, 80% { opacity: 0; }
+  22%, 30%, 38%, 46%, 54%, 60%, 66%, 70%, 74%, 78% { opacity: 1; }
+  84%, 100% { opacity: 0; }
 }
 
+/* Next form: invisible until flicker, visible for good at 84% */
 @keyframes evolutionNextFlicker {
-  0%, 20% { opacity: 0; }
-  25%, 33%, 41%, 49%, 57%, 64%, 70%, 74% { opacity: 1; }
-  29%, 37%, 45%, 53%, 61%, 67%, 72%, 76% { opacity: 0; }
-  81%, 100% { opacity: 1; }
+  0%, 14% { opacity: 0; }
+  18%, 26%, 34%, 42%, 50%, 57%, 63%, 68%, 72%, 76%, 80% { opacity: 1; }
+  22%, 30%, 38%, 46%, 54%, 60%, 66%, 70%, 74%, 78% { opacity: 0; }
+  84%, 100% { opacity: 1; }
 }
 
 @keyframes evolutionImageGlow {
   0% {
     filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 0 rgba(255,255,255,0));
   }
-  62% {
-    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 30px rgba(82,199,255,0.58));
+  44% {
+    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(82,199,255,0.42));
   }
-  78% {
-    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 54px rgba(255,255,255,0.95));
+  68% {
+    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 42px rgba(82,199,255,0.68));
+  }
+  80% {
+    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 64px rgba(255,255,255,0.98));
   }
   100% {
-    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 16px rgba(255,200,87,0.36));
+    filter: drop-shadow(0 22px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 18px rgba(255,200,87,0.44));
   }
 }
 
+/* Flash: big white flash at ~80% (when form switches for good) */
 @keyframes evolutionFlash {
-  0%, 72% { opacity: 0; }
-  78% { opacity: 0.96; }
-  86% { opacity: 0; }
+  0%, 76% { opacity: 0; }
+  80% { opacity: 0.98; }
+  88% { opacity: 0; }
   100% { opacity: 0; }
 }
 

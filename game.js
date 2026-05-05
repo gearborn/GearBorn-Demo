@@ -4046,6 +4046,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     rivalNitroActive: false,
     rivalNitroTimer: 0,
     rivalNitroSkill,
+    rivalNitroUsed: false,
     rivalShiftTimer: Math.max(0.65, 1.3 - rivalNitroSkill * 0.35),
     rivalNitroDelay: 0,
     shiftScore: [],
@@ -4189,7 +4190,7 @@ function updateRivalNitro(dt) {
     }
     race.rivalShiftTimer = Math.max(0.62, 1.22 - race.rivalNitroSkill * 0.42 + Math.random() * 0.22);
   }
-  if (race.rivalNitroCharge < 4 || race.rivalNitroActive || race.rivalNitroDelay > 0) return;
+  if (race.rivalNitroUsed || race.rivalNitroCharge < 4 || race.rivalNitroActive || race.rivalNitroDelay > 0) return;
   const progress = race.rivalDistance / race.target;
   const behind = race.rivalDistance < race.playerDistance;
   const panicUse = behind && progress > 0.36 + (1 - race.rivalNitroSkill) * 0.25;
@@ -4229,6 +4230,7 @@ function showToast(title, message) {
 function useRivalNitro() {
   race.rivalNitroCharge = 0;
   race.rivalNitroActive = true;
+  race.rivalNitroUsed = true;
   race.rivalNitroTimer = dragNitroDuration;
   race.rivalNitroDelay = 2.2 + (1 - race.rivalNitroSkill) * 1.2;
   race.rivalSpeed = Math.min(race.rivalSpeed * dragNitroMultiplier, race.rivalMaxSpeed * dragNitroMultiplier);
@@ -4534,8 +4536,8 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
   el.evolutionAnimation.classList.add("active");
   void el.evolutionAnimation.offsetWidth;
   el.evolutionAnimation.classList.add("run");
-  const revealTimer = window.setTimeout(revealOnce, 5050);
-  await new Promise((resolve) => window.setTimeout(resolve, 5600));
+  const revealTimer = window.setTimeout(revealOnce, 9200);
+  await new Promise((resolve) => window.setTimeout(resolve, 11000));
   window.clearTimeout(revealTimer);
   revealOnce();
   el.evolutionAnimation.classList.remove("active", "run");
@@ -4601,12 +4603,20 @@ function applyPinkSlipLossPenalty(carId) {
 
 function closeEvolutionModal() {
   const continueAfterPinkSlip = evolutionModal?.mode === "pink-slip" ? pendingPinkSlipContinue : null;
+  const wasJustEvolved = evolutionModal?.mode === "unlocked" && !tutorialActive();
   pendingPinkSlipContinue = null;
   evolutionModal = null;
   el.evolutionModal.classList.remove("evolution-unlocked");
   el.evolutionModal.classList.remove("active");
   el.evolutionModal.setAttribute("aria-hidden", "true");
-  continueAfterPinkSlip?.();
+  if (continueAfterPinkSlip) {
+    continueAfterPinkSlip();
+  } else if (wasJustEvolved) {
+    showView("garage");
+    render();
+    el.raceMessage.className = "race-message win";
+    el.raceMessage.textContent = "Evolution Complete!";
+  }
 }
 
 function openResetModal() {
@@ -6852,19 +6862,17 @@ el.evolveButton.addEventListener("click", async () => {
     state.garage[carId].evolution = evolutionIndex;
     state.garage[carId].unlockedEvolution = Math.max(state.garage[carId].unlockedEvolution ?? 0, evolutionIndex);
     saveState();
+    // Show the evolution result modal with the new form
+    el.evolutionModal.classList.add("active");
+    el.evolutionModal.setAttribute("aria-hidden", "false");
     if (tutorialEvolving) {
       state.tutorialAwaitingEvolve = false;
       state.tutorialLine = 7;
       saveState();
       renderTutorial();
-    } else {
-      closeEvolutionModal();
-      showView("garage");
-      render();
-      el.raceMessage.className = "race-message win";
-      el.raceMessage.textContent = "Evolution Complete!";
     }
     el.closeEvolution.hidden = false;
+    el.closeEvolution.focus();
   });
 });
 
@@ -7199,8 +7207,11 @@ const betaTileAssets = {
   road_t_intersection: "assets/tracks/road_t_intersection.png",
   road_cross: "assets/tracks/road_cross.png",
   road_curve_wide: "assets/tracks/road_curve_wide.png",
-  road_straight_h: "assets/tracks/road_straight_horizontal.png",
-  road_straight_v: "assets/tracks/road_straight_vertical.png"
+  road_straight_h: "assets/tracks/track-horizontal.png",
+  road_straight_v: "assets/tracks/track-vertical.png",
+  start_finish: "assets/tracks/start-finish-line.png",
+  checkpoint_neutral: "assets/tracks/checkpoint-neutral.png",
+  checkpoint_active: "assets/tracks/checkpoint-active.png"
 };
 Object.entries(betaTileAssets).forEach(([key, src]) => {
   const img = new Image();
@@ -7272,14 +7283,16 @@ function betaMakeTrack(id, name, corners, width = 20, height = 15) {
 }
 
 const betaTracks = [
-  betaMakeTrack("sunset-loop", "Sunset Loop", [{ x: 2, y: 12 }, { x: 9, y: 12 }, { x: 9, y: 9 }, { x: 16, y: 9 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 2, y: 5 }]),
-  betaMakeTrack("switchback", "Switchback", [{ x: 2, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 7 }, { x: 15, y: 7 }, { x: 15, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 6 }, { x: 2, y: 6 }]),
-  betaMakeTrack("skyline", "Skyline", [{ x: 1, y: 11 }, { x: 11, y: 11 }, { x: 11, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 2 }, { x: 1, y: 2 }]),
-  betaMakeTrack("river-run", "River Run", [{ x: 2, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 9 }, { x: 18, y: 9 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 6 }, { x: 2, y: 6 }]),
-  betaMakeTrack("canyon-cut", "Canyon Cut", [{ x: 1, y: 13 }, { x: 8, y: 13 }, { x: 8, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 12 }, { x: 18, y: 12 }, { x: 18, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 5 }, { x: 1, y: 5 }]),
-  betaMakeTrack("neon-mile", "Neon Mile", [{ x: 2, y: 7 }, { x: 5, y: 7 }, { x: 5, y: 2 }, { x: 18, y: 2 }, { x: 18, y: 6 }, { x: 11, y: 6 }, { x: 11, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 13 }, { x: 2, y: 13 }]),
-  betaMakeTrack("gearbox", "Gearbox", [{ x: 2, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 9 }, { x: 13, y: 9 }, { x: 13, y: 5 }, { x: 17, y: 5 }, { x: 17, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 9 }, { x: 2, y: 9 }]),
-  betaMakeTrack("clover", "Clover", [{ x: 2, y: 12 }, { x: 6, y: 12 }, { x: 6, y: 8 }, { x: 10, y: 8 }, { x: 10, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 4 }, { x: 10, y: 4 }, { x: 10, y: 1 }, { x: 2, y: 1 }])
+  betaMakeTrack("training", "Training", [{ x: 1, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 1 }, { x: 1, y: 1 }]),
+  betaMakeTrack("indy", "Indy", [{ x: 2, y: 12 }, { x: 9, y: 12 }, { x: 9, y: 9 }, { x: 16, y: 9 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 2, y: 5 }]),
+  betaMakeTrack("berlin", "Berlin", [{ x: 2, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 7 }, { x: 15, y: 7 }, { x: 15, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 6 }, { x: 2, y: 6 }]),
+  betaMakeTrack("dubai", "Dubai", [{ x: 1, y: 11 }, { x: 11, y: 11 }, { x: 11, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 2 }, { x: 1, y: 2 }]),
+  betaMakeTrack("rio", "Rio", [{ x: 2, y: 10 }, { x: 6, y: 10 }, { x: 6, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 9 }, { x: 18, y: 9 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 6 }, { x: 2, y: 6 }]),
+  betaMakeTrack("la", "LA", [{ x: 1, y: 13 }, { x: 8, y: 13 }, { x: 8, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 12 }, { x: 18, y: 12 }, { x: 18, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 5 }, { x: 1, y: 5 }]),
+  betaMakeTrack("seoul", "Seoul", [{ x: 2, y: 7 }, { x: 5, y: 7 }, { x: 5, y: 2 }, { x: 18, y: 2 }, { x: 18, y: 6 }, { x: 11, y: 6 }, { x: 11, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 13 }, { x: 2, y: 13 }]),
+  betaMakeTrack("safrica", "S. Africa", [{ x: 2, y: 13 }, { x: 18, y: 13 }, { x: 18, y: 9 }, { x: 13, y: 9 }, { x: 13, y: 5 }, { x: 17, y: 5 }, { x: 17, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 9 }, { x: 2, y: 9 }]),
+  betaMakeTrack("india", "India", [{ x: 2, y: 12 }, { x: 6, y: 12 }, { x: 6, y: 8 }, { x: 10, y: 8 }, { x: 10, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 4 }, { x: 10, y: 4 }, { x: 10, y: 1 }, { x: 2, y: 1 }]),
+  betaMakeTrack("space", "Space", [{ x: 2, y: 13 }, { x: 9, y: 13 }, { x: 9, y: 11 }, { x: 4, y: 11 }, { x: 4, y: 8 }, { x: 7, y: 8 }, { x: 7, y: 4 }, { x: 12, y: 4 }, { x: 12, y: 7 }, { x: 16, y: 7 }, { x: 16, y: 3 }, { x: 18, y: 3 }, { x: 18, y: 12 }, { x: 14, y: 12 }, { x: 14, y: 10 }, { x: 11, y: 10 }, { x: 11, y: 13 }, { x: 2, y: 13 }])
 ];
 let betaSelectedTrackId = betaTracks[0].id;
 let betaTrack = betaTracks[0];
@@ -7431,9 +7444,9 @@ function updateBetaRace(now) {
   betaState.last = now;
   const s = betaState.stats;
   const currentClass = betaTileClass(betaTileAt(betaState.x, betaState.y));
-  const grassFactor = currentClass === "grass" ? Math.min(0.82, 0.56 + (s.torque || 70) / 420) : 1;
+  const grassFactor = currentClass === "grass" ? Math.min(0.48, 0.28 + (s.torque || 70) / 520) : 1;
   const maxSpeed = (320 + (s.speed || 70) * 3.5 + (s.powertrain || 70) * 0.45) * grassFactor;
-  const accel = (280 + (s.acceleration || 70) * 5) * (currentClass === "grass" ? 0.58 + (s.torque || 70) / 360 : 1);
+  const accel = (280 + (s.acceleration || 70) * 5) * (currentClass === "grass" ? 0.32 + (s.torque || 70) / 480 : 1);
   const brake = 520 + (s.torque || 70) * 2;
   const turnRate = (1.9 + (s.handling || 70) / 36) * Math.min(1, Math.max(0.25, Math.abs(betaState.speed) / 190));
   if (betaInput("up")) betaState.speed += accel * dt;
@@ -7545,28 +7558,44 @@ function drawBetaFrame() {
       drawBetaTile(ctx, betaTrack.grid[y][x], x * betaTileSize, y * betaTileSize);
     }
   }
-  drawBetaMarkers(ctx);
-  drawBetaCar(ctx);
-  if (betaState.debug) drawBetaDebug(ctx);
-  ctx.restore();
-  drawBetaMiniMap();
-  el.betaTime.textContent = betaState.elapsed.toFixed(2);
-  el.betaLap.textContent = `${Math.min(betaState.lap, betaLapsRequired)} / ${betaLapsRequired}`;
-  el.betaCheckpoint.textContent = `${Math.min(betaState.checkpoint, betaTrack.checkpoints.length)} / ${betaTrack.checkpoints.length}`;
-  el.betaSpeed.textContent = `${Math.round(Math.abs(betaState.speed) / 5.2)} MPH`;
+  drawBetaMarkersSimple(ctx);
 }
 
-function drawBetaMarkers(ctx) {
-  const sx = betaTrack.startTile.x * betaTileSize;
-  const sy = betaTrack.startTile.y * betaTileSize;
-  ctx.fillStyle = "rgba(255,255,255,.9)";
-  for (let i = 0; i < 8; i += 1) {
-    ctx.fillRect(sx + i * 32, sy + 92, 16, 72);
+function drawBetaMarkersSimple(ctx) {
+  const ts = betaTileSize;
+  const sx = betaTrack.startTile.x * ts;
+  const sy = betaTrack.startTile.y * ts;
+  const startTile = betaTrack.grid[betaTrack.startTile.y]?.[betaTrack.startTile.x];
+  const startIsHoriz = betaTileIsHorizontal(startTile);
+  const sfImg = betaTrackImages.startFinish;
+  if (sfImg?.complete && sfImg.naturalWidth) {
+    ctx.save();
+    ctx.translate(sx + ts / 2, sy + ts / 2);
+    if (!startIsHoriz) ctx.rotate(Math.PI / 2);
+    ctx.drawImage(sfImg, -ts / 2, -ts * 0.275, ts, ts * 0.55);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    for (let i = 0; i < 8; i += 1) ctx.fillRect(sx + i * 32, sy + 92, 16, 72);
   }
   betaTrack.checkpoints.forEach((cp, index) => {
-    ctx.strokeStyle = index === betaState.checkpoint ? "rgba(255,200,87,.86)" : "rgba(82,199,255,.34)";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(cp.x * betaTileSize + 42, cp.y * betaTileSize + 42, betaTileSize - 84, betaTileSize - 84);
+    const passed = index < (betaState?.checkpoint || 0);
+    const img = passed ? betaTrackImages.checkpointActive : betaTrackImages.checkpointNeutral;
+    const cpTile = betaTrack.grid[cp.y]?.[cp.x];
+    const cpIsHoriz = betaTileIsHorizontal(cpTile);
+    const cx = cp.x * ts;
+    const cy = cp.y * ts;
+    if (img?.complete && img.naturalWidth) {
+      ctx.save();
+      ctx.translate(cx + ts / 2, cy + ts / 2);
+      if (!cpIsHoriz) ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -ts / 2, -ts * 0.275, ts, ts * 0.55);
+      ctx.restore();
+    } else {
+      ctx.strokeStyle = passed ? "rgba(255,200,87,.86)" : "rgba(82,199,255,.56)";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(cx + 36, cy + 36, ts - 72, ts - 72);
+    }
   });
 }
 
@@ -7775,6 +7804,37 @@ async function preloadBetaRaceAssets() {
 
 function setBetaLoading(active) {
   if (!el.betaLoading) return;
+  if (active && !el.betaLoading.querySelector(".fuel-tank")) {
+    el.betaLoading.innerHTML = `
+      <div class="loading-card beta-loading-card">
+        <div class="loading-logo">
+          <img src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+          <div class="loading-logo-text"><strong>GearBorn</strong><span>Engines Evolved</span></div>
+        </div>
+        <h1>Fueling Engines…</h1>
+        <div class="fuel-tank" aria-label="Loading progress">
+          <div class="fuel-fill beta-fuel-fill" id="beta-fuel-fill" style="width:12%"></div>
+          <span class="fuel-cap" aria-hidden="true"></span>
+        </div>
+        <p class="loading-tip">Warming up the track…</p>
+      </div>
+    `;
+    // Animate fill
+    let pct = 12;
+    const fill = el.betaLoading.querySelector(".beta-fuel-fill");
+    const fillTimer = setInterval(() => {
+      if (!el.betaLoading || el.betaLoading.hidden) { clearInterval(fillTimer); return; }
+      pct = Math.min(92, pct + 4 + Math.random() * 10);
+      if (fill) fill.style.width = pct + "%";
+    }, 180);
+    el.betaLoading._fillTimer = fillTimer;
+  }
+  if (!active && el.betaLoading._fillTimer) {
+    clearInterval(el.betaLoading._fillTimer);
+    el.betaLoading._fillTimer = null;
+    const fill = el.betaLoading.querySelector(".beta-fuel-fill");
+    if (fill) fill.style.width = "100%";
+  }
   el.betaLoading.hidden = !active;
   el.betaLoading.classList.toggle("active", active);
 }
@@ -7872,15 +7932,44 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
   };
 }
 
-function betaStartPosition(index) {
-  const point = betaTrack.path[Math.min(index, betaTrack.path.length - 1)] || betaTrack.startTile;
-  const baseX = (point.x + 0.5) * betaTileSize;
-  const baseY = (point.y + 0.5) * betaTileSize;
-  const lateralX = -Math.sin(betaTrack.startAngle) * (index % 2 === 0 ? -34 : 34);
-  const lateralY = Math.cos(betaTrack.startAngle) * (index % 2 === 0 ? -34 : 34);
+function betaStartPosition(index, totalRacers = 1) {
+  // All cars start near the start/finish tile
+  const startTile = betaTrack.startTile;
+  const baseX = (startTile.x + 0.5) * betaTileSize;
+  const baseY = (startTile.y + 0.5) * betaTileSize;
+  const angle = betaTrack.startAngle;
+  // Perpendicular (lateral) direction
+  const latX = -Math.sin(angle);
+  const latY = Math.cos(angle);
+  // Behind direction (opposite of travel)
+  const backX = -Math.cos(angle);
+  const backY = -Math.sin(angle);
+  const lateralSpacing = 60;
+  const rowSpacing = 90;
+  // Grid layout: 2 columns, rows stacked behind line
+  // index 0 = player, in the LAST row (furthest back)
+  // AI cars fill front rows first
+  const numRows = Math.ceil(totalRacers / 2);
+  // Map: player (index=0) goes to last row
+  // AI: index 1..N go to rows front-to-back (row 0 = closest to line)
+  let col, row;
+  if (index === 0) {
+    // Player: last row
+    row = numRows - 1;
+    col = 1; // right side
+  } else {
+    // AI cars: sorted front (row 0) to back (row numRows-2)
+    const aiIndex = index - 1; // 0-based AI index
+    row = Math.floor(aiIndex / 2);
+    col = aiIndex % 2;
+  }
+  // col 0 = left (-lateralSpacing/2), col 1 = right (+lateralSpacing/2)
+  const lateralOffset = (col - 0.5) * lateralSpacing;
+  // row 0 = just behind line, increasing rows go further back
+  const backOffset = (row + 1) * rowSpacing;
   return {
-    x: baseX + lateralX,
-    y: baseY + lateralY
+    x: baseX + latX * lateralOffset + backX * backOffset,
+    y: baseY + latY * lateralOffset + backY * backOffset
   };
 }
 
@@ -7891,7 +7980,8 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
   const carId = betaCurrentCarId();
   const car = cars.find((item) => item.id === carId) || cars[0];
   const form = currentEvolution(carId);
-  const playerPos = betaStartPosition(0);
+  const totalRacers = 1 + config.opponents;
+  const playerPos = betaStartPosition(0, totalRacers);
   const player = betaMakeRacer({
     id: "player",
     name: form.name,
@@ -7904,7 +7994,7 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
     angle: betaTrack.startAngle
   });
   const opponents = getRandomOpponentCars(config.opponents, carId).map((opponent, index) => {
-    const pos = betaStartPosition(index + 1);
+    const pos = betaStartPosition(index + 1, totalRacers);
     return betaMakeRacer({
       id: `ai-${index}`,
       name: opponent.form.name,
@@ -8000,6 +8090,13 @@ function betaProgressRacer(racer) {
     }
   }
   racer.wasOnStart = onStart;
+  // Advance AI waypoint when close enough to current target
+  if (racer.ai && typeof racer.aiWaypoint === "number" && betaAiRacingLine?.length) {
+    const wp = betaAiRacingLine[racer.aiWaypoint];
+    if (wp && Math.hypot(wp.x - racer.x, wp.y - racer.y) < 68) {
+      racer.aiWaypoint = (racer.aiWaypoint + 1) % betaAiRacingLine.length;
+    }
+  }
 }
 
 function betaProgressScore(racer) {
@@ -8115,17 +8212,56 @@ function finishBetaDemo() {
   drawBetaFrame();
 }
 
+function betaTileIsHorizontal(tile) {
+  if (!tile) return true;
+  if (tile.type === "road_straight") return tile.rotation !== 90 && tile.rotation !== 270;
+  return true; // default horizontal
+}
+
 function drawBetaMarkers(ctx) {
-  const sx = betaTrack.startTile.x * betaTileSize;
-  const sy = betaTrack.startTile.y * betaTileSize;
-  ctx.fillStyle = "rgba(255,255,255,.9)";
-  for (let i = 0; i < 8; i += 1) {
-    ctx.fillRect(sx + i * 32, sy + 92, 16, 72);
+  const ts = betaTileSize;
+  // --- Start / Finish line ---
+  const sx = betaTrack.startTile.x * ts;
+  const sy = betaTrack.startTile.y * ts;
+  const startTile = betaTrack.grid[betaTrack.startTile.y]?.[betaTrack.startTile.x];
+  const startIsHoriz = betaTileIsHorizontal(startTile);
+  const sfImg = betaTrackImages.startFinish;
+  if (sfImg?.complete && sfImg.naturalWidth) {
+    ctx.save();
+    ctx.translate(sx + ts / 2, sy + ts / 2);
+    if (!startIsHoriz) ctx.rotate(Math.PI / 2);
+    // Draw centered on tile, full-width of road portion only
+    const imgW = startIsHoriz ? ts : ts * 0.55;
+    const imgH = startIsHoriz ? ts * 0.55 : ts;
+    ctx.drawImage(sfImg, -imgW / 2, -imgH / 2, imgW, imgH);
+    ctx.restore();
+  } else {
+    // Fallback checkerboard
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    for (let i = 0; i < 8; i += 1) ctx.fillRect(sx + i * 32, sy + 92, 16, 72);
   }
+
+  // --- Checkpoint lines ---
   betaTrack.checkpoints.forEach((cp, index) => {
-    ctx.strokeStyle = index === betaState.player.checkpoint ? "rgba(255,200,87,.86)" : "rgba(82,199,255,.34)";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(cp.x * betaTileSize + 42, cp.y * betaTileSize + 42, betaTileSize - 84, betaTileSize - 84);
+    const playerPassed = betaState?.player ? index < betaState.player.checkpoint : false;
+    const img = playerPassed ? betaTrackImages.checkpointActive : betaTrackImages.checkpointNeutral;
+    const cpTile = betaTrack.grid[cp.y]?.[cp.x];
+    const cpIsHoriz = betaTileIsHorizontal(cpTile);
+    const cx = cp.x * ts;
+    const cy = cp.y * ts;
+    if (img?.complete && img.naturalWidth) {
+      ctx.save();
+      ctx.translate(cx + ts / 2, cy + ts / 2);
+      if (!cpIsHoriz) ctx.rotate(Math.PI / 2);
+      const imgW = cpIsHoriz ? ts : ts * 0.55;
+      const imgH = cpIsHoriz ? ts * 0.55 : ts;
+      ctx.drawImage(img, -imgW / 2, -imgH / 2, imgW, imgH);
+      ctx.restore();
+    } else {
+      ctx.strokeStyle = playerPassed ? "rgba(255,200,87,.86)" : "rgba(82,199,255,.56)";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(cx + 36, cy + 36, ts - 72, ts - 72);
+    }
   });
 }
 
@@ -8258,21 +8394,38 @@ el.betaTrackBack?.addEventListener("click", () => {
   closeBetaTrackSelect();
 });
 
+// Item definitions — icon is image path; fallback color used if image missing
 const betaItemDefinitions = [
-  { id: "turbo", name: "Turbo Sprox", icon: "TS", color: "#ffc857" },
-  { id: "shield", name: "Shield Shell", icon: "SH", color: "#52c7ff" },
-  { id: "oil", name: "Oil Slick", icon: "OS", color: "#252b35" },
-  { id: "tire", name: "Tire Trap", icon: "TT", color: "#ff805f" },
-  { id: "burst", name: "Sprox Burst", icon: "SB", color: "#f45dff" },
-  { id: "repair", name: "Repair Pulse", icon: "RP", color: "#5cff9d" }
+  { id: "turbo",    name: "Insano-Mode", icon: "assets/items/item-insano-mode.png",  color: "#ff6b1a" },
+  { id: "shield",   name: "Big Bubba",   icon: "assets/items/item-big-bubba.png",    color: "#52c7ff" },
+  { id: "oil",      name: "Oil Slick",   icon: "assets/items/oil_slick.png",         color: "#252b35" },
+  { id: "tire",     name: "Spike Strip", icon: "assets/items/item-spike-strip.png",  color: "#ff3f3f" },
+  { id: "burst",    name: "EMP Pulse",   icon: "assets/items/item-emp-pulse.png",    color: "#c084fc" },
+  { id: "teleport", name: "Teleport",    icon: "assets/items/item-teleport.png",     color: "#6ee7a8" }
 ];
 
+// Multi-race only items (not available in duel / time trial)
+const betaMultiRaceOnlyItems = new Set(["teleport"]);
+
+const betaItemImages = {};
+betaItemDefinitions.forEach((def) => {
+  betaItemImages[def.id] = betaMakeImage(def.icon);
+});
+
 const betaTrackImages = {
-  itemBox: betaMakeImage("assets/tracks/item_box.png"),
-  boostPad: betaMakeImage("assets/tracks/boost_pad.png"),
-  oilSlick: betaMakeImage("assets/tracks/oil_slick.png"),
-  barrel: betaMakeImage("assets/tracks/barrel.png"),
-  cone: betaMakeImage("assets/tracks/traffic_cone.png")
+  itemBox:           betaMakeImage("assets/tracks/item_box.png"),
+  boostPad:          betaMakeImage("assets/tracks/boost_pad.png"),
+  oilSlick:          betaMakeImage("assets/items/oil_slick.png"),
+  spikeStrip:        betaMakeImage("assets/items/spike-strip.png"),
+  empWave:           betaMakeImage("assets/items/emp-pulse-wave.png"),
+  insanoFlames:      betaMakeImage("assets/items/insano-flames.png"),
+  bubbaBubble:       betaMakeImage("assets/items/big-bubba-bubble.png"),
+  teleportPortal:    betaMakeImage("assets/items/teleport-portal.png"),
+  barrel:            betaMakeImage("assets/beta3d/obstacle_barrel.png"),
+  cone:              betaMakeImage("assets/beta3d/obstacle_cone.png"),
+  startFinish:       betaMakeImage("assets/tracks/start-finish-line.png"),
+  checkpointNeutral: betaMakeImage("assets/tracks/checkpoint-neutral.png"),
+  checkpointActive:  betaMakeImage("assets/tracks/checkpoint-active.png")
 };
 
 let betaAiRacingLine = betaTrack.aiLine;
@@ -8303,8 +8456,12 @@ function createBetaObjects(config) {
   };
 }
 
-function betaRandomItemForRacer() {
-  return betaItemDefinitions[Math.floor(Math.random() * betaItemDefinitions.length)];
+function betaRandomItemForRacer(racer) {
+  // Build pool: exclude multi-race-only items in duel/time mode
+  const modeId = betaState?.config?.id || "time";
+  const isMultiRace = modeId === "race4" || modeId === "race6";
+  const pool = betaItemDefinitions.filter((def) => isMultiRace || !betaMultiRaceOnlyItems.has(def.id));
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function betaNowMs() {
@@ -8338,9 +8495,14 @@ function betaNotify(message, duration = 1500) {
 function betaApplyHit(racer, effect = "slow", strength = 1, source = "hazard") {
   if (!racer || racer.finished || racer.ghost) return;
   const now = betaNowMs();
-  if (racer.shieldUntil > now && source !== "grass") {
-    racer.shieldUntil = 0;
-    if (racer.id === "player") betaNotify("Shield blocked the hit!");
+  // Big Bubba blocks ALL penalties (grass slowdown included)
+  if (racer.shieldUntil > now) {
+    // EMP dissipates on shield hit; shield consumed
+    if (source === "projectile") {
+      racer.shieldUntil = 0;
+      if (racer.id === "player") betaNotify("Big Bubba blocked the EMP!");
+    }
+    // All other hits blocked silently; shield stays intact
     return;
   }
   const bodyReducer = Math.max(0.48, 1 - (racer.physics.body || 70) / 260);
@@ -8369,28 +8531,52 @@ function betaUseItem(racer) {
   const pwr = racer.physics.pwrMultiplier || 1.16;
   racer.item = null;
   racer.itemCooldownUntil = now + 800;
+
+  // ── Insano-Mode (turbo) ──────────────────────────────────────
   if (item.id === "turbo") {
     racer.boostUntil = Math.max(racer.boostUntil || 0, now + 1350 * pwr);
     racer.speed = Math.min(racer.physics.maxSpeed * (1.16 + pwr * 0.12), racer.speed + 130 * pwr);
+
+  // ── Big Bubba (shield) ───────────────────────────────────────
   } else if (item.id === "shield") {
-    racer.shieldUntil = Math.max(racer.shieldUntil || 0, now + 4200 * pwr);
-  } else if (item.id === "oil" || item.id === "tire") {
+    racer.shieldUntil = Math.max(racer.shieldUntil || 0, now + 5000);
+
+  // ── Oil Slick ────────────────────────────────────────────────
+  } else if (item.id === "oil") {
     const point = betaBehindPoint(racer, 62);
     betaState.objects.traps.push({
       id: `trap-${Date.now()}-${Math.random()}`,
-      type: item.id,
+      type: "oil",
+      source: "item",           // player/AI dropped → single-trigger
       owner: racer.id,
       x: point.x,
       y: point.y,
       armedAt: now + 360,
-      expiresAt: now + 12000,
-      radius: item.id === "oil" ? 36 : 32
+      expiresAt: now + 18000,
+      radius: 36
     });
+
+  // ── Spike Strip (tire) ───────────────────────────────────────
+  } else if (item.id === "tire") {
+    const point = betaBehindPoint(racer, 62);
+    betaState.objects.traps.push({
+      id: `trap-${Date.now()}-${Math.random()}`,
+      type: "tire",
+      source: "item",           // always single-trigger
+      owner: racer.id,
+      x: point.x,
+      y: point.y,
+      armedAt: now + 360,
+      expiresAt: now + 18000,
+      radius: 32
+    });
+
+  // ── EMP Pulse (burst) ────────────────────────────────────────
   } else if (item.id === "burst") {
     const point = betaFrontPoint(racer, 62);
-    const speed = 720 * pwr;
+    const speed = 760 * pwr;
     betaState.objects.projectiles.push({
-      id: `burst-${Date.now()}-${Math.random()}`,
+      id: `emp-${Date.now()}-${Math.random()}`,
       owner: racer.id,
       x: point.x,
       y: point.y,
@@ -8398,16 +8584,61 @@ function betaUseItem(racer) {
       vy: Math.sin(racer.angle) * speed,
       angle: racer.angle,
       power: pwr,
-      expiresAt: now + 1150
+      expiresAt: now + 1200
     });
-  } else if (item.id === "repair") {
-    racer.spinUntil = 0;
-    racer.slowUntil = 0;
-    racer.hitFlashUntil = 0;
-    racer.speed = Math.min(racer.physics.maxSpeed, racer.speed + 120 * pwr);
+
+  // ── Teleport ─────────────────────────────────────────────────
+  } else if (item.id === "teleport") {
+    betaExecuteTeleport(racer, now);
   }
+
   if (racer.id === "player") updateBetaItemHud();
   return true;
+}
+
+// ── Teleport logic ────────────────────────────────────────────────────────────
+function betaExecuteTeleport(racer, now) {
+  const placements = betaPlacements();
+  const racerIdx = placements.findIndex((r) => r.id === racer.id);
+  const total = placements.length;
+  const PRE_DELAY = 1000;   // 1 s portal before teleport
+  const POST_DELAY = 1000;  // 1 s portal after teleport
+
+  if (racerIdx > 0) {
+    // Not in 1st → jump one position forward
+    const targetRacer = placements[racerIdx - 1];
+    racer.teleportPortal = { startMs: now, phase: "pre", attachedTo: racer.id };
+    window.setTimeout(() => {
+      if (!betaState) return;
+      // Place slightly behind the target
+      const behind = betaBehindPoint(targetRacer, 80);
+      racer.x = behind.x;
+      racer.y = behind.y;
+      racer.angle = targetRacer.angle;
+      racer.speed = Math.min(racer.speed, targetRacer.speed);
+      racer.teleportPortal = { startMs: betaNowMs(), phase: "post", attachedTo: racer.id };
+      window.setTimeout(() => { if (racer.teleportPortal?.phase === "post") racer.teleportPortal = null; }, POST_DELAY);
+    }, PRE_DELAY);
+  } else {
+    // In 1st → penalise 2nd place: send them to last (or 4th)
+    const victim = placements[1];
+    if (!victim) return;
+    const destIdx = Math.min(total - 1, 3);     // 4th or last
+    const destRacer = placements[destIdx] || placements[total - 1];
+    victim.teleportPortal = { startMs: now, phase: "pre", attachedTo: victim.id };
+    window.setTimeout(() => {
+      if (!betaState) return;
+      const behind = betaBehindPoint(destRacer, 90);
+      victim.x = behind.x;
+      victim.y = behind.y;
+      victim.angle = destRacer.angle;
+      victim.speed = Math.min(victim.speed, destRacer.speed * 0.7);
+      victim.teleportPortal = { startMs: betaNowMs(), phase: "post", attachedTo: victim.id };
+      window.setTimeout(() => { if (victim.teleportPortal?.phase === "post") victim.teleportPortal = null; }, POST_DELAY);
+    }, PRE_DELAY);
+    // Give player racer a brief boost reward for using it while leading
+    racer.boostUntil = Math.max(racer.boostUntil || 0, now + 600);
+  }
 }
 
 function betaFindTargetAhead(racer, maxDistance = 420) {
@@ -8446,11 +8677,17 @@ function betaAiUseItems() {
     if (racer.itemCooldownUntil > now) return;
     const item = racer.item.id;
     const placement = betaPlacements().findIndex((entry) => entry.id === racer.id) + 1;
-    if (item === "repair" && (racer.spinUntil > now || racer.slowUntil > now || racer.speed < racer.physics.maxSpeed * 0.35)) betaUseItem(racer);
-    else if (item === "turbo" && (placement > 1 || Math.abs(racer.speed) < racer.physics.maxSpeed * 0.55)) betaUseItem(racer);
+    const total = betaState.racers.length;
+    // Insano-Mode: use when not 1st or going slow
+    if (item === "turbo" && (placement > 1 || Math.abs(racer.speed) < racer.physics.maxSpeed * 0.55)) betaUseItem(racer);
+    // Big Bubba: use when threat nearby
     else if (item === "shield" && (betaFindTargetAhead(racer, 180) || betaHasChaser(racer, 180) || Math.random() < 0.012)) betaUseItem(racer);
+    // Oil / Spike Strip: drop when someone is chasing
     else if ((item === "oil" || item === "tire") && betaHasChaser(racer, 300)) betaUseItem(racer);
-    else if (item === "burst" && betaFindTargetAhead(racer, 430)) betaUseItem(racer);
+    // EMP: fire when someone is ahead and close
+    else if (item === "burst" && betaFindTargetAhead(racer, 450)) betaUseItem(racer);
+    // Teleport: use when behind and mid-race
+    else if (item === "teleport" && placement > 1 && Math.random() < 0.04) betaUseItem(racer);
   });
 }
 
@@ -8500,16 +8737,21 @@ function betaApplyObstacles(now) {
 function betaUpdateTraps(now) {
   const objects = betaState?.objects;
   if (!objects) return;
-  objects.traps = objects.traps.filter((trap) => trap.expiresAt > now);
+  objects.traps = objects.traps.filter((trap) => trap.expiresAt > now && !trap.expired);
   objects.traps.forEach((trap) => {
-    if (trap.armedAt > now || trap.hit) return;
+    if (trap.armedAt > now) return;
     betaState.racers.forEach((racer) => {
-      if (racer.id === trap.owner || racer.finished || betaDistance(racer, trap) > trap.radius + 26) return;
+      if (trap.expired || racer.id === trap.owner || racer.finished) return;
+      if (betaDistance(racer, trap) > trap.radius + 26) return;
       betaApplyHit(racer, trap.type === "oil" ? "spin" : "slow", trap.type === "oil" ? 1.1 : 1.2, "trap");
-      trap.hit = true;
+      // Item-dropped traps (source:"item") disappear after one trigger.
+      // Spike strip always disappears. Map oil slicks (no source) persist.
+      if (trap.source === "item" || trap.type === "tire") {
+        trap.expired = true;
+      }
     });
   });
-  objects.traps = objects.traps.filter((trap) => !trap.hit);
+  objects.traps = objects.traps.filter((trap) => !trap.expired);
 }
 
 function betaUpdateProjectiles(dt, now) {
@@ -8518,23 +8760,46 @@ function betaUpdateProjectiles(dt, now) {
   objects.projectiles.forEach((projectile) => {
     projectile.x += projectile.vx * dt;
     projectile.y += projectile.vy * dt;
+    // Dissipate on wall
     if (betaSurfaceAt(projectile.x, projectile.y) === "wall") projectile.expired = true;
     betaState.racers.forEach((racer) => {
-      if (projectile.expired || racer.id === projectile.owner || racer.finished || betaDistance(racer, projectile) > 34) return;
+      if (projectile.expired || racer.id === projectile.owner || racer.finished) return;
+      if (betaDistance(racer, projectile) > 38) return;
+      // Blocked by Big Bubba — shield consumed, projectile dissipates
+      if (racer.shieldUntil > betaNowMs()) {
+        racer.shieldUntil = 0;
+        if (racer.id === "player") betaNotify("Big Bubba blocked the EMP!");
+        projectile.expired = true;
+        return;
+      }
       betaApplyHit(racer, "burst", projectile.power || 1, "projectile");
       projectile.expired = true;
     });
   });
-  objects.projectiles = objects.projectiles.filter((projectile) => !projectile.expired && projectile.expiresAt > now);
+  objects.projectiles = objects.projectiles.filter((p) => !p.expired && p.expiresAt > now);
 }
 
 function updateBetaItemHud() {
   if (!el.betaItemSlot) return;
   const item = betaState?.player?.item;
   el.betaItemSlot.classList.toggle("is-empty", !item);
-  el.betaItemIcon.textContent = item?.icon || "?";
   el.betaItemName.textContent = item?.name || "Empty";
   el.betaItemPrompt.textContent = item ? "Space / E" : "Find a box";
+  const iconEl = el.betaItemIcon;
+  if (item) {
+    const img = betaItemImages[item.id];
+    if (img?.complete && img.naturalWidth) {
+      iconEl.innerHTML = "";
+      const clone = img.cloneNode();
+      clone.style.cssText = "width:28px;height:28px;object-fit:contain;display:block;";
+      iconEl.appendChild(clone);
+    } else {
+      // While loading or missing, show a short text label
+      iconEl.textContent = item.name.slice(0, 2).toUpperCase();
+    }
+  } else {
+    iconEl.textContent = "?";
+  }
 }
 
 function updateBetaControlVisuals() {
@@ -8572,6 +8837,8 @@ function betaDrawImageOrFallback(ctx, img, x, y, width, height, fallback) {
 function betaDrawTrackObjects(ctx) {
   const objects = betaState?.objects;
   if (!objects) return;
+
+  // ── Boost pads ────────────────────────────────────────────────
   objects.boostPads.forEach((pad) => {
     ctx.save();
     ctx.translate(pad.x, pad.y);
@@ -8579,104 +8846,145 @@ function betaDrawTrackObjects(ctx) {
     betaDrawImageOrFallback(ctx, betaTrackImages.boostPad, 0, 0, 58, 92, () => {
       ctx.fillStyle = "rgba(82,199,255,.78)";
       ctx.beginPath();
-      ctx.moveTo(0, -42);
-      ctx.lineTo(-26, 18);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(26, 18);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(0, -42); ctx.lineTo(-26, 18); ctx.lineTo(0, 6); ctx.lineTo(26, 18);
+      ctx.closePath(); ctx.fill();
     });
     ctx.restore();
   });
+
+  // ── Obstacles (barrels / cones) ───────────────────────────────
   objects.obstacles.forEach((obstacle) => {
     const img = obstacle.kind === "barrel" ? betaTrackImages.barrel : betaTrackImages.cone;
     betaDrawImageOrFallback(ctx, img, obstacle.x, obstacle.y, 46, 46, () => {
       ctx.fillStyle = obstacle.kind === "barrel" ? "#ff805f" : "#ffc857";
-      ctx.beginPath();
-      ctx.arc(obstacle.x, obstacle.y, 20, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(obstacle.x, obstacle.y, 20, 0, Math.PI * 2); ctx.fill();
     });
   });
+
+  // ── Item boxes ────────────────────────────────────────────────
   objects.itemBoxes.filter((box) => box.active).forEach((box) => {
     ctx.save();
-    ctx.shadowColor = "#ffc857";
-    ctx.shadowBlur = 16;
+    ctx.shadowColor = "#ffc857"; ctx.shadowBlur = 16;
     betaDrawImageOrFallback(ctx, betaTrackImages.itemBox, box.x, box.y, 48, 48, () => {
       ctx.fillStyle = "#ffc857";
       ctx.fillRect(box.x - 22, box.y - 22, 44, 44);
-      ctx.fillStyle = "#101820";
-      ctx.font = "900 28px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#101820"; ctx.font = "900 28px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText("?", box.x, box.y + 1);
     });
     ctx.restore();
   });
+
+  // ── Traps: Oil Slick & Spike Strip ───────────────────────────
   objects.traps.forEach((trap) => {
     ctx.save();
-    ctx.globalAlpha = 0.88;
+    ctx.globalAlpha = 0.9;
     if (trap.type === "oil") {
-      betaDrawImageOrFallback(ctx, betaTrackImages.oilSlick, trap.x, trap.y, 70, 42, () => {
-        ctx.fillStyle = "rgba(16,20,28,.88)";
-        ctx.beginPath();
-        ctx.ellipse(trap.x, trap.y, 34, 20, -0.2, 0, Math.PI * 2);
-        ctx.fill();
+      // Oil slick — elliptical pool
+      betaDrawImageOrFallback(ctx, betaTrackImages.oilSlick, trap.x, trap.y, 80, 50, () => {
+        ctx.fillStyle = "rgba(16,20,28,.92)";
+        ctx.beginPath(); ctx.ellipse(trap.x, trap.y, 38, 22, -0.2, 0, Math.PI * 2); ctx.fill();
       });
     } else {
-      ctx.fillStyle = "#ff805f";
-      ctx.beginPath();
-      for (let i = 0; i < 8; i += 1) {
-        const angle = (Math.PI * 2 * i) / 8;
-        const radius = i % 2 ? 14 : 32;
-        ctx.lineTo(trap.x + Math.cos(angle) * radius, trap.y + Math.sin(angle) * radius);
-      }
-      ctx.closePath();
-      ctx.fill();
+      // Spike strip — horizontal strip image
+      betaDrawImageOrFallback(ctx, betaTrackImages.spikeStrip, trap.x, trap.y, 86, 28, () => {
+        ctx.fillStyle = "#ff3f3f";
+        ctx.beginPath();
+        for (let i = 0; i < 8; i += 1) {
+          const a = (Math.PI * 2 * i) / 8;
+          const r = i % 2 ? 13 : 30;
+          ctx[i === 0 ? "moveTo" : "lineTo"](trap.x + Math.cos(a) * r, trap.y + Math.sin(a) * r);
+        }
+        ctx.closePath(); ctx.fill();
+      });
     }
     ctx.restore();
   });
-  objects.projectiles.forEach((projectile) => {
+
+  // ── EMP Pulse projectiles ─────────────────────────────────────
+  objects.projectiles.forEach((proj) => {
     ctx.save();
-    ctx.translate(projectile.x, projectile.y);
-    ctx.rotate(projectile.angle);
-    ctx.fillStyle = "#f45dff";
-    ctx.shadowColor = "#f45dff";
-    ctx.shadowBlur = 14;
-    ctx.fillRect(-18, -7, 36, 14);
+    ctx.translate(proj.x, proj.y);
+    ctx.rotate(proj.angle);
+    const empImg = betaTrackImages.empWave;
+    if (empImg?.complete && empImg.naturalWidth) {
+      ctx.drawImage(empImg, -36, -20, 72, 40);
+    } else {
+      ctx.fillStyle = "#c084fc"; ctx.shadowColor = "#c084fc"; ctx.shadowBlur = 18;
+      ctx.fillRect(-22, -8, 44, 16);
+    }
     ctx.restore();
   });
 }
 
 function betaDrawStatusEffects(ctx, racer) {
   const now = betaNowMs();
+
+  // ── Teleport portal (pre and post) ───────────────────────────
+  if (racer.teleportPortal) {
+    const portal = racer.teleportPortal;
+    const age = now - portal.startMs;
+    const alpha = Math.min(1, age / 200) * (portal.phase === "post" ? Math.max(0, 1 - age / 1000) : 1);
+    if (alpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.92;
+      const pImg = betaTrackImages.teleportPortal;
+      const size = 110 + Math.sin(age / 180) * 10;
+      if (pImg?.complete && pImg.naturalWidth) {
+        ctx.drawImage(pImg, racer.x - size / 2, racer.y - size / 2, size, size);
+      } else {
+        ctx.strokeStyle = "#6ee7a8"; ctx.lineWidth = 5; ctx.shadowColor = "#6ee7a8"; ctx.shadowBlur = 20;
+        ctx.beginPath(); ctx.arc(racer.x, racer.y, size / 2, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // ── Insano-Mode flames (boost active) ────────────────────────
   if (racer.boostUntil > now) {
     ctx.save();
-    ctx.globalAlpha = 0.75;
-    ctx.translate(racer.x - Math.cos(racer.angle) * 42, racer.y - Math.sin(racer.angle) * 42);
-    ctx.rotate(racer.angle);
-    ctx.fillStyle = "rgba(82,199,255,.8)";
-    ctx.fillRect(-44, -15, 72, 7);
-    ctx.fillRect(-34, 8, 62, 7);
+    const flameImg = betaTrackImages.insanoFlames;
+    // Position flames behind the car
+    const bx = racer.x - Math.cos(racer.angle) * 50;
+    const by = racer.y - Math.sin(racer.angle) * 50;
+    ctx.translate(bx, by);
+    ctx.rotate(racer.angle + Math.PI / 2);
+    if (flameImg?.complete && flameImg.naturalWidth) {
+      ctx.globalAlpha = 0.88;
+      ctx.drawImage(flameImg, -32, -20, 64, 56);
+    } else {
+      // Fallback: two streaks
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = "rgba(82,199,255,.8)";
+      ctx.fillRect(-44, -15, 72, 7);
+      ctx.fillRect(-34, 8, 62, 7);
+    }
     ctx.restore();
   }
+
+  // ── Big Bubba bubble (shield active) ─────────────────────────
   if (racer.shieldUntil > now) {
     ctx.save();
-    ctx.strokeStyle = "rgba(82,199,255,.92)";
-    ctx.shadowColor = "#52c7ff";
-    ctx.shadowBlur = 15;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(racer.x, racer.y, 52, 0, Math.PI * 2);
-    ctx.stroke();
+    const bubbleImg = betaTrackImages.bubbaBubble;
+    const pulse = 1 + Math.sin(now / 220) * 0.04;
+    const size = 108 * pulse;
+    if (bubbleImg?.complete && bubbleImg.naturalWidth) {
+      ctx.globalAlpha = 0.82;
+      ctx.drawImage(bubbleImg, racer.x - size / 2, racer.y - size / 2, size, size);
+    } else {
+      ctx.strokeStyle = "rgba(82,199,255,.92)";
+      ctx.shadowColor = "#52c7ff"; ctx.shadowBlur = 15;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(racer.x, racer.y, 52 * pulse, 0, Math.PI * 2); ctx.stroke();
+    }
     ctx.restore();
   }
+
+  // ── Hit flash ─────────────────────────────────────────────────
   if (racer.hitFlashUntil > now) {
     ctx.save();
-    ctx.strokeStyle = "rgba(255,128,95,.9)";
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(racer.x, racer.y, 46, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,128,95,.9)"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(racer.x, racer.y, 46, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
 }
@@ -8712,6 +9020,7 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     hitFlashUntil: 0,
     lastPadAt: 0,
     itemCooldownUntil: 0,
+    teleportPortal: null,
     aiWaypoint: 0,
     image: betaMakeImage(imageFor(form, "topdown")),
     record: [],
@@ -8749,7 +9058,8 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
   const carId = betaCurrentCarId();
   const car = cars.find((item) => item.id === carId) || cars[0];
   const form = currentEvolution(carId);
-  const playerPos = betaStartPosition(0);
+  const totalRacers = 1 + config.opponents;
+  const playerPos = betaStartPosition(0, totalRacers);
   const player = betaMakeRacer({
     id: "player",
     name: form.name,
@@ -8762,7 +9072,7 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
     angle: betaTrack.startAngle
   });
   const opponents = getRandomOpponentCars(config.opponents, carId).map((opponent, index) => {
-    const pos = betaStartPosition(index + 1);
+    const pos = betaStartPosition(index + 1, totalRacers);
     return betaMakeRacer({
       id: `ai-${index}`,
       name: opponent.form.name,
@@ -8834,9 +9144,11 @@ function betaDriveRacer(racer, dt, controls = {}) {
   const currentClass = betaSurfaceAt(racer.x, racer.y);
   const boosted = racer.boostUntil > now;
   const slowed = racer.slowUntil > now;
-  const grassFactor = currentClass === "grass" ? Math.min(0.82, 0.56 + racer.physics.torque / 420) : 1;
+  const shielded = racer.shieldUntil > now;   // Big Bubba blocks grass penalty
+  const effectiveClass = shielded ? "road" : currentClass;
+  const grassFactor = effectiveClass === "grass" ? Math.min(0.48, 0.28 + racer.physics.torque / 520) : 1;
   let maxSpeed = racer.physics.maxSpeed * grassFactor;
-  let accel = racer.physics.acceleration * (currentClass === "grass" ? 0.58 + racer.physics.torque / 360 : 1);
+  let accel = racer.physics.acceleration * (effectiveClass === "grass" ? 0.32 + racer.physics.torque / 480 : 1);
   if (boosted) {
     maxSpeed *= 1.22 + (racer.physics.powertrain || 70) / 620;
     accel *= 1.25;
@@ -8860,8 +9172,9 @@ function betaDriveRacer(racer, dt, controls = {}) {
   if (nextClass === "wall" || (racer.ai && nextClass === "grass")) {
     racer.x = racer.prevX;
     racer.y = racer.prevY;
-    racer.speed *= racer.ai ? 0.38 : -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
-    if (racer.ai && nextClass === "grass") {
+    racer.speed *= racer.ai ? -0.28 : -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
+    if (racer.ai) {
+      // Steer toward next waypoint to escape
       const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
@@ -8920,6 +9233,7 @@ function drawBetaFrame() {
   drawBetaMarkers(ctx);
   betaDrawTrackObjects(ctx);
   if (betaState.ghostPoint) drawBetaGhost(ctx);
+  // Draw status effects (flames, bubble) UNDER the car so car sits on top
   betaState.racers.forEach((racer) => betaDrawStatusEffects(ctx, racer));
   betaState.racers.filter((racer) => racer.ai).forEach((racer) => drawBetaCar(ctx, racer));
   drawBetaCar(ctx, betaState.player);
