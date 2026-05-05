@@ -7067,10 +7067,6 @@ small {
 }
 
 /* ── Forge view layout ─────────────────────────────────────────────────────── */
-.forge-view {
-  display: grid;
-  gap: 20px;
-}
 
 .forge-layout {
   display: grid;
