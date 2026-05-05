@@ -7475,3 +7475,23 @@ small {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Forge view needs grid layout when active */
+#forge-view.active {
+  display: grid;
+  gap: 20px;
+}
+
+/* Beta full-page screens — replace each other inside beta-mode */
+.beta-screen {
+  width: 100%;
+}
+
+.beta-screen[hidden] {
+  display: none !important;
+}
+
+/* beta-intro is now also a beta-screen */
+.beta-intro.beta-screen {
+  /* Keep existing beta-intro styles, just ensure hidden works */
+}

@@ -581,7 +581,7 @@
         </section>
 
         <!-- THE FORGE sub-view (lives alongside other views) -->
-        <section class="view forge-view" id="forge-view" hidden aria-label="The Forge">
+        <section class="view forge-view" id="forge-view" aria-label="The Forge">
           <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
           <div class="section-heading">
             <p>The Forge</p>
@@ -727,70 +727,70 @@
         <section class="view" id="beta-view" aria-labelledby="beta-title">
           <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="beta-mode" id="beta-mode">
-            <div class="beta-intro" id="beta-intro">
+            <!-- BETA SCREEN 1: Main menu -->
+            <div class="beta-intro beta-screen" id="beta-intro">
               <p class="modal-kicker">Experimental</p>
               <h1 id="beta-title">Beta Mode</h1>
-
-              <!-- Main screen -->
-              <div id="beta-main-screen">
-                <h2>Choose a racing prototype.</h2>
-                <p>Experimental test modes. Progress and rewards are disabled.</p>
-                <button class="success-button beta-car-select-open" id="beta-car-select-open" type="button">🏎 Car Select</button>
-                <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
-                  <strong>Pseudo-3D Baybee Run</strong>
-                  <span>Behind-the-car test on a longer prototype track.</span>
+              <h2>Choose a racing prototype.</h2>
+              <p>Experimental test modes. Progress and rewards are disabled.</p>
+              <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
+                <strong>Pseudo-3D Baybee Run</strong>
+                <span>Behind-the-car test on a longer prototype track.</span>
+              </button>
+              <div class="beta-option-grid" id="beta-options">
+                <button class="beta-option-card" data-beta-mode="time" type="button">
+                  <strong>Solo Time Trial</strong>
+                  <span>Race your best time against Phantaxi.</span>
                 </button>
-                <div class="beta-option-grid" id="beta-options">
-                  <button class="beta-option-card" data-beta-mode="time" type="button">
-                    <strong>Solo Time Trial</strong>
-                    <span>Race your best time against Phantaxi.</span>
-                  </button>
-                  <button class="beta-option-card" data-beta-mode="race4" type="button">
-                    <strong>4-Car Circuit Race</strong>
-                    <span>Place Top 2 against three GearBorn.</span>
-                  </button>
-                  <button class="beta-option-card" data-beta-mode="race6" type="button">
-                    <strong>6-Car Circuit Race</strong>
-                    <span>Place Top 3 against five GearBorn.</span>
-                  </button>
-                  <button class="beta-option-card" data-beta-mode="duel" type="button">
-                    <strong>Head-to-Head Race</strong>
-                    <span>Beat one rival GearBorn.</span>
-                  </button>
-                </div>
+                <button class="beta-option-card" data-beta-mode="race4" type="button">
+                  <strong>4-Car Circuit Race</strong>
+                  <span>Place Top 2 against three GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="race6" type="button">
+                  <strong>6-Car Circuit Race</strong>
+                  <span>Place Top 3 against five GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="duel" type="button">
+                  <strong>Head-to-Head Race</strong>
+                  <span>Beat one rival GearBorn.</span>
+                </button>
               </div>
+              <span id="beta-car-select-toggle" style="display:none"></span>
+            </div>
 
-              <!-- Car Select screen -->
-              <div id="beta-car-select-screen" hidden>
-                <h2>Select Your Car</h2>
-                <p>This car will be used for all Beta 2D races.</p>
-                <div class="car-select-layout beta-car-select-panel" id="beta-car-select-panel">
-                  <div class="icon-grid compact-car-grid" id="beta-car-grid"></div>
-                  <div class="car-select-preview" id="beta-car-select-preview"></div>
-                </div>
-                <div class="modal-actions" style="justify-content:center;margin-top:8px;">
-                  <button class="success-button" id="beta-car-select-confirm" type="button">Confirm Car</button>
-                  <button class="ghost" id="beta-car-select-back" type="button">Back</button>
-                </div>
+            <!-- BETA SCREEN 2: Car Select (full-page, replaces main menu) -->
+            <div class="beta-screen" id="beta-car-select-screen" hidden>
+              <button class="back-link" id="beta-car-select-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Beta Mode</p>
+                <h1>Select Your Car</h1>
               </div>
+              <p class="beta-note">This car will be used for your Beta 2D race.</p>
+              <div class="car-select-layout beta-car-select-panel" id="beta-car-select-panel">
+                <div class="icon-grid compact-car-grid" id="beta-car-grid"></div>
+                <div class="car-select-preview" id="beta-car-select-preview"></div>
+              </div>
+              <div class="modal-actions" style="justify-content:center;margin-top:12px;">
+                <button class="success-button" id="beta-car-select-confirm" type="button">Select Car &amp; Choose Track</button>
+              </div>
+            </div>
 
-              <!-- Track Select screen (shown after choosing a mode) -->
-              <div id="beta-track-select-screen" hidden>
-                <h2 id="beta-track-select-title">Choose a Track</h2>
-                <div class="beta-track-select" id="beta-track-select">
-                  <div class="beta-track-list" id="beta-track-list"></div>
-                  <div class="beta-track-preview">
-                    <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected Beta Mode track preview"></canvas>
-                    <div class="modal-actions">
-                      <button class="success-button" id="beta-track-start" type="button">Start Race</button>
-                      <button class="ghost" id="beta-track-back" type="button">Back</button>
-                    </div>
+            <!-- BETA SCREEN 3: Track Select (full-page, replaces car select) -->
+            <div class="beta-screen" id="beta-track-select-screen" hidden>
+              <button class="back-link" id="beta-track-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Beta Mode</p>
+                <h1 id="beta-track-select-title">Choose a Track</h1>
+              </div>
+              <div class="beta-track-select" id="beta-track-select">
+                <div class="beta-track-list" id="beta-track-list"></div>
+                <div class="beta-track-preview">
+                  <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected Beta Mode track preview"></canvas>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-track-start" type="button">Start Race</button>
                   </div>
                 </div>
               </div>
-
-              <!-- Legacy hidden refs for JS compat -->
-              <span id="beta-car-select-toggle" style="display:none"></span>
             </div>
             <div class="beta-3d-race" id="beta-3d-race" hidden>
               <div class="beta-3d-hud">

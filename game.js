@@ -4655,25 +4655,18 @@ let forgeSelectedCarId = null;
 let forgeAnimating = false;
 
 function openForge() {
-  if (!el.forgeView) return;
   forgeSelectedCarId = null;
   forgeAnimating = false;
-  renderForgeInventory();
-  el.forgeView.removeAttribute("hidden");
-  el.forgeView.setAttribute("aria-hidden", "false");
   if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
-  el.forgeUnlockBtn.disabled = true;
-  el.forgeUnlockBtn.textContent = "Select a Medallion";
-  el.forgeAnimationArea.innerHTML = "";
-  el.forgeAnimationArea.classList.remove("animating");
+  if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = "Select a Medallion"; }
+  if (el.forgeAnimationArea) { el.forgeAnimationArea.innerHTML = ""; el.forgeAnimationArea.classList.remove("animating"); }
   if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
   if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+  showView("forge");
 }
 
 function closeForge() {
-  if (!el.forgeView) return;
-  el.forgeView.setAttribute("hidden", "");
-  el.forgeView.setAttribute("aria-hidden", "true");
+  showView("garage");
 }
 
 function renderForgeInventory() {
@@ -5485,8 +5478,9 @@ function showView(view) {
   if (view === "boss") setFlowStep("boss", "car");
   if (view === "battle") setFlowStep("battle", "car");
   if (view === "beta") openBetaIntro();
+  if (view === "forge") { renderForgeInventory(); }
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
-  if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
+  if (!["story", "play", "time-trial", "boss", "battle", "beta", "forge"].includes(view)) render();
 }
 
 function storyTunerReady() {
@@ -6840,8 +6834,10 @@ document.addEventListener("click", (event) => {
 });
 
 // Beta car select screen
-el.betaCarSelectOpen?.addEventListener("click", openBetaCarSelect);
-el.betaCarSelectConfirm?.addEventListener("click", closeBetaCarSelect);
+el.betaCarSelectConfirm?.addEventListener("click", () => {
+  // Confirmed car → proceed to track select
+  openBetaTrackSelect(betaPendingMode || "time");
+});
 el.betaCarSelectBack?.addEventListener("click", closeBetaCarSelect);
 
 el.playerCar.addEventListener("change", (event) => {
@@ -7623,7 +7619,7 @@ function startBetaDemo() {
     last: performance.now(),
     raf: null
   };
-  el.betaIntro.hidden = true;
+  showBetaScreen(null); // hide all beta screens
   el.betaRace.hidden = false;
   el.betaResults.hidden = true;
   el.betaDebug.textContent = "Debug: Off";
@@ -8126,30 +8122,37 @@ function renderBetaTrackSelect() {
   drawBetaTrackPreview(betaTrack);
 }
 
+// ── Beta screen navigation: show exactly one beta screen at a time ────────────
+function showBetaScreen(screenId) {
+  ["beta-intro", "beta-car-select-screen", "beta-track-select-screen"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !screenId || id !== screenId;
+  });
+}
+
 function openBetaTrackSelect(mode = "time") {
   betaPendingMode = mode;
   const modeLabels = { time: "Solo Time Trial", race4: "4-Car Race", race6: "6-Car Race", duel: "Head-to-Head" };
-  if (el.betaTrackSelectTitle) el.betaTrackSelectTitle.textContent = `Choose a Track — ${modeLabels[mode] || "Race"}`;
-  if (el.betaMainScreen) el.betaMainScreen.hidden = true;
-  if (el.betaTrackSelectScreen) el.betaTrackSelectScreen.hidden = false;
+  if (el.betaTrackSelectTitle) el.betaTrackSelectTitle.textContent = `${modeLabels[mode] || "Race"} — Choose a Track`;
+  showBetaScreen("beta-track-select-screen");
   renderBetaTrackSelect();
 }
 
 function closeBetaTrackSelect() {
-  if (el.betaTrackSelectScreen) el.betaTrackSelectScreen.hidden = true;
-  if (el.betaMainScreen) el.betaMainScreen.hidden = false;
+  // Back from track select → return to car select
+  showBetaScreen("beta-car-select-screen");
 }
 
-function openBetaCarSelect() {
-  if (el.betaMainScreen) el.betaMainScreen.hidden = true;
-  if (el.betaCarSelectScreen) el.betaCarSelectScreen.hidden = false;
+function openBetaCarSelect(mode) {
+  if (mode) betaPendingMode = mode;
+  showBetaScreen("beta-car-select-screen");
   renderCarTiles();
   renderCarSelectPreview("beta", el.betaCarSelectPreview);
 }
 
 function closeBetaCarSelect() {
-  if (el.betaCarSelectScreen) el.betaCarSelectScreen.hidden = true;
-  if (el.betaMainScreen) el.betaMainScreen.hidden = false;
+  // Back from car select → return to main menu
+  showBetaScreen("beta-intro");
 }
 
 function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0, ai = false, skill = 1, ghost = false }) {
@@ -8273,7 +8276,7 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
     last: performance.now(),
     raf: null
   };
-  el.betaIntro.hidden = true;
+  showBetaScreen(null); // hide all beta screens
   el.betaRace.hidden = false;
   el.betaResults.hidden = true;
   el.betaDebug.textContent = "Debug: Off";
@@ -8623,7 +8626,7 @@ function drawBetaMiniMap() {
 el.betaOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-mode]");
   if (!button) return;
-  openBetaTrackSelect(button.dataset.betaMode);
+  openBetaCarSelect(button.dataset.betaMode);
 });
 
 el.betaTrackList?.addEventListener("click", (event) => {
@@ -9358,7 +9361,7 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
   };
   Object.keys(betaKeys).forEach((key) => delete betaKeys[key]);
   updateBetaControlVisuals();
-  el.betaIntro.hidden = true;
+  showBetaScreen(null); // hide all beta screens
   el.betaRace.hidden = false;
   el.betaResults.hidden = true;
   if (el.betaCountdown) {
@@ -9743,12 +9746,9 @@ function setBeta3dControl(direction, active) {
 
 function openBetaIntro() {
   if (!el.betaIntro || !el.betaRace) return;
-  el.betaIntro.hidden = false;
   el.betaRace.hidden = true;
   if (el.beta3dRace) el.beta3dRace.hidden = true;
-  if (el.betaTrackSelect) el.betaTrackSelect.hidden = true;
-  if (el.betaOptions) el.betaOptions.hidden = false;
-  if (el.beta3dStart) el.beta3dStart.hidden = false;
+  showBetaScreen("beta-intro");
   setBetaLoading(false);
   stopBetaDemo(false);
   stopBeta3d(false);
@@ -10102,7 +10102,6 @@ document.querySelector("#forge-unlock-btn")?.addEventListener("click", () => {
 });
 
 document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
-  showView("garage");
   openForge();
 });
 
