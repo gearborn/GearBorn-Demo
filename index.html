@@ -561,59 +561,56 @@
         </section>
 
         <section class="view" id="garage-view" aria-labelledby="garage-title">
-          <button class="back-link" data-view="menu" type="button">Back</button>
-          <div class="section-heading">
-            <p>Garage</p>
-            <h1 id="garage-title">Your Gearborn lineup.</h1>
-          </div>
-          <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
-          <div class="garage-status" id="garage-status" hidden></div>
-
-          <!-- THE FORGE card — same card system as garage-card / training-card -->
-          <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
-            <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
-            <span class="menu-card-icon">🔥</span>
-            <strong>The Forge</strong>
-            <small>Unlock GearBorn with your Medallions.</small>
-          </button>
-
-          <div class="garage-grid" id="garage-grid"></div>
-        </section>
-
-        <!-- THE FORGE sub-view (lives alongside other views) -->
-        <section class="view forge-view" id="forge-view" aria-label="The Forge">
-          <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
-          <div class="section-heading">
-            <p>The Forge</p>
-            <h1>Unlock your GearBorn.</h1>
-          </div>
-
-          <div class="forge-layout">
-            <!-- Left: scene with vat, animation layers -->
-            <div class="forge-scene">
-              <img class="forge-bg-img" src="assets/forge/forge_bg.png" alt="">
-              <div class="forge-animation-area" id="forge-animation-area"></div>
-              <img class="forge-vat-img" id="forge-vat-img" src="assets/forge/forge_vat.png" alt="The Forge vat">
+          <!-- GARAGE CONTENT (hidden when forge is open) -->
+          <div id="garage-content">
+            <button class="back-link" data-view="menu" type="button">Back</button>
+            <div class="section-heading">
+              <p>Garage</p>
+              <h1 id="garage-title">Your Gearborn lineup.</h1>
             </div>
+            <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
+            <div class="garage-status" id="garage-status" hidden></div>
+            <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
+              <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
+              <span class="menu-card-icon">🔥</span>
+              <strong>The Forge</strong>
+              <small>Unlock GearBorn with your Medallions.</small>
+            </button>
+            <div class="garage-grid" id="garage-grid"></div>
+          </div>
 
-            <!-- Right: controls -->
-            <div class="forge-panel">
-              <div class="forge-selection-display" id="forge-selection-display">
-                <img id="forge-selected-medallion" class="forge-selected-medallion-img" src="" alt="" hidden>
-                <p id="forge-selected-name" class="forge-selected-name-text">Select a Medallion to unlock</p>
+          <!-- FORGE PANEL (shown when forge is open, replaces garage content) -->
+          <div id="forge-panel" hidden>
+            <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
+            <div class="section-heading">
+              <p>The Forge</p>
+              <h1>Unlock your GearBorn.</h1>
+            </div>
+            <div class="forge-layout">
+              <div class="forge-scene">
+                <img class="forge-bg-img" src="assets/forge/forge_bg.png" alt="">
+                <div class="forge-animation-area" id="forge-animation-area"></div>
+                <img class="forge-vat-img" id="forge-vat-img" src="assets/forge/forge_vat.png" alt="The Forge vat">
               </div>
-              <button class="success-button forge-unlock-btn" id="forge-unlock-btn" type="button" disabled>
-                Select a Medallion
-              </button>
-              <button class="ghost forge-inventory-btn" id="forge-inventory-btn" type="button">
-                🧿 Medallion Inventory
-              </button>
-              <div class="forge-inventory-panel" id="forge-inventory-panel" hidden>
-                <div class="forge-medallion-grid" id="forge-medallion-grid"></div>
+              <div class="forge-panel-controls">
+                <div class="forge-selection-display" id="forge-selection-display">
+                  <img id="forge-selected-medallion" class="forge-selected-medallion-img" src="" alt="" hidden>
+                  <p id="forge-selected-name" class="forge-selected-name-text">Select a Medallion to unlock</p>
+                </div>
+                <button class="success-button forge-unlock-btn" id="forge-unlock-btn" type="button" disabled>
+                  Select a Medallion
+                </button>
+                <button class="ghost forge-inventory-btn" id="forge-inventory-btn" type="button">
+                  🧿 Medallion Inventory
+                </button>
+                <div class="forge-inventory-panel" id="forge-inventory-panel" hidden>
+                  <div class="forge-medallion-grid" id="forge-medallion-grid"></div>
+                </div>
               </div>
             </div>
           </div>
         </section>
+
 
         <section class="view" id="settings-view" aria-labelledby="settings-title">
           <button class="back-link" data-view="menu" type="button">Back</button>

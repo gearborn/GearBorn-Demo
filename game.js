@@ -1506,7 +1506,8 @@ const el = {
   verticalLeftKey: document.querySelector("#vertical-left-key"),
   verticalRightKey: document.querySelector("#vertical-right-key"),
   evolutionModal: document.querySelector("#evolution-modal"),
-  forgeView: document.querySelector("#forge-view"),
+  forgePanel: document.querySelector("#forge-panel"),
+  garageContent: document.querySelector("#garage-content"),
   forgeVatImg: document.querySelector("#forge-vat-img"),
   forgeMedallionGrid: document.querySelector("#forge-medallion-grid"),
   forgeInventoryPanel: document.querySelector("#forge-inventory-panel"),
@@ -4662,11 +4663,19 @@ function openForge() {
   if (el.forgeAnimationArea) { el.forgeAnimationArea.innerHTML = ""; el.forgeAnimationArea.classList.remove("animating"); }
   if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
   if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
-  showView("forge");
+  // Show forge panel inside garage-view, hide garage content
+  if (el.garageContent) el.garageContent.hidden = true;
+  if (el.forgePanel) el.forgePanel.hidden = false;
+  showView("garage");
+  renderForgeInventory();
 }
 
 function closeForge() {
-  showView("garage");
+  // Hide forge panel, restore garage content
+  if (el.forgePanel) el.forgePanel.hidden = true;
+  if (el.garageContent) el.garageContent.hidden = false;
+  // Stay on garage view
+  render();
 }
 
 function renderForgeInventory() {
@@ -5478,9 +5487,8 @@ function showView(view) {
   if (view === "boss") setFlowStep("boss", "car");
   if (view === "battle") setFlowStep("battle", "car");
   if (view === "beta") openBetaIntro();
-  if (view === "forge") { renderForgeInventory(); }
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
-  if (!["story", "play", "time-trial", "boss", "battle", "beta", "forge"].includes(view)) render();
+  if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
 }
 
 function storyTunerReady() {

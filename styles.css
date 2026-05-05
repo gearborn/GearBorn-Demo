@@ -7472,10 +7472,14 @@ small {
   }
 }
 
-/* Forge view needs grid layout when active */
-#forge-view.active {
+/* Forge panel is inside garage-view, toggled by JS via hidden attribute */
+#forge-panel {
   display: grid;
   gap: 20px;
+}
+
+#forge-panel[hidden] {
+  display: none !important;
 }
 
 /* Beta full-page screens — replace each other inside beta-mode */
