@@ -1810,11 +1810,11 @@ function sanitizeState() {
   state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
   state.tutorialAwaitingForge = Boolean(state.tutorialAwaitingForge);
   state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
-  // If the page was reloaded mid-tutorial, restore real sprox from snapshot
-  if (state.tutorialActive && state.tutorialStartingSprox > 0 && !state.unlimitedSprox) {
+  // On page reload mid-tutorial, restore the real pre-tutorial values from snapshots
+  if (state.tutorialActive && !state.unlimitedSprox) {
+    // Always restore real sprox from the saved snapshot value
     state.sprox = state.tutorialStartingSprox;
   }
-  // Restore garage/unlock/medallion snapshots on mid-tutorial reload
   if (state.tutorialActive && state.tutorialSnapshotGarage) {
     state.garage = JSON.parse(JSON.stringify(state.tutorialSnapshotGarage));
   }
@@ -4827,7 +4827,9 @@ function closeForge() {
 
 function renderForgeInventory() {
   if (!el.forgeMedallionGrid) return;
-  const owned = (state.medallionsOwned || []).filter((id) => !isCarUnlocked(id));
+  // During tutorial forge scene, show all awarded medallions regardless of unlock state
+  const tutorialForge = tutorialActive() && state.tutorialAwaitingForge;
+  const owned = (state.medallionsOwned || []).filter((id) => tutorialForge || !isCarUnlocked(id));
   el.forgeMedallionGrid.innerHTML = owned.length
     ? owned.map((carId) => {
         const car = cars.find((c) => c.id === carId);
@@ -5697,8 +5699,12 @@ function startTutorial(sceneId = "intro") {
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
   state.tutorialStartingSprox = realSprox;
+  // Do NOT zero state.sprox — keep real wallet intact.
+  // The tutorial uses state.sprox as a sandbox but we restore it on exit.
+  // Only reset tutorial-specific tracking, not the actual wallet.
   if (sceneId === "intro") {
-    // Give tutorial its own zeroed sprox budget — real wallet is preserved in tutorialStartingSprox
+    // Temporarily set sprox to 0 for the tutorial sandbox (restored in finishTutorial)
+    state.tutorialStartingSprox = realSprox;
     state.sprox = 0;
     state.tutorialDragSprox = 0;
     state.tutorialTimeMedal = "";
