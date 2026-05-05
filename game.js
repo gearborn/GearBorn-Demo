@@ -280,7 +280,7 @@ const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achieve
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
-const tutorialTrack = { id: "training-school", city: "Spindell Training Academy", country: "Training", map: "assets/maps/training-bg.png", cityMap: "assets/maps/training-bg.png", cityIcon: "assets/maps/cityicon-training.png" };
+const tutorialTrack = { id: "training-school", city: "Spindell Training Academy", country: "Training", map: "assets/menu/training_bg.png", cityMap: "assets/menu/training_bg.png", cityIcon: "assets/maps/cityicon-training.png" };
 const tutorialDistance = { meters: 400, label: "400 m", xp: 80, difficulty: 0.55 };
 const tutorialRank = { key: "F", name: "Tutorque", xpBonus: 1, power: 0.28, color: "#9aa7b7", images: { display: "assets/cars/tutorque-display.png", race: "assets/cars/tutorque-race.png" } };
 const tutorialMedals = [
@@ -5028,30 +5028,39 @@ function showForgeUnlockedPopup(carId) {
   // Capture tutorial state now — before anything else changes it
   const isForTutorial = tutorialActive();
 
-  popup.querySelector("#forge-unlocked-name").innerHTML =
-    `<strong>${form?.name || carId}</strong> is now available in the <span class="forge-orange">GARAGE</span>.`;
+  // Set car image
   const imgEl = popup.querySelector("#forge-unlocked-img");
   imgEl.src = imageFor(form, "display");
   imgEl.alt = form?.name || carId;
+
+  // Set unlock text
+  popup.querySelector("#forge-unlocked-name").textContent =
+    `${form?.name || carId} has been unlocked. It is now available in your Garage.`;
 
   // Remove hidden attr FIRST so display:flex from .active can work
   popup.removeAttribute("hidden");
   popup.classList.add("active");
   popup.setAttribute("aria-hidden", "false");
 
-  // If tutorial: advance to unlocked scene immediately so dialogue also shows
+  // If tutorial: advance to unlocked scene AND disable the Continue button
+  // so the player follows the tutorial dialogue instead
+  const closeBtn = popup.querySelector("#forge-unlocked-close");
+  closeBtn.disabled = isForTutorial;
+
   if (isForTutorial) {
     setTutorialScene("unlocked");
     setupTutorialScene();
     renderTutorial();
   }
 
-  // Replace button to avoid stale listeners
-  const closeBtn = popup.querySelector("#forge-unlocked-close");
+  // Replace button to avoid stale listeners from previous calls
   const freshBtn = closeBtn.cloneNode(true);
   closeBtn.replaceWith(freshBtn);
+  // Re-apply disabled state after clone (cloneNode copies it, but be explicit)
+  freshBtn.disabled = isForTutorial;
 
   freshBtn.addEventListener("click", () => {
+    if (freshBtn.disabled) return;
     popup.classList.remove("active");
     popup.setAttribute("hidden", "");
     popup.setAttribute("aria-hidden", "true");
@@ -5854,6 +5863,10 @@ function finishTutorial() {
   closeUpgradeModal();
   closeEvolutionModal();
   restoreEmbeddedCampaignRace();
+  // Restore story mode UI controls that tutorial hid
+  if (el.storyCitySelect) el.storyCitySelect.hidden = false;
+  if (el.changeStoryCar) el.changeStoryCar.hidden = false;
+  if (el.storyPreviewPanel) el.storyPreviewPanel.setAttribute("aria-hidden", "true");
   saveState();
   showView("menu");
   render();
@@ -6380,7 +6393,12 @@ function advanceTutorial() {
       break;
 
     case "unlocked":
-      // Post-unlock → go to starters/end
+      // Close the forge unlock popup then advance to starters
+      if (el.forgeUnlockedPopup) {
+        el.forgeUnlockedPopup.classList.remove("active");
+        el.forgeUnlockedPopup.setAttribute("hidden", "");
+        el.forgeUnlockedPopup.setAttribute("aria-hidden", "true");
+      }
       setTutorialScene("starters");
       setupTutorialScene();
       saveState();
