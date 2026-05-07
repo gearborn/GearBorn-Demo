@@ -2368,20 +2368,29 @@ function selectablePlayerCars() {
     : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly));
 }
 
+function firstSelectablePlayerCarId() {
+  return selectablePlayerCars()[0]?.id || cars.find((car) => !car.tutorialOnly)?.id || cars[0]?.id;
+}
+
+function isSelectablePlayerCar(carId) {
+  return selectablePlayerCars().some((car) => car.id === carId);
+}
+
 function difficultyMultiplier() {
   return { easy: 0.9, normal: 1, hard: 1.13 }[state.settings.difficulty] || 1;
 }
 
 function selectedCarIdForMode(mode) {
-  if (mode === "drag") return state.selectedCar;
-  if (mode === "time") return state.selectedTimeCar;
-  if (mode === "beta") return state.selectedCar;
-  if (mode === "battle") return state.selectedStoryCar;
-  return state.selectedStoryCar;
+  const fallback = firstSelectablePlayerCarId();
+  if (mode === "drag") return isSelectablePlayerCar(state.selectedCar) ? state.selectedCar : fallback;
+  if (mode === "time") return isSelectablePlayerCar(state.selectedTimeCar) ? state.selectedTimeCar : fallback;
+  if (mode === "beta") return isSelectablePlayerCar(state.selectedCar) ? state.selectedCar : fallback;
+  if (mode === "battle") return isSelectablePlayerCar(state.selectedStoryCar) ? state.selectedStoryCar : fallback;
+  return isSelectablePlayerCar(state.selectedStoryCar) ? state.selectedStoryCar : fallback;
 }
 
 function setSelectedCarForMode(mode, carId) {
-  if (!isCarUnlocked(carId)) return;
+  if (!isSelectablePlayerCar(carId)) return;
   state.selectedCar = carId;
   state.selectedTimeCar = carId;
   state.selectedStoryCar = carId;
@@ -2465,7 +2474,8 @@ function carTileMarkup(car, mode) {
 }
 
 function carSelectPreviewMarkup(carId) {
-  const car = cars.find((item) => item.id === carId) || cars.find((item) => isCarUnlocked(item.id));
+  const safeCarId = isSelectablePlayerCar(carId) ? carId : firstSelectablePlayerCarId();
+  const car = cars.find((item) => item.id === safeCarId);
   if (!car) return "";
   const progress = state.garage[car.id];
   const form = currentEvolution(car.id);
@@ -4866,6 +4876,7 @@ let forgeSelectedCarId = null;
 let forgeAnimating = false;
 
 function openForge() {
+  showView("garage");
   forgeSelectedCarId = null;
   forgeAnimating = false;
   if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
@@ -4876,7 +4887,6 @@ function openForge() {
   // Show forge panel inside garage-view, hide garage content
   if (el.garageContent) el.garageContent.hidden = true;
   if (el.forgePanel) el.forgePanel.hidden = false;
-  showView("garage");
   renderForgeInventory();
 }
 
@@ -5761,10 +5771,19 @@ function showView(view) {
   if (view === "solo") {
     ensureTunerAndIntro(view);
   }
-  if (view === "play") setFlowStep("drag", "car");
-  if (view === "time-trial") setFlowStep("time", "car");
+  if (view === "play") {
+    const scene = tutorialActive() ? currentTutorialScene() : null;
+    setFlowStep("drag", scene?.view === "play" && scene.flow ? scene.flow : "car");
+  }
+  if (view === "time-trial") {
+    const scene = tutorialActive() ? currentTutorialScene() : null;
+    setFlowStep("time", scene?.view === "time-trial" && scene.flow ? scene.flow : "car");
+  }
   if (view === "boss") setFlowStep("boss", "car");
-  if (view === "battle") setFlowStep("battle", "car");
+  if (view === "battle") {
+    const scene = tutorialActive() ? currentTutorialScene() : null;
+    setFlowStep("battle", scene?.view === "battle" && scene.flow ? scene.flow : "car");
+  }
   if (view === "beta") openBetaIntro();
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
   if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
@@ -5879,6 +5898,12 @@ function skipTutorial() {
 function setupTutorialScene() {
   const scene = currentTutorialScene();
   if (!scene) return;
+
+  if (scene.id === "mamburn") {
+    setTutorialScene("city-map");
+    setupTutorialScene();
+    return;
+  }
 
   // Set up car state first
   if (scene.id === "upgrade") {
@@ -6184,8 +6209,8 @@ function advanceTutorial() {
 
   switch (scene.id) {
     case "intro":
-      // Move to tutorial-exclusive car select (Mamburn only)
-      setTutorialScene("mamburn");
+      // Move straight to the tutorial city map; the old Mamburn-only car select is skipped.
+      setTutorialScene("city-map");
       setupTutorialScene();
       saveState();
       renderTutorial();
@@ -7576,7 +7601,22 @@ el.storyCitySelect.addEventListener("click", () => { if (!tutorialActive()) open
 el.closeStoryPreview.addEventListener("click", closeStoryPreview);
 el.closeCitySelect.addEventListener("click", closeCitySelect);
 el.storyMapStage.addEventListener("click", (event) => {
-  if (tutorialActive()) return; // tutorial controls map navigation
+  if (tutorialActive()) {
+    const tutorialButton = event.target.closest("[data-tutorial-level]");
+    if (!tutorialButton || tutorialButton.disabled) return;
+    const sceneByLevel = {
+      drag: "drag-race-intro",
+      trial: "time-trial-intro",
+      battle: "battle-intro"
+    };
+    const nextScene = sceneByLevel[tutorialButton.dataset.tutorialLevel];
+    if (!nextScene) return;
+    setTutorialScene(nextScene);
+    setupTutorialScene();
+    saveState();
+    renderTutorial();
+    return;
+  }
   const button = event.target.closest("[data-story-level]");
   if (!button || button.disabled) return;
   openStoryPreview(Number(button.dataset.storyLevel));
@@ -8243,7 +8283,7 @@ function betaSurfaceAt(x, y) {
 }
 
 function betaCurrentCarId() {
-  return isCarUnlocked(state.selectedCar) ? state.selectedCar : state.selectedStoryCar || cars[0].id;
+  return selectedCarIdForMode("beta");
 }
 
 function betaResizeCanvas() {

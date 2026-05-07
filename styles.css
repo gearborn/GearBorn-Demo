@@ -6987,15 +6987,21 @@ small {
   box-shadow: 0 22px 56px rgba(0,0,0,0.44), 0 0 32px rgba(255,100,20,0.22);
 }
 
-/* Fire icon: top-left, same position as garage/training icon */
 .forge-menu-card .menu-card-icon {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 2;
-  font-size: 3rem;
-  line-height: 1;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+  width: 86px;
+  height: 86px;
+  border: 0;
+  background-color: transparent;
+  background-image: url("assets/menu/icon_forge.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  color: transparent;
+  filter: drop-shadow(0 12px 16px rgba(0,0,0,0.42));
 }
 
 /* Forge background art fills card */
