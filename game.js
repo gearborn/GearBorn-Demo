@@ -2042,6 +2042,81 @@ function evolutionByIndex(carId, evolutionIndex) {
   return car.evolutions[evolutionIndex] || car.evolutions[0];
 }
 
+let honkAudioContext = null;
+let honkVisualTimer = null;
+
+function hashHonkSignature(value) {
+  return [...String(value || "GearBorn")].reduce((total, char) => total + char.charCodeAt(0), 0);
+}
+
+function honkSignatureFor(carId, evolutionIndex = state.garage?.[carId]?.evolution || 0) {
+  const form = evolutionByIndex(carId, evolutionIndex) || currentEvolution(carId);
+  const hash = hashHonkSignature(`${carId}:${form?.name || evolutionIndex}`);
+  return {
+    frequency: 240 + (hash % 180),
+    secondFrequency: 330 + (hash % 260),
+    duration: 0.18 + (hash % 5) * 0.012
+  };
+}
+
+function flashHonkControls() {
+  document.querySelectorAll(".touch-controls").forEach((group) => group.classList.add("honking"));
+  window.clearTimeout(honkVisualTimer);
+  honkVisualTimer = window.setTimeout(() => {
+    document.querySelectorAll(".touch-controls").forEach((group) => group.classList.remove("honking"));
+  }, 220);
+}
+
+function playHonkSound(signatureSource) {
+  honkAudioContext = honkAudioContext || new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = honkAudioContext;
+  if (ctx.state === "suspended") ctx.resume();
+  const hash = hashHonkSignature(signatureSource);
+  const signature = {
+    frequency: 240 + (hash % 180),
+    secondFrequency: 330 + (hash % 260),
+    duration: 0.18 + (hash % 5) * 0.012
+  };
+  const start = ctx.currentTime;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(0.16, start + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + signature.duration);
+  gain.connect(ctx.destination);
+  [signature.frequency, signature.secondFrequency].forEach((frequency, index) => {
+    const osc = ctx.createOscillator();
+    osc.type = index ? "triangle" : "square";
+    osc.frequency.setValueAtTime(frequency, start);
+    osc.frequency.exponentialRampToValueAtTime(frequency * 0.94, start + signature.duration);
+    osc.connect(gain);
+    osc.start(start);
+    osc.stop(start + signature.duration + 0.03);
+  });
+  flashHonkControls();
+}
+
+function playGearbornHonk(carId, evolutionIndex = state.garage?.[carId]?.evolution || 0) {
+  if (!cars.some((car) => car.id === carId)) return;
+  const form = evolutionByIndex(carId, evolutionIndex) || currentEvolution(carId);
+  playHonkSound(`${carId}:${form?.name || evolutionIndex}`);
+}
+
+function honkCurrentRaceCar() {
+  if (verticalRace?.active || verticalRace?.countdownStarted) {
+    playGearbornHonk(verticalRace.carId);
+    return true;
+  }
+  if (betaState && document.querySelector("#beta-view")?.classList.contains("active") && !el.betaRace?.hidden) {
+    playGearbornHonk(betaCurrentCarId());
+    return true;
+  }
+  if (document.querySelector("#beta-view")?.classList.contains("active") && !el.beta3dRace?.hidden) {
+    playGearbornHonk(selectedCarIdForMode("beta"));
+    return true;
+  }
+  return false;
+}
+
 function carStats(carId) {
   const progress = state.garage[carId];
   const stats = displayedGearbornStats(carId);
@@ -3396,7 +3471,10 @@ function renderVindex() {
   `).join("");
   const entry = vindexEntries.find((item) => item.number === state.selectedVindex);
   const discovered = isVindexDiscovered(entry);
-  el.vindexArt.innerHTML = discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup();
+  el.vindexArt.innerHTML = `
+    ${discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup()}
+    ${discovered ? honkButtonMarkup(`data-honk-vindex="${entry.number}"`) : ""}
+  `;
   el.vindexNumber.textContent = `#${entry.number}`;
   el.vindexName.textContent = discovered ? entry.name : "????";
   el.vindexLine.textContent = entry.line;
@@ -3410,6 +3488,17 @@ function playableEntryMeta(entry) {
     if (index >= 0) return { car, index };
   }
   return null;
+}
+
+function playVindexEntryHonk(entryNumber) {
+  const entry = vindexEntries.find((item) => item.number === entryNumber);
+  if (!entry || !isVindexDiscovered(entry)) return;
+  const playable = playableEntryMeta(entry);
+  if (playable) {
+    playGearbornHonk(playable.car.id, playable.index);
+    return;
+  }
+  playHonkSound(`vindex:${entry.name}`);
 }
 
 const oneOffEvolutionMeta = {
@@ -3677,6 +3766,7 @@ function renderGarage() {
       <article class="garage-card">
         <div class="garage-art">
           ${carMarkupForEvolution(car.id, progress.evolution, "display")}
+          ${honkButtonMarkup(`data-honk-car="${car.id}"`)}
           ${garageArtPartSlots(car.id)}
         </div>
         <div class="garage-info">
@@ -3715,6 +3805,7 @@ function renderTutorialGarage() {
     <article class="garage-card">
       <div class="garage-art">
         ${carMarkupForEvolution(tutorialCarId, progress.evolution, "display")}
+        ${honkButtonMarkup(`data-honk-car="${tutorialCarId}"`)}
         ${garageArtPartSlots(tutorialCarId)}
       </div>
       <div class="garage-info">
@@ -3778,6 +3869,14 @@ function garageArtPartSlots(carId) {
         `;
       }).join("")}
     </div>
+  `;
+}
+
+function honkButtonMarkup(attributes = "") {
+  return `
+    <button class="honk-button" type="button" ${attributes} aria-label="Play honk">
+      <img src="assets/icons/icon-horn.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    </button>
   `;
 }
 
@@ -7531,6 +7630,39 @@ document.addEventListener("click", (event) => {
   changeGarageEvolution(carId, direction);
 });
 
+document.addEventListener("pointerdown", (event) => {
+  const wheelButton = event.target.closest("[data-honk-button]");
+  if (wheelButton) {
+    event.preventDefault();
+    if (!honkCurrentRaceCar()) playGearbornHonk(selectedCarIdForMode("drag"));
+    wheelButton.classList.add("playing");
+    window.setTimeout(() => wheelButton.classList.remove("playing"), 180);
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const wheelButton = event.target.closest("[data-honk-button]");
+  if (wheelButton) {
+    event.preventDefault();
+    return;
+  }
+  const garageHonk = event.target.closest("[data-honk-car]");
+  if (garageHonk) {
+    event.preventDefault();
+    playGearbornHonk(garageHonk.dataset.honkCar);
+    garageHonk.classList.add("playing");
+    window.setTimeout(() => garageHonk.classList.remove("playing"), 180);
+    return;
+  }
+  const vindexHonk = event.target.closest("[data-honk-vindex]");
+  if (vindexHonk) {
+    event.preventDefault();
+    playVindexEntryHonk(vindexHonk.dataset.honkVindex);
+    vindexHonk.classList.add("playing");
+    window.setTimeout(() => vindexHonk.classList.remove("playing"), 180);
+  }
+});
+
 // Beta car select screen
 el.betaCarSelectConfirm?.addEventListener("click", () => {
   // Confirmed car → proceed to track select
@@ -8002,6 +8134,10 @@ document.addEventListener("keydown", (event) => {
     verticalRace.keys[key] = true;
     updateVerticalControlVisuals();
   }
+  if (key === "H" && honkCurrentRaceCar()) {
+    event.preventDefault();
+    return;
+  }
   if (event.key === "Escape" && el.resetModal.classList.contains("active")) {
     closeResetModal();
     return;
@@ -8280,6 +8416,22 @@ function betaSurfaceAt(x, y) {
   const localX = (x - tx * betaTileSize) / betaTileSize;
   const localY = (y - ty * betaTileSize) / betaTileSize;
   return betaRoadMaskContains(tile, localX, localY) ? "road" : "grass";
+}
+
+function betaNormalizeAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function betaStraightAssistAngle(racer) {
+  const tile = betaTileAt(racer.x, racer.y);
+  if (!tile || tile.type !== "road_straight") return null;
+  const vertical = tile.rotation === 90 || tile.rotation === 270;
+  const candidates = vertical ? [Math.PI / 2, -Math.PI / 2] : [0, Math.PI];
+  return candidates.reduce((best, angle) => {
+    const bestDelta = Math.abs(betaNormalizeAngle(best - racer.angle));
+    const delta = Math.abs(betaNormalizeAngle(angle - racer.angle));
+    return delta < bestDelta ? angle : best;
+  }, candidates[0]);
 }
 
 function betaCurrentCarId() {
@@ -8647,11 +8799,11 @@ function syncBetaTrackDerived() {
 function betaRatingsForCar(carId, level = state.garage?.[carId]?.level || 1, evolution = state.garage?.[carId]?.evolution || 0, includePlayerBonuses = false) {
   if (includePlayerBonuses) return displayedGearbornStats(carId);
   const profile = gearbornStatProfiles[carId] || gearbornStatProfiles.bee;
-  const levelGain = Math.max(0, level - 1);
+  const levelGain = level - 1;
   const evolutionGain = Math.max(0, evolution) * 2;
   return Object.fromEntries(["speed", "acceleration", "handling", "torque", "body", "powertrain"].map((key) => [
     key,
-    Math.min(100, (profile[key] ?? 74) + levelGain + evolutionGain)
+    Math.min(100, Math.max(1, (profile[key] ?? 74) + levelGain + evolutionGain))
   ]));
 }
 
@@ -8682,7 +8834,7 @@ function getRandomOpponentCars(count, playerCarId) {
     const car = shuffled[index % shuffled.length];
     const evolution = Math.min(playerProgress.evolution || 0, car.evolutions.length - 1);
     const form = car.evolutions[evolution] || car.evolutions[0];
-    const level = Math.max(1, Math.min(maxCarLevel, (playerProgress.level || 1) + (index % 3) - 1));
+    const level = (playerProgress.level || 1) - 3;
     const ratings = betaRatingsForCar(car.id, level, evolution, false);
     return {
       car,
@@ -8691,7 +8843,7 @@ function getRandomOpponentCars(count, playerCarId) {
       evolution,
       level,
       ratings,
-      skill: 0.92 + Math.random() * 0.14
+      skill: 0.98 + Math.random() * 0.04
     };
   });
 }
@@ -9016,6 +9168,13 @@ function betaDriveRacer(racer, dt, controls = {}) {
   const turnRate = racer.physics.turnRate * Math.min(1, Math.max(0.25, Math.abs(racer.speed) / 190));
   if (controls.left) racer.angle -= turnRate * dt * (racer.speed >= 0 ? 1 : -1);
   if (controls.right) racer.angle += turnRate * dt * (racer.speed >= 0 ? 1 : -1);
+  const assistAngle = controls.up ? betaStraightAssistAngle(racer) : null;
+  if (assistAngle !== null && Math.abs(racer.speed) > 45) {
+    const correction = betaNormalizeAngle(assistAngle - racer.angle);
+    const playerSteering = controls.left || controls.right;
+    const assistStrength = (playerSteering ? 0.92 : 1.8) + (racer.physics.torque || 70) / 120;
+    racer.angle += correction * Math.min(1, assistStrength * dt);
+  }
   racer.prevX = racer.x;
   racer.prevY = racer.y;
   racer.x += Math.cos(racer.angle) * racer.speed * dt;
@@ -10148,11 +10307,11 @@ function betaDriveRacer(racer, dt, controls = {}) {
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
   } else if (racer.ai && nextClass === "grass") {
-    // AI on grass: don't revert position — allow them to drive through it
-    // but steer hard back toward the racing line so they recover quickly
+    racer.x = racer.prevX;
+    racer.y = racer.prevY;
+    racer.speed *= 0.72;
     const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
     racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
-    // Slight speed reduction on grass is already handled by the grassFactor above
   }
 }
 

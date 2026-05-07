@@ -3553,13 +3553,22 @@ small {
 }
 
 .control-wheel {
+  border: 0;
+  background: transparent;
+  padding: 0;
   display: grid;
   height: 68px;
   place-items: center;
-  pointer-events: none;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .control-wheel img {
+  grid-area: 1 / 1;
   display: block;
   width: min(68px, 100%);
   height: min(68px, 100%);
@@ -3567,6 +3576,18 @@ small {
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.42));
   transform: rotate(0deg);
   transition: transform 120ms ease;
+}
+
+.control-wheel .wheel-horn {
+  opacity: 0;
+}
+
+.touch-controls.honking .control-wheel .wheel-neutral {
+  opacity: 0;
+}
+
+.touch-controls.honking .control-wheel .wheel-horn {
+  opacity: 1;
 }
 
 .touch-controls.steering-left .control-wheel img {
@@ -4144,6 +4165,13 @@ small {
   height: 100%;
 }
 
+.vindex-art > .honk-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+}
+
 .vindex-copy,
 .profile-copy {
   container-type: inline-size;
@@ -4430,6 +4458,54 @@ small {
 
 .garage-art-part-slot.empty {
   border-style: dashed;
+}
+
+.honk-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 200, 87, 0.42);
+  border-radius: 999px;
+  background: rgba(13, 17, 24, 0.72);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.honk-button:hover {
+  transform: scale(1.06);
+  border-color: rgba(255, 200, 87, 0.78);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.38), 0 0 18px rgba(255, 200, 87, 0.22);
+}
+
+.honk-button:active,
+.honk-button.playing {
+  transform: scale(0.96);
+}
+
+.honk-button img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.garage-art > .honk-button {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  z-index: 4;
+  transform: translateY(-50%);
+}
+
+.garage-art > .honk-button:hover {
+  transform: translateY(-50%) scale(1.06);
+}
+
+.garage-art > .honk-button:active,
+.garage-art > .honk-button.playing {
+  transform: translateY(-50%) scale(0.96);
 }
 
 .garage-art-part-slot .empty-plus {
