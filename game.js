@@ -387,11 +387,19 @@ const artVanUnlockByAchievement = {
 };
 const achievementDefs = [
   { id: "streak5", name: "Hot Streak", requirement: "Win 5 races in a row", reward: "Unlock Vanvass", type: "streak", target: 5 },
+  { id: "drag25", name: "Drag Prospect", requirement: "Win 25% of Drag Races in Story Mode", reward: "1000 Sprox", type: "storyTypePercent", raceType: "drag", percentTarget: 25, sprox: 1000 },
+  { id: "drag50", name: "Drag Contender", requirement: "Win 50% of Drag Races in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "drag", percentTarget: 50, sprox: 5000 },
   { id: "allDrags", name: "Drag Dominator", requirement: "Win all Drag Races in Story Mode", reward: "Unlock Vanksy", type: "storyType", raceType: "drag" },
+  { id: "trial25", name: "Timer Rookie", requirement: "Win 25% of Time Trials in Story Mode", reward: "1000 Sprox", type: "storyTypePercent", raceType: "trial", percentTarget: 25, sprox: 1000 },
+  { id: "trial50", name: "Timer Contender", requirement: "Win 50% of Time Trials in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "trial", percentTarget: 50, sprox: 5000 },
   { id: "allTrials", name: "Clock Breaker", requirement: "Win all Time Trials in Story Mode", reward: "Unlock Vanst", type: "storyType", raceType: "trial" },
+  { id: "battle25", name: "Arena Rookie", requirement: "Win 25% of Battles in Story Mode", reward: "1000 Sprox", type: "storyTypePercent", raceType: "battle", percentTarget: 25, sprox: 1000 },
+  { id: "battle50", name: "Arena Contender", requirement: "Win 50% of Battles in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "battle", percentTarget: 50, sprox: 5000 },
   { id: "allBattles", name: "Arena Artist", requirement: "Win all Battles in Story Mode", reward: "Unlock Vandinsky", type: "storyType", raceType: "battle" },
   { id: "allRivals", name: "Friendly Fire", requirement: "Win all Rival Races in Story Mode", reward: "Unlock Vancasso", type: "storyType", raceType: "rival" },
   { id: "allBosses", name: "Boss Canvas", requirement: "Win all Boss Races in Story Mode", reward: "Unlock Vangas", type: "storyType", raceType: "boss" },
+  { id: "pinkSlip25", name: "Pink Slip Rookie", requirement: "Win 25% of Pink Slip Races in Story Mode", reward: "1000 Sprox", type: "storyTypePercent", raceType: "pink-slip", percentTarget: 25, sprox: 1000 },
+  { id: "pinkSlip50", name: "Pink Slip Contender", requirement: "Win 50% of Pink Slip Races in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "pink-slip", percentTarget: 50, sprox: 5000 },
   { id: "allPinkSlips", name: "Pink Slip Collector", requirement: "Win all Pink Slip Races in Story Mode", reward: "Unlock Vandy-Warhol", type: "storyType", raceType: "pink-slip" },
   { id: "vindex25", name: "VINdex Scout", requirement: "Encounter 25% of the VINdex", reward: "1000 Sprox", type: "vindex", percent: 25 },
   { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
@@ -763,7 +771,7 @@ const pinkSlipRacePlan = {
 };
 const rivalRacePlan = {
   1: { id: "berlin-rival", mechanic: "drag", xp: 300, power: 1.2, distance: 800 },
-  4: { id: "los-angeles-rival", mechanic: "bossVertical", xp: 640, power: 1.56, distance: 500 },
+  4: { id: "los-angeles-rival", mechanic: "circuitDuel", xp: 640, power: 1.56, distance: 500 },
   7: { id: "bangalore-rival", mechanic: "battle", xp: 1040, power: 1.92 }
 };
 function pinkSlipStageFor(plan) {
@@ -780,17 +788,20 @@ function pinkSlipStageFor(plan) {
 }
 const campaignLevels = bosses.flatMap((boss, index) => {
   const drag = { type: "drag", title: `${campaignDragStages[index].rankKey} Class Drag: ${campaignDragStages[index].name}`, drag: campaignDragStages[index] };
-  const trial = { type: "trial", title: `${boss.track.city} Time Trial`, track: boss.track, bossIndex: index };
+  const trial = { type: "trial", title: `${boss.track.city} Time Trial`, track: boss.track, bossIndex: index, circuitMode: "time" };
+  const circuit4 = { type: "circuit", title: `${boss.track.city} 4-Car Circuit`, track: boss.track, bossIndex: index, circuitMode: "race4", xp: Math.round(150 + index * 80) };
+  const circuit6 = { type: "circuit", title: `${boss.track.city} 6-Car Circuit`, track: boss.track, bossIndex: index, circuitMode: "race6", xp: Math.round(190 + index * 92) };
   const arena = { type: "battle", title: `${boss.name} Arena Battle`, bossIndex: index };
   const rival = rivalRacePlan[index]
     ? { type: "rival", title: `${boss.track.city} Rival Race`, bossIndex: index, track: boss.track, ...rivalRacePlan[index] }
     : null;
-  const battle = { type: "boss", title: `${boss.name} Boss Race`, bossIndex: index };
-  const prelims = index % 2 === 0 ? [drag, trial, arena] : [trial, drag, arena];
+  const battle = { type: "boss", title: `${boss.name} Boss Race`, bossIndex: index, track: boss.track, circuitMode: "duel" };
+  const prelims = index % 2 === 0 ? [drag, trial, circuit4, arena] : [trial, drag, circuit4, arena];
+  if ([4, 5, 6, 7].includes(index)) prelims.splice(3, 0, circuit6);
   if (rival) prelims.push(rival);
   const arc = prelims.concat(battle);
-  return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId }]) : arc;
-}).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true }]);
+  return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId, track: boss.track, circuitMode: "duel" }]) : arc;
+}).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true, track: finalBoss.track, circuitMode: "duel" }]);
 const storyNodeLayouts = [
   { key: "drag", x: 16, y: 70 },
   { key: "trial", x: 84, y: 70 },
@@ -802,6 +813,7 @@ const storyNodeLayouts = [
 const storyLevelVisuals = {
   drag: { label: "Drag Race", icon: "assets/items/icon-drag-race.png", color: "#ffc857" },
   trial: { label: "Time Trial", icon: "assets/items/icon-time-trial.png", color: "#6ee7a8" },
+  circuit: { label: "Circuit Race", icon: "assets/items/icon-boss-training.png", color: "#52c7ff" },
   battle: { label: "Battle", icon: "assets/items/icon-battle.png", color: "#f25f5c" },
   rival: { label: "Rival Race", icon: "assets/items/icon-rival-race.png", color: "#c084fc" },
   boss: { label: "Boss Battle", icon: "assets/items/icon-boss.png", color: "#52c7ff" },
@@ -818,9 +830,20 @@ const cityAbbreviations = {
   bangalore: "INDIA",
   space: "Space"
 };
+const cityBannerImages = {
+  indianapolis: "assets/banners/banner-indianapolis.png",
+  berlin: "assets/banners/banner-berlin.png",
+  dubai: "assets/banners/banner-dubai.png",
+  rio: "assets/banners/banner-rio-de-janeiro.png",
+  "los-angeles": "assets/banners/banner-los-angeles.png",
+  seoul: "assets/banners/banner-seoul.png",
+  "cape-town": "assets/banners/banner-cape-town.png",
+  bangalore: "assets/banners/banner-bengaluru.png",
+  space: "assets/banners/banner-space.png"
+};
 let storyCursor = 0;
 const storyCities = bosses.map((boss, index) => {
-  const levelCount = 4 + (rivalRacePlan[index] ? 1 : 0) + (pinkSlipRacePlan[index] ? 1 : 0);
+  const levelCount = 5 + ([4, 5, 6, 7].includes(index) ? 1 : 0) + (rivalRacePlan[index] ? 1 : 0) + (pinkSlipRacePlan[index] ? 1 : 0);
   const levels = campaignLevels.slice(storyCursor, storyCursor + levelCount).map((level, offset) => ({ ...level, campaignIndex: storyCursor + offset }));
   storyCursor += levelCount;
   return { id: boss.track.id, city: boss.track.city, country: boss.track.country, track: boss.track, bossIndex: index, levels, icon: boss.track.cityIcon };
@@ -900,6 +923,66 @@ const vindexEntries = [
   ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unlock-rainbowlt-display.png"],
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/rival-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
+const vindexClassByNumber = {
+  "010": "E",
+  "032": "C",
+  "037": "D",
+  "039": "E",
+  "040": "D",
+  "041": "C",
+  "058": "E",
+  "059": "D",
+  "060": "C",
+  "063": "E",
+  "064": "D",
+  "065": "C",
+  "066": "E",
+  "067": "D",
+  "068": "C",
+  "088": "D",
+  "089": "C",
+  "090": "B",
+  "091": "D",
+  "092": "C",
+  "093": "B",
+  "110": "B",
+  "111": "A",
+  "145": "D",
+  "146": "C",
+  "147": "B",
+  "151": "D",
+  "152": "C",
+  "153": "B",
+  "154": "D",
+  "155": "C",
+  "156": "B",
+  "157": "D",
+  "158": "B",
+  "159": "B",
+  "160": "B",
+  "161": "B",
+  "162": "B",
+  "163": "B",
+  "164": "B",
+  "198": "D",
+  "199": "C",
+  "200": "B",
+  "212": "F",
+  "231": "C",
+  "232": "B",
+  "233": "A",
+  "243": "C",
+  "244": "B",
+  "245": "A",
+  "251": "B",
+  "287": "B",
+  "296": "A",
+  "298": "A",
+  "301": "A",
+  "305": "A",
+  "326": "S",
+  "327": "S"
+};
 const tuners = [
   { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
   { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
@@ -914,8 +997,30 @@ const profileBios = {
   jabu: "A builder. A dreamer. A racer shaped by what he did not have. Jabu creates from scraps, turning discarded parts into something powerful and beautiful. He races to prove that vision matters more than resources.",
   pallavi: "Grace in life. Fire on the track. Pallavi lives between honoring tradition and chasing her own ambitions. Behind the wheel, she is focused, fearless, and unstoppable.",
   "racer-alpha": "No name. No past. Just speed. Racer Alpha is a myth made real, hidden behind a mirrored helmet that reveals nothing. No one knows where he came from. If you beat him, you earn the right to find out.",
-  "dr-tyree": "A brilliant mind with a disappointing lap time. Dr. Tyree was once the Academy's top student - on paper. His understanding of GearBorn mechanics is unmatched, his theories cited across the world, and his doctorate... frequently mentioned. But on the track? Let's just say the data didn't translate. Now the Academy's lead instructor, Tyree treats GearBorn with absolute seriousness - borderline reverence. To him, this is about more than just rubber and road. He believes mastery comes from understanding - not instinct."
+  "dr-tyree": "A brilliant mind with a disappointing lap time. Dr. Tyree was once the Academy's top student - on paper. His understanding of GearBorn mechanics is unmatched, his theories cited across the world, and his doctorate... frequently mentioned. But on the track? Let's just say the data didn't translate. Now the Academy's lead instructor, Tyree treats GearBorn with absolute seriousness - borderline reverence. To him, this is about more than just rubber and road. He believes mastery comes from understanding - not instinct.",
+  ashley: "Ashley Racem was never supposed to make it past the gates. No racing family. No sponsors. No polished Academy pedigree. Just raw instinct and a habit of connecting with GearBorn in ways nobody could quite explain.\n\nOnce considered a rising talent, Ashley's future at the Academy ended after she stole a prototype GearBorn key and wrecked the original Tutorque during an unauthorized run. Ask Ashley, and she'll tell you the system failed her long before the crash ever happened.\n\nNow she races outside the official circuit, helping overlooked Tuners find paths the Academy never would've offered them. To Ashley, compatibility matters more than credentials — and the road doesn't care where you came from.",
+  "lynx-incarso": "Nobody really knows where Lynx Incarso came from. What they do know is that if she's behind you on the starting grid, you should probably update your insurance. Loud, fearless, and completely unpredictable, Lynx races with the kind of reckless aggression that makes other Tuners question their own survival instincts. Some racers insist the chaos is calculated, that she's using intimidation to force mistakes. The terrifying part? It probably isn't. Lynx genuinely seems to enjoy the danger. To her, racing isn't about perfect lines or clean technique. It's about pressure, panic, and seeing who breaks first.",
+  "portia-crosh": "The voice behind hit GearBorn podcast Good Tunes, Portia Crosh built her reputation covering the world's top Tuners before deciding she was tired of talking about greatness from the sidelines. Smart, sharp, and relentlessly ambitious, Portia approaches racing like she approaches journalism - by learning exactly where the pressure points are and pushing them. Critics say she's too polished for the track. Portia keeps beating them anyway. Somehow she always knows the story before everyone else, including the parts people wish she didn't.",
+  "marlyn-adelaide": "Off the track, Marlyn Adelaide is a walking disaster. He spills drinks, trips over air, complains constantly, and somehow gets lost in places he's already been. Behind the wheel? Different person entirely. Marlyn drives with razor-sharp precision and impossible reflexes, treating every race like a moving puzzle only he can solve. He's picky, dramatic, and exhausting to be around for long periods of time - but even his rivals admit the guy's a genius once the engines start.",
+  "crosby-nash": "Crosby Nash looks terrifying right up until he opens his mouth. Gentle, encouraging, and relentlessly positive, Crosby treats every racer like they're already friends - whether they want him to or not. Most people enter races against him expecting intimidation tactics. Instead they get compliments, life advice, and heartfelt encouragement at red lights. Underneath the teddy bear energy is an incredibly capable driver who earned his reputation the hard way. Crosby doesn't race to crush people. He races because he genuinely wants to see how far everyone can go.",
+  "eli-kaufman": "Most Tuners grew up dreaming about the spotlight. Eli Kaufman grew up carrying someone else's clubs through it. A longtime caddy for the city's elite racers, Eli learned the Tuner world one overheard conversation at a time - studying egos, rivalries, and strategy while staying invisible. After years of saving every tip he earned, Eli finally bought his way onto the track himself. Calm, patient, and impossible to rattle, he races the same way he worked: quietly, precisely, and always three steps ahead of the people underestimating him. He's also your best friend."
 };
+const otherNpcProfiles = [
+  { id: "eli-kaufman", name: "Eli Kaufman", city: "The Starting Grid" },
+  { id: "portia-crosh", name: "Portia Crosh", city: "Good Tunes Studio" },
+  { id: "lynx-incarso", name: "Lynx Incarso", city: "Unknown" },
+  { id: "marlyn-adelaide", name: "Marlyn Adelaide", city: "Everywhere, Somehow Lost" },
+  { id: "crosby-nash", name: "Crosby Nash", city: "The Open Road" }
+].map((profile) => ({
+  ...profile,
+  image: `assets/characters/headshot-${profile.id.split("-")[0]}.png`,
+  headshot: `assets/characters/headshot-${profile.id.split("-")[0]}.png`,
+  character: `assets/characters/character-${profile.id.split("-")[0]}.png`,
+  category: "Other",
+  car: "Other",
+  country: "Other",
+  bio: profileBios[profile.id] || "Profile bio coming soon."
+}));
 const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   id: boss.id,
   name: boss.name,
@@ -933,7 +1038,18 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   city: "Tuner Academy",
   country: "Other",
   bio: profileBios["dr-tyree"]
-}]);
+}, {
+  id: "ashley",
+  name: "Ashley Racem",
+  image: "assets/characters/headshot-ashley.png",
+  headshot: "assets/characters/headshot-ashley.png",
+  character: "assets/characters/character-ashley.png",
+  category: "Other",
+  car: "Other",
+  city: "Outside the Official Circuit",
+  country: "Other",
+  bio: profileBios.ashley
+}], otherNpcProfiles);
 const saveKey = "gearborn-demo-save-v1";
 const tunerChoiceVersion = 1;
 const storyCutsceneScripts = {
@@ -1250,6 +1366,7 @@ const defaultState = {
   selectedTimeCar: cars[0].id,
   selectedTimeTrack: storyTracks[0].id,
   selectedVindex: vindexEntries[0].number,
+  vindexFilter: "all",
   selectedProfile: racerProfiles[0].id,
   racerAlphaUnmasked: false,
   racerAlphaProfileView: "masked",
@@ -1277,6 +1394,7 @@ const defaultState = {
   selectedCampaign: 0,
   highestCampaignIndex: 0,
   selectedStoryCity: 0,
+  visitedStoryCities: {},
   completedCampaignLevels: {},
   betaTimeTrials: {},
   bond: {},
@@ -1331,6 +1449,7 @@ const builderState = {
   grid: [],
   selectedTile: "grass",
   rotation: 0,
+  tool: "build",
   dirty: false,
   modalMode: null,
   pendingName: ""
@@ -1338,15 +1457,13 @@ const builderState = {
 
 const builderTileDefs = [
   { id: "grass", label: "Grass", asset: "assets/tracks/grass.png", accent: "transparent" },
-  { id: "road_straight", label: "Road Straight", asset: "assets/tracks/road_straight_horizontal.png", accent: "transparent" },
-  { id: "road_turn", label: "Road Turn", asset: "assets/tracks/road_turn.png", accent: "transparent" },
-  { id: "road_t_intersection", label: "T Intersection", asset: "assets/tracks/road_t_intersection.png", accent: "transparent" },
-  { id: "road_cross", label: "Road Cross", asset: "assets/tracks/road_cross.png", accent: "transparent" },
-  { id: "road_curve_wide", label: "Wide Curve", asset: "assets/tracks/road_curve_wide.png", accent: "transparent" },
+  { id: "road_horizontal", label: "Horizontal Road", asset: "assets/tracks/track-horizontal.png", accent: "transparent", placeType: "road_straight", placeRotation: 0 },
+  { id: "road_vertical", label: "Vertical Road", asset: "assets/tracks/track-vertical.png", accent: "transparent", placeType: "road_straight", placeRotation: 90 },
+  { id: "road_turn", label: "Road Turn", asset: "assets/tracks/track-turn.png", accent: "transparent" },
   { id: "wall_straight", label: "Wall Straight", asset: "assets/tracks/wall_straight.png", accent: "transparent" },
   { id: "wall_corner", label: "Wall Corner", asset: "assets/tracks/wall_corner.png", accent: "transparent" },
-  { id: "start_finish", label: "Start / Finish", asset: "assets/tracks/road_straight_horizontal.png", accent: "repeating-linear-gradient(90deg,#fff 0 7px,#111 7px 14px)" },
-  { id: "checkpoint", label: "Checkpoint", asset: "assets/tracks/road_straight_horizontal.png", accent: "rgba(82,199,255,.42)" }
+  { id: "start_finish", label: "Start / Finish", asset: "assets/tracks/start-finish-line.png", accent: "transparent", marker: true },
+  { id: "checkpoint", label: "Checkpoint", asset: "assets/tracks/checkpoint-neutral.png", accent: "transparent", marker: true }
 ];
 
 const el = {
@@ -1374,6 +1491,15 @@ const el = {
   betaMainScreen: document.querySelector("#beta-main-screen"),
   betaTrackSelectScreen: document.querySelector("#beta-track-select-screen"),
   betaTrackSelectTitle: document.querySelector("#beta-track-select-title"),
+  betaPreviewScreen: document.querySelector("#beta-preview-screen"),
+  betaPreviewBack: document.querySelector("#beta-preview-back"),
+  betaPreviewTitle: document.querySelector("#beta-preview-title"),
+  betaLeaderboard: document.querySelector("#beta-leaderboard"),
+  betaPreviewMap: document.querySelector("#beta-preview-map"),
+  betaPreviewCity: document.querySelector("#beta-preview-city"),
+  betaCityMenu: document.querySelector("#beta-city-menu"),
+  betaPreviewCar: document.querySelector("#beta-preview-car"),
+  betaPreviewStart: document.querySelector("#beta-preview-start"),
   playerCar: document.querySelector("#player-car"),
   storyCar: document.querySelector("#story-car"),
   campaignCar: document.querySelector("#campaign-car"),
@@ -1428,6 +1554,7 @@ const el = {
   betaIntro: document.querySelector("#beta-intro"),
   betaRace: document.querySelector("#beta-race"),
   betaOptions: document.querySelector("#beta-options"),
+  betaMode: document.querySelector("#beta-mode"),
   beta3dRace: document.querySelector("#beta-3d-race"),
   beta3dStart: document.querySelector("#beta-3d-start"),
   beta3dCanvas: document.querySelector("#beta-3d-canvas"),
@@ -1474,6 +1601,7 @@ const el = {
   builderGrid: document.querySelector("#builder-grid"),
   builderCurrentName: document.querySelector("#builder-current-name"),
   builderDirtyState: document.querySelector("#builder-dirty-state"),
+  builderBuild: document.querySelector("#builder-build"),
   builderRotate: document.querySelector("#builder-rotate"),
   builderClear: document.querySelector("#builder-clear"),
   builderSave: document.querySelector("#builder-save"),
@@ -1500,6 +1628,7 @@ const el = {
   closeStoryPreview: document.querySelector("#close-story-preview"),
   storyPreviewIcon: document.querySelector("#story-preview-icon"),
   storyPreviewArt: document.querySelector("#story-preview-art"),
+  storyPreviewLeaderboard: document.querySelector("#story-preview-leaderboard"),
   storyCitySelectPanel: document.querySelector("#story-city-select-panel"),
   closeCitySelect: document.querySelector("#close-city-select"),
   storyCityGrid: document.querySelector("#story-city-grid"),
@@ -1517,6 +1646,11 @@ const el = {
   vindexNumber: document.querySelector("#vindex-number"),
   vindexName: document.querySelector("#vindex-name"),
   vindexLine: document.querySelector("#vindex-line"),
+  vindexStatus: document.querySelector("#vindex-status"),
+  vindexClassStamp: document.querySelector("#vindex-class-stamp"),
+  vindexPlate: document.querySelector("#vindex-plate"),
+  vindexFilterButtons: document.querySelector("#vindex-filter-buttons"),
+  vindexProgress: document.querySelector("#vindex-progress"),
   profileList: document.querySelector("#profile-list"),
   profileArt: document.querySelector("#profile-art"),
   profileCarArt: document.querySelector("#profile-car-art"),
@@ -1674,6 +1808,7 @@ const embeddedRaceHomes = ["play", "time-trial", "boss", "battle"].map((view) =>
 let embeddedCampaignView = null;
 let pendingBossRaceStart = null;
 let pendingCityUnlock = null;
+let pendingCityWelcome = null;
 
 function loadState() {
   try {
@@ -1693,6 +1828,7 @@ function mergeState(base, saved) {
     storyTimeTrials: { ...base.storyTimeTrials, ...saved.storyTimeTrials },
     betaTimeTrials: { ...base.betaTimeTrials, ...saved.betaTimeTrials },
     completedCampaignLevels: { ...base.completedCampaignLevels, ...saved.completedCampaignLevels },
+    visitedStoryCities: { ...base.visitedStoryCities, ...saved.visitedStoryCities },
     bond: { ...base.bond, ...saved.bond },
     partsInventory: { ...base.partsInventory, ...saved.partsInventory },
     equippedParts: { ...base.equippedParts, ...saved.equippedParts },
@@ -1713,6 +1849,7 @@ function sanitizeState() {
   state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
   state.equippedParts = state.equippedParts && typeof state.equippedParts === "object" ? state.equippedParts : {};
   state.achievements = state.achievements && typeof state.achievements === "object" ? state.achievements : {};
+  state.visitedStoryCities = state.visitedStoryCities && typeof state.visitedStoryCities === "object" ? state.visitedStoryCities : {};
   state.winStreak = Math.max(0, Math.floor(Number(state.winStreak) || 0));
   const artVanFormCount = cars.find((car) => car.id === "art-van")?.evolutions.length || 0;
   state.unlockedArtVanForms = Array.isArray(state.unlockedArtVanForms)
@@ -1772,6 +1909,7 @@ function sanitizeState() {
   state.timeTrials = state.timeTrials || {};
   state.storyTimeTrials = state.storyTimeTrials || {};
   state.betaTimeTrials = state.betaTimeTrials && typeof state.betaTimeTrials === "object" ? state.betaTimeTrials : {};
+  if (!["all", "owned", "seen"].includes(state.vindexFilter)) state.vindexFilter = "all";
   state.settings.verticalKeys = {
     ...defaultState.settings.verticalKeys,
     ...(state.settings.verticalKeys || {})
@@ -2334,6 +2472,19 @@ function achievementProgress(achievement) {
     const total = levels.length;
     return { current, total, percent: total ? Math.floor((current / total) * 100) : 0, complete: total > 0 && current >= total, label: `${current}/${total} complete` };
   }
+  if (achievement.type === "storyTypePercent") {
+    const levels = storyLevelsOfType(achievement.raceType);
+    const current = levels.filter(({ index }) => storyLevelCompleted(index)).length;
+    const total = levels.length;
+    const actualPercent = total ? Math.floor((current / total) * 100) : 0;
+    return {
+      current,
+      total,
+      percent: Math.min(100, Math.floor((actualPercent / achievement.percentTarget) * 100)),
+      complete: total > 0 && actualPercent >= achievement.percentTarget,
+      label: `${current}/${total} complete`
+    };
+  }
   if (achievement.type === "vindex") {
     const stats = vindexCompletionStats();
     const current = Math.min(stats.percent, achievement.percent);
@@ -2403,6 +2554,9 @@ function grantAchievementReward(achievement, silent = false) {
   } else if (achievement.id === "vindex75") {
     const parts = grantRandomLevelTwoParts(3);
     message = `Level 2 parts awarded: ${parts.join(", ")}`;
+  } else if (achievement.type === "storyTypePercent" && achievement.sprox) {
+    addSprox(achievement.sprox);
+    message = `${achievement.sprox} Sprox awarded.`;
   }
   record.granted = true;
   if (!silent) showToast(`Achievement Unlocked: ${achievement.name}`, message);
@@ -2644,6 +2798,7 @@ function renderMenuGoal() {
   let reward = 50;
   if (level?.type === "drag" || level?.type === "pink-slip") reward = level.drag.xp;
   if (level?.type === "trial") reward = timeMedals[timeMedals.length - 1].xp;
+  if (level?.type === "circuit" || level?.type === "rival") reward = story2dReward(level);
   if (level?.type === "battle") reward = battleRewardForBossIndex(level.bossIndex);
   if (level?.type === "boss") reward = (level.final ? finalBoss : bosses[level.bossIndex])?.xp || reward;
   nextRewardNode.textContent = `Reward +${reward} Sprox`;
@@ -2738,15 +2893,15 @@ function highestUnlockedStoryCityIndex() {
 }
 
 function cityCoreLevelsCompleted(city) {
-  return city.levels.filter((level) => ["drag", "trial", "battle", "rival"].includes(level.type)).filter((level) => storyLevelCompleted(level.campaignIndex)).length;
+  return city.levels.filter((level) => !["boss", "pink-slip"].includes(level.type)).filter((level) => storyLevelCompleted(level.campaignIndex)).length;
 }
 
 function cityCoreLevelsTotal(city) {
-  return city.levels.filter((level) => ["drag", "trial", "battle", "rival"].includes(level.type)).length;
+  return city.levels.filter((level) => !["boss", "pink-slip"].includes(level.type)).length;
 }
 
 function cityBossRequirement(city) {
-  return city.levels.some((level) => level.type === "rival") ? 3 : 2;
+  return Math.max(1, cityCoreLevelsTotal(city) - 1);
 }
 
 function cityBossUnlocked(city) {
@@ -2760,7 +2915,7 @@ function cityBossCompleted(city) {
 }
 
 function storyLevelVisible(city, level) {
-  if (level.type === "drag" || level.type === "trial" || level.type === "battle" || level.type === "rival") return true;
+  if (!["boss", "pink-slip"].includes(level.type)) return true;
   if (level.type === "boss") return cityBossUnlocked(city);
   if (level.type === "pink-slip") return cityBossCompleted(city);
   return false;
@@ -2808,9 +2963,17 @@ function renderCampaign() {
   const completedCore = cityCoreLevelsCompleted(city);
   const totalCore = cityCoreLevelsTotal(city);
   const requiredCore = Math.min(cityBossRequirement(city), totalCore);
-  const remainingCore = Math.max(0, requiredCore - completedCore);
-  el.bossUnlockNote.textContent = cityUnlocked && !city.final && !cityBossUnlocked(city)
-    ? `Beat ${remainingCore}/${totalCore} Levels to Unlock Boss Race`
+  const boss = bosses[city.bossIndex] || finalBoss;
+  const repPercent = requiredCore ? Math.min(100, Math.round((completedCore / requiredCore) * 100)) : 100;
+  el.bossUnlockNote.innerHTML = cityUnlocked && !city.final && !cityBossUnlocked(city)
+    ? `<div class="reputation-meter" style="--rep:${repPercent}%">
+        <div class="rep-copy"><span>Reputation</span><strong>${Math.min(completedCore, requiredCore)}/${totalCore}</strong></div>
+        <div class="rep-track"><i></i></div>
+        <div class="rep-boss">
+          <img class="rep-boss-bg" src="${storyLevelVisuals.boss.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          <img class="rep-boss-face" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
+        </div>
+      </div>`
     : "";
   el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
   if (el.storyCitySelect) el.storyCitySelect.hidden = false;
@@ -2819,18 +2982,75 @@ function renderCampaign() {
   renderStoryLevelPreview();
 }
 
+function maybeShowCityWelcome() {
+  if (tutorialActive() || !viewIsActive("story")) return;
+  const city = storyCities[state.selectedStoryCity] || storyCities[0];
+  if (!storyCityUnlocked(state.selectedStoryCity)) return;
+  state.visitedStoryCities = state.visitedStoryCities || {};
+  if (state.visitedStoryCities[city.id]) return;
+  pendingCityWelcome = city.id;
+  if (el.cityUnlockModal) {
+    const banner = cityBannerImages[city.id];
+    el.cityUnlockModal.classList.toggle("city-welcome-active", Boolean(banner));
+    el.cityUnlockIcon.innerHTML = banner
+      ? `<img class="city-welcome-banner" src="${banner}" alt="Welcome to ${city.city}" loading="eager" decoding="async" onerror="this.remove(); this.parentElement.innerHTML='${city.icon ? `<img src=&quot;${city.icon}&quot; alt=&quot;&quot; aria-hidden=&quot;true&quot;>` : ""}'">`
+      : (city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "");
+    el.cityUnlockTitle.innerHTML = banner ? "" : `<strong>Welcome to ${city.city}</strong>`;
+    el.cityUnlockTitle.hidden = Boolean(banner);
+    el.cityUnlockModal.classList.add("active");
+    el.cityUnlockModal.setAttribute("aria-hidden", "false");
+    el.cityUnlockClose.focus();
+  } else {
+    showToast(`Welcome to ${city.city}`, "Continue to the city map.");
+  }
+  state.visitedStoryCities[city.id] = true;
+  saveState();
+}
+
 function storyMapNodeMarkup(city, level) {
   const hidden = !storyLevelVisible(city, level);
   const locked = storyLevelLocked(city, level);
   const completed = storyLevelCompleted(level.campaignIndex);
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
-  const layout = storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
+  const layout = storyNodeLayoutFor(city, level);
+  const nodeLabel = storyNodeLabel(level, completed, visual);
   return `
     <button class="story-map-node ${locked ? "locked" : ""} ${completed ? "completed" : ""}" type="button" data-story-level="${level.campaignIndex}" style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}" ${hidden ? "hidden" : ""} ${locked ? "disabled" : ""}>
       ${storyNodeIconMarkup(city, level, visual)}
-      <span class="story-node-label">${completed ? "Complete" : visual.label}</span>
+      <span class="story-node-label">${nodeLabel}</span>
     </button>
   `;
+}
+
+function storyNodeLayoutFor(city, level) {
+  if (level.type === "boss") return { x: 50, y: 18 };
+  if (level.type === "pink-slip") return { x: 50, y: 89 };
+  const prelims = city.levels.filter((item) => !["boss", "pink-slip"].includes(item.type) && storyLevelVisible(city, item));
+  const index = Math.max(0, prelims.findIndex((item) => item.campaignIndex === level.campaignIndex));
+  const count = Math.max(1, prelims.length);
+  const rowSpec = count <= 4
+    ? [{ count, y: 68 }]
+    : count <= 6
+      ? [{ count: Math.ceil(count / 2), y: 49 }, { count: Math.floor(count / 2), y: 72 }]
+      : [{ count: Math.ceil(count / 3), y: 42 }, { count: Math.ceil((count - Math.ceil(count / 3)) / 2), y: 62 }, { count: count - Math.ceil(count / 3) - Math.ceil((count - Math.ceil(count / 3)) / 2), y: 75 }];
+  let cursor = 0;
+  for (const row of rowSpec) {
+    if (index < cursor + row.count) {
+      const rowIndex = index - cursor;
+      const spacing = 78 / Math.max(1, row.count);
+      const x = 11 + spacing / 2 + rowIndex * spacing;
+      return { x: Math.max(12, Math.min(88, Math.round(x))), y: row.y };
+    }
+    cursor += row.count;
+  }
+  return { x: 50, y: 68 };
+}
+
+function storyNodeLabel(level, completed, visual) {
+  if (completed) return "Complete";
+  if (level.type === "circuit") return level.circuitMode === "race6" ? "6-Car Race" : "4-Car Race";
+  if (level.type === "rival" && level.mechanic === "circuitDuel") return "Rival Race";
+  return visual.label;
 }
 
 function rivalTuner() {
@@ -2876,10 +3096,11 @@ function storyNodeIconMarkup(city, level, visual) {
   }
   if (level.type === "pink-slip") {
     const form = level.drag;
+    const medallion = forgeMedallionSrc(level.pinkSlipCarId);
     return `
       <span class="story-node-icon layered type-pink-slip">
         <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject pink-car" src="${form.displayImage || form.image}" alt="${form.name}" loading="lazy" decoding="async">
+        <img class="node-subject pink-medallion" src="${medallion || form.displayImage || form.image}" alt="${form.name}" loading="lazy" decoding="async">
       </span>
     `;
   }
@@ -2925,6 +3146,7 @@ function renderStoryLevelPreview() {
   el.campaignTitle.textContent = locked && level.final ? "?" : level.title;
   el.campaignMeta.textContent = campaignLevelMeta(level, locked);
   el.storyPreviewArt.innerHTML = storyPreviewArtMarkup(level, locked);
+  renderStoryPreviewLeaderboard(level, locked);
   renderCampaignRewards(level, locked);
   renderStoryLoadout();
   el.startCampaign.disabled = locked;
@@ -2933,15 +3155,15 @@ function renderStoryLevelPreview() {
 
 function storyPreviewArtMarkup(level, locked) {
   if (locked) return `<div class="silhouette-card"><div class="silhouette-car">?</div></div>`;
-  if (level.type === "drag" || level.type === "pink-slip") {
+  if (level.type === "drag") {
     const image = level.drag.displayImage || level.drag.image?.replace("-race.", "-display.");
-    return displayMarkup(image, level.drag.name, level.type === "pink-slip" ? "#f4a7d8" : "#ffc857");
+    return displayMarkup(image, level.drag.name, "#ffc857");
   }
   if (level.type === "battle") {
     return `<div class="story-map-preview" style="background-image:url('assets/maps/map-battle-arena.png')"><span>Arena Battle</span></div>`;
   }
-  if (level.type === "trial") {
-    return `<div class="story-map-preview" style="background-image:url('${level.track.map}')"><span>${level.track.city}</span></div>`;
+  if (is2dStoryLevel(level)) {
+    return `<canvas class="story-beta-track-preview" data-story-beta-track="${betaTrackIdForStoryTrack(level.track || (level.final ? finalBoss.track : bosses[level.bossIndex]?.track))}" width="420" height="300" aria-label="Circuit race track preview"></canvas>`;
   }
   if (level.type === "rival") {
     const rival = rivalTuner();
@@ -2952,6 +3174,37 @@ function storyPreviewArtMarkup(level, locked) {
   }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
   return characterMarkup({ name: boss.name, image: boss.portrait });
+}
+
+function renderStoryPreviewLeaderboard(level, locked) {
+  if (!el.storyPreviewLeaderboard) return;
+  if (locked || !is2dStoryLevel(level)) {
+    el.storyPreviewLeaderboard.innerHTML = "";
+    drawStoryBetaPreviewCanvases();
+    return;
+  }
+  const mode = story2dModeForLevel(level);
+  const playerCar = cars.find((car) => car.id === state.selectedStoryCar) || cars[0];
+  const playerForm = currentEvolution(playerCar.id);
+  const opponents = story2dOpponentsForLevel(level, mode, state.selectedCampaign);
+  const rows = opponents.map((opponent) => betaLeaderboardRow({
+    driver: opponent.driver,
+    form: opponent.form,
+    car: opponent.car
+  })).join("");
+  el.storyPreviewLeaderboard.innerHTML = `
+    <div class="story-preview-leaderboard-title">${mode === "time" ? "Time Trial Run" : "Race Leaderboard"}</div>
+    ${rows}
+    ${betaLeaderboardRow({ driver: selectedTuner(), form: playerForm, car: playerCar, player: true })}
+  `;
+  drawStoryBetaPreviewCanvases();
+}
+
+function drawStoryBetaPreviewCanvases() {
+  document.querySelectorAll(".story-beta-track-preview").forEach((canvas) => {
+    const track = betaTracks.find((item) => item.id === canvas.dataset.storyBetaTrack) || betaTracks[0];
+    drawBetaTrackPreviewTo(canvas, track);
+  });
 }
 
 function openStoryPreview(campaignIndex) {
@@ -2994,6 +3247,7 @@ function selectStoryCity(index) {
   closeStoryPreview();
   saveState();
   renderCampaign();
+  window.setTimeout(maybeShowCityWelcome, 80);
 }
 
 function campaignLevelEarnedBadge(index, level, locked) {
@@ -3006,6 +3260,7 @@ function campaignTypeLabel(level) {
   if (level.type === "drag") return "Drag Race";
   if (level.type === "pink-slip") return "Pink Slip Race";
   if (level.type === "trial") return "Time Trial";
+  if (level.type === "circuit") return level.circuitMode === "race6" ? "6-Car Race" : "4-Car Race";
   if (level.type === "battle") return "Battle";
   if (level.type === "rival") return "Rival Race";
   return "Boss Battle";
@@ -3035,6 +3290,10 @@ function renderCampaignRewards(level, locked) {
         <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} Sprox</strong>
       </div>
     `).join("") + bestResult + possiblePartRewardMarkup();
+    return;
+  }
+  if (level.type === "circuit") {
+    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "drag" || level.type === "pink-slip") {
@@ -3101,13 +3360,14 @@ function campaignLevelMeta(level, locked) {
   if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "400 m" : "800 m"}`;
   if (level.type === "pink-slip") return `${level.drag.rankKey} Class · ${level.drag.distance} m · Unlock ${level.drag.name}`;
   if (level.type === "trial") return `${level.track.city}, ${level.track.country}`;
+  if (level.type === "circuit") return `${level.track.city}, ${level.track.country} · ${level.circuitMode === "race6" ? "Top 3" : "Top 2"}`;
   if (level.type === "battle") {
     const boss = bosses[level.bossIndex];
     return `${boss.name} · ${boss.car} · Arena`;
   }
   if (level.type === "rival") {
     const rival = rivalTuner();
-    const mechanic = { drag: "Drag Race", bossVertical: "City Sprint", battle: "Battle Mode" }[level.mechanic] || "Rival Race";
+    const mechanic = { drag: "Drag Race", bossVertical: "City Sprint", circuitDuel: "Head-to-Head Race", battle: "Battle Mode" }[level.mechanic] || "Rival Race";
     return `${rival.name} · ${mechanic}`;
   }
   return "";
@@ -3462,24 +3722,127 @@ function renderTimeTrackGrid() {
   }
 }
 
-function renderVindex() {
-  el.vindexList.innerHTML = vindexEntries.map((entry) => `
-    <button class="vindex-button ${entry.number === state.selectedVindex ? "active" : ""}" type="button" data-vindex="${entry.number}">
-      <span>#${entry.number}</span>
-      <strong>${isVindexDiscovered(entry) ? entry.name : "????"}</strong>
+function getVindexClass(entry) {
+  return vindexClassByNumber[entry?.number] || "";
+}
+
+function getClassStamp(classLetter) {
+  return classLetter ? `assets/vindex/stamp-${String(classLetter).toLowerCase()}.png` : "";
+}
+
+function getLicensePlate(entry) {
+  return entry ? `assets/license/license-${slugify(entry.name)}.png` : "";
+}
+
+function getPlateCode(entry) {
+  if (!entry) return "???-000";
+  const prefix = String(entry.name || "GB").replace(/[^a-z0-9]/gi, "").slice(0, 3).toUpperCase().padEnd(3, "X");
+  return `${prefix}-${String(entry.number || "000").padStart(3, "0")}`;
+}
+
+function getStatus(entry) {
+  if (!entry || !isVindexDiscovered(entry)) return "locked";
+  return isVindexOwned(entry) ? "owned" : "seen";
+}
+
+function isVindexOwned(entry) {
+  const playable = playableEntryMeta(entry);
+  if (!playable) return false;
+  if ([tutorialCarId, tutorialOpponentCarId].includes(playable.car.id)) return state.tutorialComplete || tutorialActive();
+  if (playable.car.id === "art-van") return isCarUnlocked("art-van") && (state.unlockedArtVanForms || []).includes(playable.index);
+  return isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= playable.index;
+}
+
+function vindexEntriesForFilter() {
+  const filter = state.vindexFilter || "all";
+  return vindexEntries.filter((entry) => {
+    const status = getStatus(entry);
+    if (filter === "owned") return status === "owned";
+    if (filter === "seen") return status === "owned" || status === "seen";
+    return true;
+  });
+}
+
+function vindexProgressCounts() {
+  const total = vindexEntries.length;
+  const owned = vindexEntries.filter((entry) => getStatus(entry) === "owned").length;
+  const seen = vindexEntries.filter((entry) => ["owned", "seen"].includes(getStatus(entry))).length;
+  return { total, owned, seen, locked: Math.max(0, total - seen) };
+}
+
+function vindexPlateMarkup(entry, discovered) {
+  if (!discovered) return "";
+  const code = getPlateCode(entry);
+  return `
+    <div class="vindex-license-plate">
+      <img src="${getLicensePlate(entry)}" alt="${entry.name} license plate" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+      <span hidden>${code}</span>
+    </div>
+  `;
+}
+
+function licensePlateMarkupForName(name, number = "000", className = "garage-license-plate") {
+  const entry = { name, number };
+  return `
+    <div class="${className}">
+      <img src="${getLicensePlate(entry)}" alt="${name} license plate" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+      <span hidden>${getPlateCode(entry)}</span>
+    </div>
+  `;
+}
+
+function vindexListRowMarkup(entry) {
+  const status = getStatus(entry);
+  const discovered = status !== "locked";
+  return `
+    <button class="vindex-button ${entry.number === state.selectedVindex ? "active" : ""} status-${status}" type="button" data-vindex="${entry.number}">
+      <span class="vindex-row-number">#${discovered ? entry.number : "???"}</span>
+      <strong>${discovered ? entry.name : "???"}</strong>
     </button>
-  `).join("");
-  const entry = vindexEntries.find((item) => item.number === state.selectedVindex);
-  const discovered = isVindexDiscovered(entry);
+  `;
+}
+
+function renderVindex() {
+  const entries = vindexEntriesForFilter();
+  if (!entries.some((entry) => entry.number === state.selectedVindex)) {
+    state.selectedVindex = entries[0]?.number || vindexEntries[0].number;
+  }
+  el.vindexList.innerHTML = entries.length ? entries.map(vindexListRowMarkup).join("") : `<p class="empty-note">No GearBorn match this filter.</p>`;
+  el.vindexFilterButtons?.querySelectorAll("[data-vindex-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.vindexFilter === (state.vindexFilter || "all"));
+  });
+  const counts = vindexProgressCounts();
+  if (el.vindexProgress) {
+    el.vindexProgress.innerHTML = `
+      <p><span>Owned</span><strong>${counts.owned} / ${counts.total}</strong></p>
+      <p><span>Seen</span><strong>${counts.seen} / ${counts.total}</strong></p>
+      <p><span>Locked</span><strong>${counts.locked} / ${counts.total}</strong></p>
+    `;
+  }
+  const entry = vindexEntries.find((item) => item.number === state.selectedVindex) || vindexEntries[0];
+  const status = getStatus(entry);
+  const discovered = status !== "locked";
+  const classLetter = getVindexClass(entry);
   el.vindexArt.innerHTML = `
     ${discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup()}
     ${discovered ? honkButtonMarkup(`data-honk-vindex="${entry.number}"`) : ""}
   `;
-  el.vindexNumber.textContent = `#${entry.number}`;
-  el.vindexName.textContent = discovered ? entry.name : "????";
-  el.vindexLine.textContent = entry.line;
-  document.querySelectorAll(".vindex-evolution-line").forEach((node) => node.remove());
-  el.vindexLine.insertAdjacentHTML("afterend", evolutionLineMarkup(entry));
+  el.vindexNumber.textContent = discovered ? `#${entry.number}` : "#???";
+  el.vindexName.textContent = discovered ? entry.name : "???";
+  el.vindexLine.textContent = discovered ? entry.line : "Mystery GearBorn";
+  if (el.vindexStatus) {
+    el.vindexStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    el.vindexStatus.className = `status-${status}`;
+  }
+  if (el.vindexClassStamp) {
+    const stamp = discovered ? getClassStamp(classLetter) : "";
+    el.vindexClassStamp.hidden = !stamp;
+    if (stamp) {
+      el.vindexClassStamp.src = stamp;
+      el.vindexClassStamp.alt = `Class ${classLetter}`;
+    }
+  }
+  if (el.vindexPlate) el.vindexPlate.innerHTML = vindexPlateMarkup(entry, discovered);
 }
 
 function playableEntryMeta(entry) {
@@ -3624,7 +3987,7 @@ function achievementRewardArt(achievement) {
   }
   if (achievement.id === "vindex50") return carMarkupForEvolution("cake-train", 0, "display");
   if (achievement.id === "vindex75") return `<div class="achievement-reward-parts">${partTypes.slice(0, 3).map((part) => partImageMarkup({ ...part, level: 2, bonus: 3, stars: "★★" }, "achievement-part-image")).join("")}</div>`;
-  if (achievement.id === "vindex25") return `<span class="achievement-sprox-preview sprox-coin" aria-label="Sprox reward"></span>`;
+  if (achievement.id === "vindex25" || achievement.sprox || /sprox/i.test(achievement.reward || "")) return `<span class="achievement-sprox-preview sprox-coin" aria-label="Sprox reward"></span>`;
   return `<div class="achievement-trophy">★</div>`;
 }
 
@@ -3762,6 +4125,7 @@ function renderGarage() {
     const stats = displayedGearbornStats(car.id);
     const playstyle = gearbornStatProfiles[car.id]?.playstyle || "";
     const upgradeCost = xpForNextLevel(progress.level);
+    const form = currentEvolution(car.id);
     return `
       <article class="garage-card">
         <div class="garage-art">
@@ -3770,9 +4134,14 @@ function renderGarage() {
           ${garageArtPartSlots(car.id)}
         </div>
         <div class="garage-info">
-          <h2>${currentEvolution(car.id).name}</h2>
-          <h3>${car.family}</h3>
-          <p class="playstyle-tag">${playstyle}</p>
+          <div class="garage-identity-row">
+            <div class="garage-identity-copy">
+              <h2>${form.name}</h2>
+              <h3>${car.family}</h3>
+              <p class="playstyle-tag">${playstyle}</p>
+            </div>
+            ${licensePlateMarkupForName(form.name, vindexEntries.find((entry) => entry.name === form.name)?.number || "000")}
+          </div>
           <div class="meta-row">
             <span>Level ${progress.level}</span>
             <span class="evolution">Form ${progress.evolution + 1} / ${unlockedEvolutionIndex(car.id) + 1}</span>
@@ -3801,6 +4170,7 @@ function renderTutorialGarage() {
   const stats = displayedGearbornStats(tutorialCarId);
   const playstyle = gearbornStatProfiles[tutorialCarId]?.playstyle || "";
   const maxed = progress.level >= maxCarLevel;
+  const form = currentEvolution(tutorialCarId);
   el.garageGrid.innerHTML = `
     <article class="garage-card">
       <div class="garage-art">
@@ -3809,9 +4179,14 @@ function renderTutorialGarage() {
         ${garageArtPartSlots(tutorialCarId)}
       </div>
       <div class="garage-info">
-        <h2>${currentEvolution(tutorialCarId).name}</h2>
-        <h3>${car.family}</h3>
-        <p class="playstyle-tag">${playstyle}</p>
+        <div class="garage-identity-row">
+          <div class="garage-identity-copy">
+            <h2>${form.name}</h2>
+            <h3>${car.family}</h3>
+            <p class="playstyle-tag">${playstyle}</p>
+          </div>
+          ${licensePlateMarkupForName(form.name, vindexEntries.find((entry) => entry.name === form.name)?.number || "000")}
+        </div>
         <div class="meta-row">
           <span>Level ${progress.level}</span>
           <span class="evolution">Training</span>
@@ -4727,6 +5102,7 @@ function showRaceResult(trackNode, result) {
 function finishStoryRaceScreen() {
   if (race) race.active = false;
   if (verticalRace) verticalRace.active = false;
+  if (viewIsActive("beta")) showView("story");
   restoreEmbeddedCampaignRace();
   storyReplayOpen = false;
   closeStoryPreview();
@@ -5322,6 +5698,8 @@ function closeFirstTutorialModal() {
 
 function openCityUnlockModal(city) {
   if (!city || !el.cityUnlockModal) return;
+  el.cityUnlockModal.classList.remove("city-welcome-active");
+  el.cityUnlockTitle.hidden = false;
   el.cityUnlockIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "";
   el.cityUnlockTitle.innerHTML = `<strong>${city.city}</strong> has been unlocked in <strong>CITY SELECT</strong>`;
   el.cityUnlockModal.classList.add("active");
@@ -5332,7 +5710,9 @@ function openCityUnlockModal(city) {
 function closeCityUnlockModal() {
   if (!el.cityUnlockModal) return;
   el.cityUnlockModal.classList.remove("active");
+  el.cityUnlockModal.classList.remove("city-welcome-active");
   el.cityUnlockModal.setAttribute("aria-hidden", "true");
+  el.cityUnlockTitle.hidden = false;
 }
 
 function renderTutorialSceneOptions() {
@@ -5402,9 +5782,7 @@ function carNameKey(name = "") {
 }
 
 function displayScaleStyle(name, role = "display") {
-  if (role !== "display") return "";
-  const scale = displayImageScaleByName[carNameKey(name)] || 1;
-  return scale === 1 ? "" : ` style="--display-scale:${scale}"`;
+  return "";
 }
 
 function rankMarkup(rank, role = "display") {
@@ -5535,12 +5913,20 @@ function createBlankBuilderGrid() {
 function cloneBuilderGrid(grid) {
   return Array.from({ length: builderGridSize }, (_, y) => Array.from({ length: builderGridSize }, (_, x) => {
     const tile = grid?.[y]?.[x] || { type: "grass", rotation: 0 };
-    return { type: tile.type || "grass", rotation: Number(tile.rotation) || 0 };
+    const allowed = builderTileDefs.some((def) => def.id === tile.type) || tile.type === "road_straight";
+    return { type: allowed ? tile.type : "grass", rotation: Number(tile.rotation) || 0 };
   }));
 }
 
 function builderTileDef(type) {
+  if (type === "road_straight") return { id: "road_straight", label: "Road", asset: "assets/tracks/track-horizontal.png", accent: "transparent" };
   return builderTileDefs.find((tile) => tile.id === type) || builderTileDefs[0];
+}
+
+function builderRoadAssetForRotation(rotation = 0) {
+  return Number(rotation) === 90 || Number(rotation) === 270
+    ? "assets/tracks/track-vertical.png"
+    : "assets/tracks/track-horizontal.png";
 }
 
 function builderEscape(value = "") {
@@ -5583,11 +5969,16 @@ function renderBuilderGrid() {
   el.builderGrid.innerHTML = builderState.grid.map((row, y) => row.map((tile, x) => {
     const def = builderTileDef(tile.type);
     const rotation = Number(tile.rotation) || 0;
+    const isStraight = tile.type === "road_straight";
+    const isMarker = def.marker;
+    const baseAsset = isStraight || isMarker ? builderRoadAssetForRotation(rotation) : def.asset;
+    const markerRotation = isMarker && (rotation === 0 || rotation === 180) ? 90 : 0;
     return `
       <button class="builder-cell" data-builder-x="${x}" data-builder-y="${y}" type="button"
         style="--tile-accent:${def.accent};"
         aria-label="${def.label} at ${x + 1}, ${y + 1}">
-        <span class="builder-cell-tile" style="background-image:url('${def.asset}');transform:rotate(${rotation}deg);"></span>
+        <span class="builder-cell-tile" style="background-image:url('${baseAsset}');transform:rotate(${isStraight ? 0 : rotation}deg);"></span>
+        ${isMarker ? `<span class="builder-cell-marker" style="background-image:url('${def.asset}');transform:rotate(${markerRotation}deg);"></span>` : ""}
       </button>
     `;
   }).join("")).join("");
@@ -5604,7 +5995,9 @@ function renderBuilder() {
   if (editorOpen) {
     el.builderCurrentName.textContent = builderState.name || "Untitled Track";
     el.builderDirtyState.textContent = builderState.dirty ? "Unsaved changes" : "Saved";
-    el.builderRotate.textContent = `Rotate ${builderState.rotation}°`;
+    el.builderBuild?.classList.toggle("active", builderState.tool === "build");
+    el.builderRotate?.classList.toggle("active", builderState.tool === "rotate");
+    if (el.builderRotate) el.builderRotate.textContent = "Rotate";
     renderBuilderPalette();
     renderBuilderGrid();
   }
@@ -5623,6 +6016,7 @@ function startNewBuilderTrack() {
   builderState.grid = createBlankBuilderGrid();
   builderState.selectedTile = "grass";
   builderState.rotation = 0;
+  builderState.tool = "build";
   builderState.dirty = false;
   renderBuilder();
 }
@@ -5641,6 +6035,7 @@ function loadBuilderTrack(id) {
   builderState.grid = cloneBuilderGrid(track.grid);
   builderState.selectedTile = "grass";
   builderState.rotation = 0;
+  builderState.tool = "build";
   builderState.dirty = false;
   renderBuilder();
 }
@@ -5652,14 +6047,29 @@ function markBuilderDirty() {
 
 function placeBuilderTile(x, y) {
   if (!builderState.grid[y]?.[x]) return;
-  builderState.grid[y][x] = { type: builderState.selectedTile, rotation: builderState.rotation };
+  if (!builderState.tool) return;
+  const current = builderState.grid[y][x];
+  if (builderState.tool === "rotate") {
+    current.rotation = ((Number(current.rotation) || 0) + 90) % 360;
+  } else if (builderState.selectedTile === "start_finish" || builderState.selectedTile === "checkpoint") {
+    if (current.type !== "road_straight" && current.type !== "start_finish" && current.type !== "checkpoint") {
+      showToast("Straight Track Needed", "Place this marker on a horizontal or vertical road tile.");
+      return;
+    }
+    builderState.grid[y][x] = { type: builderState.selectedTile, rotation: Number(current.rotation) || 0 };
+  } else {
+    const def = builderTileDef(builderState.selectedTile);
+    builderState.grid[y][x] = {
+      type: def.placeType || builderState.selectedTile,
+      rotation: Number.isFinite(def.placeRotation) ? def.placeRotation : builderState.rotation
+    };
+  }
   markBuilderDirty();
   renderBuilderGrid();
 }
 
-function rotateBuilderTile() {
-  builderState.rotation = (builderState.rotation + 90) % 360;
-  renderBuilderPalette();
+function toggleBuilderTool(tool) {
+  builderState.tool = builderState.tool === tool ? null : tool;
   renderBuilder();
 }
 
@@ -5718,6 +6128,13 @@ function confirmBuilderSaveName() {
   const name = el.builderModalInput.value.trim();
   if (!name) {
     el.builderModalCopy.textContent = "Please enter a track name.";
+    return;
+  }
+  const duplicate = loadCustomTracks().some((track) => (
+    track.id !== builderState.id && (track.name || "").trim().toLowerCase() === name.toLowerCase()
+  ));
+  if (duplicate) {
+    el.builderModalCopy.textContent = "A saved track with that name already exists.";
     return;
   }
   builderState.pendingName = name;
@@ -5856,7 +6273,10 @@ function showView(view) {
   }
   el.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}-view`));
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
-  document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === view));
+  const activeNavView = view === "beta" && betaRaceContext?.source === "training"
+    ? "solo"
+    : (view === "beta" && betaRaceContext?.source === "story" ? "story" : view);
+  document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === activeNavView));
   document.body.classList.toggle("mode-active", view !== "menu");
   if (view === "story") {
     storyReplayOpen = false;
@@ -5865,6 +6285,7 @@ function showView(view) {
     state.selectedCampaign = firstPlayableStoryLevelForCity(state.selectedStoryCity)?.campaignIndex ?? state.selectedCampaign;
     saveState();
     render();
+    window.setTimeout(maybeShowCityWelcome, 80);
     ensureTunerAndIntro(view);
   }
   if (view === "solo") {
@@ -5883,7 +6304,7 @@ function showView(view) {
     const scene = tutorialActive() ? currentTutorialScene() : null;
     setFlowStep("battle", scene?.view === "battle" && scene.flow ? scene.flow : "car");
   }
-  if (view === "beta") openBetaIntro();
+  if (view === "beta" && !betaRaceContext) openBetaPrototypeIntro();
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
   if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
 }
@@ -6255,6 +6676,7 @@ function tutorialSpeakerProfile(speaker) {
   }
   if (speaker === "key") return { name: "GearBorn Key", image: gearbornKeyImage };
   if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
+  if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshot-ashley.png" };
   return { name: "Dr. Tyree", image: "assets/characters/headshot-dr-tyree.png" };
 }
 
@@ -6734,24 +7156,21 @@ function startCampaignRace(index, level) {
     startRivalCampaignRace(index, level);
     return;
   }
-  if (level.type === "drag" || level.type === "pink-slip") {
+  if (level.type === "pink-slip") {
+    startStory2dRace(index, level);
+    return;
+  }
+  if (level.type === "drag") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
-    state.selectedDistance = level.type === "pink-slip" ? level.drag.distance : index === 0 ? 400 : 800;
+    state.selectedDistance = index === 0 ? 400 : 800;
     saveState();
     render();
     prepareDragRace(index, level.drag);
     return;
   }
-  if (level.type === "trial") {
-    mountCampaignRace("time-trial");
-    state.selectedTimeCar = state.selectedStoryCar;
-    state.selectedTimeTrack = level.track.id;
-    saveState();
-    render();
-    modeFlow.time = "race";
-    renderFlowScreens();
-    beginVerticalRace("campaign-time", true, { campaignLevelIndex: index, track: level.track });
+  if (level.type === "trial" || level.type === "circuit") {
+    startStory2dRace(index, level);
     return;
   }
   if (level.type === "battle") {
@@ -6763,14 +7182,7 @@ function startCampaignRace(index, level) {
     beginBattle("campaign-battle", { boss, campaignLevelIndex: index });
     return;
   }
-  const boss = level.final ? finalBoss : bosses[level.bossIndex];
-  mountCampaignRace("boss");
-  state.selectedBoss = boss.id;
-  saveState();
-  render();
-  modeFlow.boss = "race";
-  renderFlowScreens();
-  beginVerticalRace("campaign-boss", true, { campaignLevelIndex: index, boss });
+  startStory2dRace(index, level);
 }
 
 function shouldShowStoryCutscene(index, level) {
@@ -6834,13 +7246,19 @@ function startRivalCampaignRace(index, level) {
     });
     return;
   }
-  const boss = rivalBossData(level);
-  mountCampaignRace("boss");
+  startStory2dRace(index, level);
+}
+
+function startStory2dRace(index, level) {
+  betaRaceContext = { source: "story", campaignLevelIndex: index, level };
+  betaPendingMode = story2dModeForLevel(level);
+  betaPreviewMode = betaPendingMode;
+  betaSelectedTrackId = betaTrackIdForStoryTrack(level.track || (level.final ? finalBoss.track : bosses[level.bossIndex]?.track));
+  betaPreviewOpponents = story2dOpponentsForLevel(level, betaPendingMode, index);
+  state.selectedBetaCar = state.selectedStoryCar;
   saveState();
-  render();
-  modeFlow.boss = "race";
-  renderFlowScreens();
-  beginVerticalRace("campaign-rival", true, { campaignLevelIndex: index, boss });
+  showView("beta");
+  startBetaDemo(betaPendingMode);
 }
 
 function openRivalDialogue(level, phase, onContinue) {
@@ -7598,7 +8016,29 @@ document.querySelectorAll("[data-steer]").forEach((button) => {
 
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
+    if (button.dataset.view === "beta") {
+      betaRaceContext = { source: "prototype" };
+      showView("beta");
+      openBetaPrototypeIntro();
+      return;
+    }
     showView(button.dataset.view);
+  });
+});
+
+document.querySelectorAll("[data-training-2d]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const trainingMode = button.getAttribute("data-training-2d");
+    betaRaceContext = { source: "training" };
+    betaPreviewOpponents = [];
+    showView("beta");
+    if (trainingMode === "time") {
+      el.betaMode?.classList.remove("vs-only", "prototype-only");
+      el.betaMode?.classList.add("no-3d");
+      openBetaPreview("time", false);
+    } else {
+      openBetaVsIntro();
+    }
   });
 });
 
@@ -7665,8 +8105,8 @@ document.addEventListener("click", (event) => {
 
 // Beta car select screen
 el.betaCarSelectConfirm?.addEventListener("click", () => {
-  // Confirmed car → proceed to track select
-  openBetaTrackSelect(betaPendingMode || "time");
+  betaReturningToPreview = false;
+  openBetaPreview(betaPendingMode || "time", true);
 });
 el.betaCarSelectBack?.addEventListener("click", closeBetaCarSelect);
 
@@ -7834,6 +8274,14 @@ el.vindexList.addEventListener("click", (event) => {
   renderVindex();
 });
 
+el.vindexFilterButtons?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex-filter]");
+  if (!button) return;
+  state.vindexFilter = button.dataset.vindexFilter;
+  saveState();
+  renderVindex();
+});
+
 el.profileList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-profile]");
   if (!button) return;
@@ -7968,14 +8416,17 @@ el.builderLoadBack?.addEventListener("click", openBuilderMenu);
 el.builderExit?.addEventListener("click", () => {
   if (requestBuilderExit("builder-menu")) openBuilderMenu();
 });
-el.builderRotate?.addEventListener("click", rotateBuilderTile);
+el.builderBuild?.addEventListener("click", () => toggleBuilderTool("build"));
+el.builderRotate?.addEventListener("click", () => toggleBuilderTool("rotate"));
 el.builderClear?.addEventListener("click", clearBuilderGrid);
 el.builderSave?.addEventListener("click", beginBuilderSave);
 el.builderPalette?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-builder-tile]");
   if (!button) return;
   builderState.selectedTile = button.dataset.builderTile;
+  builderState.tool = "build";
   renderBuilderPalette();
+  renderBuilder();
 });
 el.builderGrid?.addEventListener("click", (event) => {
   const cell = event.target.closest("[data-builder-x][data-builder-y]");
@@ -8359,8 +8810,124 @@ const betaTracks = [
   betaMakeTrack("india", "India", [{ x: 5, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 16, y: 8 }, { x: 16, y: 6 }, { x: 15, y: 6 }, { x: 15, y: 2 }, { x: 7, y: 2 }, { x: 7, y: 6 }, { x: 3, y: 6 }, { x: 3, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 13 }]),
   betaMakeTrack("space", "Space", [{ x: 5, y: 13 }, { x: 15, y: 13 }, { x: 15, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 14, y: 8 }, { x: 14, y: 5 }, { x: 18, y: 5 }, { x: 18, y: 2 }, { x: 10, y: 2 }, { x: 10, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 7 }, { x: 6, y: 7 }, { x: 6, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }])
 ];
+const betaDirectionDelta = {
+  N: { x: 0, y: -1 },
+  E: { x: 1, y: 0 },
+  S: { x: 0, y: 1 },
+  W: { x: -1, y: 0 }
+};
+const betaOppositeDirection = { N: "S", E: "W", S: "N", W: "E" };
+
+function betaTileConnections(tile) {
+  const type = tile?.type;
+  const rotation = ((Number(tile?.rotation) || 0) + 360) % 360;
+  if (type === "road_straight" || type === "start_finish" || type === "checkpoint") {
+    return rotation === 90 || rotation === 270 ? ["N", "S"] : ["E", "W"];
+  }
+  if (type === "road_turn") {
+    return ({ 0: ["E", "S"], 90: ["S", "W"], 180: ["N", "W"], 270: ["N", "E"] })[rotation] || ["E", "S"];
+  }
+  return [];
+}
+
+function betaBuilderTileToRaceTile(tile) {
+  if (!tile || tile.type === "grass") return { type: "grass", rotation: 0 };
+  if (tile.type?.startsWith("wall")) return { type: tile.type, rotation: Number(tile.rotation) || 0 };
+  if (tile.type === "start_finish" || tile.type === "checkpoint") {
+    return { type: "road_straight", rotation: Number(tile.rotation) || 0 };
+  }
+  if (tile.type === "road_straight" || tile.type === "road_turn") {
+    return { type: tile.type, rotation: Number(tile.rotation) || 0 };
+  }
+  return { type: "grass", rotation: 0 };
+}
+
+function betaRoadTilesFromGrid(grid) {
+  const tiles = [];
+  grid.forEach((row, y) => row.forEach((tile, x) => {
+    if (betaTileConnections(tile).length) tiles.push({ x, y });
+  }));
+  return tiles;
+}
+
+function betaWalkCustomPath(grid, start) {
+  const roadTiles = betaRoadTilesFromGrid(grid);
+  if (!start || !roadTiles.length) return roadTiles;
+  const path = [start];
+  let previous = null;
+  let current = start;
+  const maxSteps = roadTiles.length + 4;
+  for (let step = 0; step < maxSteps; step += 1) {
+    const currentTile = grid[current.y]?.[current.x];
+    const candidates = betaTileConnections(currentTile).map((dir) => {
+      const delta = betaDirectionDelta[dir];
+      return { x: current.x + delta.x, y: current.y + delta.y, from: betaOppositeDirection[dir] };
+    }).filter((candidate) => betaTileConnections(grid[candidate.y]?.[candidate.x]).includes(candidate.from));
+    const next = candidates.find((candidate) => !previous || candidate.x !== previous.x || candidate.y !== previous.y) || candidates[0];
+    if (!next) break;
+    if (next.x === start.x && next.y === start.y && path.length >= 8) break;
+    if (path.some((point) => point.x === next.x && point.y === next.y)) break;
+    previous = current;
+    current = { x: next.x, y: next.y };
+    path.push(current);
+  }
+  return path.length >= 8 ? path : roadTiles;
+}
+
+function betaCustomTrackFromBuilder(track) {
+  const sourceGrid = cloneBuilderGrid(track.grid);
+  const markers = [];
+  sourceGrid.forEach((row, y) => row.forEach((tile, x) => {
+    if (tile.type === "start_finish" || tile.type === "checkpoint") markers.push({ x, y, type: tile.type, rotation: Number(tile.rotation) || 0 });
+  }));
+  const grid = sourceGrid.map((row) => row.map(betaBuilderTileToRaceTile));
+  const width = grid[0]?.length || builderGridSize;
+  const height = grid.length || builderGridSize;
+  const startMarker = markers.find((marker) => marker.type === "start_finish");
+  const firstRoad = betaRoadTilesFromGrid(grid)[0] || { x: 1, y: 1 };
+  const startTile = startMarker ? { x: startMarker.x, y: startMarker.y } : firstRoad;
+  const path = betaWalkCustomPath(grid, startTile);
+  const checkpoints = markers.filter((marker) => marker.type === "checkpoint").map((marker) => ({ x: marker.x, y: marker.y }));
+  const fallbackCheckpoints = [0.25, 0.5, 0.75].map((pct) => path[Math.floor(path.length * pct)]).filter(Boolean);
+  const next = path[1] || startTile;
+  return {
+    id: `custom:${track.id}`,
+    custom: true,
+    name: track.name || "Custom Track",
+    width,
+    height,
+    grid,
+    path,
+    aiLine: path.map((point) => ({ x: (point.x + 0.5) * betaTileSize, y: (point.y + 0.5) * betaTileSize })),
+    startTile,
+    startAngle: Math.atan2(next.y - startTile.y, next.x - startTile.x),
+    checkpoints: checkpoints.length ? checkpoints : fallbackCheckpoints
+  };
+}
+
+function betaCustomTracks() {
+  return loadCustomTracks().map(betaCustomTrackFromBuilder).filter((track) => track.path.length >= 2);
+}
+
+function betaSavedTracksAvailableForMode(mode = betaPreviewMode || betaPendingMode) {
+  return betaRaceContext?.source === "training" && ["race4", "race6", "duel"].includes(mode);
+}
+
+function betaSelectableTracks(mode = betaPreviewMode || betaPendingMode) {
+  return betaSavedTracksAvailableForMode(mode) ? betaTracks.concat(betaCustomTracks()) : betaTracks;
+}
+
+function betaTrackById(trackId, mode = betaPreviewMode || betaPendingMode) {
+  return betaSelectableTracks(mode).find((track) => track.id === trackId) || betaTracks.find((track) => track.id === trackId) || betaTracks[0];
+}
 let betaSelectedTrackId = betaTracks[0].id;
 let betaTrack = betaTracks[0];
+let betaPreviewOpponents = [];
+let betaPreviewMode = "time";
+let betaReturningToPreview = false;
+let betaDuelDriverIndex = 0;
+let betaRaceContext = null;
+const story2dOpponentCache = new Map();
 
 let betaState = null;
 let betaCarImage = null;
@@ -8434,6 +9001,69 @@ function betaStraightAssistAngle(racer) {
   }, candidates[0]);
 }
 
+function betaNearestRoadSpawn(racer) {
+  const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+  let bestIndex = 0;
+  let bestDistance = Infinity;
+  line.forEach((point, index) => {
+    const distance = Math.hypot(point.x - racer.x, point.y - racer.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  });
+  const point = line[bestIndex] || { x: (betaTrack.startTile.x + 0.5) * betaTileSize, y: (betaTrack.startTile.y + 0.5) * betaTileSize };
+  const next = line[(bestIndex + 1) % line.length] || point;
+  return {
+    x: point.x,
+    y: point.y,
+    angle: Math.atan2(next.y - point.y, next.x - point.x)
+  };
+}
+
+function betaRespawnRacer(racer, now = betaNowMs()) {
+  const spawn = betaNearestRoadSpawn(racer);
+  racer.x = spawn.x;
+  racer.y = spawn.y;
+  racer.prevX = spawn.x;
+  racer.prevY = spawn.y;
+  racer.angle = spawn.angle;
+  racer.speed = 0;
+  racer.spinUntil = 0;
+  racer.slowUntil = 0;
+  racer.offTrackSince = null;
+  racer.stuckSince = null;
+  racer.lastRecoveryX = spawn.x;
+  racer.lastRecoveryY = spawn.y;
+  racer.respawnUntil = now + 2000;
+}
+
+function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
+  if (!racer || racer.finished || racer.ghost) return;
+  if (racer.respawnUntil && racer.respawnUntil > now) return;
+  const surface = betaSurfaceAt(racer.x, racer.y);
+  if (racer.ai) {
+    const moved = Math.hypot(racer.x - (racer.lastRecoveryX ?? racer.x), racer.y - (racer.lastRecoveryY ?? racer.y));
+    racer.lastRecoveryX = racer.x;
+    racer.lastRecoveryY = racer.y;
+    if (moved < 2 && Math.abs(racer.speed || 0) < 18) {
+      racer.stuckSince = racer.stuckSince || now;
+      if (now - racer.stuckSince >= 5000) {
+        betaRespawnRacer(racer, now);
+        return;
+      }
+    } else {
+      racer.stuckSince = null;
+    }
+  }
+  if (surface === "road") {
+    racer.offTrackSince = null;
+    return;
+  }
+  racer.offTrackSince = racer.offTrackSince || now;
+  if (now - racer.offTrackSince >= 5000) betaRespawnRacer(racer, now);
+}
+
 function betaCurrentCarId() {
   return selectedCarIdForMode("beta");
 }
@@ -8451,9 +9081,9 @@ function betaResizeCanvas() {
 
 function openBetaIntro() {
   if (!el.betaIntro || !el.betaRace) return;
-  el.betaIntro.hidden = false;
   el.betaRace.hidden = true;
   stopBetaDemo(false);
+  showBetaScreen("beta-intro");
 }
 
 function startBetaDemo() {
@@ -8848,6 +9478,133 @@ function getRandomOpponentCars(count, playerCarId) {
   });
 }
 
+function betaBossCarSetup(boss) {
+  const bossIndex = Math.max(0, bossChallengeBosses.findIndex((item) => item.id === boss.id));
+  const playerCarId = betaCurrentCarId();
+  const playerProgress = state.garage[playerCarId] || { level: 1, evolution: 0 };
+  const level = Math.max(1, (playerProgress.level || 1) - 3);
+  const knownLine = cars.find((car) => car.evolutions.some((form) => form.name === boss.car));
+  if (knownLine) {
+    const evolution = Math.max(0, knownLine.evolutions.findIndex((form) => form.name === boss.car));
+    const form = knownLine.evolutions[evolution] || knownLine.evolutions[0];
+    return {
+      car: knownLine,
+      carId: knownLine.id,
+      form,
+      evolution,
+      level,
+      ratings: betaRatingsForCar(knownLine.id, level, evolution, false),
+      skill: 1
+    };
+  }
+  const ratingBase = Math.min(98, 72 + bossIndex * 3);
+  const ratings = {
+    speed: ratingBase + 2,
+    acceleration: ratingBase,
+    handling: ratingBase,
+    torque: ratingBase + 1,
+    body: ratingBase,
+    powertrain: ratingBase + 2
+  };
+  return {
+    car: { id: `boss-${boss.id}`, color: "#c084fc", family: boss.car },
+    carId: `boss-${boss.id}`,
+    form: {
+      name: boss.car,
+      images: {
+        display: bossCarDisplayImage(boss),
+        race: battleCarImageForBoss(boss),
+        topdown: boss.carImage
+      }
+    },
+    evolution: 0,
+    level,
+    ratings,
+    skill: 1
+  };
+}
+
+function betaTrackIdForStoryTrack(track = {}) {
+  const map = {
+    indianapolis: "indy",
+    berlin: "berlin",
+    dubai: "dubai",
+    rio: "rio",
+    "los-angeles": "la",
+    seoul: "seoul",
+    "cape-town": "safrica",
+    bangalore: "india",
+    space: "space",
+    "training-school": "training"
+  };
+  return map[track.id] || track.id || "training";
+}
+
+function is2dStoryLevel(level) {
+  return level?.type === "trial"
+    || level?.type === "circuit"
+    || level?.type === "boss"
+    || level?.type === "pink-slip"
+    || (level?.type === "rival" && level.mechanic === "circuitDuel");
+}
+
+function story2dModeForLevel(level) {
+  if (level?.type === "trial") return "time";
+  if (level?.type === "circuit") return level.circuitMode || "race4";
+  return "duel";
+}
+
+function pinkSlipOpponentSetup(level) {
+  const car = cars.find((item) => item.id === level.pinkSlipCarId) || cars[0];
+  const form = car.evolutions[0];
+  const playerProgress = state.garage[state.selectedStoryCar] || { level: 1 };
+  const levelValue = Math.max(1, (playerProgress.level || 1) - 3);
+  return {
+    driver: { id: `pink-${car.id}`, name: form.name, headshot: forgeMedallionSrc(car.id), image: forgeMedallionSrc(car.id) },
+    car,
+    carId: car.id,
+    form,
+    evolution: 0,
+    level: levelValue,
+    ratings: betaRatingsForCar(car.id, levelValue, 0, false),
+    skill: 0.96
+  };
+}
+
+function rivalOpponentSetup(level) {
+  const rival = rivalTuner();
+  const setup = rivalCarSetup(state.selectedStoryCar);
+  return {
+    driver: rival,
+    car: setup.car,
+    carId: setup.carId,
+    form: setup.form,
+    evolution: setup.evolution,
+    level: setup.level,
+    ratings: setup.stats || setup.ratings,
+    skill: 0.98
+  };
+}
+
+function story2dOpponentsForLevel(level, mode = story2dModeForLevel(level), campaignIndex = null) {
+  const cacheKey = campaignIndex === null ? "" : `${campaignIndex}:${mode}:${state.selectedStoryCar}:${selectedTuner().id}`;
+  if (cacheKey && story2dOpponentCache.has(cacheKey)) return story2dOpponentCache.get(cacheKey);
+  let opponents = [];
+  if (!betaModeConfigs[mode]?.opponents) return [];
+  if (level.type === "boss") opponents = [{ ...betaBossCarSetup(level.final ? finalBoss : bosses[level.bossIndex]), driver: level.final ? finalBoss : bosses[level.bossIndex] }];
+  else if (level.type === "pink-slip") opponents = [pinkSlipOpponentSetup(level)];
+  else if (level.type === "rival") opponents = [rivalOpponentSetup(level)];
+  else {
+    const drivers = betaNpcDriversForMode(mode);
+    opponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar).map((opponent, index) => ({
+      ...opponent,
+      driver: drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length]
+    }));
+  }
+  if (cacheKey) story2dOpponentCache.set(cacheKey, opponents);
+  return opponents;
+}
+
 function betaOrdinal(value) {
   const mod10 = value % 10;
   const mod100 = value % 100;
@@ -8889,7 +9646,7 @@ function setBetaLoading(active) {
     el.betaLoading.innerHTML = `
       <div class="loading-card beta-loading-card">
         <div class="loading-logo">
-          <img src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+          <img src="assets/logo/gearborn-logo.png" alt="GearBorn" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
           <div class="loading-logo-text"><strong>GearBorn</strong><span>Engines Evolved</span></div>
         </div>
         <h1>Fueling Engines…</h1>
@@ -8921,21 +9678,26 @@ function setBetaLoading(active) {
 }
 
 function selectBetaTrack(trackId) {
-  betaSelectedTrackId = betaTracks.some((track) => track.id === trackId) ? trackId : betaTracks[0].id;
-  betaTrack = betaTracks.find((track) => track.id === betaSelectedTrackId) || betaTracks[0];
+  const nextTrack = betaTrackById(trackId);
+  betaSelectedTrackId = nextTrack.id;
+  betaTrack = nextTrack;
   syncBetaTrackDerived();
   renderBetaTrackSelect();
 }
 
 function drawBetaTrackPreview(track = betaTrack) {
-  if (!el.betaTrackPreview) return;
-  const ctx = el.betaTrackPreview.getContext("2d");
+  drawBetaTrackPreviewTo(el.betaTrackPreview, track);
+}
+
+function drawBetaTrackPreviewTo(canvas, track = betaTrack) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   const ratio = window.devicePixelRatio || 1;
-  const rect = el.betaTrackPreview.getBoundingClientRect();
-  el.betaTrackPreview.width = Math.max(1, Math.floor(rect.width * ratio));
-  el.betaTrackPreview.height = Math.max(1, Math.floor(rect.height * ratio));
-  const w = el.betaTrackPreview.width / ratio;
-  const h = el.betaTrackPreview.height / ratio;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+  canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+  const w = canvas.width / ratio;
+  const h = canvas.height / ratio;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, w, h);
   const scale = Math.min(w / track.width, h / track.height) * 0.92;
@@ -8975,7 +9737,8 @@ const betaTrackCityIcons = {
 
 function renderBetaTrackSelect() {
   if (!el.betaTrackList) return;
-  el.betaTrackList.innerHTML = betaTracks.map((track) => {
+  const tracks = betaSelectableTracks(betaPendingMode);
+  el.betaTrackList.innerHTML = tracks.map((track) => {
     const icon = betaTrackCityIcons[track.id] || "";
     const isActive = track.id === betaSelectedTrackId;
     return `
@@ -8985,12 +9748,141 @@ function renderBetaTrackSelect() {
       </button>
     `;
   }).join("");
-  drawBetaTrackPreview(betaTrack);
+  drawBetaTrackPreview(betaTrackById(betaSelectedTrackId, betaPendingMode));
+}
+
+function betaDriverPortraitMarkup(driver) {
+  const name = driver?.name || "Racer";
+  const image = driver?.headshot || driver?.image || "";
+  const initials = name.split(" ").map((part) => part[0]).join("").slice(0, 2);
+  return `
+    <span class="beta-racer-head ${image ? "" : "placeholder"}">
+      ${image ? `<img src="${image}" alt="${name}" loading="lazy" decoding="async" onerror="this.remove(); this.parentElement.classList.add('placeholder');">` : ""}
+      <em>${initials}</em>
+    </span>
+  `;
+}
+
+function betaNpcDriversForMode(mode) {
+  if (mode === "duel") return [betaDuelDrivers()[betaDuelDriverIndex % betaDuelDrivers().length] || rivalTuner()];
+  const eli = otherNpcProfiles.find((profile) => profile.id === "eli-kaufman") || otherNpcProfiles[0];
+  if (mode === "race6") return otherNpcProfiles.slice(0, 5);
+  const others = otherNpcProfiles.filter((profile) => profile.id !== "eli-kaufman").sort(() => Math.random() - 0.5);
+  return [eli].concat(others.slice(0, 2));
+}
+
+function betaDuelDrivers() {
+  return [rivalTuner()].concat(bossChallengeBosses);
+}
+
+function betaOpponentSetForMode(mode) {
+  const config = betaModeConfigs[mode] || betaModeConfigs.time;
+  if (!config.opponents) return [];
+  if (mode === "duel") {
+    const driver = betaDuelDrivers()[betaDuelDriverIndex % betaDuelDrivers().length] || rivalTuner();
+    const setup = driver.id === rivalTuner().id
+      ? rivalCarSetup(betaCurrentCarId())
+      : betaBossCarSetup(driver);
+    return [{
+      driver,
+      car: setup.car,
+      carId: setup.carId,
+      form: setup.form,
+      evolution: setup.evolution,
+      level: setup.level,
+      ratings: setup.stats || setup.ratings,
+      skill: 0.98
+    }];
+  }
+  const drivers = betaNpcDriversForMode(mode);
+  return getRandomOpponentCars(config.opponents, betaCurrentCarId()).map((opponent, index) => ({
+    ...opponent,
+    driver: drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length]
+  }));
+}
+
+function openBetaPreview(mode = betaPendingMode || "time", preserveOpponents = false) {
+  betaPendingMode = mode;
+  betaPreviewMode = mode;
+  betaTrack = betaTrackById(betaSelectedTrackId, mode);
+  betaSelectedTrackId = betaTrack.id;
+  syncBetaTrackDerived();
+  if (!preserveOpponents || betaPreviewOpponents.length !== (betaModeConfigs[mode]?.opponents || 0)) {
+    betaPreviewOpponents = betaOpponentSetForMode(mode);
+  }
+  showBetaScreen("beta-preview-screen");
+  renderBetaPreview();
+}
+
+function betaLeaderboardRow({ driver, form, car, player = false, opponentIndex = null }) {
+  const carImage = imageFor(form, "display");
+  return `
+    <div class="beta-leaderboard-row ${player ? "player selectable" : ""} ${opponentIndex !== null ? "selectable" : ""}" ${opponentIndex !== null ? `data-beta-preview-opponent="${opponentIndex}"` : ""} ${player ? "data-beta-preview-car-row" : ""}>
+      ${betaDriverPortraitMarkup(driver)}
+      <div class="beta-leaderboard-car">${displayMarkup(carImage, form?.name || "GearBorn", car?.color || "#ffc857")}</div>
+      <div class="beta-leaderboard-copy">
+        <strong>${driver?.name || "Racer"}</strong>
+        <span>${form?.name || "GearBorn"}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderBetaPreview() {
+  const config = betaModeConfigs[betaPreviewMode] || betaModeConfigs.time;
+  if (el.betaPreviewTitle) el.betaPreviewTitle.textContent = config.label || "Race Preview";
+  const trackIcon = betaTrackCityIcons[betaTrack.id] || "";
+  if (el.betaPreviewCity) {
+    el.betaPreviewCity.innerHTML = `${trackIcon ? `<img src="${trackIcon}" alt="" loading="lazy" decoding="async">` : ""}<span>${betaTrack.name}</span>`;
+  }
+  if (el.betaCityMenu) {
+    const customTracks = betaSavedTracksAvailableForMode(config.id) ? betaCustomTracks() : [];
+    el.betaCityMenu.innerHTML = `
+      <div class="beta-city-menu-section">
+        <span>City Tracks</span>
+        ${betaTracks.map((track) => {
+      const icon = betaTrackCityIcons[track.id] || "";
+      return `<button class="${track.id === betaTrack.id ? "active" : ""}" data-beta-preview-track="${track.id}" type="button">${icon ? `<img src="${icon}" alt="">` : ""}<span>${track.name}</span></button>`;
+    }).join("")}
+      </div>
+      ${customTracks.length ? `
+        <label class="beta-custom-track-picker">
+          <span>Saved Tracks</span>
+          <select data-beta-custom-track-select>
+            <option value="">Choose saved track</option>
+            ${customTracks.map((track) => `<option value="${track.id}" ${track.id === betaTrack.id ? "selected" : ""}>${track.name}</option>`).join("")}
+          </select>
+        </label>
+      ` : ""}
+    `;
+  }
+  drawBetaTrackPreviewTo(el.betaPreviewMap, betaTrack);
+  const playerCar = cars.find((car) => car.id === betaCurrentCarId()) || cars[0];
+  const playerForm = currentEvolution(playerCar.id);
+  if (config.id === "time") {
+    const best = state.betaTimeTrials?.[betaTrack.id]?.bestTime;
+    el.betaLeaderboard.innerHTML = `
+      <div class="beta-time-preview">
+        ${betaLeaderboardRow({ driver: selectedTuner(), form: playerForm, car: playerCar, player: true })}
+        <div class="reward-row compact"><span class="medal-text gold">Gold</span><strong>38.00 s</strong></div>
+        <div class="reward-row compact"><span class="medal-text silver">Silver</span><strong>44.00 s</strong></div>
+        <div class="reward-row compact"><span class="medal-text bronze">Bronze</span><strong>52.00 s</strong></div>
+        <div class="reward-row compact"><span>Phantaxi</span><strong>${best ? `${best.toFixed(2)} s` : "No ghost yet"}</strong></div>
+      </div>
+    `;
+    return;
+  }
+  el.betaLeaderboard.innerHTML = betaPreviewOpponents.map((opponent) => betaLeaderboardRow({
+    driver: opponent.driver,
+    form: opponent.form,
+    car: opponent.car,
+    opponentIndex: config.id === "duel" ? 0 : null
+  })).join("") + betaLeaderboardRow({ driver: selectedTuner(), form: playerForm, car: playerCar, player: true });
 }
 
 // ── Beta screen navigation: show exactly one beta screen at a time ────────────
 function showBetaScreen(screenId) {
-  ["beta-intro", "beta-car-select-screen", "beta-track-select-screen"].forEach((id) => {
+  ["beta-intro", "beta-car-select-screen", "beta-preview-screen", "beta-track-select-screen"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.hidden = !screenId || id !== screenId;
   });
@@ -9017,7 +9909,11 @@ function openBetaCarSelect(mode) {
 }
 
 function closeBetaCarSelect() {
-  // Back from car select → return to main menu
+  if (betaReturningToPreview) {
+    betaReturningToPreview = false;
+    openBetaPreview(betaPendingMode, true);
+    return;
+  }
   showBetaScreen("beta-intro");
 }
 
@@ -9111,7 +10007,10 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
     y: playerPos.y,
     angle: betaTrack.startAngle
   });
-  const opponents = getRandomOpponentCars(config.opponents, carId).map((opponent, index) => {
+  const opponentSource = betaPreviewOpponents.length === config.opponents
+    ? betaPreviewOpponents
+    : getRandomOpponentCars(config.opponents, carId);
+  const opponents = opponentSource.map((opponent, index) => {
     const pos = betaStartPosition(index + 1, totalRacers);
     return betaMakeRacer({
       id: `ai-${index}`,
@@ -9316,6 +10215,8 @@ function finishBetaDemo() {
   const placement = placements.findIndex((racer) => racer.id === "player") + 1;
   const elapsed = betaState.elapsed;
   let resultLine = `Final time: ${elapsed.toFixed(2)} s`;
+  const context = betaState.context || null;
+  let success = betaState.config.id === "time" || placement <= betaState.config.goalRank;
   if (betaState.config.id === "time") {
     const previous = state.betaTimeTrials?.[betaTrack.id]?.bestTime;
     const isBest = !previous || elapsed < previous;
@@ -9329,12 +10230,66 @@ function finishBetaDemo() {
     }
     resultLine = `Final time: ${elapsed.toFixed(2)} s · Best: ${(isBest ? elapsed : previous).toFixed(2)} s${isBest ? " · New Best!" : ""}`;
   } else {
-    const success = placement <= betaState.config.goalRank;
     resultLine = `${betaOrdinal(placement)} / ${betaState.racers.length} · ${betaState.config.goalLabel} · ${success ? "Success" : "Failed"}`;
   }
-  el.betaFinalTime.textContent = resultLine;
-  el.betaResults.hidden = false;
+  if (context?.source === "story") {
+    el.betaResults.hidden = true;
+    finishStory2dRace(context, success, placement, elapsed, resultLine);
+  } else {
+    el.betaFinalTime.textContent = resultLine;
+    el.betaResults.hidden = false;
+  }
   drawBetaFrame();
+}
+
+function story2dReward(level) {
+  if (level.type === "trial") return timeMedals[timeMedals.length - 1].xp;
+  if (level.type === "circuit") return level.xp || 120;
+  if (level.type === "rival") return level.xp || 160;
+  if (level.type === "pink-slip") return level.drag?.xp || 180;
+  if (level.type === "boss") return (level.final ? finalBoss : bosses[level.bossIndex])?.xp || 260;
+  return 80;
+}
+
+function finishStory2dRace(context, won, placement, elapsed, resultLine) {
+  const level = context.level;
+  const carId = betaState.player.carId;
+  const riskyPinkSlipLoss = !won && isPinkSlipRiskActive(level);
+  let earned = won ? story2dReward(level) : Math.floor(story2dReward(level) * 0.16);
+  if (earned) addSprox(earned);
+  recordRaceUsage(carId);
+  recordStoryRaceOutcome(won, true);
+  let penaltyLine = "";
+  if (riskyPinkSlipLoss) {
+    applyPinkSlipLossPenalty(carId);
+    penaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
+  }
+  const partReward = won ? rollStoryPartReward() : null;
+  if (won) completeCampaignLevel(context.campaignLevelIndex);
+  saveState();
+  showRaceResult(el.betaRace, {
+    won,
+    sprox: earned,
+    lines: [resultLine, penaltyLine, partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
+    primaryLabel: "Next",
+    raceAgainLabel: "Race Again",
+    onRaceAgain: () => startStory2dRace(context.campaignLevelIndex, level),
+    onPrimary: () => {
+      const finishStory = () => {
+        betaRaceContext = null;
+        finishStoryRaceScreen();
+      };
+      if (won && level.type === "pink-slip" && level.pinkSlipCarId && !isCarUnlocked(level.pinkSlipCarId)) {
+        showPinkSlipUnlock(level.pinkSlipCarId, finishStory);
+        return;
+      }
+      if (won && level.type === "rival") {
+        openRivalDialogue(level, "post", finishStory);
+        return;
+      }
+      finishStory();
+    }
+  });
 }
 
 function betaTileIsHorizontal(tile) {
@@ -9499,7 +10454,7 @@ function drawBetaMiniMap() {
 el.betaOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-mode]");
   if (!button) return;
-  openBetaCarSelect(button.dataset.betaMode);
+  openBetaPreview(button.dataset.betaMode);
 });
 
 el.betaTrackList?.addEventListener("click", (event) => {
@@ -9514,6 +10469,53 @@ el.betaTrackStart?.addEventListener("click", () => {
 
 el.betaTrackBack?.addEventListener("click", () => {
   closeBetaTrackSelect();
+});
+
+el.betaPreviewBack?.addEventListener("click", () => {
+  showBetaScreen("beta-intro");
+});
+
+el.betaPreviewStart?.addEventListener("click", () => {
+  startBetaDemo(betaPreviewMode || betaPendingMode);
+});
+
+el.betaPreviewCar?.addEventListener("click", () => {
+  betaReturningToPreview = true;
+  openBetaCarSelect(betaPreviewMode || betaPendingMode);
+});
+
+el.betaPreviewCity?.addEventListener("click", () => {
+  if (el.betaCityMenu) el.betaCityMenu.hidden = !el.betaCityMenu.hidden;
+});
+
+el.betaCityMenu?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-beta-preview-track]");
+  if (!button) return;
+  selectBetaTrack(button.dataset.betaPreviewTrack);
+  el.betaCityMenu.hidden = true;
+  renderBetaPreview();
+});
+
+el.betaCityMenu?.addEventListener("change", (event) => {
+  const select = event.target.closest("[data-beta-custom-track-select]");
+  if (!select || !select.value) return;
+  selectBetaTrack(select.value);
+  el.betaCityMenu.hidden = true;
+  renderBetaPreview();
+});
+
+el.betaLeaderboard?.addEventListener("click", (event) => {
+  const carRow = event.target.closest("[data-beta-preview-car-row]");
+  if (carRow) {
+    betaReturningToPreview = true;
+    openBetaCarSelect(betaPreviewMode || betaPendingMode || "time");
+    return;
+  }
+  const row = event.target.closest("[data-beta-preview-opponent]");
+  if (!row || betaPreviewMode !== "duel") return;
+  betaDuelDriverIndex = (betaDuelDriverIndex + 1) % betaDuelDrivers().length;
+  betaPreviewOpponents = betaOpponentSetForMode("duel");
+  renderBetaPreview();
 });
 
 // Item definitions — icon is image path; fallback color used if image missing
@@ -10068,15 +11070,15 @@ function betaDrawStatusEffects(ctx, racer) {
     ctx.save();
     const flameImg = betaTrackImages.insanoFlames;
     // Position flames behind the car
-    const bx = racer.x - Math.cos(racer.angle) * 50;
-    const by = racer.y - Math.sin(racer.angle) * 50;
+    const bx = racer.x - Math.cos(racer.angle) * 58;
+    const by = racer.y - Math.sin(racer.angle) * 58;
     ctx.translate(bx, by);
     // car is drawn at angle + PI/2 (top-down sprite); flames need to face backward
     // an extra +PI/2 rotates the flame image so it shoots out the back correctly
     ctx.rotate(racer.angle + Math.PI);
     if (flameImg?.complete && flameImg.naturalWidth) {
       ctx.globalAlpha = 0.88;
-      ctx.drawImage(flameImg, -32, -20, 64, 56);
+      ctx.drawImage(flameImg, -40, -40, 80, 80);
     } else {
       // Fallback: two streaks
       ctx.globalAlpha = 0.75;
@@ -10147,6 +11149,11 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     itemCooldownUntil: 0,
     teleportPortal: null,
     aiWaypoint: 0,
+    offTrackSince: null,
+    stuckSince: null,
+    lastRecoveryX: x,
+    lastRecoveryY: y,
+    respawnUntil: 0,
     image: betaMakeImage(imageFor(form, "topdown")),
     record: [],
     lastRecord: 0
@@ -10178,7 +11185,8 @@ function betaAiControls(racer) {
 async function startBetaDemo(mode = betaState?.config?.id || "time") {
   if (!el.betaCanvas) return;
   const loadToken = ++betaLoadToken;
-  betaTrack = betaTracks.find((track) => track.id === betaSelectedTrackId) || betaTracks[0];
+  betaTrack = betaTrackById(betaSelectedTrackId, mode);
+  betaSelectedTrackId = betaTrack.id;
   syncBetaTrackDerived();
   const config = betaModeConfigs[mode] || betaModeConfigs.time;
   betaResizeCanvas();
@@ -10198,7 +11206,10 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
     y: playerPos.y,
     angle: betaTrack.startAngle
   });
-  const opponents = getRandomOpponentCars(config.opponents, carId).map((opponent, index) => {
+  const opponentSource = betaPreviewOpponents.length === config.opponents
+    ? betaPreviewOpponents
+    : getRandomOpponentCars(config.opponents, carId);
+  const opponents = opponentSource.map((opponent, index) => {
     const pos = betaStartPosition(index + 1, totalRacers);
     return betaMakeRacer({
       id: `ai-${index}`,
@@ -10232,6 +11243,7 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
     last: performance.now(),
     raf: null
   };
+  betaState.context = betaRaceContext;
   Object.keys(betaKeys).forEach((key) => delete betaKeys[key]);
   updateBetaControlVisuals();
   showBetaScreen(null); // hide all beta screens
@@ -10263,6 +11275,10 @@ async function startBetaDemo(mode = betaState?.config?.id || "time") {
 
 function betaDriveRacer(racer, dt, controls = {}) {
   const now = betaNowMs();
+  if (racer.respawnUntil && racer.respawnUntil > now) {
+    racer.speed = 0;
+    return;
+  }
   if (racer.spinUntil > now) {
     racer.angle += dt * 5.2;
     racer.speed *= Math.max(0, 1 - dt * 1.8);
@@ -10291,6 +11307,13 @@ function betaDriveRacer(racer, dt, controls = {}) {
   const turnRate = racer.physics.turnRate * Math.min(1, Math.max(0.25, Math.abs(racer.speed) / 190));
   if (controls.left) racer.angle -= turnRate * dt * (racer.speed >= 0 ? 1 : -1);
   if (controls.right) racer.angle += turnRate * dt * (racer.speed >= 0 ? 1 : -1);
+  const assistAngle = controls.up ? betaStraightAssistAngle(racer) : null;
+  if (assistAngle !== null && Math.abs(racer.speed) > 24) {
+    const correction = betaNormalizeAngle(assistAngle - racer.angle);
+    const playerSteering = controls.left || controls.right;
+    const assistStrength = playerSteering ? 1.55 : 3.2;
+    racer.angle += correction * Math.min(1, assistStrength * dt);
+  }
   racer.prevX = racer.x;
   racer.prevY = racer.y;
   racer.x += Math.cos(racer.angle) * racer.speed * dt;
@@ -10335,6 +11358,7 @@ function updateBetaRace(now) {
   betaApplyObstacles(itemNow);
   betaUpdateTraps(itemNow);
   betaUpdateProjectiles(dt, itemNow);
+  betaState.racers.filter((racer) => !racer.finished).forEach((racer) => betaUpdateOffTrackRecovery(racer, itemNow));
   betaState.racers.filter((racer) => !racer.finished).forEach(betaProgressRacer);
   betaRecordGhostSample(now);
   betaState.ghostPoint = betaGhostPointAt(betaState.elapsed);
@@ -10374,21 +11398,23 @@ function drawBetaFrame() {
   if (betaState.debug) drawBetaDebug(ctx);
   ctx.restore();
   if (betaState.notification && betaState.notificationUntil > betaNowMs()) {
+    const noticeY = 74;
     ctx.save();
     ctx.fillStyle = "rgba(16,20,28,.82)";
     ctx.strokeStyle = "rgba(255,200,87,.55)";
     ctx.lineWidth = 1.5;
-    if (ctx.roundRect) ctx.roundRect(w / 2 - 150, 18, 300, 42, 12);
-    else ctx.rect(w / 2 - 150, 18, 300, 42);
+    if (ctx.roundRect) ctx.roundRect(w / 2 - 150, noticeY, 300, 42, 12);
+    else ctx.rect(w / 2 - 150, noticeY, 300, 42);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = "#ffc857";
     ctx.font = "900 16px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(betaState.notification, w / 2, 39);
+    ctx.fillText(betaState.notification, w / 2, noticeY + 21);
     ctx.restore();
   }
+  betaDrawOffTrackWarning(ctx, w, h);
   drawBetaMiniMap();
   updateBetaItemHud();
   const placement = betaPlacements().findIndex((racer) => racer.id === "player") + 1;
@@ -10397,6 +11423,43 @@ function drawBetaFrame() {
   el.betaCheckpoint.textContent = `${Math.min(betaState.player.checkpoint, betaTrack.checkpoints.length)} / ${betaTrack.checkpoints.length}`;
   el.betaSpeed.textContent = `${Math.round(Math.abs(betaState.player.speed) / 5.2)} MPH`;
   el.betaPosition.textContent = `${betaOrdinal(placement)} / ${betaState.racers.length}`;
+}
+
+function betaDrawOffTrackWarning(ctx, w, h) {
+  const player = betaState?.player;
+  if (!player || player.finished) return;
+  const now = betaNowMs();
+  if (player.respawnUntil && player.respawnUntil > now) {
+    const pauseLeft = Math.ceil((player.respawnUntil - now) / 1000);
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "1000 24px 'Arial Black', Impact, sans-serif";
+    ctx.fillStyle = "#ffc857";
+    ctx.shadowColor = "rgba(0,0,0,.75)";
+    ctx.shadowBlur = 14;
+    ctx.fillText("RETURNING TO TRACK", w / 2, h * 0.36);
+    ctx.font = "1000 46px 'Arial Black', Impact, sans-serif";
+    ctx.fillText(String(Math.max(0, pauseLeft)), w / 2, h * 0.36 + 48);
+    ctx.restore();
+    return;
+  }
+  if (!player.offTrackSince) return;
+  const elapsed = now - player.offTrackSince;
+  if (elapsed < 2000) return;
+  const left = Math.max(0, Math.ceil((5000 - elapsed) / 1000));
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "1000 26px 'Arial Black', Impact, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(0,0,0,.82)";
+  ctx.shadowBlur = 16;
+  ctx.fillText("RETURN TO THE TRACK", w / 2, h * 0.36);
+  ctx.font = "1000 58px 'Arial Black', Impact, sans-serif";
+  ctx.fillStyle = left <= 1 ? "#ff5d5d" : "#ffc857";
+  ctx.fillText(String(left), w / 2, h * 0.36 + 56);
+  ctx.restore();
 }
 
 function drawBetaCar(ctx, racer = betaState.player) {
@@ -10617,14 +11680,58 @@ function setBeta3dControl(direction, active) {
   updateBeta3dControlVisuals();
 }
 
-function openBetaIntro() {
+function setBetaIntroCopy({ kicker, title, subtitle, copy }) {
+  if (!el.betaIntro) return;
+  const kickerEl = el.betaIntro.querySelector(".modal-kicker");
+  const titleEl = el.betaIntro.querySelector("#beta-title");
+  const subtitleEl = el.betaIntro.querySelector("h2");
+  const copyEl = el.betaIntro.querySelector("p:not(.modal-kicker)");
+  if (kickerEl) kickerEl.textContent = kicker;
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+  if (copyEl) copyEl.textContent = copy;
+}
+
+function openBetaVsIntro() {
   if (!el.betaIntro || !el.betaRace) return;
   el.betaRace.hidden = true;
   if (el.beta3dRace) el.beta3dRace.hidden = true;
+  el.betaMode?.classList.remove("prototype-only");
+  el.betaMode?.classList.add("vs-only", "no-3d");
+  setBetaIntroCopy({
+    kicker: "Training Academy",
+    title: "Vs. Race",
+    subtitle: "Choose a race format.",
+    copy: "Run full circuit races with the new racing engine."
+  });
   showBetaScreen("beta-intro");
   setBetaLoading(false);
   stopBetaDemo(false);
   stopBeta3d(false);
+}
+
+function openBetaPrototypeIntro() {
+  if (!el.betaIntro || !el.betaRace) return;
+  betaRaceContext = { source: "prototype" };
+  el.betaRace.hidden = true;
+  if (el.beta3dRace) el.beta3dRace.hidden = true;
+  el.betaMode?.classList.remove("vs-only", "no-3d");
+  el.betaMode?.classList.add("prototype-only");
+  setBetaIntroCopy({
+    kicker: "Beta Mode",
+    title: "Beta Mode",
+    subtitle: "Pseudo-3D Racing Prototype",
+    copy: "Experimental behind-the-car racing test. Progress and rewards are disabled."
+  });
+  showBetaScreen("beta-intro");
+  setBetaLoading(false);
+  stopBetaDemo(false);
+  stopBeta3d(false);
+}
+
+function openBetaIntro() {
+  if (betaRaceContext?.source === "prototype") openBetaPrototypeIntro();
+  else openBetaVsIntro();
 }
 
 function startBeta3dRun() {

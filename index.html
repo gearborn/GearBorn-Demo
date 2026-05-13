@@ -10,7 +10,7 @@
     <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
       <div class="loading-card">
         <div class="loading-logo">
-          <img src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn Engines Evolved">
+          <img src="assets/logo/gearborn-logo.png" alt="GearBorn Engines Evolved">
           <div class="loading-logo-text">
             <strong>GearBorn</strong>
             <span>Engines Evolved</span>
@@ -30,7 +30,7 @@
           <button class="main-menu-button" data-view="menu" type="button">Main Menu</button>
           <button class="brand" data-view="menu" aria-label="Gearborn home">
             <span class="brand-mark">
-              <img src="assets/logo/gearborn-engines-evolved-logo.png" alt="">
+              <img src="assets/logo/gearborn-logo.png" alt="">
             </span>
             <span>
               <strong>GearBorn</strong>
@@ -58,14 +58,14 @@
         <section class="view active" id="menu-view" aria-labelledby="menu-title">
           <div class="main-menu">
             <div class="menu-logo" aria-label="GearBorn Engines Evolved">
-              <img id="game-logo" src="assets/logo/gearborn-engines-evolved-logo.png" alt="GearBorn Engines Evolved" hidden onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-              <div class="menu-title-box">
+              <img id="game-logo" src="assets/logo/gearborn-logo.png" alt="GearBorn Engines Evolved" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+              <div class="menu-title-box" hidden>
                 <div class="logo-placeholder">
                   <span>GearBorn</span>
                   <strong>Engines Evolved</strong>
                 </div>
-                <p class="menu-subtitle">Race, Train, Evolve</p>
               </div>
+              <p class="menu-subtitle">Race, Train, Evolve</p>
             </div>
             <div class="menu-dashboard" aria-label="Menu choices">
               <button class="menu-card hero-menu-card" data-view="story" type="button">
@@ -127,16 +127,16 @@
               <span>Shift through gears and beat class rivals.</span>
               <em>Start</em>
             </button>
-            <button class="solo-card primary-card" data-view="time-trial" type="button">
+            <button class="solo-card primary-card" data-training-2d="time" type="button">
               <span class="solo-card-icon"></span>
               <strong>Time Trial</strong>
-              <span>Chase bronze, silver, gold, and your Phantaxi Time.</span>
+              <span>Run a circuit and chase bronze, silver, gold, and Phantaxi.</span>
               <em>Start</em>
             </button>
-            <button class="solo-card primary-card" data-view="boss" type="button">
+            <button class="solo-card primary-card" data-training-2d="vs" type="button">
               <span class="solo-card-icon"></span>
-              <strong>Boss Race</strong>
-              <span>Race the bosses directly on their city tracks.</span>
+              <strong>Vs. Race</strong>
+              <span>Choose a 4-car, 6-car, or head-to-head race.</span>
               <em>Start</em>
             </button>
             <button class="solo-card primary-card" data-view="battle" type="button">
@@ -192,6 +192,7 @@
                 </div>
               </div>
               <div class="story-preview-art" id="story-preview-art"></div>
+              <div class="story-preview-leaderboard" id="story-preview-leaderboard"></div>
               <div class="campaign-rewards" id="campaign-rewards"></div>
               <div class="story-loadout" id="story-loadout"></div>
               <button class="story-primary campaign-start" id="start-campaign" type="button">Start Level</button>
@@ -384,19 +385,33 @@
 
         <section class="view" id="vindex-view" aria-labelledby="vindex-title">
           <button class="back-link" data-view="menu" type="button">Back</button>
-          <div class="section-heading">
-            <p>VINdex</p>
-            <h1 id="vindex-title">GearBorn car archive.</h1>
-          </div>
-          <div class="vindex-layout">
-            <div class="vindex-list" id="vindex-list"></div>
-            <div class="vindex-detail">
-              <div class="vindex-art" id="vindex-art"></div>
-              <div class="vindex-copy">
-                <p id="vindex-number"></p>
-                <h2 id="vindex-name"></h2>
-                <span id="vindex-line"></span>
-              </div>
+          <h1 class="sr-only" id="vindex-title">VINdex GearBorn archive</h1>
+          <div class="vindex-shell">
+            <div class="vindex-stage">
+              <aside class="vindex-list-panel" aria-label="GearBorn list">
+                <div class="vindex-list" id="vindex-list"></div>
+              </aside>
+              <section class="vindex-detail" aria-label="Selected GearBorn">
+                <div class="vindex-preview-head">
+                  <p id="vindex-number"></p>
+                  <h2 id="vindex-name"></h2>
+                  <span id="vindex-line"></span>
+                </div>
+                <img class="vindex-class-stamp" id="vindex-class-stamp" alt="" hidden>
+                <div class="vindex-art" id="vindex-art"></div>
+                <div class="vindex-plate-wrap" id="vindex-plate"></div>
+                <div class="vindex-copy">
+                  <strong id="vindex-status"></strong>
+                </div>
+              </section>
+              <aside class="vindex-filter-panel" aria-label="VINdex filters">
+                <div class="vindex-filter-buttons" id="vindex-filter-buttons">
+                  <button type="button" data-vindex-filter="all" aria-label="Show all GearBorn"><img src="assets/vindex/filter-all.png" alt="All"></button>
+                  <button type="button" data-vindex-filter="owned" aria-label="Show owned GearBorn"><img src="assets/vindex/filter-owned.png" alt="Owned"></button>
+                  <button type="button" data-vindex-filter="seen" aria-label="Show seen GearBorn"><img src="assets/vindex/filter-seen.png" alt="Seen"></button>
+                </div>
+                <div class="vindex-progress" id="vindex-progress"></div>
+              </aside>
             </div>
           </div>
         </section>
@@ -701,7 +716,8 @@
                   <span id="builder-dirty-state">Unsaved</span>
                 </div>
                 <div class="builder-actions">
-                  <button class="ghost" id="builder-rotate" type="button">Rotate 0°</button>
+                  <button class="ghost" id="builder-build" type="button">Build</button>
+                  <button class="ghost" id="builder-rotate" type="button">Rotate</button>
                   <button class="ghost" id="builder-clear" type="button">Clear Grid</button>
                   <button class="primary" id="builder-save" type="button">Save</button>
                   <button class="danger-button" id="builder-exit" type="button">Back</button>
@@ -729,10 +745,10 @@
           <div class="beta-mode" id="beta-mode">
             <!-- BETA SCREEN 1: Main menu -->
             <div class="beta-intro beta-screen" id="beta-intro">
-              <p class="modal-kicker">Experimental</p>
-              <h1 id="beta-title">Beta Mode</h1>
-              <h2>Choose a racing prototype.</h2>
-              <p>Experimental test modes. Progress and rewards are disabled.</p>
+              <p class="modal-kicker">Training Academy</p>
+              <h1 id="beta-title">Vs. Race</h1>
+              <h2>Choose a race format.</h2>
+              <p>Run full circuit races with the new racing engine.</p>
               <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
                 <strong>Pseudo-3D Baybee Run</strong>
                 <span>Behind-the-car test on a longer prototype track.</span>
@@ -762,10 +778,10 @@
             <div class="beta-screen" id="beta-car-select-screen" hidden>
               <button class="back-link" id="beta-car-select-back" type="button">Back</button>
               <div class="section-heading">
-                <p>Beta Mode</p>
+                <p>Training Academy</p>
                 <h1>Select Your Car</h1>
               </div>
-              <p class="beta-note">This car will be used for your Beta 2D race.</p>
+              <p class="beta-note">This car will be used for your circuit race.</p>
               <div class="car-select-layout beta-car-select-panel" id="beta-car-select-panel">
                 <div class="icon-grid compact-car-grid" id="beta-car-grid"></div>
                 <div class="car-select-preview" id="beta-car-select-preview"></div>
@@ -775,17 +791,37 @@
               </div>
             </div>
 
+            <!-- BETA SCREEN 2B: Race Preview -->
+            <div class="beta-screen" id="beta-preview-screen" hidden>
+              <button class="back-link" id="beta-preview-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Training Academy</p>
+                <h1 id="beta-preview-title">Race Preview</h1>
+              </div>
+              <div class="beta-preview-layout">
+                <div class="beta-leaderboard" id="beta-leaderboard"></div>
+                <div class="beta-preview-side">
+                  <button class="beta-preview-city" id="beta-preview-city" type="button" aria-label="Change city"></button>
+                  <div class="beta-city-menu" id="beta-city-menu" hidden></div>
+                  <canvas id="beta-preview-map" width="420" height="300" aria-label="Circuit race map preview"></canvas>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-preview-start" type="button">Start Race</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- BETA SCREEN 3: Track Select (full-page, replaces car select) -->
             <div class="beta-screen" id="beta-track-select-screen" hidden>
               <button class="back-link" id="beta-track-back" type="button">Back</button>
               <div class="section-heading">
-                <p>Beta Mode</p>
+                <p>Training Academy</p>
                 <h1 id="beta-track-select-title">Choose a Track</h1>
               </div>
               <div class="beta-track-select" id="beta-track-select">
                 <div class="beta-track-list" id="beta-track-list"></div>
                 <div class="beta-track-preview">
-                  <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected Beta Mode track preview"></canvas>
+                  <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected circuit track preview"></canvas>
                   <div class="modal-actions">
                     <button class="success-button" id="beta-track-start" type="button">Start Race</button>
                   </div>
@@ -813,7 +849,7 @@
                 <button class="danger-button" id="beta-3d-exit" type="button">Exit</button>
               </div>
               <div class="beta-3d-stage">
-                <canvas id="beta-3d-canvas" width="960" height="620" aria-label="Beta Mode pseudo-3D racing prototype"></canvas>
+                <canvas id="beta-3d-canvas" width="960" height="620" aria-label="Pseudo-3D racing prototype"></canvas>
                 <div class="beta-results" id="beta-3d-results" hidden>
                   <h2>Finished!</h2>
                   <p id="beta-3d-final-time">Final time: 0.00 s</p>
@@ -823,7 +859,7 @@
                   </div>
                 </div>
               </div>
-              <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Beta Mode pseudo-3D driving controls">
+              <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Pseudo-3D driving controls">
                 <button class="steer-button arrow-control left-control" data-beta3d-control="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
                   <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
@@ -850,8 +886,8 @@
                 <span id="beta-speed" style="display:none">0 MPH</span>
               </div>
               <div class="beta-stage">
-                <canvas id="beta-canvas" width="960" height="620" aria-label="Beta Mode circuit"></canvas>
-                <canvas id="beta-minimap" width="180" height="140" aria-label="Beta Mode mini-map"></canvas>
+                <canvas id="beta-canvas" width="960" height="620" aria-label="Circuit race"></canvas>
+                <canvas id="beta-minimap" width="180" height="140" aria-label="Circuit mini-map"></canvas>
                 <div class="beta-canvas-hud" id="beta-canvas-hud" aria-label="Race HUD">
                   <div class="beta-canvas-hud-panel" id="beta-hud-lap-panel">
                     <span>Lap</span>
@@ -884,11 +920,11 @@
                   <p id="beta-final-time">Final time: 0.00 s</p>
                   <div class="modal-actions">
                     <button class="success-button" id="beta-restart" type="button">Restart</button>
-                    <button class="ghost" id="beta-finish-exit" type="button">Exit Beta Mode</button>
+                    <button class="ghost" id="beta-finish-exit" type="button">Exit</button>
                   </div>
                 </div>
               </div>
-              <div class="touch-controls beta-touch-controls" aria-label="Beta Mode driving controls">
+              <div class="touch-controls beta-touch-controls" aria-label="Circuit race driving controls">
                 <button class="steer-button arrow-control left-control" data-beta-control="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
                   <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
@@ -1012,8 +1048,8 @@
         <p class="pink-slip-warning-title" id="pink-slip-warning-title">WARNING</p>
         <p id="pink-slip-warning-copy"></p>
         <div class="modal-actions">
-          <button class="danger-button" id="confirm-pink-slip-risk" type="button">Yes</button>
-          <button class="success-button" id="cancel-pink-slip-risk" type="button">No</button>
+          <button class="success-button" id="confirm-pink-slip-risk" type="button">Yes</button>
+          <button class="danger-button" id="cancel-pink-slip-risk" type="button">No</button>
         </div>
       </div>
     </div>
