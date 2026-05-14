@@ -217,7 +217,7 @@ const cars = [
       { name: "Vanbrandt", style: "Baroque", formBonus: { body: 3, powertrain: 3 }, images: { display: "assets/cars/art-vanbrandt-display.png", race: "assets/cars/art-vanbrandt-race.png", topdown: "assets/cars/art-vanbrandt-topdown.png" } },
       { name: "Vancasso", style: "Cubist", formBonus: { body: 3, handling: 3 }, images: { display: "assets/cars/art-vancasso-display.png", race: "assets/cars/art-vancasso-race.png", topdown: "assets/cars/art-vancasso-topdown.png" } },
       { name: "Vangas", style: "Impressionist", formBonus: { acceleration: 3, torque: 3 }, images: { display: "assets/cars/art-vangas-display.png", race: "assets/cars/art-vangas-race.png", topdown: "assets/cars/art-vangas-topdown.png" } },
-      { name: "Vandy-Warhol", style: "Pop Art", formBonus: { speed: 3, acceleration: 3 }, images: { display: "assets/cars/art-vandy-warhaul-display.png", race: "assets/cars/art-vandy-warhaul-race.png", topdown: "assets/cars/art-vandy-warhaul-topdown.png" } },
+      { name: "Vandy-Warhaul", style: "Pop Art", formBonus: { speed: 3, acceleration: 3 }, images: { display: "assets/cars/art-vandy-warhaul-display.png", race: "assets/cars/art-vandy-warhaul-race.png", topdown: "assets/cars/art-vandy-warhaul-topdown.png" } },
       { name: "Vanksy", style: "Graffiti", formBonus: { handling: 3, acceleration: 3 }, images: { display: "assets/cars/art-vanksy-display.png", race: "assets/cars/art-vanksy-race.png", topdown: "assets/cars/art-vanksy-topdown.png" } },
       { name: "Vanst", style: "Surrealist", formBonus: { speed: 3, powertrain: 3 }, images: { display: "assets/cars/art-vanst-display.png", race: "assets/cars/art-vanst-race.png", topdown: "assets/cars/art-vanst-topdown.png" } }
     ]
@@ -400,7 +400,7 @@ const achievementDefs = [
   { id: "allBosses", name: "Boss Canvas", requirement: "Win all Boss Races in Story Mode", reward: "Unlock Vangas", type: "storyType", raceType: "boss" },
   { id: "pinkSlip25", name: "Pink Slip Rookie", requirement: "Win 25% of Pink Slip Races in Story Mode", reward: "1000 Sprox", type: "storyTypePercent", raceType: "pink-slip", percentTarget: 25, sprox: 1000 },
   { id: "pinkSlip50", name: "Pink Slip Contender", requirement: "Win 50% of Pink Slip Races in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "pink-slip", percentTarget: 50, sprox: 5000 },
-  { id: "allPinkSlips", name: "Pink Slip Collector", requirement: "Win all Pink Slip Races in Story Mode", reward: "Unlock Vandy-Warhol", type: "storyType", raceType: "pink-slip" },
+  { id: "allPinkSlips", name: "Pink Slip Collector", requirement: "Win all Pink Slip Races in Story Mode", reward: "Unlock Vandy-Warhaul", type: "storyType", raceType: "pink-slip" },
   { id: "vindex25", name: "VINdex Scout", requirement: "Encounter 25% of the VINdex", reward: "1000 Sprox", type: "vindex", percent: 25 },
   { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
   { id: "vindex75", name: "VINdex Archivist", requirement: "Encounter 75% of the VINdex", reward: "3 Level 2 parts", type: "vindex", percent: 75 },
@@ -901,7 +901,7 @@ const vindexEntries = [
   ["159", "Vanbrandt", "Art Van Line", "assets/cars/art-vanbrandt-display.png"],
   ["160", "Vancasso", "Art Van Line", "assets/cars/art-vancasso-display.png"],
   ["161", "Vangas", "Art Van Line", "assets/cars/art-vangas-display.png"],
-  ["162", "Vandy-Warhol", "Art Van Line", "assets/cars/art-vandy-warhaul-display.png"],
+  ["162", "Vandy-Warhaul", "Art Van Line", "assets/cars/art-vandy-warhaul-display.png"],
   ["163", "Vanksy", "Art Van Line", "assets/cars/art-vanksy-display.png"],
   ["164", "Vanst", "Art Van Line", "assets/cars/art-vanst-display.png"],
   ["198", "Elepledge", "Sorority Elephant Line", "assets/cars/sorority-elephant-elepledge-display.png"],
@@ -3029,10 +3029,10 @@ function storyNodeLayoutFor(city, level) {
   const index = Math.max(0, prelims.findIndex((item) => item.campaignIndex === level.campaignIndex));
   const count = Math.max(1, prelims.length);
   const rowSpec = count <= 4
-    ? [{ count, y: 68 }]
+    ? [{ count, y: 62 }]
     : count <= 6
-      ? [{ count: Math.ceil(count / 2), y: 49 }, { count: Math.floor(count / 2), y: 72 }]
-      : [{ count: Math.ceil(count / 3), y: 42 }, { count: Math.ceil((count - Math.ceil(count / 3)) / 2), y: 62 }, { count: count - Math.ceil(count / 3) - Math.ceil((count - Math.ceil(count / 3)) / 2), y: 75 }];
+      ? [{ count: Math.ceil(count / 2), y: 43 }, { count: Math.floor(count / 2), y: 62 }]
+      : [{ count: Math.ceil(count / 3), y: 36 }, { count: Math.ceil((count - Math.ceil(count / 3)) / 2), y: 53 }, { count: count - Math.ceil(count / 3) - Math.ceil((count - Math.ceil(count / 3)) / 2), y: 66 }];
   let cursor = 0;
   for (const row of rowSpec) {
     if (index < cursor + row.count) {
@@ -5427,10 +5427,10 @@ async function runForgeAnimation(carId) {
   area.innerHTML = `
     <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion">
     <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="">
-    <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform.png" alt="">
+    <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform_stage.png" alt="">
     <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
-    <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover.png" alt="">
-    <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet.png" alt="">
+    <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover_stage.png" alt="">
+    <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet_stage.png" alt="">
   `;
 
   const step = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -9017,7 +9017,8 @@ function betaNearestRoadSpawn(racer) {
   return {
     x: point.x,
     y: point.y,
-    angle: Math.atan2(next.y - point.y, next.x - point.x)
+    angle: Math.atan2(next.y - point.y, next.x - point.x),
+    index: bestIndex
   };
 }
 
@@ -9035,6 +9036,12 @@ function betaRespawnRacer(racer, now = betaNowMs()) {
   racer.stuckSince = null;
   racer.lastRecoveryX = spawn.x;
   racer.lastRecoveryY = spawn.y;
+  racer.lastProgressScore = betaProgressScore(racer);
+  racer.lastProgressAt = now;
+  racer.lastWaypointDistance = Infinity;
+  if (racer.ai && betaAiRacingLine?.length) {
+    racer.aiWaypoint = (spawn.index + 1) % betaAiRacingLine.length;
+  }
   racer.respawnUntil = now + 2000;
 }
 
@@ -9044,16 +9051,34 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
   const surface = betaSurfaceAt(racer.x, racer.y);
   if (racer.ai) {
     const moved = Math.hypot(racer.x - (racer.lastRecoveryX ?? racer.x), racer.y - (racer.lastRecoveryY ?? racer.y));
+    const score = betaProgressScore(racer);
+    const waypoint = betaAiRacingLine?.[racer.aiWaypoint || 0];
+    const waypointDistance = waypoint ? Math.hypot(waypoint.x - racer.x, waypoint.y - racer.y) : 0;
+    if (!racer.lastProgressAt) {
+      racer.lastProgressScore = score;
+      racer.lastProgressAt = now;
+      racer.lastWaypointDistance = waypointDistance;
+    }
+    const progressed = score > (racer.lastProgressScore ?? score) + 0.015 || waypointDistance < (racer.lastWaypointDistance ?? Infinity) - 18;
+    if (progressed) {
+      racer.lastProgressScore = score;
+      racer.lastProgressAt = now;
+      racer.lastWaypointDistance = waypointDistance;
+    }
     racer.lastRecoveryX = racer.x;
     racer.lastRecoveryY = racer.y;
     if (moved < 2 && Math.abs(racer.speed || 0) < 18) {
       racer.stuckSince = racer.stuckSince || now;
-      if (now - racer.stuckSince >= 5000) {
+      if (now - racer.stuckSince >= 2400) {
         betaRespawnRacer(racer, now);
         return;
       }
     } else {
       racer.stuckSince = null;
+    }
+    if (now - (racer.lastProgressAt || now) >= 3600) {
+      betaRespawnRacer(racer, now);
+      return;
     }
   }
   if (surface === "road") {
@@ -9061,7 +9086,8 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
     return;
   }
   racer.offTrackSince = racer.offTrackSince || now;
-  if (now - racer.offTrackSince >= 5000) betaRespawnRacer(racer, now);
+  const limit = racer.ai ? 3200 : 5000;
+  if (now - racer.offTrackSince >= limit) betaRespawnRacer(racer, now);
 }
 
 function betaCurrentCarId() {
@@ -10134,25 +10160,83 @@ function betaPlacements() {
   return [...(betaState?.racers || [])].sort((a, b) => betaProgressScore(b) - betaProgressScore(a));
 }
 
+function betaCollisionCorners(racer) {
+  const halfLength = 37;
+  const halfWidth = 22;
+  const forward = { x: Math.cos(racer.angle), y: Math.sin(racer.angle) };
+  const right = { x: -Math.sin(racer.angle), y: Math.cos(racer.angle) };
+  return [
+    { x: racer.x + forward.x * halfLength + right.x * halfWidth, y: racer.y + forward.y * halfLength + right.y * halfWidth },
+    { x: racer.x + forward.x * halfLength - right.x * halfWidth, y: racer.y + forward.y * halfLength - right.y * halfWidth },
+    { x: racer.x - forward.x * halfLength - right.x * halfWidth, y: racer.y - forward.y * halfLength - right.y * halfWidth },
+    { x: racer.x - forward.x * halfLength + right.x * halfWidth, y: racer.y - forward.y * halfLength + right.y * halfWidth }
+  ];
+}
+
+function betaProjectCorners(corners, axis) {
+  let min = Infinity;
+  let max = -Infinity;
+  corners.forEach((point) => {
+    const value = point.x * axis.x + point.y * axis.y;
+    min = Math.min(min, value);
+    max = Math.max(max, value);
+  });
+  return { min, max };
+}
+
+function betaCarContact(a, b) {
+  if (!a || !b) return null;
+  const broad = Math.hypot(b.x - a.x, b.y - a.y);
+  if (broad > 88) return null;
+  const cornersA = betaCollisionCorners(a);
+  const cornersB = betaCollisionCorners(b);
+  const axes = [
+    { x: Math.cos(a.angle), y: Math.sin(a.angle) },
+    { x: -Math.sin(a.angle), y: Math.cos(a.angle) },
+    { x: Math.cos(b.angle), y: Math.sin(b.angle) },
+    { x: -Math.sin(b.angle), y: Math.cos(b.angle) }
+  ];
+  let bestOverlap = Infinity;
+  let bestAxis = axes[0];
+  for (const axis of axes) {
+    const projectedA = betaProjectCorners(cornersA, axis);
+    const projectedB = betaProjectCorners(cornersB, axis);
+    const overlap = Math.min(projectedA.max, projectedB.max) - Math.max(projectedA.min, projectedB.min);
+    if (overlap <= 0) return null;
+    if (overlap < bestOverlap) {
+      bestOverlap = overlap;
+      bestAxis = axis;
+    }
+  }
+  const towardB = (b.x - a.x) * bestAxis.x + (b.y - a.y) * bestAxis.y;
+  const normal = towardB >= 0 ? bestAxis : { x: -bestAxis.x, y: -bestAxis.y };
+  return { normal, depth: bestOverlap };
+}
+
 function betaResolveCarCollisions() {
+  const now = betaNowMs();
   const racers = betaState.racers.filter((racer) => !racer.finished);
   for (let i = 0; i < racers.length; i += 1) {
     for (let j = i + 1; j < racers.length; j += 1) {
       const a = racers[i];
       const b = racers[j];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      if (dist >= 58) continue;
-      const push = (58 - dist) / 2;
-      const nx = dx / dist;
-      const ny = dy / dist;
+      if ((a.respawnUntil && a.respawnUntil > now) || (b.respawnUntil && b.respawnUntil > now)) continue;
+      const contact = betaCarContact(a, b);
+      if (!contact) continue;
+      const push = Math.min(16, contact.depth / 2 + 1.5);
+      const nx = contact.normal.x;
+      const ny = contact.normal.y;
       a.x -= nx * push;
       a.y -= ny * push;
       b.x += nx * push;
       b.y += ny * push;
-      a.speed *= 0.86 + a.physics.body / 700;
-      b.speed *= 0.86 + b.physics.body / 700;
+      const va = { x: Math.cos(a.angle) * a.speed, y: Math.sin(a.angle) * a.speed };
+      const vb = { x: Math.cos(b.angle) * b.speed, y: Math.sin(b.angle) * b.speed };
+      const closingSpeed = (vb.x - va.x) * nx + (vb.y - va.y) * ny;
+      if (closingSpeed < -18 || contact.depth > 12) {
+        a.speed *= 0.9 + Math.min(0.08, a.physics.body / 1200);
+        b.speed *= 0.9 + Math.min(0.08, b.physics.body / 1200);
+      }
     }
   }
 }
@@ -11153,6 +11237,9 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     stuckSince: null,
     lastRecoveryX: x,
     lastRecoveryY: y,
+    lastProgressScore: 0,
+    lastProgressAt: 0,
+    lastWaypointDistance: Infinity,
     respawnUntil: 0,
     image: betaMakeImage(imageFor(form, "topdown")),
     record: [],

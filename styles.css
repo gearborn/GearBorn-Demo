@@ -4449,7 +4449,7 @@ small {
 
 .vindex-stage .vindex-list {
   display: grid;
-  gap: clamp(3px, 0.35vw, 5px);
+  gap: clamp(2px, 0.26vw, 4px);
   max-height: 100%;
   overflow: auto;
   overflow-x: hidden;
@@ -4460,14 +4460,15 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: minmax(32px, 0.34fr) minmax(0, 1fr);
-  gap: clamp(3px, 0.45vw, 6px);
-  min-height: clamp(24px, 3vw, 38px);
-  padding: clamp(3px, 0.45vw, 6px) clamp(5px, 0.6vw, 8px);
+  grid-template-columns: clamp(22px, 2.7vw, 31px) minmax(0, 1fr);
+  gap: clamp(2px, 0.32vw, 5px);
+  min-height: clamp(19px, 2.2vw, 30px);
+  padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
+  border-radius: 7px;
   background: rgba(4, 8, 13, 0.48);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
 }
 
 .vindex-stage .vindex-button:hover,
@@ -4483,23 +4484,25 @@ small {
 
 .vindex-stage .vindex-button span,
 .vindex-stage .vindex-button strong {
-  overflow: visible;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: unset;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .vindex-row-number {
   color: var(--vindex-gold);
-  font-size: clamp(0.46rem, 0.68vw, 0.62rem);
+  font-size: clamp(0.34rem, 0.48vw, 0.48rem);
   font-weight: 1000;
+  line-height: 1;
 }
 
 .vindex-stage .vindex-button strong {
   color: #fff7dc;
-  font-size: clamp(0.48rem, 0.7vw, 0.68rem);
-  line-height: 1.05;
+  font-size: clamp(0.42rem, 0.6vw, 0.58rem);
+  line-height: 1;
   min-width: 0;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
 }
 
 .vindex-row-stamp {
@@ -4532,26 +4535,26 @@ small {
 .vindex-preview-head p {
   margin: 0 0 2px;
   color: var(--vindex-gold);
-  font-size: clamp(0.72rem, 1.2vw, 1rem);
+  font-size: clamp(0.56rem, 0.86vw, 0.82rem);
   font-weight: 1000;
 }
 
 .vindex-preview-head h2 {
   margin: 0;
   color: #fff7dc;
-  font-size: clamp(1rem, 2.55vw, 2.95rem);
+  font-size: clamp(0.92rem, 2.2vw, 2.55rem);
   line-height: 0.96;
   text-transform: uppercase;
   text-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
   overflow-wrap: normal;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .vindex-preview-head span {
   display: block;
   margin-top: clamp(3px, 0.45vw, 7px);
   color: rgba(236, 238, 242, 0.58);
-  font-size: clamp(0.62rem, 1.05vw, 0.9rem);
+  font-size: clamp(0.5rem, 0.82vw, 0.76rem);
   font-weight: 1000;
   line-height: 1.05;
   text-transform: uppercase;
@@ -4603,9 +4606,25 @@ small {
 .vindex-stage .vindex-art > .honk-button {
   top: auto;
   right: auto;
-  bottom: -34%;
-  left: -0.5%;
+  bottom: -23%;
+  left: -1.4%;
   z-index: 5;
+  width: clamp(52px, 5.6vw, 76px);
+  height: clamp(52px, 5.6vw, 76px);
+  border: 2px solid rgba(255, 215, 92, 0.82);
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.72), transparent 27%),
+    linear-gradient(145deg, rgba(255, 211, 84, 0.94), rgba(255, 136, 35, 0.9) 52%, rgba(82, 199, 255, 0.74));
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.42),
+    0 0 18px rgba(255, 184, 56, 0.34),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42);
+}
+
+.vindex-stage .vindex-art > .honk-button img {
+  width: 86%;
+  height: 86%;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.38));
 }
 
 .vindex-stage .vindex-art > .silhouette-card {
@@ -4623,21 +4642,21 @@ small {
 .vindex-plate-wrap {
   position: absolute;
   left: 50%;
-  bottom: 7.8%;
+  bottom: 17.6%;
   z-index: 2;
-  width: min(54%, 360px);
+  width: min(57%, 420px);
   transform: translateX(-50%);
 }
 
 .vindex-license-plate {
   display: grid;
   place-items: center;
-  min-height: clamp(34px, 4.2vw, 64px);
+  min-height: clamp(40px, 5.4vw, 76px);
 }
 
 .vindex-license-plate img {
   width: 100%;
-  max-height: clamp(40px, 5.4vw, 78px);
+  max-height: clamp(44px, 6.1vw, 88px);
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
 }
@@ -4705,7 +4724,7 @@ small {
 }
 
 .vindex-filter-panel {
-  right: 6.7%;
+  right: 7.9%;
   top: 19.4%;
   width: 16.8%;
   height: 61%;
@@ -4720,6 +4739,7 @@ small {
   display: grid;
   justify-items: center;
   width: 100%;
+  transform: translateX(-4%);
   gap: clamp(6px, 0.85vw, 12px);
 }
 
@@ -4753,6 +4773,7 @@ small {
   width: min(100%, 190px);
   gap: 6px;
   margin-top: clamp(4px, 1vw, 12px);
+  transform: translateX(-4%);
   color: #2c261a;
   font-weight: 1000;
   text-transform: uppercase;
@@ -4820,6 +4841,45 @@ small {
 .profile-list .vindex-button,
 .vindex-list .vindex-button {
   align-items: center;
+}
+
+.vindex-stage .vindex-button {
+  grid-template-columns: clamp(22px, 2.7vw, 31px) minmax(0, 1fr);
+  min-height: clamp(19px, 2.2vw, 30px);
+  padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
+  overflow: hidden;
+}
+
+.vindex-stage .vindex-button span,
+.vindex-stage .vindex-button strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  line-height: 1;
+}
+
+.vindex-stage .vindex-button strong {
+  font-size: clamp(0.42rem, 0.6vw, 0.58rem);
+}
+
+.vindex-stage .vindex-row-number {
+  font-size: clamp(0.34rem, 0.48vw, 0.48rem);
+}
+
+.vindex-stage .vindex-preview-head p {
+  font-size: clamp(0.56rem, 0.86vw, 0.82rem);
+}
+
+.vindex-stage .vindex-preview-head h2 {
+  font-size: clamp(0.92rem, 2.2vw, 2.55rem);
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.vindex-stage .vindex-preview-head span {
+  font-size: clamp(0.5rem, 0.82vw, 0.76rem);
+  letter-spacing: 0;
 }
 
 .profile-copy h2,
@@ -4968,6 +5028,20 @@ small {
   top: 50%;
   z-index: 4;
   transform: translateY(-50%);
+  border: 2px solid rgba(255, 215, 92, 0.82);
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.72), transparent 27%),
+    linear-gradient(145deg, rgba(255, 211, 84, 0.94), rgba(255, 136, 35, 0.9) 52%, rgba(82, 199, 255, 0.74));
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.42),
+    0 0 18px rgba(255, 184, 56, 0.34),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42);
+}
+
+.garage-art > .honk-button img {
+  width: 86%;
+  height: 86%;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.38));
 }
 
 .garage-art > .honk-button:hover {
@@ -7938,17 +8012,7 @@ small {
 }
 
 .forge-fullscreen-overlay::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: min(640px, 92vw);
-  aspect-ratio: 3 / 2;
-  transform: translateX(-50%);
-  background: url("assets/forge/forge_vat.png") center bottom / contain no-repeat;
-  clip-path: inset(34% 0 0 0);
-  z-index: 24;
-  pointer-events: none;
+  content: none;
 }
 
 /* Background image fills the full screen */
@@ -7968,8 +8032,8 @@ small {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(640px, 92vw);
-  z-index: 4;
+  width: min(760px, 94vw);
+  z-index: 24;
   pointer-events: none;
   transform-origin: center bottom;
 }
@@ -7995,7 +8059,7 @@ small {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(640px, 92vw);
+  width: min(760px, 94vw);
   /* height = vat's lava level — approx 62% of the vat image height from bottom */
   height: 48%;
   z-index: 15;
@@ -8010,12 +8074,16 @@ small {
   inset: 0;
   z-index: 10;
   pointer-events: none;
-  --forge-platform-w: clamp(220px, 25vw, 340px);
-  --forge-platform-h: clamp(330px, 37.5vw, 510px);
-  --forge-cover-w: clamp(275px, 33vw, 450px);
-  --forge-cover-h: clamp(235px, 28vw, 380px);
-  --forge-rise-bottom: calc(50% - var(--forge-platform-h));
-  --forge-cover-rise-bottom: calc(50% - var(--forge-cover-h) + 8px);
+  --forge-platform-w: clamp(245px, 28vw, 405px);
+  --forge-cover-w: clamp(288px, 33vw, 475px);
+  --forge-magnet-w: clamp(118px, 13.5vw, 188px);
+  --forge-car-w: clamp(160px, 18vw, 270px);
+  --forge-platform-top: clamp(42%, 48vh, 50%);
+  --forge-cover-top: calc(var(--forge-platform-top) - clamp(84px, 9.4vw, 134px));
+  --forge-magnet-top: calc(var(--forge-cover-top) - clamp(152px, 17vw, 238px));
+  --forge-car-top: calc(var(--forge-platform-top) - clamp(35px, 4.2vw, 64px));
+  --forge-rise-distance: 92vh;
+  --forge-lift-distance: -112vh;
 }
 
 .forge-anim-layer {
@@ -8048,54 +8116,54 @@ small {
 }
 .forge-anim-medallion.step-gone { opacity: 0; transition: opacity 0.15s ease; }
 
-/* Platform: rises from below vat to midscreen (bottom:48% of screen) */
+/* Platform: rises from the vat and stops around mid-screen. */
 .forge-anim-platform {
   width: var(--forge-platform-w);
-  height: var(--forge-platform-h);
-  bottom: -58%;
+  height: auto;
+  top: var(--forge-platform-top);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, var(--forge-rise-distance));
   opacity: 0;
   object-fit: contain;
   z-index: 12;
   transition: none;
 }
 .forge-anim-platform.step-rise {
-  bottom: var(--forge-rise-bottom);
+  transform: translate(-50%, 0);
   opacity: 1;
-  transition: bottom 1.0s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+  transition: transform 1.05s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease;
 }
 
 /* Cover: large enough to hide the car and synchronized with the platform. */
 .forge-anim-cover {
   width: var(--forge-cover-w);
-  height: var(--forge-cover-h);
-  bottom: -58%;
+  height: auto;
+  top: var(--forge-cover-top);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, var(--forge-rise-distance));
   opacity: 0;
   object-fit: contain;
   z-index: 18;
   transition: none;
 }
 .forge-anim-cover.step-rise {
-  bottom: var(--forge-cover-rise-bottom);
+  transform: translate(-50%, 0);
   opacity: 1;
-  transition: bottom 1.0s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+  transition: transform 1.05s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease;
 }
 .forge-anim-cover.step-lift {
-  bottom: 120%;
+  transform: translate(-50%, var(--forge-lift-distance));
   opacity: 1;
-  transition: bottom 0.7s cubic-bezier(0.44,0,1,0.56);
+  transition: transform 0.82s cubic-bezier(0.44,0,1,0.56);
 }
-.forge-anim-cover.step-gone { bottom: 130%; opacity: 0; transition: none; }
+.forge-anim-cover.step-gone { transform: translate(-50%, var(--forge-lift-distance)); opacity: 0; transition: none; }
 
-/* Car: sits on platform top, centered. Same bottom anchor as cover. */
+/* Car: hidden by the cover until the magnet lifts it away. */
 .forge-anim-car-reveal {
-  width: clamp(185px, 22vw, 310px);
-  bottom: calc(50% - clamp(220px, 26vw, 350px));
+  width: var(--forge-car-w);
+  top: var(--forge-car-top);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   opacity: 0;
   z-index: 15;
   transition: none;
@@ -8115,7 +8183,11 @@ small {
 
 .forge-anim-car-reveal .car {
   width: 100%;
-  height: clamp(145px, 19vw, 260px);
+  height: clamp(126px, 14vw, 210px);
+}
+
+.forge-anim-car-reveal .car-image {
+  object-position: center bottom;
 }
 .forge-anim-car-reveal.step-reveal {
   opacity: 1;
@@ -8130,26 +8202,26 @@ small {
 
 /* Magnet: descends from top to just above cover top edge */
 .forge-anim-magnet {
-  width: clamp(58px, 7vw, 92px);
-  top: -16%;
+  width: var(--forge-magnet-w);
+  top: var(--forge-magnet-top);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, var(--forge-lift-distance));
   opacity: 0;
   object-fit: contain;
   z-index: 19;
   transition: none;
 }
 .forge-anim-magnet.step-magnet-drop {
-  top: calc(50% - var(--forge-cover-h) - clamp(52px, 6vw, 76px));
+  transform: translate(-50%, 0);
   opacity: 1;
-  transition: top 0.65s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+  transition: transform 0.7s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease;
 }
 .forge-anim-magnet.step-magnet-lift {
-  top: -20%;
+  transform: translate(-50%, var(--forge-lift-distance));
   opacity: 1;
-  transition: top 0.7s cubic-bezier(0.44,0,1,0.56);
+  transition: transform 0.82s cubic-bezier(0.44,0,1,0.56);
 }
-.forge-anim-magnet.step-gone { top: -25%; opacity: 0; transition: none; }
+.forge-anim-magnet.step-gone { transform: translate(-50%, var(--forge-lift-distance)); opacity: 0; transition: none; }
 
 /* Smoke: erupts from vat during shake */
 .forge-anim-smoke {
