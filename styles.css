@@ -782,6 +782,13 @@ body:not(.mode-active) .nav {
   border-color: rgba(110, 231, 168, 0.45);
 }
 
+.achievement-card.secret {
+  border-color: rgba(192, 132, 252, 0.22);
+  background:
+    linear-gradient(135deg, rgba(72, 61, 112, 0.28), rgba(0, 0, 0, 0.34)),
+    rgba(7, 11, 18, 0.64);
+}
+
 .achievement-card-copy,
 .achievement-progress {
   display: grid;
@@ -874,6 +881,12 @@ body:not(.mode-active) .nav {
   color: #141820;
   font-size: 3rem;
   box-shadow: 0 0 30px rgba(255, 200, 87, 0.3);
+}
+
+.achievement-trophy.secret {
+  background: linear-gradient(145deg, #4b5563, #111827);
+  color: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 0 24px rgba(192, 132, 252, 0.22);
 }
 
 .achievement-sprox-preview {
@@ -4609,6 +4622,7 @@ small {
   max-width: 1440px;
   min-width: min(100%, 700px);
   aspect-ratio: 3 / 2;
+  container-type: inline-size;
   background: url("assets/vindex/vindex-bg.png") center / 100% 100% no-repeat;
   border-radius: 18px;
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
@@ -4643,8 +4657,8 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(22px, 2.7vw, 31px) minmax(0, 1fr);
-  gap: clamp(2px, 0.32vw, 5px);
+  grid-template-columns: clamp(17px, 2.3cqw, 31px) minmax(0, 1fr);
+  gap: clamp(1px, 0.3cqw, 5px);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -4688,14 +4702,14 @@ small {
 
 .vindex-row-number {
   color: var(--vindex-gold);
-  font-size: clamp(0.34rem, 0.48vw, 0.48rem);
+  font-size: clamp(0.28rem, 0.48cqw, 0.48rem);
   font-weight: 1000;
   line-height: 1;
 }
 
 .vindex-stage .vindex-button strong {
   color: #fff7dc;
-  font-size: clamp(0.42rem, 0.6vw, 0.58rem);
+  font-size: clamp(0.31rem, 0.58cqw, 0.58rem);
   line-height: 1;
   min-width: 0;
   overflow-wrap: normal;
@@ -4724,7 +4738,7 @@ small {
   position: absolute;
   left: 4.2%;
   top: 7.2%;
-  width: 64%;
+  width: 61%;
   z-index: 2;
 }
 
@@ -4738,7 +4752,7 @@ small {
 .vindex-preview-head h2 {
   margin: 0;
   color: #fff7dc;
-  font-size: clamp(0.92rem, 2.2vw, 2.55rem);
+  font-size: clamp(0.72rem, 2.05cqw, 2.55rem);
   line-height: 0.96;
   text-transform: uppercase;
   text-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
@@ -4750,7 +4764,7 @@ small {
   display: block;
   margin-top: clamp(3px, 0.45vw, 7px);
   color: rgba(236, 238, 242, 0.58);
-  font-size: clamp(0.5rem, 0.82vw, 0.76rem);
+  font-size: clamp(0.34rem, 0.78cqw, 0.76rem);
   font-weight: 1000;
   line-height: 1.05;
   text-transform: uppercase;
@@ -4762,8 +4776,8 @@ small {
   top: 4.2%;
   right: 4%;
   z-index: 3;
-  width: clamp(62px, 8vw, 120px);
-  height: clamp(62px, 8vw, 120px);
+  width: clamp(42px, 8cqw, 120px);
+  height: clamp(42px, 8cqw, 120px);
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.36));
 }
@@ -4817,8 +4831,8 @@ small {
   bottom: -23%;
   left: -1.4%;
   z-index: 5;
-  width: clamp(52px, 5.6vw, 76px);
-  height: clamp(52px, 5.6vw, 76px);
+  width: clamp(34px, 5.4cqw, 76px);
+  height: clamp(34px, 5.4cqw, 76px);
   border: 2px solid rgba(255, 215, 92, 0.82);
   background:
     radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.72), transparent 27%),
@@ -4864,7 +4878,7 @@ small {
 
 .vindex-license-plate img {
   width: 100%;
-  max-height: clamp(44px, 6.1vw, 88px);
+  max-height: clamp(34px, 6.1cqw, 88px);
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
 }
@@ -5052,7 +5066,7 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(22px, 2.7vw, 31px) minmax(0, 1fr);
+  grid-template-columns: clamp(17px, 2.3cqw, 31px) minmax(0, 1fr);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   overflow: hidden;
@@ -5067,11 +5081,11 @@ small {
 }
 
 .vindex-stage .vindex-button strong {
-  font-size: clamp(0.42rem, 0.6vw, 0.58rem);
+  font-size: clamp(0.31rem, 0.58cqw, 0.58rem);
 }
 
 .vindex-stage .vindex-row-number {
-  font-size: clamp(0.34rem, 0.48vw, 0.48rem);
+  font-size: clamp(0.28rem, 0.48cqw, 0.48rem);
 }
 
 .vindex-stage .vindex-preview-head p {
@@ -5079,14 +5093,14 @@ small {
 }
 
 .vindex-stage .vindex-preview-head h2 {
-  font-size: clamp(0.92rem, 2.2vw, 2.55rem);
+  font-size: clamp(0.72rem, 2.05cqw, 2.55rem);
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
 }
 
 .vindex-stage .vindex-preview-head span {
-  font-size: clamp(0.5rem, 0.82vw, 0.76rem);
+  font-size: clamp(0.34rem, 0.78cqw, 0.76rem);
   letter-spacing: 0;
 }
 

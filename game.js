@@ -531,7 +531,8 @@ const achievementDefs = [
   { id: "vindex25", name: "VINdex Scout", requirement: "Encounter 25% of the VINdex", reward: "1000 Sprox", type: "vindex", percent: 25 },
   { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
   { id: "vindex75", name: "VINdex Archivist", requirement: "Encounter 75% of the VINdex", reward: "3 Level 2 parts", type: "vindex", percent: 75 },
-  { id: "vindex100", name: "VINdex Master", requirement: "Encounter 100% of the VINdex", reward: "Unlock Vanbrandt", type: "vindex", percent: 100 }
+  { id: "vindex100", name: "VINdex Master", requirement: "Encounter 100% of the VINdex", reward: "Unlock Vanbrandt", type: "vindex", percent: 100 },
+  { id: "garbageMedallion", name: "Garbage Day", requirement: "Lose 5 races or battles in a row", reward: "Garbage Medallion", type: "garbageMedallion", secret: true }
 ];
 const tutorialDialogue = {
   intro: [
@@ -4442,24 +4443,36 @@ const storyCities = bosses.map((boss, index) => {
   levels: [{ ...campaignLevels[campaignLevels.length - 1], campaignIndex: campaignLevels.length - 1 }],
   icon: finalBoss.track.cityIcon
 }]);
-const medallionGauntlets = Object.fromEntries(storyCities
-  .filter((city) => !city.final)
-  .slice(0, 8)
-  .map((city, index) => {
-    const gearBornLineId = gauntletUnlockOrder[index] || "muscle-man";
-    return [city.id, {
-      enabled: true,
-      unlockReputationPercent: 50,
-      gearBornLineId,
-      medallionId: gearBornLineId,
-      displayName: cars.find((car) => car.id === gearBornLineId)?.evolutions[0]?.name || "A GearBorn",
-      stages: [
-        { stage: 1, mode: "drag", opponentForm: 1 },
-        { stage: 2, mode: "battle", opponentForm: 2 },
-        { stage: 3, mode: "headToHead2D", opponentForm: 3 }
-      ]
-    }];
-  }));
+const gauntletCityLineMap = {
+  indianapolis: "silly-goose",
+  berlin: "butcher-hog",
+  dubai: "construction-blok",
+  rio: "skater-koala",
+  "los-angeles": "muscle-man",
+  seoul: "chill-penguin",
+  "cape-town": "space-dolphin",
+  bangalore: "tiger-cart"
+};
+
+function medallionGauntletConfigForLine(gearBornLineId) {
+  return {
+    enabled: true,
+    unlockReputationPercent: 50,
+    gearBornLineId,
+    medallionId: gearBornLineId,
+    displayName: cars.find((car) => car.id === gearBornLineId)?.evolutions[0]?.name || "A GearBorn",
+    stages: [
+      { stage: 1, mode: "drag", opponentForm: 1 },
+      { stage: 2, mode: "battle", opponentForm: 2 },
+      { stage: 3, mode: "headToHead2D", opponentForm: 3 }
+    ]
+  };
+}
+
+const medallionGauntlets = Object.fromEntries(Object.entries(gauntletCityLineMap).map(([cityId, gearBornLineId]) => [
+  cityId,
+  medallionGauntletConfigForLine(gearBornLineId)
+]));
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 14.5 },
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 17.5 },
@@ -6580,6 +6593,10 @@ function achievementProgress(achievement) {
       label: `${stats.percent}% encountered`
     };
   }
+  if (achievement.type === "garbageMedallion") {
+    const complete = Boolean(state.garbageMedallionAwarded || hasMedallion("waste-management"));
+    return { current: complete ? 1 : 0, total: 1, percent: complete ? 100 : 0, complete, label: complete ? "Unlocked" : "Secret" };
+  }
   return { current: 0, total: 1, percent: 0, complete: false, label: "0%" };
 }
 
@@ -6647,6 +6664,10 @@ function grantAchievementReward(achievement, silent = false) {
   } else if (achievement.id === "vindex75") {
     const parts = grantRandomLevelTwoParts(3);
     message = `Level 2 parts awarded: ${parts.join(", ")}`;
+  } else if (achievement.id === "garbageMedallion") {
+    awardMedallion("waste-management");
+    state.garbageMedallionAwarded = true;
+    message = "Garbage Medallion awarded.";
   } else if (achievement.type === "storyTypePercent" && achievement.sprox) {
     addSprox(achievement.sprox);
     message = `${achievement.sprox} Sprox awarded.`;
@@ -6671,6 +6692,11 @@ function checkAchievements(silent = false) {
     }
   });
   return changed;
+}
+
+function achievementIsSecretHidden(achievement) {
+  const record = state.achievements?.[achievement.id] || {};
+  return Boolean(achievement.secret && !record.complete && !record.granted);
 }
 
 function normalizedGearbornStat(value) {
@@ -7408,6 +7434,8 @@ function maybeUnlockGarbageMedallion() {
   awardMedallion("waste-management");
   state.garbageMedallionAwarded = true;
   state.consecutiveLosses = 0;
+  state.achievements = state.achievements || {};
+  state.achievements.garbageMedallion = { complete: true, granted: true };
   saveState();
   openGarbageMedallionPopup();
   return true;
@@ -8408,6 +8436,8 @@ function renderProfiles() {
 }
 
 function achievementRewardArt(achievement) {
+  if (achievementIsSecretHidden(achievement)) return `<div class="achievement-trophy secret">?</div>`;
+  if (achievement.id === "garbageMedallion") return carMarkupForEvolution("waste-management", 0, "display");
   const artFormIndex = artVanUnlockByAchievement[achievement.id];
   if (Number.isInteger(artFormIndex)) {
     const form = cars.find((car) => car.id === "art-van")?.evolutions[artFormIndex];
@@ -8426,33 +8456,35 @@ function renderAchievements() {
   el.achievementList.innerHTML = achievementDefs.map((achievement) => {
     const progress = achievementProgress(achievement);
     const record = state.achievements[achievement.id] || {};
+    const hiddenSecret = achievementIsSecretHidden(achievement);
     return `
-      <button class="achievement-card ${achievement.id === selected.id ? "active" : ""} ${record.complete ? "complete" : ""}" type="button" data-achievement="${achievement.id}">
+      <button class="achievement-card ${achievement.id === selected.id ? "active" : ""} ${record.complete ? "complete" : ""} ${hiddenSecret ? "secret" : ""}" type="button" data-achievement="${achievement.id}">
         <span class="achievement-card-copy">
-          <strong>${achievement.name}</strong>
-          <small>${achievement.requirement}</small>
-          <em>${record.granted ? "Reward unlocked" : achievement.reward}</em>
+          <strong>${hiddenSecret ? "Secret Achievement" : achievement.name}</strong>
+          <small>${hiddenSecret ? "Unlock this achievement to reveal its condition." : achievement.requirement}</small>
+          <em>${hiddenSecret ? "Mystery reward" : record.granted ? "Reward unlocked" : achievement.reward}</em>
         </span>
         <span class="achievement-progress">
-          <strong>${record.complete ? "Complete" : `${progress.percent}%`}</strong>
-          <small>${progress.label}</small>
+          <strong>${hiddenSecret ? "???" : record.complete ? "Complete" : `${progress.percent}%`}</strong>
+          <small>${hiddenSecret ? "Secret" : progress.label}</small>
         </span>
       </button>
     `;
   }).join("");
   const progress = achievementProgress(selected);
   const record = state.achievements[selected.id] || {};
+  const hiddenSecret = achievementIsSecretHidden(selected);
   el.achievementDetail.innerHTML = `
     <div class="achievement-detail-art">${achievementRewardArt(selected)}</div>
-    <p class="achievement-kicker">${record.complete ? "Unlocked" : "In Progress"}</p>
-    <h2>${selected.name}</h2>
-    <p>${selected.requirement}</p>
-    <div class="achievement-meter" aria-label="${progress.percent}% complete">
-      <i style="width:${Math.min(100, progress.percent)}%"></i>
+    <p class="achievement-kicker">${hiddenSecret ? "Secret" : record.complete ? "Unlocked" : "In Progress"}</p>
+    <h2>${hiddenSecret ? "Secret Achievement" : selected.name}</h2>
+    <p>${hiddenSecret ? "Unlock this achievement to reveal its condition." : selected.requirement}</p>
+    <div class="achievement-meter" aria-label="${hiddenSecret ? 0 : progress.percent}% complete">
+      <i style="width:${hiddenSecret ? 0 : Math.min(100, progress.percent)}%"></i>
     </div>
     <div class="achievement-detail-grid">
-      <span>Progress</span><strong>${progress.label}</strong>
-      <span>Reward</span><strong>${selected.reward}</strong>
+      <span>Progress</span><strong>${hiddenSecret ? "Secret" : progress.label}</strong>
+      <span>Reward</span><strong>${hiddenSecret ? "Mystery reward" : selected.reward}</strong>
       <span>Status</span><strong>${record.complete ? "Complete" : "Incomplete"}</strong>
     </div>
   `;
