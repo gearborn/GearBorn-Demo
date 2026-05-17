@@ -1003,11 +1003,24 @@
           </div>
         </div>
         <p id="tutorial-copy"></p>
+        <div class="tutorial-choices" id="tutorial-choices" hidden></div>
         <div class="tutorial-actions">
           <button class="ghost" id="tutorial-back" type="button">Back</button>
           <button class="primary" id="tutorial-next" type="button">Next</button>
         </div>
         <button class="tutorial-skip" id="tutorial-skip" type="button">Skip Tutorial</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-skip-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-skip-title">
+        <p class="modal-kicker">Tutorial</p>
+        <h2 id="tutorial-skip-title">Skip Tutorial?</h2>
+        <p>Are you sure you want to exit the tutorial? You can continue learning through Story Mode, but this intro will be skipped.</p>
+        <div class="modal-actions">
+          <button class="ghost" id="cancel-tutorial-skip" type="button">Cancel</button>
+          <button class="danger-button" id="confirm-tutorial-skip" type="button">Skip Tutorial</button>
+        </div>
       </div>
     </div>
 

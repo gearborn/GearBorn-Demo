@@ -270,13 +270,125 @@ const cars = [
   }
 ];
 
+// Sheet-driven playable lines added for medallion rewards and future roster expansion.
+cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
+  {
+    id: "muscle-man",
+    family: "Muscle Man",
+    color: "#f97316",
+    trait: "Flex cruiser",
+    unlockable: true,
+    evolutions: [
+      { name: "Tourquette", images: { display: "assets/cars/muscle-tourquette-display.png", race: "assets/cars/muscle-tourquette-race.png", topdown: "assets/cars/muscle-tourquette-topdown.png" } },
+      { name: "Pistonox", images: { display: "assets/cars/muscle-pistonox-display.png", race: "assets/cars/muscle-pistonox-race.png", topdown: "assets/cars/muscle-pistonox-topdown.png" } },
+      { name: "Cylindialis", images: { display: "assets/cars/muscle-cylindialis-display.png", race: "assets/cars/muscle-cylindialis-race.png", topdown: "assets/cars/muscle-cylindialis-topdown.png" } }
+    ]
+  },
+  {
+    id: "waste-management",
+    family: "Waste Management",
+    color: "#7c8f45",
+    trait: "Trash collector",
+    unlockable: true,
+    evolutions: [
+      { name: "Garbaggito", images: { display: "assets/cars/garbage-garbaggito-display.png", race: "assets/cars/garbage-garbaggito-race.png", topdown: "assets/cars/garbage-garbaggito-topdown.png" } },
+      { name: "Garbanino", images: { display: "assets/cars/garbage-garbanino-display.png", race: "assets/cars/garbage-garbanino-race.png", topdown: "assets/cars/garbage-garbanino-topdown.png" } }
+    ]
+  },
+  {
+    id: "chill-penguin",
+    family: "Chill Penguin",
+    color: "#7dd3fc",
+    trait: "Glacier slider",
+    unlockable: true,
+    evolutions: [
+      { name: "Freezy-E", images: { display: "assets/cars/penguin-freezy-e-display.png", race: "assets/cars/penguin-freezy-e-race.png", topdown: "assets/cars/penguin-freezy-e-topdown.png" } },
+      { name: "Brrap", images: { display: "assets/cars/penguin-brrap-display.png", race: "assets/cars/penguin-brrap-race.png", topdown: "assets/cars/penguin-brrap-topdown.png" } },
+      { name: "Chillmatic", images: { display: "assets/cars/penguin-chillmatic-display.png", race: "assets/cars/penguin-chillmatic-race.png", topdown: "assets/cars/penguin-chillmatic-topdown.png" } }
+    ]
+  },
+  {
+    id: "space-dolphin",
+    family: "Space Dolphin",
+    color: "#67e8f9",
+    trait: "Cosmic surfer",
+    unlockable: true,
+    evolutions: [
+      { name: "Orbitide", images: { display: "assets/cars/dolphin-orbitide-display.png", race: "assets/cars/dolphin-orbitide-race.png", topdown: "assets/cars/dolphin-orbitide-topdown.png" } },
+      { name: "Aquantius", images: { display: "assets/cars/dolphin-aquantius-display.png", race: "assets/cars/dolphin-aquantius-race.png", topdown: "assets/cars/dolphin-aquantius-topdown.png" } },
+      { name: "Astromarino", images: { display: "assets/cars/dolphin-astromarino-display.png", race: "assets/cars/dolphin-astromarino-race.png", topdown: "assets/cars/dolphin-astromarino-topdown.png" } }
+    ]
+  },
+  {
+    id: "butcher-hog",
+    family: "Butcher Hog",
+    color: "#fb7185",
+    trait: "Meatwheel menace",
+    unlockable: true,
+    evolutions: [
+      { name: "Sauspin", images: { display: "assets/cars/butcher-sauspin-display.png", race: "assets/cars/butcher-sauspin-race.png", topdown: "assets/cars/butcher-sauspin-topdown.png" } },
+      { name: "Marrauvage", images: { display: "assets/cars/butcher-marrauvage-display.png", race: "assets/cars/butcher-marrauvage-race.png", topdown: "assets/cars/butcher-marrauvage-topdown.png" } },
+      { name: "OlChap", images: { display: "assets/cars/butcher-olchap-display.png", race: "assets/cars/butcher-olchap-race.png", topdown: "assets/cars/butcher-olchap-topdown.png" } }
+    ]
+  },
+  {
+    id: "tiger-cart",
+    family: "Tiger Cart",
+    color: "#facc15",
+    trait: "Feral fairway",
+    unlockable: true,
+    evolutions: [
+      { name: "Puttercat", images: { display: "assets/cars/golf-puttercat-display.png", race: "assets/cars/golf-puttercat-race.png", topdown: "assets/cars/golf-puttercat-topdown.png" } },
+      { name: "Snarfly", images: { display: "assets/cars/golf-snarfly-display.png", race: "assets/cars/golf-snarfly-race.png", topdown: "assets/cars/golf-snarfly-topdown.png" } },
+      { name: "Notar-O", images: { display: "assets/cars/golf-notar-o-display.png", race: "assets/cars/golf-notar-o-race.png", topdown: "assets/cars/golf-notar-o-topdown.png" } }
+    ]
+  },
+  {
+    id: "silly-goose",
+    family: "Silly Goose",
+    color: "#f8fafc",
+    trait: "Chaos honker",
+    unlockable: true,
+    evolutions: [
+      { name: "Honky", images: { display: "assets/cars/goose-honky-display.png", race: "assets/cars/goose-honky-race.png", topdown: "assets/cars/goose-honky-topdown.png" } },
+      { name: "Goosetopher", images: { display: "assets/cars/goose-goosetopher-display.png", race: "assets/cars/goose-goosetopher-race.png", topdown: "assets/cars/goose-goosetopher-topdown.png" } },
+      { name: "Eggdon", images: { display: "assets/cars/goose-eggdon-display.png", race: "assets/cars/goose-eggdon-race.png", topdown: "assets/cars/goose-eggdon-topdown.png" } }
+    ]
+  },
+  {
+    id: "construction-blok",
+    family: "Construction Blok",
+    color: "#fbbf24",
+    trait: "Brick builder",
+    unlockable: true,
+    evolutions: [
+      { name: "Blokparty", images: { display: "assets/cars/traffic-blokparty-display.png", race: "assets/cars/traffic-blokparty-race.png", topdown: "assets/cars/traffic-blokparty-topdown.png" } },
+      { name: "Structable", images: { display: "assets/cars/traffic-structable-display.png", race: "assets/cars/traffic-structable-race.png", topdown: "assets/cars/traffic-structable-topdown.png" } },
+      { name: "Doublestak", images: { display: "assets/cars/traffic-doublestak-display.png", race: "assets/cars/traffic-doublestak-race.png", topdown: "assets/cars/traffic-doublestak-topdown.png" } }
+    ]
+  },
+  {
+    id: "skater-koala",
+    family: "Skater Koala",
+    color: "#94a3b8",
+    trait: "Rail carver",
+    unlockable: true,
+    evolutions: [
+      { name: "Koaster", images: { display: "assets/cars/koala-koaster-display.png", race: "assets/cars/koala-koaster-race.png", topdown: "assets/cars/koala-koaster-topdown.png" } },
+      { name: "Supey", images: { display: "assets/cars/koala-supey-display.png", race: "assets/cars/koala-supey-race.png", topdown: "assets/cars/koala-supey-topdown.png" } },
+      { name: "Koalossus", images: { display: "assets/cars/koala-koalossus-display.png", race: "assets/cars/koala-koalossus-race.png", topdown: "assets/cars/koala-koalossus-topdown.png" } }
+    ]
+  }
+);
+
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
 const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
+const gauntletUnlockOrder = ["muscle-man", "chill-penguin", "space-dolphin", "butcher-hog", "tiger-cart", "silly-goose", "construction-blok", "skater-koala"];
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const rivalStarterCarIds = defaultUnlockedLines;
 const achievementUnlockOrder = ["art-van", "cake-train"];
-const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, ["rainbowlt", "metal-snake", "training-car"]);
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, ["waste-management", "rainbowlt", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -292,7 +404,7 @@ const tutorialMedals = [
 // Tutorial-exclusive city with 3 levels shown on the training city map
 const tutorialCityLevels = [
   { type: "drag",   title: "F Class Drag Race: Tutorque",          tutorialLevel: "drag",   campaignIndex: -1 },
-  { type: "trial",  title: "Spindell Training Academy Time Trial",  tutorialLevel: "trial",  campaignIndex: -2 },
+  { type: "rival",  title: "Training Head-to-Head: Rival",          tutorialLevel: "head2head", mechanic: "circuitDuel", track: tutorialTrack, campaignIndex: -2 },
   { type: "battle", title: "Training Battle: Tutorque",             tutorialLevel: "battle", campaignIndex: -3 }
 ];
 const tutorialCity = {
@@ -305,51 +417,66 @@ const tutorialCity = {
   icon: tutorialTrack.cityIcon
 };
 
-// Tutorial scene IDs — each maps to a dialogue block and a view/flow
+// Tutorial scene registry. `code` is the approved T-### ordering; `id` remains
+// slug-style for code stability. Dialogue/content below intentionally uses
+// placeholders for new story beats until final writing and assets are approved.
 const tutorialScenes = [
-  // ── Intro ───────────────────────────────────────────────────────────────────
-  { id: "intro",           label: "Intro",           view: "menu" },
-  // ── Car select (tutorial-exclusive, Mamburn only) ─────────────────────────
-  { id: "mamburn",         label: "Mamburn",          view: "play",       flow: "car" },
-  // ── City map (Spindell Training Academy) ──────────────────────────────────
-  { id: "city-map",        label: "City Map",         view: "story" },
-  // ── Drag race ─────────────────────────────────────────────────────────────
-  { id: "drag-race-intro", label: "Drag Race Intro",  view: "story" },
-  { id: "drag-race",       label: "Drag Race",        view: "play",       flow: "match" },
-  { id: "dr-controls",     label: "DR Controls",      view: "play",       flow: "race" },
-  { id: "sprox",           label: "Drag Race Win",    view: "play",       wait: true },
-  // ── Time trial ────────────────────────────────────────────────────────────
-  { id: "drag2tt",         label: "Drag→TT",          view: "story" },
-  { id: "time-trial-intro",label: "Time Trial Intro", view: "story" },
-  { id: "time-trial",      label: "Time Trial",       view: "time-trial", flow: "match" },
-  { id: "tt-controls",     label: "TT Controls",      view: "time-trial", flow: "race" },
-  { id: "tt-after",        label: "Time Trial Win",   view: "time-trial", wait: true },
-  // ── Battle ────────────────────────────────────────────────────────────────
-  { id: "tt2battle",       label: "TT→Battle",        view: "story" },
-  { id: "battle-intro",    label: "Battle Intro",     view: "story" },
-  { id: "battle",          label: "Battle",           view: "battle",     flow: "match" },
-  { id: "pre-battle",      label: "Pre-Battle",       view: "battle",     flow: "race" },
-  { id: "post-battle",     label: "Battle Win",       view: "battle",     wait: true },
-  // ── Garage / Upgrade / Evolve ─────────────────────────────────────────────
-  { id: "garage",          label: "Garage",           view: "garage" },
-  { id: "upgrade",         label: "Upgrade",          view: "garage" },
-  { id: "evolve",          label: "Evolve",           view: "garage",     wait: true },
-  { id: "evolved-form",    label: "Evolved Form",     view: "garage" },
-  // ── VINdex ────────────────────────────────────────────────────────────────
-  { id: "vindex",          label: "VINdex",           view: "vindex" },
-  // ── The Forge ─────────────────────────────────────────────────────────────
-  { id: "achievements",    label: "Achievements",     view: "achievements" },
-  { id: "the-forge",       label: "The Forge",        view: "garage" },
-  // ── Post-forge unlock ─────────────────────────────────────────────────────
-  { id: "unlocked",        label: "Unlocked",         view: "garage" },
-  // ── End ───────────────────────────────────────────────────────────────────
-  { id: "starters",        label: "Starters",         view: "garage" }
+  { code: "T-001", id: "intro", label: "INTRO", view: "menu", mode: "vnScene", background: "assets/tutorial/tutorial-academy-exterior.png", splash: "assets/tutorial/tutorial-comic-intro.png" },
+  { code: "T-002", id: "rival-intro", label: "RIVAL INTRO", view: "menu", mode: "vnScene", background: "assets/tutorial/tutorial-academy-hallway.png", supports: ["rivalCharacter", "tutorqueVisual"] },
+  { code: "T-003", id: "mamburn", label: "MAMBURN", view: "play", flow: "car", mode: "vnScene", background: "assets/menu/garage_bg.png" },
+  { code: "T-004", id: "city-map", label: "CITY MAP", view: "story", mode: "dialogueOverlay" },
+  { code: "T-005", id: "drag-race-intro", label: "DRAG RACE INTRO", view: "story", mode: "dialogueOverlay", supports: ["rivalCharacter", "tutorqueVisual"] },
+  { code: "T-006", id: "drag-race", label: "DRAG RACE", view: "play", flow: "match", mode: "gameplay" },
+  { code: "T-007", id: "drag-race-win", label: "DRAG RACE WIN", view: "play", wait: true, mode: "dialogueOverlay" },
+  { code: "T-008", id: "rival-stinger", label: "RIVAL STINGER", view: "play", mode: "vnScene", background: "assets/menu/garage_bg.png", supports: ["rivalCharacter"] },
+  { code: "T-009", id: "drag2h2h", label: "DRAG2H2H", view: "story", mode: "dialogueOverlay" },
+  { code: "T-010", id: "head2head-intro", label: "HEAD2HEAD INTRO", view: "story", mode: "dialogueOverlay", supports: ["rivalCharacter"] },
+  { code: "T-011", id: "head2head", label: "HEAD2HEAD", view: "beta", flow: "race", mode: "gameplay" },
+  { code: "T-012", id: "head2head-win", label: "HEAD2HEAD WIN", view: "beta", wait: true, mode: "dialogueOverlay" },
+  { code: "T-013", id: "h2h-rival-stinger", label: "H2H RIVAL STINGER", view: "beta", mode: "vnScene", background: "assets/menu/garage_bg.png", supports: ["rivalCharacter", "tutorqueNoticesPlayer"] },
+  { code: "T-014", id: "h2h2battle", label: "H2H2BATTLE", view: "story", mode: "dialogueOverlay" },
+  { code: "T-015", id: "battle-intro", label: "BATTLE INTRO", view: "story", mode: "dialogueOverlay" },
+  { code: "T-016", id: "battle", label: "BATTLE", view: "battle", flow: "match", mode: "gameplay" },
+  { code: "T-017", id: "battle-win", label: "BATTLE WIN", view: "battle", wait: true, mode: "dialogueOverlay" },
+  { code: "T-018", id: "map-final", label: "MAP FINAL", view: "story", mode: "dialogueOverlay" },
+  { code: "T-019", id: "garage", label: "GARAGE", view: "garage", mode: "dialogueOverlay", background: "assets/menu/garage_bg.png" },
+  { code: "T-020", id: "upgrade", label: "UPGRADE", view: "garage", mode: "menuTutorial" },
+  { code: "T-021", id: "evolve", label: "EVOLVE", view: "garage", wait: true, mode: "menuTutorial", splash: "assets/tutorial/tutorial-comic-evolution.png" },
+  { code: "T-022", id: "evolution-cinematic", label: "EVOLUTION CINEMATIC", view: "garage", mode: "comicSplash", splash: "assets/tutorial/tutorial-comic-evolution.png", redirectTo: "evolve" },
+  { code: "T-023", id: "evolved-form", label: "EVOLVED FORM", view: "garage", mode: "dialogueOverlay", redirectTo: "evolve" },
+  { code: "T-024", id: "tyree-final", label: "TYREE FINAL", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
+  { code: "T-025", id: "empty-garage", label: "EMPTY GARAGE", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
+  { code: "T-026", id: "medallion-discovery", label: "MEDALLION DISCOVERY", view: "garage", mode: "comicSplash", background: "assets/menu/garage_bg.png", redirectTo: "empty-garage" },
+  { code: "T-027", id: "ashley-intro", label: "ASHLEY INTRO", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
+  { code: "T-028", id: "the-forge", label: "THE FORGE", view: "garage", mode: "menuTutorial", background: "assets/forge/forge_bg.png", splash: "assets/tutorial/tutorial-comic-forge.png" },
+  { code: "T-029", id: "medallion-unlock", label: "MEDALLION UNLOCK", view: "garage", mode: "menuTutorial" },
+  { code: "T-030", id: "unlocked", label: "UNLOCKED", view: "garage", mode: "dialogueOverlay" },
+  { code: "T-031", id: "vindex", label: "VINDEX", view: "vindex", mode: "menuTutorial" },
+  { code: "T-032", id: "achievements", label: "ACHIEVEMENTS", view: "achievements", mode: "menuTutorial" },
+  { code: "T-033", id: "end", label: "END / STORY MODE LAUNCH", view: "menu", mode: "dialogueOverlay" }
 ];
+
+const tutorialSceneAliases = {
+  "dr-controls": "drag-race",
+  sprox: "drag-race-win",
+  drag2tt: "drag2h2h",
+  "time-trial-intro": "head2head-intro",
+  "time-trial": "head2head",
+  "tt-controls": "head2head",
+  "tt-after": "head2head-win",
+  tt2battle: "h2h2battle",
+  "pre-battle": "battle",
+  "post-battle": "battle-win",
+  starters: "end",
+  "evolution-cinematic": "evolve",
+  "evolved-form": "evolve",
+  "medallion-discovery": "empty-garage"
+};
 
 // Scene-select options shown in Replay Tutorial modal
 const tutorialSceneSelectOptions = [
   { label: "Drag Race",   scene: "drag-race-intro" },
-  { label: "Time Trial",  scene: "time-trial-intro" },
+  { label: "Head-to-Head",  scene: "head2head-intro" },
   { label: "Battle",      scene: "battle-intro" },
   { label: "Garage",      scene: "garage" },
   { label: "VINdex",      scene: "vindex" },
@@ -416,7 +543,7 @@ const tutorialDialogue = {
     ["tyree", "Follow me."]
   ],
   "city-map": [
-    ["tyree", "Welcome to Spindell Training Academy, your training ground. This is where you'll run through the three core race types: Drag Race, Time Trial, and Battle."],
+    ["tyree", "Welcome to Spindell Training Academy, your training ground. This is where you'll run through the core race types: Drag Race, Head-to-Head, and Battle."],
     ["user", "Cool. Where do I start?"],
     ["tyree", "We'll go in order. First up — Drag Race. I'm clicking it for you."]
   ],
@@ -427,7 +554,7 @@ const tutorialDialogue = {
     ["tyree", "You're confident now, but what about on the track? Let me click Start Level."]
   ],
   "drag2tt": [
-    ["tyree", () => `Nice race! You earned ${formatSprox(state.tutorialDragSprox || tutorialDistance.xp)} Sprox for that win, but we're not done yet.`],
+    ["tyree", () => `Nice race! You earned ${formatSprox(state.tutorialDragSprox || tutorialDistance.xp)} for that win, but we're not done yet.`],
     ["user", "What's next?"],
     ["tyree", "Time Trial. Let me pull it up."]
   ],
@@ -655,6 +782,3231 @@ const tutorialDialogue = {
     ["tyree", "Good luck and good racing!"]
   ]
 };
+
+Object.assign(tutorialDialogue, {
+  "drag-race-win": [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_DRAG_RACE_WIN_SPROX" },
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_DRAG_RACE_TO_HEAD2HEAD" }
+  ],
+  "rival-intro": [
+    { speaker: "narration", text: "TUTORIAL_PLACEHOLDER_ACADEMY_HALLWAY_INTRO" },
+    { speaker: "rival", text: () => `TUTORIAL_PLACEHOLDER_RIVAL_INTRO_${rivalCharacter().id.toUpperCase().replace(/-/g, "_")}` },
+    { speaker: "tutorque", text: "TUTORIAL_PLACEHOLDER_TUTORQUE_PRESENT" }
+  ],
+  "rival-stinger": [
+    { speaker: "rival", text: "TUTORIAL_PLACEHOLDER_RIVAL_STINGER_AFTER_DRAG" }
+  ],
+  drag2h2h: [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_MAP_REPUTATION_TO_HEAD2HEAD" }
+  ],
+  "head2head-intro": [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_HEAD2HEAD_LEVEL_PREVIEW" },
+    { speaker: "rival", text: "TUTORIAL_PLACEHOLDER_RIVAL_HEAD2HEAD_READY" }
+  ],
+  head2head: [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_HEAD2HEAD_2D_CONTROLS" },
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_HEAD2HEAD_START_RACE" }
+  ],
+  "head2head-win": [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_HEAD2HEAD_WIN" }
+  ],
+  "h2h-rival-stinger": [
+    { speaker: "rival", text: "TUTORIAL_PLACEHOLDER_RIVAL_STINGER_AFTER_HEAD2HEAD" },
+    { speaker: "tutorque", text: "TUTORIAL_PLACEHOLDER_TUTORQUE_NOTICES_PLAYER" }
+  ],
+  "map-final": [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_MAP_FINAL_BOSS_VISIBLE" }
+  ],
+  "evolution-cinematic": [
+    { speaker: "narration", text: "TUTORIAL_PLACEHOLDER_EVOLUTION_CINEMATIC_SPLASH" }
+  ],
+  "tyree-final": [
+    { speaker: "tyree", text: "TUTORIAL_PLACEHOLDER_TYREE_FINAL_REJECTION" },
+    { speaker: "user", text: "TUTORIAL_PLACEHOLDER_PLAYER_REACTION_REJECTION" }
+  ],
+  "empty-garage": [
+    { speaker: "narration", text: "TUTORIAL_PLACEHOLDER_EMPTY_GARAGE" }
+  ],
+  "medallion-discovery": [
+    { speaker: "tutorque", text: "TUTORIAL_PLACEHOLDER_TUTORQUE_MEDALLION_DISCOVERY" },
+    { speaker: "narration", text: "TUTORIAL_PLACEHOLDER_MEDALLION_PICKUP_FX" }
+  ],
+  "ashley-intro": [
+    { speaker: "ashley", text: "TUTORIAL_PLACEHOLDER_ASHLEY_INTRO" },
+    { speaker: "ashley", text: "TUTORIAL_PLACEHOLDER_ASHLEY_FORGE_TRANSITION" }
+  ],
+  "medallion-unlock": [
+    { speaker: "ashley", text: "TUTORIAL_PLACEHOLDER_MEDALLION_UNLOCK_INSTRUCTIONS" }
+  ]
+});
+
+const tutorialRewriteDialogue = {
+  "intro": [
+    {
+      "speaker": "tyree",
+      "text": "Welcome to Spindell Training Academy."
+    },
+    {
+      "speaker": "tyree",
+      "text": "My name is Dr. Tyree."
+    },
+    {
+      "speaker": "tyree",
+      "text": "I’ll be conducting your Tuner evaluation today."
+    },
+    {
+      "speaker": "user",
+      "text": "Doctor?"
+    },
+    {
+      "speaker": "user",
+      "text": "For cars?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "GearBorn Mechanics and History, actually."
+    },
+    {
+      "speaker": "tyree",
+      "text": "My doctorate is internationally recognized."
+    },
+    {
+      "speaker": "user",
+      "text": "So this is one of those “those who can’t do” situations."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You haven’t even touched a steering wheel yet and you’re already trying to get under my skin."
+    },
+    {
+      "speaker": "user",
+      "text": "Is it working?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "A little."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Every Tuner in the world starts somewhere."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Some become champions."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Most don’t."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’ve waited my whole life for this.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Good."
+            },
+            {
+              "speaker": "tyree",
+              "text": "The Academy was built for people willing to dedicate themselves completely to the bond between Tuner and GearBorn."
+            }
+          ]
+        },
+        {
+          "label": "No pressure or anything.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Pressure is part of the process."
+            },
+            {
+              "speaker": "tyree",
+              "text": "The track reveals who people really are."
+            }
+          ]
+        },
+        {
+          "label": "If I fail, I’m blaming you.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "What did I do?"
+            },
+            {
+              "speaker": "user",
+              "text": "Got a doctorate instead of a license."
+            },
+            {
+              "speaker": "tyree",
+              "text": "Touche."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Follow me."
+    },
+    {
+      "speaker": "user",
+      "text": "Should I be nervous?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "No."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But you should take this seriously."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s see what you’re capable of."
+    }
+  ],
+  "rival-intro": [
+    {
+      "speaker": "rival",
+      "text": "You’re late."
+    },
+    {
+      "speaker": "user",
+      "text": "Ugh, you?!"
+    },
+    {
+      "speaker": "rival",
+      "text": "This is becoming your brand."
+    },
+    {
+      "speaker": "user",
+      "text": "I got here, didn’t I?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Barely."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Good. You’re both here."
+    },
+    {
+      "speaker": "user",
+      "text": "Tell me we’re not up against each other."
+    },
+    {
+      "speaker": "rival",
+      "text": "Sounds like something you’d say."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "You nervous?",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Not remotely."
+            },
+            {
+              "speaker": "user",
+              "text": "Cool. Me neither."
+            },
+            {
+              "speaker": "rival",
+              "text": "That was convincing."
+            }
+          ]
+        },
+        {
+          "label": "You still doing that thing where you pretend not to like me?",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "I don’t have to pretend."
+            },
+            {
+              "speaker": "user",
+              "text": "Convincing…"
+            }
+          ]
+        },
+        {
+          "label": "I’m definitely beating you.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "You said that last time too."
+            },
+            {
+              "speaker": "user",
+              "text": "And statistically, eventually I’ll be right."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Today’s evaluation determines whether you qualify for Academy recommendation."
+    },
+    {
+      "speaker": "user",
+      "text": "Does he/she (if rival is Mylo, he; if rival is Cha Cha, she) get a head start to be fair?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Do you get extra time like you do on tests?"
+    },
+    {
+      "speaker": "user",
+      "text": "Just so you know, you don’t get to park in a handicap spot because you drive slow."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Focus."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You two are insufferable. Let’s go."
+    }
+  ],
+  "mamburn": [
+    {
+      "speaker": "tyree",
+      "text": "Normally, first-year evaluations are done using Academy Tutorques."
+    },
+    {
+      "speaker": "user",
+      "text": "“Normally” sounds promising."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Unfortunately for you, they’re all currently assigned to upperclass evaluations."
+    },
+    {
+      "speaker": "tyree",
+      "text": "So today..."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You’ll be borrowing my GearBorn."
+    },
+    {
+      "speaker": "user",
+      "text": "Wait."
+    },
+    {
+      "speaker": "user",
+      "text": "THIS is yours?User - Sick!"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Her name is Mamburn."
+    },
+    {
+      "speaker": "user",
+      "text": "You named your car Mamburn?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "She named herself."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Okay, that’s actually awesome.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Mamburn appreciates your refined taste."
+            }
+          ]
+        },
+        {
+          "label": "You drive THIS? Theoretically or actually?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Most theories need testing."
+            }
+          ]
+        },
+        {
+          "label": "Can I keep it if I win?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Absolutely not."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "GearBorn aren’t ordinary vehicles."
+    },
+    {
+      "speaker": "tyree",
+      "text": "A Tuner communicates with them through a GearBorn Key."
+    },
+    {
+      "speaker": "user",
+      "text": "So this is the part where you tell me not to press the wrong button or I explode?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "No, it’s where I tell you if you crash my Mamburn, I’ll kill you."
+    },
+    {
+      "speaker": "user",
+      "text": "This is the coolest you’ve ever been in your life."
+    },
+    {
+      "speaker": "tyree",
+      "text": "This key is synchronized specifically to Mamburn."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Treat her like your own."
+    },
+    {
+      "speaker": "user",
+      "text": "You really love this thing, huh?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "More than most people deserve to love their GearBorn."
+    },
+    {
+      "speaker": "user",
+      "text": "That got weirdly intense."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You asked."
+    },
+    {
+      "speaker": "key",
+      "text": "Dr. Tyree lent you his GearBorn Key."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    }
+  ],
+  "city-map": [
+    {
+      "speaker": "tyree",
+      "text": "Every Tuner starts somewhere."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But the best eventually race everywhere."
+    },
+    {
+      "speaker": "user",
+      "text": "Wait..."
+    },
+    {
+      "speaker": "user",
+      "text": "Am I going to need a passport?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Yes. Do you have one?"
+    },
+    {
+      "speaker": "user",
+      "text": "Uh… Totally!"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Different cities specialize in different race styles."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Different GearBorn."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Different philosophies."
+    },
+    {
+      "speaker": "user",
+      "text": "Philosophies?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "You’d be surprised how seriously people take racing."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m starting in Dubai. You guys pay for the flights, right?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Make the circuit first and then we can talk logistics."
+            }
+          ]
+        },
+        {
+          "label": "How many of these have you raced in?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "That information is classified."
+            },
+            {
+              "speaker": "user",
+              "text": "So... none."
+            }
+          ]
+        },
+        {
+          "label": "Which one has the best food?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Not relevant."
+            },
+            {
+              "speaker": "tyree",
+              "text": "But Cape Town."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Drag Races test acceleration and shifting precision."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Head-to-Head races test consistency against other Tuners."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Battle Arenas test your GearBorn’s combat abilities."
+    },
+    {
+      "speaker": "user",
+      "text": "Still can’t believe they fight."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Boss Challenges are reserved for elite Tuners."
+    },
+    {
+      "speaker": "user",
+      "text": "So basically..."
+    },
+    {
+      "speaker": "user",
+      "text": "Become the greatest Tuner in the world."
+    },
+    {
+      "speaker": "tyree",
+      "text": "That is... technically the goal, yes."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "rival",
+      "text": "Do you ever say anything else?"
+    },
+    {
+      "speaker": "user",
+      "text": "No."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Save this for the track."
+    }
+  ],
+  "drag-race-intro": [
+    {
+      "speaker": "tyree",
+      "text": "This is the race preview screen."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Here, Tuners can review the track, distance, and opponent before a race begins."
+    },
+    {
+      "speaker": "user",
+      "text": "And today I’ll be humiliating…"
+    },
+    {
+      "speaker": "user",
+      "text": "Tutorque?"
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "That thing?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Tutorque has probably logged more track hours than you have walking hours."
+    },
+    {
+      "speaker": "user",
+      "text": "Okay, first of all, rude."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Drag Races are straightforward."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Two Tuners. One straight track. Fastest finish wins."
+    },
+    {
+      "speaker": "user",
+      "text": "Finally. Something easy."
+    },
+    {
+      "speaker": "rival",
+      "text": "You haven’t started yet."
+    },
+    {
+      "speaker": "user",
+      "text": "Exactly. I’m undefeated."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I was born for this.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "We’ll circle back to that confidence thing later."
+            }
+          ]
+        },
+        {
+          "label": "If I lose to a Tutorque, I’m leaving the country.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "That may honestly be your best option."
+            }
+          ]
+        },
+        {
+          "label": "Can I race the rival instead?",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Beat Tutorque first."
+            },
+            {
+              "speaker": "tutorque",
+              "text": "HONK."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "The race distance today will be 400 meters."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Short enough to teach fundamentals."
+    },
+    {
+      "speaker": "rival",
+      "text": "And long enough for mistakes to matter."
+    },
+    {
+      "speaker": "user",
+      "text": "Good thing I don’t make mistakes."
+    },
+    {
+      "speaker": "rival",
+      "text": "Pff… That was so lame."
+    },
+    {
+      "speaker": "user",
+      "text": "N… no… no it wasn’t."
+    },
+    {
+      "speaker": "mamburn",
+      "text": "VRROOOOOOOM!"
+    },
+    {
+      "speaker": "tyree",
+      "text": "She’s eager."
+    },
+    {
+      "speaker": "user",
+      "text": "At least she gets me."
+    },
+    {
+      "speaker": "rival",
+      "text": "Hey, that’s one for you."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Enough."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s get you both on the track."
+    }
+  ],
+  "drag-race": [
+    {
+      "speaker": "tyree",
+      "text": "Once the race begins, watch the shift meter carefully."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Press SPACE when the indicator reaches the shift zone to change gears."
+    },
+    {
+      "speaker": "user",
+      "text": "Hit the NOS. Got it."
+    },
+    {
+      "speaker": "tyree",
+      "text": "After 4 Perfect Shifts, you’ll be able to use your nitrous."
+    },
+    {
+      "speaker": "user",
+      "text": "Like I said… hit the NOS. Got it."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Has (he/she - if Mylo, he; if Cha Cha, she) always been like this?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Unfortunately."
+    },
+    {
+      "speaker": "tyree",
+      "text": "If you miss too many shifts, your engine will overheat."
+    },
+    {
+      "speaker": "user",
+      "text": "So the car explodes."
+    },
+    {
+      "speaker": "tyree",
+      "text": "No."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But I will judge you silently."
+    },
+    {
+      "speaker": "mamburn",
+      "text": "VROOOM."
+    },
+    {
+      "speaker": "tyree",
+      "text": "And Mamburn will judge you loudly."
+    },
+    {
+      "speaker": "user",
+      "text": "See?"
+    },
+    {
+      "speaker": "user",
+      "text": "We’re bonding already."
+    },
+    {
+      "speaker": "rival",
+      "text": "That’s not what that sound meant."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Once the lights count down, the race begins immediately."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m about to smoke this mailbox.",
+          "responseLines": [
+            {
+              "speaker": "tutorque",
+              "text": "HONK."
+            },
+            {
+              "speaker": "rival",
+              "text": "Tutorque took that personally."
+            }
+          ]
+        },
+        {
+          "label": "Tutorque’s looking nervous.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Tutorque could kick your butt."
+            },
+            {
+              "speaker": "user",
+              "text": "With the training wheels?"
+            }
+          ]
+        },
+        {
+          "label": "Wait, which pedal is brake again?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Suddenly, I regret everything."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Positions."
+    },
+    {
+      "speaker": "rival",
+      "text": "Try to keep up."
+    },
+    {
+      "speaker": "user",
+      "text": "Try not to cry when I win."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK!"
+    },
+    {
+      "speaker": "mamburn",
+      "text": "VROOOOM!"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Ready?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Race start in…"
+    }
+  ],
+  "drag-race-win": [
+    {
+      "speaker": "tyree",
+      "text": "Nicely done, (User’s name)."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your shifting was sloppy, your launch timing needs work, and you almost overheated Mamburn twice..."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But you won."
+    },
+    {
+      "speaker": "user",
+      "text": "You say compliments like they physically hurt you."
+    },
+    {
+      "speaker": "rival",
+      "text": "Don’t let it go to your head."
+    },
+    {
+      "speaker": "user",
+      "text": "Why? It looks good up there."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "Even Tutorque respects me now."
+    },
+    {
+      "speaker": "rival",
+      "text": "That is not what that meant."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Winning races earns you Sprox."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Sprox can be used for upgrades, modifications, and progression throughout the Academy circuit."
+    },
+    {
+      "speaker": "user",
+      "text": "Modifications sounds expensive."
+    },
+    {
+      "speaker": "tyree",
+      "text": "It is."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You earned enough for a decent start."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But raw speed alone won’t carry you very far."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "You worried I’m actually good at this?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "I’m worried you think one race proves anything."
+            }
+          ]
+        },
+        {
+          "label": "I barely even tried.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Trust me. We could tell."
+            }
+          ]
+        },
+        {
+          "label": "So when do I become world famous?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Judging by your driving? Several years minimum."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s move on."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Real Tuners need more than straight-line speed."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Back to the map."
+    }
+  ],
+  "rival-stinger": [
+    {
+      "speaker": "rival",
+      "text": "Don’t get comfortable."
+    },
+    {
+      "speaker": "user",
+      "text": "You sound nervous."
+    },
+    {
+      "speaker": "rival",
+      "text": "You won one training race."
+    },
+    {
+      "speaker": "user",
+      "text": "Undefeated is undefeated."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "honk. honk."
+    },
+    {
+      "speaker": "user",
+      "text": "Did it sound like it just honked in lower case?"
+    },
+    {
+      "speaker": "rival",
+      "text": "He’s saying you shouldn’t be so arrogant."
+    },
+    {
+      "speaker": "user",
+      "text": "You understand it?"
+    },
+    {
+      "speaker": "rival",
+      "text": "No. I’ve just met you before."
+    },
+    {
+      "speaker": "user",
+      "text": "Hurtful."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Enough talking."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your next evaluation starts now."
+    }
+  ],
+  "drag2h2h": [
+    {
+      "speaker": "tyree",
+      "text": "Winning races also increases your reputation."
+    },
+    {
+      "speaker": "user",
+      "text": "My reputation already feels incredible."
+    },
+    {
+      "speaker": "rival",
+      "text": "World’s most famous idiot."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Reputation determines which races, cities, and Boss Challenges you can access."
+    },
+    {
+      "speaker": "tyree",
+      "text": "The higher your reputation, the more opportunities become available."
+    },
+    {
+      "speaker": "user",
+      "text": "So basically the world’s giant racing gatekeeping."
+    },
+    {
+      "speaker": "tyree",
+      "text": "The Academy prefers the term “earned progression.”"
+    },
+    {
+      "speaker": "user",
+      "text": "That somehow sounded even more gatekeep-y."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Which brings us to your next challenge."
+    },
+    {
+      "speaker": "user",
+      "text": "Please say explosions."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Head-to-Head racing."
+    },
+    {
+      "speaker": "user",
+      "text": "Less exciting, but okay."
+    },
+    {
+      "speaker": "rival",
+      "text": "(User’s name) is good with straight lines, but I think (he/she) struggles with turning."
+    },
+    {
+      "speaker": "user",
+      "text": "When did you become so mean?"
+    },
+    {
+      "speaker": "rival",
+      "text": "You know what this is about."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "You sure you want to lose in front of Tyree?",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "You are dangerously committed to this bit."
+            }
+          ]
+        },
+        {
+          "label": "If I win, I’m taking your parking spot.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "I don’t even have a parking spot."
+            },
+            {
+              "speaker": "user",
+              "text": "Then I’m taking Tyree’s."
+            },
+            {
+              "speaker": "tyree",
+              "text": "It’s Dr."
+            }
+          ]
+        },
+        {
+          "label": "Friendly reminder that I’m still undefeated.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Against a Tutorque."
+            },
+            {
+              "speaker": "user",
+              "text": "Oh, so it’s the car’s fault. Wow. See what she thinks of you, Tutey?"
+            },
+            {
+              "speaker": "tutorque",
+              "text": "HONK!"
+            },
+            {
+              "speaker": "user",
+              "text": "Yep, that’s exactly what I was saying."
+            },
+            {
+              "speaker": "rival",
+              "text": "Don’t act like you understand it now. That’s my bit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Head-to-Head races test consistency, positioning, and adaptability under pressure."
+    },
+    {
+      "speaker": "user",
+      "text": "So this one’s personal."
+    },
+    {
+      "speaker": "rival",
+      "text": "It was always personal."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s begin."
+    }
+  ],
+  "head2head-intro": [
+    {
+      "speaker": "tyree",
+      "text": "Unlike Drag Races, Head-to-Head races take place on full tracks with turns, obstacles, and changing conditions."
+    },
+    {
+      "speaker": "user",
+      "text": "Finally."
+    },
+    {
+      "speaker": "user",
+      "text": "Actual driving."
+    },
+    {
+      "speaker": "rival",
+      "text": "Bold thing to say before your first corner."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You’ll be racing directly against your rival today."
+    },
+    {
+      "speaker": "user",
+      "text": "Oh, I got that part."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Stay focused."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Reckless driving leads to collisions, lost speed, and bad positioning."
+    },
+    {
+      "speaker": "user",
+      "text": "You say that like crashing isn’t cool."
+    },
+    {
+      "speaker": "tyree",
+      "text": "It is significantly less cool when you are inside the vehicle.."
+    },
+    {
+      "speaker": "tyree",
+      "text": "The Academy track was designed specifically to test reaction speed and racing instincts."
+    },
+    {
+      "speaker": "tyree",
+      "text": "During the race, watch your speed entering corners."
+    },
+    {
+      "speaker": "tyree",
+      "text": "A perfect line is often faster than raw acceleration."
+    },
+    {
+      "speaker": "user",
+      "text": "You just described my entire academic career."
+    },
+    {
+      "speaker": "rival",
+      "text": "Fast in straight lines. Disaster in corners?"
+    },
+    {
+      "speaker": "user",
+      "text": "Exactly."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Positions."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Head-to-Head evaluation begins now."
+    }
+  ],
+  "head2head": [
+    {
+      "speaker": "tyree",
+      "text": "Use WASD to steer during the race."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Look out for items on the road which can be activated with the SPACE bar."
+    },
+    {
+      "speaker": "user",
+      "text": "Items? Like what?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Teleport."
+    },
+    {
+      "speaker": "user",
+      "text": "Teleport? Seriously?"
+    },
+    {
+      "speaker": "rival",
+      "text": "(He’s/She’s) actually right about this one. Seriously?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Seriously."
+    },
+    {
+      "speaker": "rival",
+      "text": "Sick."
+    },
+    {
+      "speaker": "user",
+      "text": "Are we best friends now?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Shut up."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Head-to-Head races are won through consistency."
+    },
+    {
+      "speaker": "tyree",
+      "text": "One mistake can decide everything."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Good thing I don’t make mistakes.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "We literally watched you hit a cone ten seconds ago."
+            }
+          ]
+        },
+        {
+          "label": "I’m mostly worried about embarrassing the rival.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Your concern is touching."
+            }
+          ]
+        },
+        {
+          "label": "Wait, are we allowed to bump each other?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Officially? No."
+            },
+            {
+              "speaker": "user",
+              "text": "Great. So it’s just a suggestion."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Ready positions."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Race start in…"
+    }
+  ],
+  "head2head-win": [
+    {
+      "speaker": "tyree",
+      "text": "Hm."
+    },
+    {
+      "speaker": "user",
+      "text": "Hm?? That’s all I get?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "I’m reviewing the race."
+    },
+    {
+      "speaker": "user",
+      "text": "I won the race."
+    },
+    {
+      "speaker": "rival",
+      "text": "Barely."
+    },
+    {
+      "speaker": "user",
+      "text": "Scoreboard."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "Thank you. I agree, Tutes."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your instincts are... unusual."
+    },
+    {
+      "speaker": "user",
+      "text": "Good unusual or bad unusual?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "I haven’t decided yet."
+    },
+    {
+      "speaker": "rival",
+      "text": "That usually means bad."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Admit it. You’re impressed.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "I’m evaluating you."
+            },
+            {
+              "speaker": "user",
+              "text": "That’s not a no."
+            }
+          ]
+        },
+        {
+          "label": "So when do I get my championship trophy?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Survive the academy first."
+            }
+          ]
+        },
+        {
+          "label": "(Rival’s name) almost had me for a second there.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "I had cleaner lines. You just got lucky."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "One final evaluation remains."
+    },
+    {
+      "speaker": "user",
+      "text": "Finally."
+    },
+    {
+      "speaker": "user",
+      "text": "Battle Mode?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Battle Mode."
+    },
+    {
+      "speaker": "user",
+      "text": "YES."
+    },
+    {
+      "speaker": "rival",
+      "text": "You are way too excited about this."
+    },
+    {
+      "speaker": "user",
+      "text": "Cars fighting is objectively incredible."
+    }
+  ],
+  "h2h-rival-stinger": [
+    {
+      "speaker": "rival",
+      "text": "Okay."
+    },
+    {
+      "speaker": "rival",
+      "text": "That was better than I expected."
+    },
+    {
+      "speaker": "user",
+      "text": "Wow."
+    },
+    {
+      "speaker": "user",
+      "text": "Was that almost a compliment?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Don’t make it weird."
+    },
+    {
+      "speaker": "user",
+      "text": "Too late."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "Seriously, what’s with the staring?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Tutorque doesn’t usually pay attention to first-years like this."
+    },
+    {
+      "speaker": "user",
+      "text": "Maybe it recognizes greatness."
+    },
+    {
+      "speaker": "rival",
+      "text": "Maybe it recognizes chaos."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "That one sounded supportive."
+    },
+    {
+      "speaker": "rival",
+      "text": "It absolutely did not."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Enough."
+    },
+    {
+      "speaker": "tyree",
+      "text": "The final evaluation is waiting."
+    },
+    {
+      "speaker": "user",
+      "text": "Battle Arena?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Battle Arena."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "rival",
+      "text": "There it is."
+    }
+  ],
+  "h2h2battle": [
+    {
+      "speaker": "tyree",
+      "text": "Racing tests a Tuner’s driving ability."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Battle Arenas test the bond between Tuner and GearBorn directly."
+    },
+    {
+      "speaker": "user",
+      "text": "So this is where things get dangerous."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Potentially."
+    },
+    {
+      "speaker": "user",
+      "text": "Nice."
+    },
+    {
+      "speaker": "rival",
+      "text": "Why are you excited by that?"
+    },
+    {
+      "speaker": "user",
+      "text": "I don’t know."
+    },
+    {
+      "speaker": "user",
+      "text": "Feels important."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Every GearBorn possesses unique abilities tied to their Powertrain attribute."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Strong Tuners learn how to synchronize those abilities with their own instincts."
+    },
+    {
+      "speaker": "user",
+      "text": "You make it sound weirdly spiritual."
+    },
+    {
+      "speaker": "tyree",
+      "text": "For some people..."
+    },
+    {
+      "speaker": "tyree",
+      "text": "It is."
+    },
+    {
+      "speaker": "user",
+      "text": "Okay, this just keeps getting so much cooler."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m about to destroy Tutorque.",
+          "responseLines": [
+            {
+              "speaker": "tutorque",
+              "text": "HONK."
+            },
+            {
+              "speaker": "rival",
+              "text": "That sounded offended."
+            }
+          ]
+        },
+        {
+          "label": "Are battles actually Academy-approved?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Officially, yes."
+            },
+            {
+              "speaker": "user",
+              "text": "Seems fishy, but I’m not asking more questions"
+            }
+          ]
+        },
+        {
+          "label": "If I lose, I blame game balance.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Excuses before the battle is bold."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "The Battle Arena is ahead."
+    },
+    {
+      "speaker": "rival",
+      "text": "Try not to embarrass yourself."
+    },
+    {
+      "speaker": "user",
+      "text": "When do I not embarrass myself?"
+    }
+  ],
+  "battle-intro": [
+    {
+      "speaker": "user",
+      "text": "Another one of these? Can we just skip to the battle?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "I had a whole speech about…"
+    },
+    {
+      "speaker": "user",
+      "text": "The battle?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Seriously, there’s important…"
+    },
+    {
+      "speaker": "rival",
+      "text": "Battle?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "I liked it better when you couldn’t agree on anything."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s go."
+    }
+  ],
+  "battle": [
+    {
+      "speaker": "user",
+      "text": "So the cars actually fight."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Correct."
+    },
+    {
+      "speaker": "user",
+      "text": "And everyone just accepted that as normal?"
+    },
+    {
+      "speaker": "rival",
+      "text": "You accepted it pretty quickly."
+    },
+    {
+      "speaker": "user",
+      "text": "Yeah, because it rules."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Attacking deals direct damage to your opponent."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Defending reduces incoming damage and may stun an attacking opponent."
+    },
+    {
+      "speaker": "user",
+      "text": "So defending’s overpowered."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Defending still takes damage."
+    },
+    {
+      "speaker": "user",
+      "text": "Cowards truly suffer everywhere."
+    },
+    {
+      "speaker": "rival",
+      "text": "You are absolutely the type to button mash."
+    },
+    {
+      "speaker": "user",
+      "text": "Strategy through aggression."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "See? Tutorque gets it."
+    },
+    {
+      "speaker": "rival",
+      "text": "I genuinely don’t think it does."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Specials cannot be defended."
+    },
+    {
+      "speaker": "tyree",
+      "text": "If you mistime your defense against a Special attack, you absorb the full impact without dealing any damage."
+    },
+    {
+      "speaker": "user",
+      "text": "Sounds bad."
+    },
+    {
+      "speaker": "tyree",
+      "text": "This one’s quick."
+    },
+    {
+      "speaker": "user",
+      "text": "Joke’s on you. It’s your car."
+    },
+    {
+      "speaker": "tyree",
+      "text": "So you better not lose."
+    },
+    {
+      "speaker": "user",
+      "text": "Me? Never."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m winning this first turn.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "Confidence before a strategy. Bold approach."
+            }
+          ]
+        },
+        {
+          "label": "Tutorque looks nervous.",
+          "responseLines": [
+            {
+              "speaker": "tutorque",
+              "text": "HONK."
+            },
+            {
+              "speaker": "tyree",
+              "text": "You really need to show some respect."
+            }
+          ]
+        },
+        {
+          "label": "Wait, can GearBorn trash talk each other?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Not verbally."
+            },
+            {
+              "speaker": "user",
+              "text": "So emotionally."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Battle begins now."
+    }
+  ],
+  "battle-win": [
+    {
+      "speaker": "tyree",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "You’re doing the hmm thing again."
+    },
+    {
+      "speaker": "tyree",
+      "text": "I’m thinking."
+    },
+    {
+      "speaker": "user",
+      "text": "About how incredible I am?"
+    },
+    {
+      "speaker": "rival",
+      "text": "That seems unlikely."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "Tuto’s got the same look. That “I want to pass (User’s name)” look."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your synchronization with Mamburn improved dramatically during that battle."
+    },
+    {
+      "speaker": "user",
+      "text": "True. What does that mean?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "GearBorn respond differently depending on the Tuner driving them."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Timing. Emotion. Instinct."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Compatibility matters."
+    },
+    {
+      "speaker": "user",
+      "text": "So Mamburn likes me more than you."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s not get carried away."
+    },
+    {
+      "speaker": "rival",
+      "text": "Please get less carried away, actually."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Still..."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your battle instincts are unusually strong for a first-year."
+    },
+    {
+      "speaker": "user",
+      "text": "You keep saying unusual like you’re deciding whether to call security."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Admit it. I crushed that.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Your confidence continues to outpace your experience."
+            }
+          ]
+        },
+        {
+          "label": "Wait until you see me with my own GearBorn.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Let’s survive the evaluation first."
+            }
+          ]
+        },
+        {
+          "label": "Tutorque definitely likes me now.",
+          "responseLines": [
+            {
+              "speaker": "tutorque",
+              "text": "HONK."
+            },
+            {
+              "speaker": "tyree",
+              "text": "Yes, I totally agree."
+            },
+            {
+              "speaker": "user",
+              "text": "Wait, do you understand him?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "user",
+      "text": "Are we done with the evaluations yet?"
+    },
+    {
+      "speaker": "user",
+      "text": "I can keep winning all day, but I figure you want me in front of the fans sooner than later."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s head back to the map."
+    },
+    {
+      "speaker": "user",
+      "text": "Oh, you’ve got to be kidding me."
+    }
+  ],
+  "map-final": [
+    {
+      "speaker": "tyree",
+      "text": "As your reputation grows, more race types become available."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Including Boss Challenges."
+    },
+    {
+      "speaker": "user",
+      "text": "Wait."
+    },
+    {
+      "speaker": "user",
+      "text": "Do I get to race you now?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "This is just an example."
+    },
+    {
+      "speaker": "user",
+      "text": "You’re kidding me."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You’ll also unlock Medallion Gauntlets and Pink Slip races where you can unlock new GearBorn medallions."
+    },
+    {
+      "speaker": "user",
+      "text": "Cool."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Just watch out in Pink Slip races because you’ll lose your car if you lose."
+    },
+    {
+      "speaker": "user",
+      "text": "Cool… cool, cool, cool."
+    },
+    {
+      "speaker": "user",
+      "text": "No pressure."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Most Tuners spend years building enough reputation to challenge even one Boss."
+    },
+    {
+      "speaker": "user",
+      "text": "Give me two weeks."
+    },
+    {
+      "speaker": "rival",
+      "text": "You really don’t know when to stop talking."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m beating all of them.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Ambition is easy."
+            },
+            {
+              "speaker": "tyree",
+              "text": "Consistency is difficult."
+            }
+          ]
+        },
+        {
+          "label": "Which Boss is the strongest?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Depends who you ask."
+            },
+            {
+              "speaker": "rival",
+              "text": "And whether they survived the race."
+            }
+          ]
+        },
+        {
+          "label": "Do any of them have normal hobbies?",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "What like pottery?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s head to the garage."
+    },
+    {
+      "speaker": "user",
+      "text": "Finally."
+    },
+    {
+      "speaker": "user",
+      "text": "I’ve been waiting for the cool customization stuff."
+    },
+    {
+      "speaker": "rival",
+      "text": "Somehow I feel like this is about to become a problem."
+    }
+  ],
+  "garage": [
+    {
+      "speaker": "user",
+      "text": "Okay."
+    },
+    {
+      "speaker": "user",
+      "text": "Now THIS is sick."
+    },
+    {
+      "speaker": "tyree",
+      "text": "This is the Garage."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Every GearBorn you unlock, upgrade, and evolve will be stored here."
+    },
+    {
+      "speaker": "user",
+      "text": "So this becomes, like... my collection?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Your responsibility."
+    },
+    {
+      "speaker": "user",
+      "text": "Way less fun wording."
+    },
+    {
+      "speaker": "rival",
+      "text": "Same meaning, though."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Every GearBorn possesses a unique balance of six core attributes."
+    },
+    {
+      "speaker": "tyree",
+      "text": "SPEED, ACCELERATION, HANDLING, TORQUE, BODY, and POWERTRAIN."
+    },
+    {
+      "speaker": "user",
+      "text": "I know what most of those words mean."
+    },
+    {
+      "speaker": "rival",
+      "text": "“Most” is concerning."
+    },
+    {
+      "speaker": "user",
+      "text": "Hey."
+    },
+    {
+      "speaker": "tyree",
+      "text": "SPEED determines maximum velocity."
+    },
+    {
+      "speaker": "tyree",
+      "text": "ACCELERATION determines how quickly a GearBorn reaches that speed."
+    },
+    {
+      "speaker": "tyree",
+      "text": "HANDLING affects turning precision and corner stability."
+    },
+    {
+      "speaker": "user",
+      "text": "Okay, that one’s obvious."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You want to take it from here?"
+    },
+    {
+      "speaker": "user",
+      "text": "Keep going. (Rival’s name) probably needs to hear it."
+    },
+    {
+      "speaker": "rival",
+      "text": "Sure."
+    },
+    {
+      "speaker": "tyree",
+      "text": "TORQUE affects shifting performance and acceleration output during gear transitions."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "tyree",
+      "text": "BODY determines durability and resistance to impacts."
+    },
+    {
+      "speaker": "user",
+      "text": "Less sick."
+    },
+    {
+      "speaker": "tyree",
+      "text": "POWERTRAIN governs a GearBorn’s unique abilities and combat specialization."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "Thank you."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s move on to upgrading."
+    }
+  ],
+  "upgrade": [
+    {
+      "speaker": "tyree",
+      "text": "Upgrading increases a GearBorn’s overall performance permanently."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Higher levels improve all core attributes."
+    },
+    {
+      "speaker": "user",
+      "text": "Jeez, these prices are insane."
+    },
+    {
+      "speaker": "tyree",
+      "text": "My Mamburn is already Level 9, so you’ll see it’s quite expensive."
+    },
+    {
+      "speaker": "tyree",
+      "text": "The higher the level, the higher the price."
+    },
+    {
+      "speaker": "user",
+      "text": "I can’t afford that."
+    },
+    {
+      "speaker": "tyree",
+      "text": "It’s okay. I’ll cover the rest."
+    },
+    {
+      "speaker": "user",
+      "text": "Wait, seriously?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "You remember that this is my car, right?"
+    },
+    {
+      "speaker": "user",
+      "text": "Dang, I was hoping you’d forget to ask for the keys."
+    },
+    {
+      "speaker": "user",
+      "text": "Ooo."
+    },
+    {
+      "speaker": "user",
+      "text": "Big numbers."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Click LEVEL UP."
+    },
+    {
+      "speaker": "user",
+      "text": "You sound weirdly excited."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Upgrading is an important moment in a Tuner’s development."
+    },
+    {
+      "speaker": "user",
+      "text": "Nerd."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Here goes nothing.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Usually the preferred outcome."
+            }
+          ]
+        },
+        {
+          "label": "If this explodes, I’m blaming you.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "I’m beginning to regret encouraging you."
+            }
+          ]
+        },
+        {
+          "label": "Mamburn, don’t embarrass me.",
+          "responseLines": [
+            {
+              "speaker": "mamburn",
+              "text": "VROOOOM."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "Go ahead."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Let’s see what happens."
+    }
+  ],
+  "evolve": [
+    {
+      "speaker": "user",
+      "text": "Uh..."
+    },
+    {
+      "speaker": "user",
+      "text": "Was it supposed to do that?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Hmm…"
+    },
+    {
+      "speaker": "user",
+      "text": "Stop hmm-ing and tell me what’s going on!"
+    },
+    {
+      "speaker": "snaytan",
+      "text": "VROOOOOOM."
+    },
+    {
+      "speaker": "tyree",
+      "text": "You triggered an evolution in Mamburn."
+    },
+    {
+      "speaker": "tyree",
+      "text": "She’s now become the fearsome Snaytan!"
+    },
+    {
+      "speaker": "user",
+      "text": "How did you somehow come out of this with an even cooler car?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Those who can’t do…"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Get someone to do it for them."
+    },
+    {
+      "speaker": "user",
+      "text": "Touche."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "You’re welcome, by the way.",
+          "responseLines": [
+            {
+              "speaker": "rival",
+              "text": "He paid for most of it!"
+            }
+          ]
+        },
+        {
+          "label": "Can I call you Dr. Snakes?",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "No."
+            }
+          ]
+        },
+        {
+          "label": "I’m kind of attached now.",
+          "responseLines": [
+            {
+              "speaker": "tyree",
+              "text": "Don’t start trying to convince me."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "tyree",
+      "text": "There is... one final matter."
+    },
+    {
+      "speaker": "user",
+      "text": "Why do I suddenly not like how you said that?"
+    }
+  ],
+  "tyree-final": [
+    {
+      "speaker": "tyree",
+      "text": "Your evaluation is complete."
+    },
+    {
+      "speaker": "user",
+      "text": "Cool."
+    },
+    {
+      "speaker": "user",
+      "text": "So where’s the “congratulations future Tuner” speech?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "I’m sorry, but I can’t pass you."
+    },
+    {
+      "speaker": "user",
+      "text": "What?"
+    },
+    {
+      "speaker": "rival",
+      "text": "Wait, that’s not right…"
+    },
+    {
+      "speaker": "user",
+      "text": "I won all of the races."
+    },
+    {
+      "speaker": "user",
+      "text": "I beat Tutorque."
+    },
+    {
+      "speaker": "user",
+      "text": "Mamburn literally evolved."
+    },
+    {
+      "speaker": "tyree",
+      "text": "This evaluation measures more than results."
+    },
+    {
+      "speaker": "user",
+      "text": "Then what was the point of any of this?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "(Rival’s name) needed a competitive benchmark for Academy recommendation."
+    },
+    {
+      "speaker": "user",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "So I was just practice?"
+    },
+    {
+      "speaker": "rival",
+      "text": "That’s not-"
+    },
+    {
+      "speaker": "tyree",
+      "text": "You demonstrated strong instincts."
+    },
+    {
+      "speaker": "tyree",
+      "text": "But instincts alone are not enough to become a Tuner."
+    },
+    {
+      "speaker": "user",
+      "text": "You said bonding mattered."
+    },
+    {
+      "speaker": "tyree",
+      "text": "It does."
+    },
+    {
+      "speaker": "user",
+      "text": "Then what am I missing?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "Control."
+    },
+    {
+      "speaker": "user",
+      "text": "So that’s it?"
+    },
+    {
+      "speaker": "tyree",
+      "text": "You may apply again next year."
+    },
+    {
+      "speaker": "user",
+      "text": "Next year?!"
+    },
+    {
+      "speaker": "user",
+      "text": "Are you serious?!"
+    },
+    {
+      "speaker": "rival",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "Say something."
+    },
+    {
+      "speaker": "rival",
+      "text": "I didn’t know this was how they were scoring it."
+    },
+    {
+      "speaker": "user",
+      "text": "Yeah."
+    },
+    {
+      "speaker": "user",
+      "text": "Well, apparently everybody knew except me."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Please return the key."
+    },
+    {
+      "speaker": "user",
+      "text": "Right."
+    },
+    {
+      "speaker": "key",
+      "text": "Dr. Tyree takes back his GearBorn Key."
+    },
+    {
+      "speaker": "tyree",
+      "text": "Mamburn performed exceptionally today."
+    },
+    {
+      "speaker": "user",
+      "text": "Cool."
+    },
+    {
+      "speaker": "user",
+      "text": "Glad somebody passed."
+    },
+    {
+      "speaker": "tyree",
+      "text": "I’m so sorry (User’s name)."
+    }
+  ],
+  "empty-garage": [
+    {
+      "speaker": "user",
+      "text": "..."
+    },
+    {
+      "speaker": "user",
+      "text": "Cool."
+    },
+    {
+      "speaker": "user",
+      "text": "Awesome."
+    },
+    {
+      "speaker": "user",
+      "text": "Apply again next year."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "user",
+      "text": "..."
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "Oh."
+    },
+    {
+      "speaker": "user",
+      "text": "You came back to laugh at me too?"
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "What are you doing?"
+    },
+    {
+      "speaker": "user",
+      "text": "What are those?"
+    },
+    {
+      "speaker": "tutorque",
+      "text": "HONK."
+    },
+    {
+      "speaker": "user",
+      "text": "That was weird."
+    },
+    {
+      "speaker": "user",
+      "text": "I wish I understood those honks."
+    },
+    {
+      "speaker": "narration",
+      "text": "TUTORIAL_PLACEHOLDER_MEDALLIONS_ACQUIRED"
+    },
+    {
+      "speaker": "user",
+      "text": "What the heck are these?"
+    }
+  ],
+  "ashley-intro": [
+    {
+      "speaker": "ashley",
+      "text": "Quick, Astro. They’re gone."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Who are you? This place is supposed to be empty."
+    },
+    {
+      "speaker": "user",
+      "text": "I’m leaving. Sorry."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Wait, did you just take Tyree’s evaluation?"
+    },
+    {
+      "speaker": "user",
+      "text": "Took it. Failed it."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Then how’d you get those medallions?"
+    },
+    {
+      "speaker": "user",
+      "text": "These? Tutorque just left them."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Just left them? Like it gave them to you?"
+    },
+    {
+      "speaker": "user",
+      "text": "Yeah, it kind of just plopped them down."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Who the heck are you, kid?"
+    },
+    {
+      "speaker": "user",
+      "text": "(User’s name)."
+    },
+    {
+      "speaker": "ashley",
+      "text": "(User’s name), I don’t think you understand what just happened."
+    },
+    {
+      "speaker": "user",
+      "text": "Who are you?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Ashley Racem."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Former Academy problem child."
+    },
+    {
+      "speaker": "user",
+      "text": "Was that an official title?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Pretty well known."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Tutorques don’t hand out medallions unless they recognize a bond."
+    },
+    {
+      "speaker": "user",
+      "text": "A bond?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Real synchronization."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Not keys."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Not rankings."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Not Academy approval."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Actual connection."
+    },
+    {
+      "speaker": "user",
+      "text": "So Tyree was wrong?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Tyree sees the world through rules."
+    },
+    {
+      "speaker": "ashley",
+      "text": "GearBorn don’t always care about rules."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Come on."
+    },
+    {
+      "speaker": "user",
+      "text": "Where are we going?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Somewhere the Academy really wouldn’t want you seeing."
+    },
+    {
+      "speaker": "user",
+      "text": "That is the coolest possible answer you could’ve given."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Yeah."
+    },
+    {
+      "speaker": "ashley",
+      "text": "I get that a lot."
+    }
+  ],
+  "the-forge": [
+    {
+      "speaker": "user",
+      "text": "Okay."
+    },
+    {
+      "speaker": "user",
+      "text": "THIS is insane."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Welcome to the Forge."
+    },
+    {
+      "speaker": "user",
+      "text": "This place looks illegal."
+    },
+    {
+      "speaker": "ashley",
+      "text": "That’s because it mostly is."
+    },
+    {
+      "speaker": "user",
+      "text": "What even IS this?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Before the Academy turned medallions into rankings and gatekeeping..."
+    },
+    {
+      "speaker": "ashley",
+      "text": "The Forge was how Tuners bonded with GearBorn."
+    },
+    {
+      "speaker": "user",
+      "text": "And this still works?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Better than the Academy does."
+    },
+    {
+      "speaker": "ashley",
+      "text": "The medallions Tutorque gave you contain dormant GearBorn bonds."
+    },
+    {
+      "speaker": "ashley",
+      "text": "You use the Forge to awaken them."
+    },
+    {
+      "speaker": "user",
+      "text": "So I’m basically hatching a car."
+    },
+    {
+      "speaker": "ashley",
+      "text": "That is the least magical way you could’ve phrased that."
+    },
+    {
+      "speaker": "user",
+      "text": "Thank you."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Pick one."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Let’s see who answered your bond."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "What if I pick wrong?",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Then they wouldn’t have answered you."
+            }
+          ]
+        },
+        {
+          "label": "Can I unlock all of them?",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Now you’re thinking like a Tuner."
+            }
+          ]
+        },
+        {
+          "label": "This still feels extremely illegal.",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Illegal’s mostly just a confidence thing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "ashley",
+      "text": "Go ahead."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Place the medallion into the Forge."
+    }
+  ],
+  "medallion-unlock": [
+    {
+      "speaker": "user",
+      "text": "Okay."
+    },
+    {
+      "speaker": "user",
+      "text": "That was WAY cooler than the Academy."
+    },
+    {
+      "speaker": "ashley",
+      "text": "I wish Tyree was here to hear you say that."
+    },
+    {
+      "speaker": "user",
+      "text": "I absolutely want Tyree to hear me say that."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Congratulations."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Your first real GearBorn answered your call."
+    }
+  ],
+  "unlocked": [
+    {
+      "speaker": "user",
+      "text": "No way."
+    },
+    {
+      "speaker": "user",
+      "text": "That one’s mine?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Yours if you earn the bond."
+    },
+    {
+      "speaker": "ashley",
+      "text": "GearBorn choose who they trust."
+    },
+    {
+      "speaker": "user",
+      "text": "Okay, that’s still taking me a second to process."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Get used to it."
+    },
+    {
+      "speaker": "ashley",
+      "text": "The world’s a lot bigger than the Academy made it seem."
+    },
+    {
+      "speaker": "ashley",
+      "text": "There are hundreds of GearBorn out there."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Different cities."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Different Tuners."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Different stories."
+    },
+    {
+      "speaker": "user",
+      "text": "And all of them can evolve?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "If the bond’s strong enough."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Here."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Download this."
+    },
+    {
+      "speaker": "user",
+      "text": "VINdex?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Tracks every GearBorn you encounter."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Once you see a GearBorn, its basic info gets logged automatically."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Unlocking one gives you deeper data, evolution paths, and compatibility records."
+    },
+    {
+      "speaker": "user",
+      "text": "So basically a giant GearBorn encyclopedia."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Please never call it that around serious Tuners."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "I’m absolutely collecting all of them.",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Careful."
+            },
+            {
+              "speaker": "ashley",
+              "text": "That’s how the obsession starts."
+            }
+          ]
+        },
+        {
+          "label": "This feels weirdly addictive already.",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Welcome to the club."
+            }
+          ]
+        },
+        {
+          "label": "Wait, there are HUNDREDS of these things?",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "You haven’t even scratched the surface."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "ashley",
+      "text": "Open it up."
+    },
+    {
+      "speaker": "ashley",
+      "text": "I’ll show you how it works."
+    }
+  ],
+  "vindex": [
+    {
+      "speaker": "user",
+      "text": "Okay, this is actually super clean."
+    },
+    {
+      "speaker": "ashley",
+      "text": "The VINdex logs every GearBorn you encounter across the world."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Seen GearBorn get basic entries."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Bonded GearBorn unlock full records."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Evolutions, attributes, histories... all of it."
+    },
+    {
+      "speaker": "user",
+      "text": "So the goal is basically to fill the whole thing out."
+    },
+    {
+      "speaker": "ashley",
+      "text": "For some Tuners, yeah."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Others just chase strength."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Or reputation."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Or money."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Depends what kind of Tuner you become."
+    },
+    {
+      "speaker": "user",
+      "text": "TUTORIAL_CHOICE_PROMPT",
+      "choices": [
+        {
+          "label": "Which one’s your favorite?",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Depends on the day."
+            },
+            {
+              "speaker": "ashley",
+              "text": "And how much property damage I’m trying to avoid."
+            }
+          ]
+        },
+        {
+          "label": "So there are legendary GearBorn too, right?",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "Oh, absolutely."
+            },
+            {
+              "speaker": "ashley",
+              "text": "Some people spend their entire lives chasing them."
+            }
+          ]
+        },
+        {
+          "label": "I’m definitely finding the weirdest one possible.",
+          "responseLines": [
+            {
+              "speaker": "ashley",
+              "text": "I’m starting to get that about you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "speaker": "ashley",
+      "text": "There’s one more thing you should know before I turn you loose."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Open Achievements."
+    }
+  ],
+  "achievements": [
+    {
+      "speaker": "user",
+      "text": "Oh no."
+    },
+    {
+      "speaker": "user",
+      "text": "There are percentages."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Tuners love percentages."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Makes them feel in control."
+    },
+    {
+      "speaker": "user",
+      "text": "This is how people lose hundreds of hours of their lives, huh?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Thousands, usually."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Achievements track major milestones across your journey."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Race wins."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Boss victories."
+    },
+    {
+      "speaker": "ashley",
+      "text": "GearBorn discoveries."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Evolutions."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Some are easy."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Some are completely harder."
+    },
+    {
+      "speaker": "user",
+      "text": "I hate numbers."
+    },
+    {
+      "speaker": "ashley",
+      "text": "This is so simple."
+    },
+    {
+      "speaker": "user",
+      "text": "Uh…"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Achievements also reward Sprox, medallions, and rare unlocks."
+    },
+    {
+      "speaker": "ashley",
+      "text": "So don’t ignore them."
+    },
+    {
+      "speaker": "user",
+      "text": "So the races reward me for becoming emotionally unhealthy."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Now you’re understanding competitive racing culture."
+    },
+    {
+      "speaker": "ashley",
+      "text": "One last thing."
+    },
+    {
+      "speaker": "ashley",
+      "text": "The Academy teaches people how to follow the road."
+    },
+    {
+      "speaker": "ashley",
+      "text": "But the best Tuners?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "They find their own route."
+    }
+  ],
+  "end": [
+    {
+      "speaker": "ashley",
+      "text": "Out there, nobody cares whether the Academy passed you or not."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Bosses care about reputation."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Tuners care about results."
+    },
+    {
+      "speaker": "ashley",
+      "text": "GearBorn care about connection."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Everything else is noise."
+    },
+    {
+      "speaker": "user",
+      "text": "So what now?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "Now?"
+    },
+    {
+      "speaker": "ashley",
+      "text": "You build your reputation."
+    },
+    {
+      "speaker": "ashley",
+      "text": "You challenge the city bosses."
+    },
+    {
+      "speaker": "ashley",
+      "text": "You unlock stronger GearBorn."
+    },
+    {
+      "speaker": "ashley",
+      "text": "You figure out what kind of Tuner you actually want to become."
+    },
+    {
+      "speaker": "user",
+      "text": "Sounds easy enough."
+    },
+    {
+      "speaker": "ashley",
+      "text": "It really, REALLY isn’t."
+    },
+    {
+      "speaker": "user",
+      "text": "Sick."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Yeah."
+    },
+    {
+      "speaker": "ashley",
+      "text": "It kinda is."
+    },
+    {
+      "speaker": "ashley",
+      "text": "Welcome to the world of GearBorn."
+    }
+  ]
+};
+Object.assign(tutorialDialogue, tutorialRewriteDialogue);
+
+
+const tutorialDialogueAliases = {
+  "battle-win": "post-battle",
+  "evolution-cinematic": "evolve",
+  "evolved-form": "evolve",
+  "medallion-discovery": "empty-garage",
+  end: "starters"
+};
 const displayImageScaleByName = {
   swinecroft: 1.22,
   phantaxi: 1.28,
@@ -704,8 +4056,241 @@ const gearbornStatProfiles = {
   "cake-train": { speed: 68, acceleration: 72, handling: 60, torque: 87, body: 87, powertrain: 84, playstyle: "Sugar Juggernaut" },
   rainbowlt: { speed: 87, acceleration: 87, handling: 87, torque: 87, body: 87, powertrain: 87, playstyle: "Perfect Ascension" },
   "metal-snake": { speed: 100, acceleration: 98, handling: 78, torque: 100, body: 80, powertrain: 92, playstyle: "Heavy Burner" },
-  "training-car": { speed: 60, acceleration: 60, handling: 60, torque: 60, body: 60, powertrain: 60, playstyle: "Student Driver" }
+  "training-car": { speed: 60, acceleration: 60, handling: 60, torque: 60, body: 60, powertrain: 60, playstyle: "Student Driver", type: "Training" }
 };
+Object.assign(gearbornStatProfiles, {
+  "bee": {
+    "speed": 87,
+    "acceleration": 87,
+    "handling": 80,
+    "torque": 74,
+    "body": 62,
+    "powertrain": 84,
+    "playstyle": "Stinger Sprinter",
+    "type": "Agility"
+  },
+  "muscle-man": {
+    "speed": 86,
+    "acceleration": 76,
+    "handling": 64,
+    "torque": 82,
+    "body": 80,
+    "powertrain": 78,
+    "playstyle": "Flex Cruiser",
+    "type": "Power"
+  },
+  "pickup": {
+    "speed": 70,
+    "acceleration": 72,
+    "handling": 64,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 74,
+    "playstyle": "Load Hauler",
+    "type": "Endurance"
+  },
+  "karate-cow": {
+    "speed": 72,
+    "acceleration": 86,
+    "handling": 74,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 84,
+    "playstyle": "Deceptive Powerhouse",
+    "type": "Endurance"
+  },
+  "pig": {
+    "speed": 74,
+    "acceleration": 78,
+    "handling": 72,
+    "torque": 82,
+    "body": 84,
+    "powertrain": 87,
+    "playstyle": "Scrappy Bruiser",
+    "type": "Tech"
+  },
+  "waste-management": {
+    "speed": 64,
+    "acceleration": 66,
+    "handling": 60,
+    "torque": 80,
+    "body": 83,
+    "powertrain": 76,
+    "playstyle": "Trash Collector",
+    "type": "Endurance"
+  },
+  "techno-dinosaur": {
+    "speed": 84,
+    "acceleration": 76,
+    "handling": 66,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 84,
+    "playstyle": "Primal Charger",
+    "type": "Transmission"
+  },
+  "rabbit": {
+    "speed": 82,
+    "acceleration": 87,
+    "handling": 87,
+    "torque": 74,
+    "body": 60,
+    "powertrain": 80,
+    "playstyle": "Hopshot Dasher",
+    "type": "Agility"
+  },
+  "chill-penguin": {
+    "speed": 72,
+    "acceleration": 80,
+    "handling": 86,
+    "torque": 74,
+    "body": 70,
+    "powertrain": 82,
+    "playstyle": "Glacier Slider",
+    "type": "Grip"
+  },
+  "grunge-fish": {
+    "speed": 74,
+    "acceleration": 72,
+    "handling": 87,
+    "torque": 87,
+    "body": 64,
+    "powertrain": 82,
+    "playstyle": "Dirty Thrasher",
+    "type": "Grip"
+  },
+  "space-dolphin": {
+    "speed": 82,
+    "acceleration": 86,
+    "handling": 80,
+    "torque": 72,
+    "body": 62,
+    "powertrain": 78,
+    "playstyle": "Cosmic Surfer",
+    "type": "Agility"
+  },
+  "whale": {
+    "speed": 66,
+    "acceleration": 68,
+    "handling": 58,
+    "torque": 72,
+    "body": 87,
+    "powertrain": 87,
+    "playstyle": "Tidal Fortress",
+    "type": "Endurance"
+  },
+  "florida-gator": {
+    "speed": 80,
+    "acceleration": 82,
+    "handling": 76,
+    "torque": 80,
+    "body": 87,
+    "powertrain": 87,
+    "playstyle": "Swamp Striker",
+    "type": "Tech"
+  },
+  "art-van": {
+    "speed": 78,
+    "acceleration": 78,
+    "handling": 78,
+    "torque": 78,
+    "body": 78,
+    "powertrain": 78,
+    "playstyle": "Blank Canvas",
+    "type": "Neutral"
+  },
+  "sorority-elephant": {
+    "speed": 68,
+    "acceleration": 70,
+    "handling": 60,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 78,
+    "playstyle": "Stampede Engine",
+    "type": "Endurance"
+  },
+  "butcher-hog": {
+    "speed": 74,
+    "acceleration": 78,
+    "handling": 66,
+    "torque": 80,
+    "body": 84,
+    "powertrain": 86,
+    "playstyle": "Meatwheel Menace",
+    "type": "Tech"
+  },
+  "frog": {
+    "speed": 76,
+    "acceleration": 84,
+    "handling": 87,
+    "torque": 72,
+    "body": 64,
+    "powertrain": 82,
+    "playstyle": "Bogside Jumper",
+    "type": "Grip"
+  },
+  "cake-train": {
+    "speed": 68,
+    "acceleration": 72,
+    "handling": 60,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 84,
+    "playstyle": "Sugar Juggernaut",
+    "type": "Endurance"
+  },
+  "tiger-cart": {
+    "speed": 83,
+    "acceleration": 86,
+    "handling": 87,
+    "torque": 72,
+    "body": 66,
+    "powertrain": 78,
+    "playstyle": "Feral Fairway",
+    "type": "Grip"
+  },
+  "silly-goose": {
+    "speed": 72,
+    "acceleration": 78,
+    "handling": 70,
+    "torque": 66,
+    "body": 62,
+    "powertrain": 84,
+    "playstyle": "Chaos Honker",
+    "type": "Tech"
+  },
+  "construction-blok": {
+    "speed": 64,
+    "acceleration": 68,
+    "handling": 60,
+    "torque": 84,
+    "body": 87,
+    "powertrain": 79,
+    "playstyle": "Brick Builder",
+    "type": "Endurance"
+  },
+  "skater-koala": {
+    "speed": 76,
+    "acceleration": 82,
+    "handling": 86,
+    "torque": 70,
+    "body": 64,
+    "powertrain": 80,
+    "playstyle": "Rail Carver",
+    "type": "Grip"
+  },
+  "rainbowlt": {
+    "speed": 87,
+    "acceleration": 87,
+    "handling": 87,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 87,
+    "playstyle": "Perfect Ascension",
+    "type": "Neutral"
+  }
+});
+
 const bossStatProfiles = {
   crusadome: { speed: 76, acceleration: 74, handling: 70, torque: 82, body: 90, powertrain: 68 },
   baronessex: { speed: 74, acceleration: 72, handling: 68, torque: 84, body: 100, powertrain: 80 },
@@ -857,6 +4442,24 @@ const storyCities = bosses.map((boss, index) => {
   levels: [{ ...campaignLevels[campaignLevels.length - 1], campaignIndex: campaignLevels.length - 1 }],
   icon: finalBoss.track.cityIcon
 }]);
+const medallionGauntlets = Object.fromEntries(storyCities
+  .filter((city) => !city.final)
+  .slice(0, 8)
+  .map((city, index) => {
+    const gearBornLineId = gauntletUnlockOrder[index] || "muscle-man";
+    return [city.id, {
+      enabled: true,
+      unlockReputationPercent: 50,
+      gearBornLineId,
+      medallionId: gearBornLineId,
+      displayName: cars.find((car) => car.id === gearBornLineId)?.evolutions[0]?.name || "A GearBorn",
+      stages: [
+        { stage: 1, mode: "drag", opponentForm: 1 },
+        { stage: 2, mode: "battle", opponentForm: 2 },
+        { stage: 3, mode: "headToHead2D", opponentForm: 3 }
+      ]
+    }];
+  }));
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 14.5 },
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 17.5 },
@@ -890,6 +4493,7 @@ const vindexEntries = [
   ["145", "Moshfin", "Grunge Fish Line", "assets/cars/fish-moshfin-display.png"],
   ["146", "Barracobain", "Grunge Fish Line", "assets/cars/fish-barracobain-display.png"],
   ["147", "Vedderanha", "Grunge Fish Line", "assets/cars/fish-vedderanha-display.png"],
+  ["150", "Astromarino", "Space Dolphin Line", "assets/cars/dolphin-astromarino-display.png"],
   ["151", "Totorca", "Yacht Rock Whale Line", "assets/cars/whale-totorca-display.png"],
   ["152", "Boates", "Yacht Rock Whale Line", "assets/cars/whale-boates-display.png"],
   ["153", "Shamacht", "Yacht Rock Whale Line", "assets/cars/whale-shamacht-display.png"],
@@ -923,6 +4527,169 @@ const vindexEntries = [
   ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unlock-rainbowlt-display.png"],
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/rival-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
+
+const additionalVindexEntries = [
+  [
+    "042",
+    "Tourquette",
+    "Muscle Man Line",
+    "assets/cars/muscle-tourquette-display.png"
+  ],
+  [
+    "043",
+    "Pistonox",
+    "Muscle Man Line",
+    "assets/cars/muscle-pistonox-display.png"
+  ],
+  [
+    "044",
+    "Cylindialis",
+    "Muscle Man Line",
+    "assets/cars/muscle-cylindialis-display.png"
+  ],
+  [
+    "079",
+    "Garbaggito",
+    "Waste Management Line",
+    "assets/cars/garbage-garbaggito-display.png"
+  ],
+  [
+    "080",
+    "Garbanino",
+    "Waste Management Line",
+    "assets/cars/garbage-garbanino-display.png"
+  ],
+  [
+    "097",
+    "Freezy-E",
+    "Chill Penguin Line",
+    "assets/cars/penguin-freezy-e-display.png"
+  ],
+  [
+    "098",
+    "Brrap",
+    "Chill Penguin Line",
+    "assets/cars/penguin-brrap-display.png"
+  ],
+  [
+    "099",
+    "Chillmatic",
+    "Chill Penguin Line",
+    "assets/cars/penguin-chillmatic-display.png"
+  ],
+  [
+    "148",
+    "Orbitide",
+    "Space Dolphin Line",
+    "assets/cars/dolphin-orbitide-display.png"
+  ],
+  [
+    "149",
+    "Aquantius",
+    "Space Dolphin Line",
+    "assets/cars/dolphin-aquantius-display.png"
+  ],
+  [
+    "150",
+    "Astromarino",
+    "Space Dolphin Line",
+    "assets/cars/dolphin-astromarino-display.png"
+  ],
+  [
+    "222",
+    "Sauspin",
+    "Butcher Hog Line",
+    "assets/cars/butcher-sauspin-display.png"
+  ],
+  [
+    "223",
+    "Marrauvage",
+    "Butcher Hog Line",
+    "assets/cars/butcher-marrauvage-display.png"
+  ],
+  [
+    "224",
+    "OlChap",
+    "Butcher Hog Line",
+    "assets/cars/butcher-olchap-display.png"
+  ],
+  [
+    "246",
+    "Puttercat",
+    "Tiger Cart Line",
+    "assets/cars/golf-puttercat-display.png"
+  ],
+  [
+    "247",
+    "Snarfly",
+    "Tiger Cart Line",
+    "assets/cars/golf-snarfly-display.png"
+  ],
+  [
+    "248",
+    "Notar-O",
+    "Tiger Cart Line",
+    "assets/cars/golf-notar-o-display.png"
+  ],
+  [
+    "252",
+    "Honky",
+    "Silly Goose Line",
+    "assets/cars/goose-honky-display.png"
+  ],
+  [
+    "253",
+    "Goosetopher",
+    "Silly Goose Line",
+    "assets/cars/goose-goosetopher-display.png"
+  ],
+  [
+    "254",
+    "Eggdon",
+    "Silly Goose Line",
+    "assets/cars/goose-eggdon-display.png"
+  ],
+  [
+    "267",
+    "Blokparty",
+    "Construction Blok Line",
+    "assets/cars/traffic-blokparty-display.png"
+  ],
+  [
+    "268",
+    "Structable",
+    "Construction Blok Line",
+    "assets/cars/traffic-structable-display.png"
+  ],
+  [
+    "269",
+    "Doublestak",
+    "Construction Blok Line",
+    "assets/cars/traffic-doublestak-display.png"
+  ],
+  [
+    "276",
+    "Koaster",
+    "Skater Koala Line",
+    "assets/cars/koala-koaster-display.png"
+  ],
+  [
+    "277",
+    "Supey",
+    "Skater Koala Line",
+    "assets/cars/koala-supey-display.png"
+  ],
+  [
+    "278",
+    "Koalossus",
+    "Skater Koala Line",
+    "assets/cars/koala-koalossus-display.png"
+  ]
+].map(([number, name, line, image]) => ({ number, name, line, image }));
+additionalVindexEntries.forEach((entry) => {
+  if (!vindexEntries.some((item) => item.number === entry.number && item.name === entry.name)) vindexEntries.push(entry);
+});
+vindexEntries.sort((a, b) => Number(a.number) - Number(b.number) || a.name.localeCompare(b.name));
 const vindexClassByNumber = {
   "010": "E",
   "032": "C",
@@ -950,6 +4717,7 @@ const vindexClassByNumber = {
   "145": "D",
   "146": "C",
   "147": "B",
+  "150": "B",
   "151": "D",
   "152": "C",
   "153": "B",
@@ -983,6 +4751,93 @@ const vindexClassByNumber = {
   "326": "S",
   "327": "S"
 };
+Object.assign(vindexClassByNumber, {
+  "010": "E",
+  "032": "C",
+  "037": "D",
+  "039": "E",
+  "040": "D",
+  "041": "C",
+  "042": "D",
+  "043": "C",
+  "044": "B",
+  "058": "E",
+  "059": "D",
+  "060": "C",
+  "063": "E",
+  "064": "D",
+  "065": "C",
+  "066": "E",
+  "067": "D",
+  "068": "C",
+  "079": "E",
+  "080": "D",
+  "088": "D",
+  "089": "C",
+  "090": "B",
+  "091": "E",
+  "092": "D",
+  "093": "C",
+  "097": "D",
+  "098": "C",
+  "099": "B",
+  "110": "B",
+  "111": "A",
+  "145": "D",
+  "146": "C",
+  "147": "B",
+  "148": "D",
+  "149": "C",
+  "150": "B",
+  "151": "D",
+  "152": "C",
+  "153": "B",
+  "154": "D",
+  "155": "C",
+  "156": "B",
+  "157": "D",
+  "158": "B",
+  "159": "B",
+  "160": "B",
+  "161": "B",
+  "162": "B",
+  "163": "B",
+  "164": "B",
+  "198": "D",
+  "199": "C",
+  "200": "B",
+  "212": "F",
+  "222": "D",
+  "223": "C",
+  "224": "B",
+  "231": "C",
+  "232": "B",
+  "233": "A",
+  "243": "C",
+  "244": "B",
+  "245": "A",
+  "246": "C",
+  "247": "B",
+  "248": "A",
+  "251": "B",
+  "252": "E",
+  "253": "D",
+  "254": "C",
+  "267": "C",
+  "268": "B",
+  "269": "A",
+  "276": "D",
+  "277": "C",
+  "278": "B",
+  "287": "B",
+  "296": "A",
+  "298": "A",
+  "301": "A",
+  "305": "A",
+  "326": "S",
+  "327": "S"
+});
+
 const tuners = [
   { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
   { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
@@ -1034,7 +4889,8 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   name: "Dr. Tyree",
   image: "assets/characters/headshot-dr-tyree.png",
   category: "Other",
-  car: "Other",
+  car: "Mamburn",
+  carImage: "assets/cars/snake-mamburn-display.png",
   city: "Tuner Academy",
   country: "Other",
   bio: profileBios["dr-tyree"]
@@ -1045,7 +4901,8 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   headshot: "assets/characters/headshot-ashley.png",
   character: "assets/characters/character-ashley.png",
   category: "Other",
-  car: "Other",
+  car: "Astromarino",
+  carImage: "assets/cars/dolphin-astromarino-display.png",
   city: "Outside the Official Circuit",
   country: "Other",
   bio: profileBios.ashley
@@ -1343,6 +5200,195 @@ const storyCutsceneScripts = {
   }
 };
 
+const gameFeatureConfig = {
+  enableMedalSystem: true,
+  enableMicroObjectives: false,
+  enableGarageIdleAnimations: true,
+  enableVINdexRevealNotifications: true,
+  enableEvolutionPolish: true,
+  enableReputationAnimations: true,
+  reduceMotion: false
+};
+
+const microObjectiveDefinitions = [
+  // TODO: Finalize objective design and approved player-facing copy before enabling.
+  {
+    id: "placeholder-clean-race",
+    titleKey: "OBJECTIVE_PLACEHOLDER_CLEAN_RACE_TITLE",
+    descriptionKey: "OBJECTIVE_PLACEHOLDER_CLEAN_RACE_DESCRIPTION",
+    eventId: "*",
+    objectiveType: "cleanRace",
+    targetValue: 1,
+    rewardType: "sprox",
+    rewardValue: 0,
+    enabled: false
+  },
+  {
+    id: "placeholder-target-time",
+    titleKey: "OBJECTIVE_PLACEHOLDER_TARGET_TIME_TITLE",
+    descriptionKey: "OBJECTIVE_PLACEHOLDER_TARGET_TIME_DESCRIPTION",
+    eventId: "*",
+    objectiveType: "targetTime",
+    targetValue: 0,
+    rewardType: "none",
+    rewardValue: 0,
+    enabled: false
+  }
+];
+
+const idleBehaviorProfiles = {
+  playful: { bob: 1, bounce: 0.8, glowPulse: 0.7, tilt: 0.45 },
+  calm: { bob: 0.45, bounce: 0.25, glowPulse: 0.35, tilt: 0.12 },
+  aggressive: { bob: 0.35, bounce: 0.7, glowPulse: 0.9, tilt: 0.55 },
+  luxury: { bob: 0.35, bounce: 0.2, glowPulse: 0.75, tilt: 0.08 },
+  spooky: { bob: 0.65, bounce: 0.12, glowPulse: 1, tilt: 0.28 },
+  heavy: { bob: 0.2, bounce: 0.15, glowPulse: 0.45, tilt: 0.08 },
+  speedy: { bob: 0.55, bounce: 0.75, glowPulse: 0.85, tilt: 0.5 }
+};
+
+const gearbornIdleConfig = {};
+
+const audioCueAssets = {
+  // TODO: Wire approved audio files here when available. Missing cues intentionally fail silently.
+  uiSelect: "",
+  uiConfirm: "",
+  raceCountdown: "",
+  raceStart: "",
+  medalReveal: "",
+  newVindexEntry: "",
+  evolutionBuild: "",
+  evolutionReveal: "",
+  gearbornIdle: "",
+  reputationGain: ""
+};
+
+const medalPriority = { none: 0, bronze: 1, silver: 2, gold: 3 };
+
+function reduceMotionEnabled() {
+  return Boolean(gameFeatureConfig.reduceMotion || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+function featureEnabled(key) {
+  if (key === "reduceMotion") return reduceMotionEnabled();
+  return Boolean(gameFeatureConfig[key]);
+}
+
+function playAudioCue(key) {
+  const src = audioCueAssets[key];
+  if (!src) return;
+  try {
+    const audio = new Audio(src);
+    audio.volume = Math.min(1, Math.max(0, (state?.settings?.volume ?? 45) / 100));
+    audio.play().catch(() => {});
+  } catch {}
+}
+
+function evaluateMicroObjectives(context = {}) {
+  if (!featureEnabled("enableMicroObjectives")) return [];
+  return microObjectiveDefinitions
+    .filter((objective) => objective.enabled && (objective.eventId === "*" || objective.eventId === context.eventId))
+    .map((objective) => ({ ...objective, complete: false }));
+}
+
+function idleProfileForGearborn(gearbornId) {
+  const config = gearbornIdleConfig[gearbornId] || {};
+  const profileKey = config.idleProfile || "playful";
+  return {
+    gearbornId,
+    idleProfile: profileKey,
+    honkSoundKey: config.honkSoundKey || `honk:${gearbornId}`,
+    animationIntensity: Number.isFinite(Number(config.animationIntensity)) ? Number(config.animationIntensity) : 1,
+    profile: idleBehaviorProfiles[profileKey] || idleBehaviorProfiles.playful
+  };
+}
+
+function normalizeMedal(medal) {
+  return medalPriority[medal] ? medal : "none";
+}
+
+function compareMedals(existingMedal, newMedal) {
+  const existing = normalizeMedal(existingMedal);
+  const next = normalizeMedal(newMedal);
+  return medalPriority[next] > medalPriority[existing] ? next : existing;
+}
+
+function storyEventId(index) {
+  return `story:${index}`;
+}
+
+function calculateMedalForRace(result = {}, raceConfig = {}) {
+  if (!featureEnabled("enableMedalSystem")) return "none";
+  const type = raceConfig.type || "";
+  const placement = Number(result.placement);
+  const won = Boolean(result.won);
+  if (type === "race6") {
+    if (placement === 1) return "gold";
+    if (placement === 2) return "silver";
+    if (placement === 3) return "bronze";
+    return "none";
+  }
+  if (type === "race4") {
+    if (placement === 1) return "gold";
+    if (placement === 2) return "silver";
+    return "none";
+  }
+  if (result.medalKey) return normalizeMedal(result.medalKey);
+  if (type === "time" || type === "timeTrial") return "none";
+  if (raceConfig.oneWin || ["drag", "battle", "pink-slip", "boss", "rival", "duel"].includes(type)) return won ? "gold" : "none";
+  return won ? "gold" : "none";
+}
+
+function getBestMedalForEvent(eventId) {
+  const record = state.raceMedals?.[eventId];
+  return normalizeMedal(typeof record === "string" ? record : record?.medal);
+}
+
+function saveBestMedalForEvent(eventId, medal) {
+  if (!featureEnabled("enableMedalSystem") || !eventId) return { medal: "none", improved: false };
+  const newMedal = normalizeMedal(medal);
+  if (newMedal === "none") return { medal: getBestMedalForEvent(eventId), improved: false };
+  state.raceMedals = state.raceMedals || {};
+  const previous = getBestMedalForEvent(eventId);
+  const best = compareMedals(previous, newMedal);
+  const improved = medalPriority[best] > medalPriority[previous];
+  if (improved) {
+    state.raceMedals[eventId] = { medal: best, updatedAt: Date.now() };
+  }
+  return { medal: best, improved };
+}
+
+function medalLabel(medal) {
+  return ({ gold: "Gold", silver: "Silver", bronze: "Bronze" }[normalizeMedal(medal)] || "");
+}
+
+function medalFrameClass(medal) {
+  const normalized = normalizeMedal(medal);
+  return normalized === "none" ? "" : `medal-frame medal-frame-${normalized}`;
+}
+
+function medalResultMarkup(medal, improved = false) {
+  const normalized = normalizeMedal(medal);
+  if (normalized === "none") return "";
+  return `<p class="race-result-medal medal-${normalized} ${improved ? "new-best" : ""}"><span>${medalLabel(normalized)}</span>${improved ? "<em>New Best</em>" : ""}</p>`;
+}
+
+function storyMedalConfig(level) {
+  if (!level) return { type: "drag", oneWin: true };
+  if (level.type === "circuit") return { type: level.circuitMode === "race6" ? "race6" : "race4" };
+  if (level.type === "trial") return { type: "timeTrial" };
+  if (level.type === "boss") return { type: "boss", oneWin: true };
+  if (level.type === "pink-slip") return { type: "pink-slip", oneWin: true };
+  if (level.type === "rival") return { type: level.mechanic === "circuitDuel" ? "duel" : "rival", oneWin: true };
+  if (level.type === "battle") return { type: "battle", oneWin: true };
+  return { type: level.type || "drag", oneWin: true };
+}
+
+function saveStoryMedal(levelIndex, result = {}) {
+  const level = campaignLevels[levelIndex];
+  const medal = calculateMedalForRace(result, storyMedalConfig(level));
+  return saveBestMedalForEvent(storyEventId(levelIndex), medal);
+}
+
 const defaultState = {
   selectedCar: cars[0].id,
   selectedRank: "E",
@@ -1389,13 +5435,21 @@ const defaultState = {
   tutorialSnapshotUnlockedLines: null,
   tutorialSnapshotMedallions: null,
   tutorialSnapshotComplete: null,
+  tutorialChoiceResponse: null,
+  tutorialSplash: "",
   storyCarChosen: false,
   highestBossIndex: 0,
   selectedCampaign: 0,
   highestCampaignIndex: 0,
   selectedStoryCity: 0,
   visitedStoryCities: {},
+  playerGauntletProgress: {},
+  activeGauntlet: null,
+  consecutiveLosses: 0,
+  garbageMedallionAwarded: false,
   completedCampaignLevels: {},
+  raceMedals: {},
+  microObjectiveProgress: {},
   betaTimeTrials: {},
   bond: {},
   partsInventory: Object.fromEntries(partVariants.map((part) => [part.key, 0])),
@@ -1792,9 +5846,13 @@ const el = {
   tutorialKicker: document.querySelector("#tutorial-kicker"),
   tutorialTitle: document.querySelector("#tutorial-title"),
   tutorialCopy: document.querySelector("#tutorial-copy"),
+  tutorialChoices: document.querySelector("#tutorial-choices"),
   tutorialBack: document.querySelector("#tutorial-back"),
   tutorialNext: document.querySelector("#tutorial-next"),
   tutorialSkip: document.querySelector("#tutorial-skip"),
+  tutorialSkipModal: document.querySelector("#tutorial-skip-modal"),
+  cancelTutorialSkip: document.querySelector("#cancel-tutorial-skip"),
+  confirmTutorialSkip: document.querySelector("#confirm-tutorial-skip"),
   unmaskModal: document.querySelector("#unmask-modal"),
   unmaskPortrait: document.querySelector("#unmask-portrait"),
   unmaskButton: document.querySelector("#unmask-button"),
@@ -1828,6 +5886,8 @@ function mergeState(base, saved) {
     storyTimeTrials: { ...base.storyTimeTrials, ...saved.storyTimeTrials },
     betaTimeTrials: { ...base.betaTimeTrials, ...saved.betaTimeTrials },
     completedCampaignLevels: { ...base.completedCampaignLevels, ...saved.completedCampaignLevels },
+    raceMedals: { ...base.raceMedals, ...saved.raceMedals },
+    microObjectiveProgress: { ...base.microObjectiveProgress, ...saved.microObjectiveProgress },
     visitedStoryCities: { ...base.visitedStoryCities, ...saved.visitedStoryCities },
     bond: { ...base.bond, ...saved.bond },
     partsInventory: { ...base.partsInventory, ...saved.partsInventory },
@@ -1849,6 +5909,8 @@ function sanitizeState() {
   state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
   state.equippedParts = state.equippedParts && typeof state.equippedParts === "object" ? state.equippedParts : {};
   state.achievements = state.achievements && typeof state.achievements === "object" ? state.achievements : {};
+  state.raceMedals = state.raceMedals && typeof state.raceMedals === "object" ? state.raceMedals : {};
+  state.microObjectiveProgress = state.microObjectiveProgress && typeof state.microObjectiveProgress === "object" ? state.microObjectiveProgress : {};
   state.visitedStoryCities = state.visitedStoryCities && typeof state.visitedStoryCities === "object" ? state.visitedStoryCities : {};
   state.winStreak = Math.max(0, Math.floor(Number(state.winStreak) || 0));
   const artVanFormCount = cars.find((car) => car.id === "art-van")?.evolutions.length || 0;
@@ -1940,6 +6002,11 @@ function sanitizeState() {
   state.highestCampaignIndex = Math.min(state.highestCampaignIndex || 0, campaignLevels.length - 1);
   state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
   state.completedCampaignLevels = state.completedCampaignLevels || {};
+  Object.keys(state.raceMedals).forEach((eventId) => {
+    const medal = getBestMedalForEvent(eventId);
+    if (medal === "none") delete state.raceMedals[eventId];
+    else state.raceMedals[eventId] = { medal, updatedAt: Number(state.raceMedals[eventId]?.updatedAt) || Date.now() };
+  });
   state.selectedStoryCity = Math.max(0, Math.min(Number(state.selectedStoryCity) || 0, storyCities.length - 1));
   if (!storyCityUnlocked(state.selectedStoryCity)) {
     state.selectedStoryCity = Math.max(0, highestUnlockedStoryCityIndex());
@@ -1963,10 +6030,16 @@ function sanitizeState() {
   state.tutorialLine = Math.max(0, Number(state.tutorialLine) || 0);
   state.tutorialDragSprox = Math.max(0, Math.floor(Number(state.tutorialDragSprox) || 0));
   state.tutorialTimeMedal = typeof state.tutorialTimeMedal === "string" ? state.tutorialTimeMedal : "";
+  state.tutorialChoiceResponse = state.tutorialChoiceResponse && typeof state.tutorialChoiceResponse === "object" ? state.tutorialChoiceResponse : null;
+  state.tutorialSplash = typeof state.tutorialSplash === "string" ? state.tutorialSplash : "";
   state.tutorialAwaitingUpgrade = Boolean(state.tutorialAwaitingUpgrade);
   state.tutorialAwaitingEvolve = Boolean(state.tutorialAwaitingEvolve);
   state.tutorialAwaitingForge = Boolean(state.tutorialAwaitingForge);
   state.tutorialStartingSprox = Math.max(0, Math.floor(Number(state.tutorialStartingSprox) || 0));
+  state.playerGauntletProgress = state.playerGauntletProgress && typeof state.playerGauntletProgress === "object" ? state.playerGauntletProgress : {};
+  state.activeGauntlet = state.activeGauntlet && typeof state.activeGauntlet === "object" ? state.activeGauntlet : null;
+  state.consecutiveLosses = Math.max(0, Math.floor(Number(state.consecutiveLosses) || 0));
+  state.garbageMedallionAwarded = Boolean(state.garbageMedallionAwarded);
   // Tutorial cannot survive a page reload — always restore pre-tutorial state from snapshots
   // and force tutorialActive=false. The tutorial will restart from intro if replayed.
   if (state.tutorialActive) {
@@ -1994,6 +6067,7 @@ function sanitizeState() {
     state.tutorialAwaitingUpgrade = false;
     state.tutorialAwaitingEvolve = false;
     state.tutorialAwaitingForge = false;
+    state.tutorialSplash = "";
     state.tutorialStartingSprox = 0;
     state.tutorialSnapshotGarage = null;
     state.tutorialSnapshotUnlockedLines = null;
@@ -2055,6 +6129,11 @@ function formatSprox(amount = state.sprox) {
 
 function sproxAmountMarkup(amount = state.sprox) {
   return `<span class="sprox-inline"><span>${formatSprox(amount)}</span><span class="sprox-coin" aria-hidden="true"></span></span>`;
+}
+
+function sproxResultMarkup(amount = 0) {
+  const value = Math.max(0, Math.floor(Number(amount) || 0));
+  return `<span class="sprox-inline"><span class="count-up-number" data-count-target="${value}">0</span><span class="sprox-coin" aria-hidden="true"></span></span>`;
 }
 
 function addSprox(amount) {
@@ -2429,7 +6508,12 @@ function recordRaceUsage(carId) {
 }
 
 function recordStoryRaceOutcome(won, isStoryRace) {
-  if (!isStoryRace) return;
+  state.consecutiveLosses = won ? 0 : Math.max(0, Math.floor(Number(state.consecutiveLosses) || 0)) + 1;
+  if (!won) maybeUnlockGarbageMedallion();
+  if (!isStoryRace) {
+    saveState();
+    return;
+  }
   state.winStreak = won ? Math.max(0, Math.floor(Number(state.winStreak) || 0)) + 1 : 0;
   if (!won) checkAchievements();
 }
@@ -2507,6 +6591,10 @@ function unlockCarLine(carId) {
   state.unlockedCars = state.unlockedCars || {};
   state.unlockedCars[carId] = true;
   state.garage[carId] = state.garage[carId] || { level: 1, xp: 0, evolution: 0, unlockedEvolution: 0, pendingEvolution: null };
+  if (newlyUnlocked && featureEnabled("enableVINdexRevealNotifications")) {
+    playAudioCue("newVindexEntry");
+    showToast("VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_TITLE", "VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_BODY");
+  }
   return newlyUnlocked;
 }
 
@@ -2516,11 +6604,16 @@ function unlockArtVanForm(index) {
   unlockCarLine("art-van");
   state.unlockedArtVanForms = Array.isArray(state.unlockedArtVanForms) ? state.unlockedArtVanForms : [];
   if (!state.unlockedArtVanForms.includes(0)) state.unlockedArtVanForms.push(0);
-  if (!state.unlockedArtVanForms.includes(index)) state.unlockedArtVanForms.push(index);
+  const newlyUnlocked = !state.unlockedArtVanForms.includes(index);
+  if (newlyUnlocked) state.unlockedArtVanForms.push(index);
   state.unlockedArtVanForms.sort((a, b) => a - b);
   const progress = state.garage["art-van"];
   if (!state.unlockedArtVanForms.includes(progress.evolution)) progress.evolution = index;
   progress.unlockedEvolution = Math.max(progress.unlockedEvolution || 0, index);
+  if (newlyUnlocked && featureEnabled("enableVINdexRevealNotifications")) {
+    playAudioCue("newVindexEntry");
+    showToast("VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_TITLE", "VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_BODY");
+  }
   return car.evolutions[index];
 }
 
@@ -2904,6 +6997,42 @@ function cityBossRequirement(city) {
   return Math.max(1, cityCoreLevelsTotal(city) - 1);
 }
 
+function cityReputationPercent(city) {
+  const requiredCore = Math.min(cityBossRequirement(city), cityCoreLevelsTotal(city));
+  return requiredCore ? Math.min(100, Math.round((cityCoreLevelsCompleted(city) / requiredCore) * 100)) : 100;
+}
+
+function gauntletProgress(cityId) {
+  state.playerGauntletProgress = state.playerGauntletProgress || {};
+  return state.playerGauntletProgress[cityId] || { revealed: false, popupShown: false, currentStage: 1, completed: false, rewardClaimed: false };
+}
+
+function saveGauntletProgress(cityId, patch = {}) {
+  state.playerGauntletProgress = state.playerGauntletProgress || {};
+  const current = gauntletProgress(cityId);
+  state.playerGauntletProgress[cityId] = {
+    ...current,
+    ...patch,
+    currentStage: Math.max(1, Math.min(3, Number(patch.currentStage ?? current.currentStage ?? 1)))
+  };
+  return state.playerGauntletProgress[cityId];
+}
+
+function gauntletForCity(city) {
+  return city && !city.final ? medallionGauntlets[city.id] : null;
+}
+
+function maybeTriggerMedallionGauntlet(city) {
+  const config = gauntletForCity(city);
+  if (!config?.enabled) return;
+  const progress = gauntletProgress(city.id);
+  if (progress.popupShown || progress.completed) return;
+  if (cityReputationPercent(city) < config.unlockReputationPercent) return;
+  saveGauntletProgress(city.id, { revealed: true, popupShown: true });
+  saveState();
+  openGauntletPopup(city.id);
+}
+
 function cityBossUnlocked(city) {
   if (city.final) return storyCityUnlocked(storyCities.indexOf(city));
   return cityCoreLevelsCompleted(city) >= cityBossRequirement(city);
@@ -2940,13 +7069,14 @@ function renderCampaign() {
   // During tutorial, use the special training city map
   if (tutorialActive()) {
     const city = tutorialCity;
+    const tutorialLevels = tutorialMapLevels();
     el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
     el.storyCityTitle.textContent = city.city.toUpperCase();
     el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.map}")`;
     el.storyCityMap.style.backgroundSize = "cover";
     el.storyCityMap.style.backgroundPosition = "center";
     el.bossUnlockNote.textContent = "";
-    el.storyMapStage.innerHTML = city.levels.map((level) => tutorialMapNodeMarkup(level)).join("");
+    el.storyMapStage.innerHTML = tutorialLevels.map((level) => tutorialMapNodeMarkup(level)).join("");
     // Hide city-select and change-car controls during tutorial
     if (el.storyCitySelect) el.storyCitySelect.hidden = true;
     if (el.changeStoryCar) el.changeStoryCar.hidden = true;
@@ -2964,7 +7094,7 @@ function renderCampaign() {
   const totalCore = cityCoreLevelsTotal(city);
   const requiredCore = Math.min(cityBossRequirement(city), totalCore);
   const boss = bosses[city.bossIndex] || finalBoss;
-  const repPercent = requiredCore ? Math.min(100, Math.round((completedCore / requiredCore) * 100)) : 100;
+  const repPercent = cityReputationPercent(city);
   el.bossUnlockNote.innerHTML = cityUnlocked && !city.final && !cityBossUnlocked(city)
     ? `<div class="reputation-meter" style="--rep:${repPercent}%">
         <div class="rep-copy"><span>Reputation</span><strong>${Math.min(completedCore, requiredCore)}/${totalCore}</strong></div>
@@ -2975,11 +7105,23 @@ function renderCampaign() {
         </div>
       </div>`
     : "";
-  el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
+  el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("") + gauntletMapNodeMarkup(city);
+  if (!tutorialActive()) {
+    window.setTimeout(() => maybeTriggerMedallionGauntlet(city), 0);
+  }
   if (el.storyCitySelect) el.storyCitySelect.hidden = false;
   if (el.changeStoryCar) el.changeStoryCar.hidden = false;
   renderStoryCityGrid();
   renderStoryLevelPreview();
+}
+
+function tutorialMapLevels() {
+  const sceneId = currentTutorialScene()?.id;
+  if (sceneId !== "map-final") return tutorialCityLevels;
+  return tutorialCityLevels.concat([
+    { type: "boss", title: "Training Boss Example", tutorialLevel: "boss-example", bossIndex: 0 },
+    { type: "pink-slip", title: "Tutorque Pink Slip Example", tutorialLevel: "pink-slip-example", medallion: "assets/medallions/medallion-tutorque.png", drag: { name: "Tutorque" } }
+  ]);
 }
 
 function maybeShowCityWelcome() {
@@ -3014,12 +7156,261 @@ function storyMapNodeMarkup(city, level) {
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
   const layout = storyNodeLayoutFor(city, level);
   const nodeLabel = storyNodeLabel(level, completed, visual);
+  const medal = getBestMedalForEvent(storyEventId(level.campaignIndex));
   return `
-    <button class="story-map-node ${locked ? "locked" : ""} ${completed ? "completed" : ""}" type="button" data-story-level="${level.campaignIndex}" style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}" ${hidden ? "hidden" : ""} ${locked ? "disabled" : ""}>
-      ${storyNodeIconMarkup(city, level, visual)}
+    <button class="story-map-node ${locked ? "locked" : ""} ${completed ? "completed" : ""} ${medalFrameClass(medal)}" type="button" data-story-level="${level.campaignIndex}" style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}" ${hidden ? "hidden" : ""} ${locked ? "disabled" : ""}>
+      <span class="story-node-medal-wrap">${storyNodeIconMarkup(city, level, visual)}</span>
       <span class="story-node-label">${nodeLabel}</span>
     </button>
   `;
+}
+
+function gauntletMapNodeMarkup(city) {
+  const config = gauntletForCity(city);
+  if (!config?.enabled) return "";
+  const progress = gauntletProgress(city.id);
+  if (!progress.revealed) return "";
+  const car = cars.find((item) => item.id === config.gearBornLineId);
+  const form = car?.evolutions[0];
+  const label = progress.completed
+    ? "Complete"
+    : progress.currentStage > 1
+      ? `Stage ${progress.currentStage}/3`
+      : "Medallion Gauntlet";
+  return `
+    <button class="story-map-node gauntlet-node ${progress.completed ? "completed" : ""}" type="button" data-gauntlet-city="${city.id}" style="left:18%; top:88%; --node-color:#f6c85f" ${progress.completed ? "disabled" : ""}>
+      <span class="story-node-icon layered type-gauntlet">
+        <img class="node-bg" src="assets/items/icon-medallion-gauntlet.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
+        <img class="node-subject gauntlet-medallion" src="${forgeMedallionSrc(config.gearBornLineId)}" alt="${form?.name || config.displayName}" loading="lazy" decoding="async">
+      </span>
+      <span class="story-node-label">${label}</span>
+    </button>
+  `;
+}
+
+function gauntletOpponentForStage(cityId, stageNumber) {
+  const config = medallionGauntlets[cityId];
+  const car = cars.find((item) => item.id === config?.gearBornLineId) || cars[0];
+  const formIndex = Math.min(car.evolutions.length - 1, Math.max(0, stageNumber - 1));
+  const form = car.evolutions[formIndex] || car.evolutions[0];
+  const level = Math.max(1, state.garage[state.selectedStoryCar]?.level || 1);
+  return { config, car, form, formIndex, level, stats: betaRatingsForCar(car.id, level, formIndex, false) };
+}
+
+function gauntletDriverForStage(cityId, stageNumber) {
+  const opponent = gauntletOpponentForStage(cityId, stageNumber);
+  return {
+    id: `gauntlet-${cityId}`,
+    name: opponent.form.name,
+    image: forgeMedallionSrc(opponent.car.id),
+    headshot: forgeMedallionSrc(opponent.car.id),
+    car: opponent.form.name
+  };
+}
+
+function gauntletModal() {
+  let modal = document.querySelector("#gauntlet-modal");
+  if (modal) return modal;
+  modal = document.createElement("div");
+  modal.id = "gauntlet-modal";
+  modal.className = "modal gauntlet-modal";
+  modal.setAttribute("aria-hidden", "true");
+  modal.innerHTML = `
+    <div class="modal-card gauntlet-card">
+      <button class="modal-x" type="button" data-gauntlet-close>×</button>
+      <img class="gauntlet-medallion-preview" alt="" loading="lazy" decoding="async">
+      <h2></h2>
+      <p></p>
+      <div class="modal-actions">
+        <button class="primary-button" type="button" data-gauntlet-continue>Continue</button>
+        <button class="secondary-button" type="button" data-gauntlet-skip>Skip</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-gauntlet-close]") || event.target.closest("[data-gauntlet-skip]")) {
+      closeGauntletPopup();
+      render();
+      return;
+    }
+    if (event.target.closest("[data-gauntlet-continue]")) {
+      const cityId = modal.dataset.cityId;
+      closeGauntletPopup();
+      startMedallionGauntlet(cityId);
+    }
+  });
+  return modal;
+}
+
+function openGauntletPopup(cityId) {
+  const config = medallionGauntlets[cityId];
+  const car = cars.find((item) => item.id === config?.gearBornLineId);
+  const form = car?.evolutions[0];
+  const modal = gauntletModal();
+  modal.dataset.cityId = cityId;
+  modal.querySelector("h2").textContent = `${config?.displayName || form?.name || "A GearBorn"} has been watching…`;
+  modal.querySelector("p").textContent = "Medallion Gauntlet unlocked.";
+  const img = modal.querySelector(".gauntlet-medallion-preview");
+  img.src = forgeMedallionSrc(config.gearBornLineId);
+  img.alt = `${form?.name || config.displayName} Medallion`;
+  modal.querySelector("[data-gauntlet-skip]").textContent = "Skip";
+  modal.querySelector("[data-gauntlet-continue]").textContent = "Continue";
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeGauntletPopup() {
+  const modal = document.querySelector("#gauntlet-modal");
+  if (!modal) return;
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function startMedallionGauntlet(cityId) {
+  const config = medallionGauntlets[cityId];
+  if (!config?.enabled) return;
+  const progress = gauntletProgress(cityId);
+  if (progress.completed) return;
+  saveGauntletProgress(cityId, { revealed: true, popupShown: true });
+  const stageNumber = progress.currentStage || 1;
+  state.activeGauntlet = { cityId, stage: stageNumber, mode: config.stages[stageNumber - 1]?.mode || "drag" };
+  saveState();
+  const opponent = gauntletOpponentForStage(cityId, stageNumber);
+  if (stageNumber === 1) {
+    state.selectedCar = state.selectedStoryCar;
+    prepareDragRace(null, {
+      rankKey: getVindexClass(vindexEntries.find((entry) => entry.name === opponent.form.name)) || "E",
+      name: opponent.form.name,
+      xp: 180,
+      power: 0.58 + stageNumber * 0.08,
+      image: imageFor(opponent.form, "race")
+    });
+    showView("play");
+    setFlowStep("drag", "race");
+    startPendingDragRace();
+    return;
+  }
+  if (stageNumber === 2) {
+    beginBattle("gauntlet-battle", {
+      boss: { id: `gauntlet-${cityId}`, name: opponent.form.name, car: opponent.form.name },
+      carId: state.selectedStoryCar,
+      opponentName: opponent.form.name,
+      opponentImage: imageFor(opponent.form, "race"),
+      opponentStats: opponent.stats,
+      reward: 0,
+      gauntlet: { cityId, stage: stageNumber }
+    });
+    showView("battle");
+    return;
+  }
+  startGauntlet2dRace(cityId);
+}
+
+function startGauntlet2dRace(cityId) {
+  const city = storyCities.find((item) => item.id === cityId) || storyCities[state.selectedStoryCity] || storyCities[0];
+  const opponent = gauntletOpponentForStage(cityId, 3);
+  betaRaceContext = { source: "gauntlet", cityId, stage: 3 };
+  betaPendingMode = "duel";
+  betaPreviewMode = "duel";
+  betaSelectedTrackId = betaTrackIdForStoryTrack(city?.track || {});
+  betaPreviewOpponents = [{
+    driver: gauntletDriverForStage(cityId, 3),
+    car: opponent.car,
+    carId: opponent.car.id,
+    form: opponent.form,
+    evolution: opponent.formIndex,
+    level: opponent.level,
+    ratings: opponent.stats,
+    skill: 0.96
+  }];
+  state.selectedBetaCar = state.selectedStoryCar;
+  saveState();
+  showView("beta");
+  startBetaDemo("duel");
+}
+
+function completeGauntletStage(won) {
+  const active = state.activeGauntlet;
+  if (!active) return false;
+  const cityId = active.cityId;
+  const config = medallionGauntlets[cityId];
+  if (!config) return false;
+  if (!won) {
+    state.activeGauntlet = null;
+    saveState();
+    return true;
+  }
+  const nextStage = Math.min(3, (active.stage || 1) + 1);
+  if ((active.stage || 1) >= 3) {
+    awardMedallion(config.gearBornLineId);
+    saveGauntletProgress(cityId, { revealed: true, popupShown: true, currentStage: 3, completed: true, rewardClaimed: true });
+    state.activeGauntlet = null;
+    showToast("Medallion Gauntlet Complete", `${config.displayName} Medallion earned.`);
+  } else {
+    saveGauntletProgress(cityId, { revealed: true, popupShown: true, currentStage: nextStage });
+    state.activeGauntlet = null;
+    showGauntletContinueOptions(cityId, nextStage);
+  }
+  saveState();
+  return true;
+}
+
+function showGauntletContinueOptions(cityId, nextStage) {
+  const modal = gauntletModal();
+  const config = medallionGauntlets[cityId];
+  modal.dataset.cityId = cityId;
+  modal.querySelector("h2").textContent = `Stage ${nextStage - 1}/3 complete`;
+  modal.querySelector("p").textContent = `Continue to Stage ${nextStage} or return to the map.`;
+  modal.querySelector(".gauntlet-medallion-preview").src = forgeMedallionSrc(config.gearBornLineId);
+  modal.querySelector("[data-gauntlet-skip]").textContent = "Return to Map";
+  modal.querySelector("[data-gauntlet-continue]").textContent = "Continue";
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function garbageMedallionModal() {
+  let modal = document.querySelector("#garbage-medallion-modal");
+  if (modal) return modal;
+  modal = document.createElement("div");
+  modal.id = "garbage-medallion-modal";
+  modal.className = "modal gauntlet-modal garbage-medallion-modal";
+  modal.setAttribute("aria-hidden", "true");
+  modal.innerHTML = `
+    <div class="modal-card gauntlet-card">
+      <img class="gauntlet-medallion-preview" src="${forgeMedallionSrc("waste-management")}" alt="Garbage Medallion" loading="lazy" decoding="async">
+      <h2>You drive like garbage. Here’s the Garbage Medallion!</h2>
+      <div class="modal-actions">
+        <button class="primary-button" type="button" data-garbage-medallion-close>Continue</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-garbage-medallion-close]")) {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+      render();
+    }
+  });
+  return modal;
+}
+
+function openGarbageMedallionPopup() {
+  const modal = garbageMedallionModal();
+  modal.querySelector(".gauntlet-medallion-preview").src = forgeMedallionSrc("waste-management");
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function maybeUnlockGarbageMedallion() {
+  if (state.garbageMedallionAwarded || Math.max(0, Math.floor(Number(state.consecutiveLosses) || 0)) < 5) return false;
+  awardMedallion("waste-management");
+  state.garbageMedallionAwarded = true;
+  state.consecutiveLosses = 0;
+  saveState();
+  openGarbageMedallionPopup();
+  return true;
 }
 
 function storyNodeLayoutFor(city, level) {
@@ -3498,6 +7889,7 @@ function beginBattle(mode = "battle", options = {}) {
     campaignLevelIndex: options.campaignLevelIndex ?? null,
     reward: options.reward ?? null,
     rival: options.rival || null,
+    gauntlet: options.gauntlet || null,
     restartOptions: options
   };
   setFlowStep("battle", "race");
@@ -3606,16 +7998,17 @@ function finishBattle() {
   battleState.finished = true;
   const won = battleState.opponent.hp <= 0 && battleState.player.hp > 0;
   const index = bossChallengeBosses.findIndex((boss) => boss.id === battleState.boss.id);
-  const earned = tutorialActive() && !won ? 0 : won ? (battleState.reward ?? battleRewardForBossIndex(index)) : Math.round(35 + Math.max(0, index) * 18);
+  const isGauntlet = Boolean(battleState.gauntlet);
+  const earned = isGauntlet ? 0 : tutorialActive() && !won ? 0 : won ? (battleState.reward ?? battleRewardForBossIndex(index)) : Math.round(35 + Math.max(0, index) * 18);
   addSprox(earned);
   recordRaceUsage(battleState.carId);
-  const partReward = won && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
+  const partReward = won && !isGauntlet && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
   recordStoryRaceOutcome(won, battleState.campaignLevelIndex !== null);
   let unlockedBossName = "";
   if (won && battleState.mode === "battle") {
     unlockedBossName = unlockNextTrainingBossFromBoss(battleState.boss.id);
   }
-  if (tutorialActive() && won) setTutorialScene("post-battle");
+  if (tutorialActive() && won) setTutorialScene("battle-win");
   if (won && battleState.campaignLevelIndex !== null) completeCampaignLevel(battleState.campaignLevelIndex);
   saveState();
   if (tutorialActive() && won) renderTutorial();
@@ -3627,7 +8020,7 @@ function finishBattle() {
     hideRaceAgain: tutorialActive() && !won,
     hideSprox: tutorialActive() && !won,
     disableActions: tutorialActive() && won,
-    primaryLabel: tutorialActive() && !won ? "Try Again" : tutorialActive() ? "Next" : battleState.campaignLevelIndex !== null ? "Next" : "Select Opponent",
+    primaryLabel: isGauntlet ? "Next" : tutorialActive() && !won ? "Try Again" : tutorialActive() ? "Next" : battleState.campaignLevelIndex !== null ? "Next" : "Select Opponent",
     primaryTone: tutorialActive() && won ? "success" : "",
     raceAgainLabel: "Battle Again",
     onPrimary: () => {
@@ -3637,6 +8030,11 @@ function finishBattle() {
       }
       if (tutorialActive()) {
         advanceTutorial();
+        return;
+      }
+      if (isGauntlet) {
+        completeGauntletStage(won);
+        finishStoryRaceScreen();
         return;
       }
       if (battleState.campaignLevelIndex !== null) {
@@ -3678,7 +8076,7 @@ function renderBattle() {
 }
 
 function renderTimeTargets() {
-  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
+  if (tutorialActive() && currentTutorialScene().id === "head2head") {
     el.timeLocation.textContent = `${tutorialTrack.city}, ${tutorialTrack.country}`;
     applyTrackMap(el.timeTrialTrack, tutorialTrack);
     el.timeTargets.innerHTML = tutorialMedals.map((medal) => `
@@ -3698,7 +8096,7 @@ function renderTimeTargets() {
 
 function renderTimeTrackGrid() {
   if (!el.timeTrackGrid) return;
-  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
+  if (tutorialActive() && currentTutorialScene().id === "head2head") {
     el.timeTrackGrid.innerHTML = `
       <button class="map-button active" type="button" data-time-track="${tutorialTrack.id}">
         ${tutorialTrack.city}
@@ -3726,12 +8124,23 @@ function getVindexClass(entry) {
   return vindexClassByNumber[entry?.number] || "";
 }
 
+function getVindexType(entry) {
+  const playable = playableEntryMeta(entry);
+  return playable ? gearbornStatProfiles[playable.car.id]?.type || "" : "";
+}
+
 function getClassStamp(classLetter) {
   return classLetter ? `assets/vindex/stamp-${String(classLetter).toLowerCase()}.png` : "";
 }
 
+const licensePlateOverrides = {
+  tourquette: "assets/license/license-torquette.png"
+};
+
 function getLicensePlate(entry) {
-  return entry ? `assets/license/license-${slugify(entry.name)}.png` : "";
+  if (!entry) return "";
+  const slug = slugify(entry.name);
+  return licensePlateOverrides[slug] || `assets/license/license-${slug}.png`;
 }
 
 function getPlateCode(entry) {
@@ -3791,6 +8200,21 @@ function licensePlateMarkupForName(name, number = "000", className = "garage-lic
   `;
 }
 
+function gearbornClassTypeBadgesForForm(formName) {
+  const entry = vindexEntries.find((item) => item.name === formName);
+  if (!entry) return "";
+  const classLetter = getVindexClass(entry);
+  const typeLabel = getVindexType(entry);
+  return `
+    <div class="garage-class-type-badges" aria-label="Class and type">
+      <span class="garage-class-badge">
+        ${classLetter ? `<img src="${getClassStamp(classLetter)}" alt="Class ${classLetter}" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{textContent:'${classLetter}'}))">` : `<strong>-</strong>`}
+      </span>
+      <span class="garage-type-badge">${typeLabel || "Type TBD"}</span>
+    </div>
+  `;
+}
+
 function vindexListRowMarkup(entry) {
   const status = getStatus(entry);
   const discovered = status !== "locked";
@@ -3823,13 +8247,14 @@ function renderVindex() {
   const status = getStatus(entry);
   const discovered = status !== "locked";
   const classLetter = getVindexClass(entry);
+  const typeLabel = getVindexType(entry);
   el.vindexArt.innerHTML = `
     ${discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup()}
     ${discovered ? honkButtonMarkup(`data-honk-vindex="${entry.number}"`) : ""}
   `;
   el.vindexNumber.textContent = discovered ? `#${entry.number}` : "#???";
   el.vindexName.textContent = discovered ? entry.name : "???";
-  el.vindexLine.textContent = discovered ? entry.line : "Mystery GearBorn";
+  el.vindexLine.textContent = discovered ? `${entry.line}${typeLabel ? ` · Type: ${typeLabel}` : ""}` : "Mystery GearBorn";
   if (el.vindexStatus) {
     el.vindexStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
     el.vindexStatus.className = `status-${status}`;
@@ -3973,9 +8398,12 @@ function renderProfiles() {
     : { ...profile, image: profile.headshot || profile.image };
   el.profileArt.innerHTML = characterMarkup(displayProfile) + racerAlphaProfileToggle(profile);
   el.profileName.textContent = profile.name;
-  el.profileMeta.textContent = profile.category === "Other" ? "Other" : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
+  el.profileMeta.textContent = profile.category === "Other"
+    ? (profile.car && profile.car !== "Other" ? `${profile.car} · ${profile.city}` : "Other")
+    : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
   const boss = bossChallengeBosses.find((item) => item.id === profile.id);
-  el.profileCarArt.innerHTML = boss ? `<img src="${bossCarDisplayImage(boss)}" alt="${boss.car}" loading="lazy" decoding="async">` : "";
+  const profileCarImage = boss ? bossCarDisplayImage(boss) : profile.carImage;
+  el.profileCarArt.innerHTML = profileCarImage ? `<img src="${profileCarImage}" alt="${profile.car}" loading="lazy" decoding="async">` : "";
   el.profileBio.textContent = profile.bio;
 }
 
@@ -4110,6 +8538,8 @@ function renderGarage() {
     renderTutorialGarage();
     return;
   }
+  // TODO garage extension hooks: trophy shelf, medallion display, city stickers,
+  // boss memorabilia, NPC garage appearances, and Ashley/Dr. Tyree moments.
   const godModeActive = garageGodModeActive();
   el.garageStatus.hidden = !godModeActive;
   el.garageStatus.textContent = godModeActive
@@ -4126,8 +8556,9 @@ function renderGarage() {
     const playstyle = gearbornStatProfiles[car.id]?.playstyle || "";
     const upgradeCost = xpForNextLevel(progress.level);
     const form = currentEvolution(car.id);
+    const idle = idleProfileForGearborn(car.id);
     return `
-      <article class="garage-card">
+      <article class="garage-card idle-profile-${idle.idleProfile}" style="--idle-intensity:${idle.animationIntensity}">
         <div class="garage-art">
           ${carMarkupForEvolution(car.id, progress.evolution, "display")}
           ${honkButtonMarkup(`data-honk-car="${car.id}"`)}
@@ -4140,6 +8571,7 @@ function renderGarage() {
               <h3>${car.family}</h3>
               <p class="playstyle-tag">${playstyle}</p>
             </div>
+            ${gearbornClassTypeBadgesForForm(form.name)}
             ${licensePlateMarkupForName(form.name, vindexEntries.find((entry) => entry.name === form.name)?.number || "000")}
           </div>
           <div class="meta-row">
@@ -4171,8 +8603,9 @@ function renderTutorialGarage() {
   const playstyle = gearbornStatProfiles[tutorialCarId]?.playstyle || "";
   const maxed = progress.level >= maxCarLevel;
   const form = currentEvolution(tutorialCarId);
+  const idle = idleProfileForGearborn(tutorialCarId);
   el.garageGrid.innerHTML = `
-    <article class="garage-card">
+    <article class="garage-card idle-profile-${idle.idleProfile}" style="--idle-intensity:${idle.animationIntensity}">
       <div class="garage-art">
         ${carMarkupForEvolution(tutorialCarId, progress.evolution, "display")}
         ${honkButtonMarkup(`data-honk-car="${tutorialCarId}"`)}
@@ -4185,6 +8618,7 @@ function renderTutorialGarage() {
             <h3>${car.family}</h3>
             <p class="playstyle-tag">${playstyle}</p>
           </div>
+          ${gearbornClassTypeBadgesForForm(form.name)}
           ${licensePlateMarkupForName(form.name, vindexEntries.find((entry) => entry.name === form.name)?.number || "000")}
         </div>
         <div class="meta-row">
@@ -4398,8 +8832,8 @@ function upgradeCarLevel() {
   const shouldEvolve = Boolean(progress.pendingEvolution);
   if (shouldEvolve && tutorialActive() && carId === tutorialCarId) {
     state.tutorialAwaitingUpgrade = false;
-    state.tutorialAwaitingEvolve = false;
     setTutorialScene("evolve");
+    state.tutorialAwaitingEvolve = true;
   }
   saveState();
   render();
@@ -4633,7 +9067,7 @@ function setRacerImage(container, image, src, alt) {
 function startRace() {
   if (tutorialActive() && currentTutorialScene().id === "drag-race") {
     prepareDragRace(null, tutorialDragStage());
-    setTutorialScene("dr-controls");
+    setTutorialScene("drag-race-win");
     saveState();
     renderTutorial();
     return;
@@ -4715,7 +9149,8 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     distance,
     dragStage,
     campaignLevelIndex,
-    carId: state.selectedCar
+    carId: state.selectedCar,
+    gauntlet: state.activeGauntlet?.mode === "drag" ? { ...state.activeGauntlet } : null
   };
   if (dragStage) {
     el.rivalRacer.style.setProperty("--car-color", rank.color);
@@ -4925,6 +9360,7 @@ function finishRace(playerWon) {
   race.rivalNitroActive = false;
   drawRace();
   const finishedRace = race;
+  const isGauntlet = Boolean(finishedRace.gauntlet);
   const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
   const finishedLevel = isStoryRace ? campaignLevels[finishedRace.campaignLevelIndex] : null;
   const pinkSlipCarId = finishedLevel?.type === "pink-slip" ? finishedLevel.pinkSlipCarId : null;
@@ -4933,7 +9369,7 @@ function finishRace(playerWon) {
   const riskyPinkSlipLoss = !playerWon && isPinkSlipRiskActive(finishedLevel);
 
   let earned = 0;
-  if (playerWon) {
+  if (playerWon && !isGauntlet) {
     earned = Math.floor(race.distance.xp * race.rank.xpBonus * difficultyMultiplier());
     addSprox(earned);
     if (tutorialActive()) state.tutorialDragSprox = earned;
@@ -4943,7 +9379,7 @@ function finishRace(playerWon) {
     }
     el.raceMessage.className = "race-message win";
     el.raceMessage.textContent = "";
-  } else {
+  } else if (!isGauntlet) {
     earned = tutorialActive() ? 0 : Math.floor(race.distance.xp * 0.16);
     if (earned) addSprox(earned);
     el.raceMessage.className = "race-message loss";
@@ -4956,9 +9392,13 @@ function finishRace(playerWon) {
     applyPinkSlipLossPenalty(finishedRace.carId);
     pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
   }
-  if (isStoryRace && playerWon) partReward = rollStoryPartReward();
+  if (!isGauntlet && isStoryRace && playerWon) partReward = rollStoryPartReward();
+  const medalResult = !isGauntlet && isStoryRace
+    ? saveStoryMedal(finishedRace.campaignLevelIndex, { won: playerWon })
+    : { medal: "none", improved: false };
+  evaluateMicroObjectives({ eventId: isStoryRace ? storyEventId(finishedRace.campaignLevelIndex) : "drag", won: playerWon });
   saveState();
-  if (isStoryRace && playerWon) {
+  if (!isGauntlet && isStoryRace && playerWon) {
     completeCampaignLevel(finishedRace.campaignLevelIndex);
   }
   render();
@@ -4966,8 +9406,10 @@ function finishRace(playerWon) {
     won: playerWon,
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
+    medal: playerWon ? medalResult.medal : "none",
+    medalImproved: medalResult.improved,
     lines: [pinkSlipPenaltyLine, partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
-    primaryLabel: tutorialActive() ? (playerWon ? "Next" : "Try Again") : isStoryRace ? "Next" : "Select Opponent",
+    primaryLabel: isGauntlet ? "Next" : tutorialActive() ? (playerWon ? "Next" : "Try Again") : isStoryRace ? "Next" : "Select Opponent",
     primaryTone: tutorialActive() && playerWon ? "success" : "",
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !playerWon,
@@ -4977,13 +9419,18 @@ function finishRace(playerWon) {
       if (tutorialActive() && !playerWon) {
         prepareDragRace(null, tutorialDragStage());
         startPendingDragRace();
-        setTutorialScene("sprox");
+        setTutorialScene("drag-race-win");
         saveState();
         renderTutorial();
         return;
       }
-      if (tutorialActive() && playerWon && currentTutorialScene().id === "sprox") {
+      if (tutorialActive() && playerWon && currentTutorialScene().id === "drag-race-win") {
         advanceTutorial();
+        return;
+      }
+      if (isGauntlet) {
+        completeGauntletStage(playerWon);
+        finishStoryRaceScreen();
         return;
       }
       if (isStoryRace) {
@@ -5004,7 +9451,9 @@ function finishRace(playerWon) {
       }
     },
     onRaceAgain: () => {
-      if (isStoryRace) {
+      if (isGauntlet) {
+        startMedallionGauntlet(finishedRace.gauntlet.cityId);
+      } else if (isStoryRace) {
         startCampaignRace(finishedRace.campaignLevelIndex, campaignLevels[finishedRace.campaignLevelIndex]);
       } else {
         prepareDragRace(null, null);
@@ -5021,6 +9470,7 @@ function failDragRace(title) {
   race.rivalNitroActive = false;
   drawRace();
   const failedRace = race;
+  const isGauntlet = Boolean(failedRace.gauntlet);
   const isStoryRace = failedRace.campaignLevelIndex !== null && failedRace.campaignLevelIndex !== undefined;
   const failedLevel = isStoryRace ? campaignLevels[failedRace.campaignLevelIndex] : null;
   let pinkSlipPenaltyLine = "";
@@ -5029,6 +9479,9 @@ function failDragRace(title) {
     pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
   }
   recordStoryRaceOutcome(false, isStoryRace);
+  const medalResult = !isGauntlet && isStoryRace
+    ? saveStoryMedal(failedRace.campaignLevelIndex, { won: false })
+    : { medal: "none", improved: false };
   saveState();
   el.raceMessage.className = "race-message loss";
   el.raceMessage.textContent = "";
@@ -5036,7 +9489,9 @@ function failDragRace(title) {
     won: false,
     title: tutorialActive() ? "RACE LOST" : title,
     sprox: 0,
-    primaryLabel: tutorialActive() ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
+    medal: "none",
+    medalImproved: medalResult.improved,
+    primaryLabel: isGauntlet ? "Next" : tutorialActive() ? "Try Again" : isStoryRace ? "Next" : "Select Opponent",
     raceAgainLabel: "Race Again",
     lines: pinkSlipPenaltyLine ? [pinkSlipPenaltyLine] : [],
     hideRaceAgain: tutorialActive(),
@@ -5045,19 +9500,24 @@ function failDragRace(title) {
       if (tutorialActive()) {
         prepareDragRace(null, tutorialDragStage());
         startPendingDragRace();
-        setTutorialScene("sprox");
+        setTutorialScene("drag-race-win");
         saveState();
         renderTutorial();
         return;
       }
-      if (isStoryRace) {
+      if (isGauntlet) {
+        completeGauntletStage(false);
+        finishStoryRaceScreen();
+      } else if (isStoryRace) {
         finishStoryRaceScreen();
       } else {
         setFlowStep("drag", "match");
       }
     },
     onRaceAgain: () => {
-      if (isStoryRace) {
+      if (isGauntlet) {
+        startMedallionGauntlet(failedRace.gauntlet.cityId);
+      } else if (isStoryRace) {
         startCampaignRace(failedRace.campaignLevelIndex, campaignLevels[failedRace.campaignLevelIndex]);
       } else {
         prepareDragRace(null, null);
@@ -5077,7 +9537,8 @@ function showRaceResult(trackNode, result) {
   popup.innerHTML = `
     <div class="race-result-card">
       <h2>${result.title || (result.won ? "Victory" : "Defeat")}</h2>
-      ${result.hideSprox ? "" : `<p>Sprox Earned: <strong>${sproxAmountMarkup(result.sprox ?? 0)}</strong></p>`}
+      ${medalResultMarkup(result.medal, result.medalImproved)}
+      ${result.hideSprox ? "" : `<p>Sprox Earned: <strong>${sproxResultMarkup(result.sprox ?? 0)}</strong></p>`}
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       <div class="race-result-actions">
         <button class="primary ${result.primaryTone === "success" ? "success-result" : ""}" type="button" data-result-action="primary" ${result.disableActions ? "disabled" : ""}>${result.primaryLabel || "Continue"}</button>
@@ -5097,6 +9558,29 @@ function showRaceResult(trackNode, result) {
     result.onPrimary?.();
   });
   trackNode.appendChild(popup);
+  animateCountUpNumbers(popup);
+  if (normalizeMedal(result.medal) !== "none") playAudioCue("medalReveal");
+}
+
+function animateCountUpNumbers(root) {
+  if (reduceMotionEnabled()) {
+    root.querySelectorAll(".count-up-number").forEach((node) => {
+      node.textContent = formatSprox(Number(node.dataset.countTarget) || 0);
+    });
+    return;
+  }
+  root.querySelectorAll(".count-up-number").forEach((node) => {
+    const target = Math.max(0, Math.floor(Number(node.dataset.countTarget) || 0));
+    const start = performance.now();
+    const duration = 520;
+    const tick = (now) => {
+      const pct = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - pct, 3);
+      node.textContent = formatSprox(Math.round(target * eased));
+      if (pct < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }
 
 function finishStoryRaceScreen() {
@@ -5189,9 +9673,12 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
   const revealOnce = () => {
     if (revealed) return;
     revealed = true;
+    playAudioCue("evolutionReveal");
     onReveal?.();
+    if (featureEnabled("enableEvolutionPolish")) showToast("EVOLUTION_REVEAL_PLACEHOLDER_TITLE", "EVOLUTION_REVEAL_PLACEHOLDER_BODY");
   };
   evolutionAnimationActive = true;
+  playAudioCue("evolutionBuild");
 
   // Load images into the overlay
   el.evolutionAnimationCurrent.src = currentImage;
@@ -5269,6 +9756,10 @@ function unlockGearbornLine(carId) {
     unlockedEvolution: 0,
     pendingEvolution: null
   };
+  if (featureEnabled("enableVINdexRevealNotifications")) {
+    playAudioCue("newVindexEntry");
+    showToast("VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_TITLE", "VINDEX_ENTRY_UNLOCKED_PLACEHOLDER_BODY");
+  }
   saveState();
   render();
   return true;
@@ -5340,6 +9831,15 @@ const forgeMedallionMap = {
   "karate-cow":         "assets/medallions/medallion-udderlee.png",
   "art-van":            "assets/medallions/medallion-vanvass.png",
   "cake-train":         "assets/medallions/medallion-cuptrack.png",
+  "muscle-man":         "assets/medallions/medallion-tourquette.png",
+  "waste-management":   "assets/medallions/medallion-garbaggito.png",
+  "chill-penguin":      "assets/medallions/medallion-freezy-e.png",
+  "space-dolphin":      "assets/medallions/medallion-orbitide.png",
+  "butcher-hog":        "assets/medallions/medallion-sauspin.png",
+  "tiger-cart":         "assets/medallions/medallion-puttercat.png",
+  "silly-goose":        "assets/medallions/medallion-honky.png",
+  "construction-blok":  "assets/medallions/medallion-blokparty.png",
+  "skater-koala":       "assets/medallions/medallion-koaster.png",
   "hornula1":           "assets/medallions/medallion-hornula1.png",
 };
 
@@ -6275,7 +10775,7 @@ function showView(view) {
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
   const activeNavView = view === "beta" && betaRaceContext?.source === "training"
     ? "solo"
-    : (view === "beta" && betaRaceContext?.source === "story" ? "story" : view);
+    : (view === "beta" && ["story", "tutorial"].includes(betaRaceContext?.source) ? "story" : view);
   document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === activeNavView));
   document.body.classList.toggle("mode-active", view !== "menu");
   if (view === "story") {
@@ -6313,8 +10813,27 @@ function storyTunerReady() {
   return Boolean(state.tunerChosen && state.selectedTuner && state.tunerChoiceVersion >= tunerChoiceVersion);
 }
 
+function resolveTutorialSceneId(sceneId = "intro") {
+  return tutorialSceneAliases[sceneId] || sceneId;
+}
+
+function tutorialSceneIndex(sceneId = "intro") {
+  const resolved = resolveTutorialSceneId(sceneId);
+  const index = tutorialScenes.findIndex((scene) => scene.id === resolved);
+  return index >= 0 ? index : 0;
+}
+
 function currentTutorialScene() {
   return tutorialScenes[state.tutorialScene] || tutorialScenes[0];
+}
+
+function selectedPlayerCharacter() {
+  return selectedTuner();
+}
+
+function rivalCharacter() {
+  const player = selectedPlayerCharacter();
+  return tuners.find((tuner) => tuner.id !== player.id) || tuners[1] || tuners[0];
 }
 
 function selectedTuner() {
@@ -6330,9 +10849,10 @@ function tutorialActive() {
 }
 
 function startTutorial(sceneId = "intro") {
-  const sceneIndex = Math.max(0, tutorialScenes.findIndex((scene) => scene.id === sceneId));
+  const resolvedSceneId = resolveTutorialSceneId(sceneId);
+  const sceneIndex = tutorialSceneIndex(resolvedSceneId);
   if (!storyTunerReady()) {
-    pendingIntroView = `tutorial:${sceneId}`;
+    pendingIntroView = `tutorial:${resolvedSceneId}`;
     openTunerModal();
     return;
   }
@@ -6345,11 +10865,12 @@ function startTutorial(sceneId = "intro") {
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
+  state.tutorialSplash = tutorialScenes[sceneIndex]?.splash || "";
   state.tutorialStartingSprox = realSprox;
   // Do NOT zero state.sprox — keep real wallet intact.
   // The tutorial uses state.sprox as a sandbox but we restore it on exit.
   // Only reset tutorial-specific tracking, not the actual wallet.
-  if (sceneId === "intro") {
+  if (resolvedSceneId === "intro") {
     // Temporarily set sprox to 0 for the tutorial sandbox (restored in finishTutorial)
     state.tutorialStartingSprox = realSprox;
     state.sprox = 0;
@@ -6361,6 +10882,8 @@ function startTutorial(sceneId = "intro") {
   state.tutorialSnapshotUnlockedLines = [...(state.unlockedLines || [])];
   state.tutorialSnapshotMedallions = [...(state.medallionsOwned || [])];
   state.tutorialSnapshotComplete = Boolean(state.tutorialComplete);
+  state.tutorialChoiceResponse = null;
+  state.tutorialSplash = "";
   setupTutorialScene();
   saveState();
   render();
@@ -6393,6 +10916,7 @@ function finishTutorial() {
   state.tutorialSnapshotUnlockedLines = null;
   state.tutorialSnapshotMedallions = null;
   state.tutorialSnapshotComplete = null;
+  state.tutorialChoiceResponse = null;
   state.tutorialTimeMedal = "";
   state.selectedCar = defaultUnlockedLines.includes(state.selectedCar) ? state.selectedCar : defaultUnlockedLines[0];
   state.selectedStoryCar = defaultUnlockedLines.includes(state.selectedStoryCar) ? state.selectedStoryCar : state.selectedCar;
@@ -6415,15 +10939,25 @@ function skipTutorial() {
   finishTutorial();
 }
 
+function openSkipTutorialConfirm() {
+  if (!el.tutorialSkipModal) {
+    skipTutorial();
+    return;
+  }
+  el.tutorialSkipModal.classList.add("active");
+  el.tutorialSkipModal.setAttribute("aria-hidden", "false");
+  el.cancelTutorialSkip?.focus();
+}
+
+function closeSkipTutorialConfirm() {
+  if (!el.tutorialSkipModal) return;
+  el.tutorialSkipModal.classList.remove("active");
+  el.tutorialSkipModal.setAttribute("aria-hidden", "true");
+}
+
 function setupTutorialScene() {
   const scene = currentTutorialScene();
   if (!scene) return;
-
-  if (scene.id === "mamburn") {
-    setTutorialScene("city-map");
-    setupTutorialScene();
-    return;
-  }
 
   // Set up car state first
   if (scene.id === "upgrade") {
@@ -6450,6 +10984,10 @@ function setupTutorialScene() {
       showView("menu");
       break;
 
+    case "rival-intro":
+      showView(scene.view || "menu");
+      break;
+
     case "mamburn":
       // Tutorial-exclusive car select: only Mamburn selectable
       state.selectedCar = tutorialCarId;
@@ -6458,8 +10996,9 @@ function setupTutorialScene() {
       break;
 
     case "city-map":
-    case "drag2tt":
-    case "tt2battle":
+    case "drag2h2h":
+    case "h2h2battle":
+    case "map-final":
       // Show tutorial story city map
       showTutorialCityMap();
       break;
@@ -6476,15 +11015,12 @@ function setupTutorialScene() {
       render();
       break;
 
-    case "time-trial-intro":
+    case "head2head-intro":
       showTutorialTimeTrialPreview();
       break;
 
-    case "time-trial":
-      state.selectedTimeCar = tutorialCarId;
-      state.selectedTimeTrack = tutorialTrack.id;
-      setFlowStep("time", "match");
-      render();
+    case "head2head":
+      prepareTutorialHeadToHeadRace();
       break;
 
     case "battle-intro":
@@ -6499,7 +11035,7 @@ function setupTutorialScene() {
       render();
       break;
 
-    case "pre-battle":
+    case "battle":
       if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
         beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
       }
@@ -6507,7 +11043,11 @@ function setupTutorialScene() {
 
     case "garage":
     case "unlocked":
-    case "starters":
+    case "end":
+    case "tyree-final":
+    case "empty-garage":
+    case "medallion-discovery":
+    case "ashley-intro":
       showView("garage");
       break;
 
@@ -6526,6 +11066,10 @@ function setupTutorialScene() {
       }
       break;
 
+    case "evolution-cinematic":
+      showView("garage");
+      break;
+
     case "vindex":
       closeUpgradeModal();
       if (el.evolutionModal) {
@@ -6542,6 +11086,7 @@ function setupTutorialScene() {
       break;
 
     case "the-forge":
+    case "medallion-unlock":
       // Award Baybee, Murrka, Bunnae medallions for the tutorial forge demo.
       // The renderForgeInventory bypass (tutorialAwaitingForge) shows these
       // regardless of unlock state, so they always appear in the inventory.
@@ -6572,13 +11117,34 @@ function ensureTutorialCarState(options = {}) {
 
 function tutorialMapNodeMarkup(level) {
   const visual = storyLevelVisuals[level.type] || storyLevelVisuals.boss;
-  const layout = storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
+  const layout = level.type === "boss" ? { x: 50, y: 18 }
+    : level.type === "pink-slip" ? { x: 50, y: 89 }
+    : storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
+  let iconMarkup = `
+    <span class="story-node-icon">
+      <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    </span>
+  `;
+  if (level.type === "boss") {
+    const boss = bosses[level.bossIndex || 0] || bosses[0];
+    iconMarkup = `
+      <span class="story-node-icon layered type-boss">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
+      </span>
+    `;
+  } else if (level.type === "pink-slip") {
+    iconMarkup = `
+      <span class="story-node-icon layered type-pink-slip">
+        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        <img class="node-subject pink-medallion" src="${level.medallion || "assets/medallions/medallion-tutorque.png"}" alt="${level.drag?.name || "Tutorque"}" loading="lazy" decoding="async">
+      </span>
+    `;
+  }
   return `
     <button class="story-map-node" type="button" data-tutorial-level="${level.tutorialLevel}"
       style="left:${layout.x}%; top:${layout.y}%; --node-color:${visual.color}">
-      <span class="story-node-icon">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-      </span>
+      ${iconMarkup}
       <span class="story-node-label">${visual.label}</span>
     </button>
   `;
@@ -6587,18 +11153,18 @@ function tutorialMapNodeMarkup(level) {
 function renderTutorialLevelPreview() {
   // During tutorial, only show preview if a specific scene wants it
   const scene = currentTutorialScene();
-  const previewScene = ["drag-race-intro", "time-trial-intro", "battle-intro"].includes(scene?.id);
+  const previewScene = ["drag-race-intro", "head2head-intro", "battle-intro"].includes(scene?.id);
   if (!previewScene || !el.storyPreviewPanel) {
     if (el.storyPreviewPanel) el.storyPreviewPanel.setAttribute("aria-hidden", "true");
     return;
   }
   // Show level preview panel for the relevant tutorial level
   const levelType = scene.id === "drag-race-intro" ? "drag"
-    : scene.id === "time-trial-intro" ? "trial"
+    : scene.id === "head2head-intro" ? "head2head"
     : "battle";
   const level = tutorialCityLevels.find((l) => l.tutorialLevel === levelType);
   if (!level) return;
-  const visual = storyLevelVisuals[levelType];
+  const visual = storyLevelVisuals[level.type] || storyLevelVisuals.drag;
   el.storyPreviewPanel.setAttribute("aria-hidden", "false");
   el.storyPreviewIcon.innerHTML = `<img src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
   if (el.campaignType) el.campaignType.textContent = visual.label;
@@ -6607,8 +11173,9 @@ function renderTutorialLevelPreview() {
   if (el.storyPreviewArt) {
     if (levelType === "drag") {
       el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialOpponentCarId, 0, "display")}</div>`;
-    } else if (levelType === "trial") {
-      el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialCarId, 0, "display")}</div>`;
+    } else if (levelType === "head2head") {
+      const rivalSetup = rivalCarSetup(tutorialCarId);
+      el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(rivalSetup.carId, rivalSetup.evolution || 0, "display")}</div>`;
     } else {
       el.storyPreviewArt.innerHTML = `<div class="selection-preview-art">${carMarkupForEvolution(tutorialOpponentCarId, 0, "display")}</div>`;
     }
@@ -6660,13 +11227,63 @@ function setupTutorialTimeMenu() {
 }
 
 function tutorialLinesForScene(scene) {
-  return tutorialDialogue[scene.id] || [["tyree", scene.copy || "Tutorial placeholder."]];
+  const dialogueId = tutorialDialogue[scene.id] ? scene.id : tutorialDialogueAliases[scene.id];
+  return tutorialDialogue[dialogueId] || [["tyree", scene.copy || "TUTORIAL_PLACEHOLDER_LINE"]];
 }
 
 function normalizeTutorialLine(line) {
+  if (line && typeof line === "object" && !Array.isArray(line)) {
+    const content = typeof line.text === "function" ? line.text() : line.text;
+    return { ...line, speaker: line.speaker || "tyree", text: tutorialText(content || "TUTORIAL_PLACEHOLDER_LINE") };
+  }
   const speaker = Array.isArray(line) ? line[0] : "tyree";
   const content = Array.isArray(line) ? line[1] : line;
-  return { speaker, text: typeof content === "function" ? content() : content };
+  return { speaker, text: tutorialText(typeof content === "function" ? content() : content) };
+}
+
+function tutorialText(value = "") {
+  const player = selectedTuner();
+  const rival = rivalCharacter();
+  const playerName = player?.name || selectedTunerShortName();
+  const rivalName = rival?.name || "your rival";
+  const userPronoun = player?.gender === "female" ? "she" : "he";
+  const userPronounCap = userPronoun.charAt(0).toUpperCase() + userPronoun.slice(1);
+  const rivalPronoun = rival?.gender === "female" ? "she" : "he";
+  return String(value)
+    .replace(/\(User’s name\)/g, playerName)
+    .replace(/\(User's name\)/g, playerName)
+    .replace(/\(Rival’s name\)/g, rivalName)
+    .replace(/\(Rival's name\)/g, rivalName)
+    .replace(/he\/she \(if rival is Mylo, he; if rival is Cha Cha, she\)/gi, rivalPronoun)
+    .replace(/\(he\/she - if rival is Mylo, he; if rival is Cha Cha, she\)/gi, rivalPronoun)
+    .replace(/\(he\/she - if Mylo, he; if Cha Cha, she\)/gi, userPronoun)
+    .replace(/\(he\/she\)/gi, userPronoun)
+    .replace(/\(He’s\/She’s\)/g, `${userPronounCap}’s`)
+    .replace(/\(he’s\/she’s\)/g, `${userPronoun}’s`);
+}
+
+function currentTutorialLine() {
+  const scene = currentTutorialScene();
+  const lines = tutorialLinesForScene(scene);
+  const index = Math.max(0, Math.min(state.tutorialLine || 0, lines.length - 1));
+  return normalizeTutorialLine(lines[index]);
+}
+
+function chooseTutorialResponse(choiceIndex) {
+  const line = currentTutorialLine();
+  const choice = line.choices?.[choiceIndex];
+  if (!choice) return;
+  const responseLines = (choice.responseLines || []).map(normalizeTutorialLine);
+  state.tutorialChoiceResponse = {
+    lines: responseLines.length ? responseLines : [{
+      speaker: choice.responseSpeaker || line.speaker || "tyree",
+      text: tutorialText(choice.responseText || choice.responseKey || "TUTORIAL_PLACEHOLDER_CHOICE_RESPONSE")
+    }],
+    index: 0,
+    nextScene: choice.nextScene || null
+  };
+  saveState();
+  renderTutorial();
 }
 
 function tutorialSpeakerProfile(speaker) {
@@ -6676,13 +11293,22 @@ function tutorialSpeakerProfile(speaker) {
   }
   if (speaker === "key") return { name: "GearBorn Key", image: gearbornKeyImage };
   if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
+  if (speaker === "mamburn") return { name: "Mamburn", image: "assets/cars/snake-mamburn-display.png" };
+  if (speaker === "snaytan") return { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png" };
   if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshot-ashley.png" };
+  if (speaker === "rival") {
+    const rival = rivalCharacter();
+    return { ...rival, image: rival.headshot || rival.image };
+  }
+  if (speaker === "narration") return { name: "Tutorial", image: "" };
   return { name: "Dr. Tyree", image: "assets/characters/headshot-dr-tyree.png" };
 }
 
 function setTutorialScene(sceneId) {
-  state.tutorialScene = Math.max(0, tutorialScenes.findIndex((scene) => scene.id === sceneId));
+  state.tutorialScene = tutorialSceneIndex(sceneId);
   state.tutorialLine = 0;
+  state.tutorialChoiceResponse = null;
+  state.tutorialSplash = tutorialScenes[state.tutorialScene]?.splash || "";
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
@@ -6698,6 +11324,37 @@ function tutorialEvolvePromptIndex() {
 function advanceTutorial() {
   const scene = currentTutorialScene();
   const lines = tutorialLinesForScene(scene);
+
+  if (state.tutorialSplash) {
+    state.tutorialSplash = "";
+    saveState();
+    renderTutorial();
+    return;
+  }
+
+  if (state.tutorialChoiceResponse) {
+    const response = state.tutorialChoiceResponse;
+    const responseLines = response.lines || [];
+    if ((response.index || 0) < responseLines.length - 1) {
+      response.index = (response.index || 0) + 1;
+      saveState();
+      renderTutorial();
+      return;
+    }
+    const nextScene = response.nextScene;
+    state.tutorialChoiceResponse = null;
+    if (nextScene) {
+      setTutorialScene(nextScene);
+      setupTutorialScene();
+    } else if (state.tutorialLine < lines.length - 1) {
+      state.tutorialLine += 1;
+    } else {
+      state.tutorialLine = lines.length - 1;
+    }
+    saveState();
+    render();
+    return;
+  }
 
   // ── Already waiting for user to act — ignore button presses ──────────────
   if (state.tutorialAwaitingForge) return;
@@ -6730,8 +11387,14 @@ function advanceTutorial() {
 
   switch (scene.id) {
     case "intro":
-      // Move straight to the tutorial city map; the old Mamburn-only car select is skipped.
-      setTutorialScene("city-map");
+      setTutorialScene("rival-intro");
+      setupTutorialScene();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "rival-intro":
+      setTutorialScene("mamburn");
       setupTutorialScene();
       saveState();
       renderTutorial();
@@ -6765,80 +11428,65 @@ function advanceTutorial() {
       break;
 
     case "drag-race":
-      // Continue → prepare the race (show controls scene)
+      // Continue → prepare and start the race.
       prepareDragRace(null, tutorialDragStage());
-      setTutorialScene("dr-controls");
-      saveState();
-      renderTutorial();
-      break;
-
-    case "dr-controls":
-      // Continue → start the actual countdown
       startPendingDragRace();
-      setTutorialScene("sprox");
+      setTutorialScene("drag-race-win");
       saveState();
       renderTutorial();
       break;
 
-    case "sprox":
-      // Drag race win → transition scene back to city map
-      setTutorialScene("drag2tt");
+    case "drag-race-win":
+      setTutorialScene("rival-stinger");
+      saveState();
+      renderTutorial();
+      break;
+
+    case "rival-stinger":
+      setTutorialScene("drag2h2h");
       showTutorialCityMap();
       saveState();
       renderTutorial();
       break;
 
-    case "drag2tt":
+    case "drag2h2h":
       // Auto-click time trial → show time-trial-intro level preview
-      setTutorialScene("time-trial-intro");
+      setTutorialScene("head2head-intro");
       setupTutorialScene();
       saveState();
       renderTutorial();
       break;
 
-    case "time-trial-intro":
-      // Start Level → go to time trial view
-      setTutorialScene("time-trial");
-      state.selectedTimeCar = tutorialCarId;
-      state.selectedTimeTrack = tutorialTrack.id;
-      setFlowStep("time", "match");
-      showView("time-trial");
+    case "head2head-intro":
+      // Start Level → stage the 2D head-to-head race preview/race screen.
+      setTutorialScene("head2head");
+      prepareTutorialHeadToHeadRace();
       saveState();
       renderTutorial();
       break;
 
-    case "time-trial":
-      // Continue → start the time trial
-      modeFlow.time = "race";
-      renderFlowScreens();
-      beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-      setTutorialScene("tt-controls");
+    case "head2head":
+      // Continue → start the current 2D racer head-to-head tutorial.
+      startTutorialHeadToHeadRace();
+      setTutorialScene("head2head-win");
       saveState();
       renderTutorial();
       break;
 
-    case "tt-controls":
-      // Continue → start the countdown
-      modeFlow.time = "race";
-      renderFlowScreens();
-      if (!verticalRace || verticalRace.finished || verticalRace.mode !== "tutorial-time") {
-        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-      }
-      startVerticalCountdown();
-      setTutorialScene("tt-after");
+    case "head2head-win":
+      setTutorialScene("h2h-rival-stinger");
       saveState();
       renderTutorial();
       break;
 
-    case "tt-after":
-      // Time trial win → back to city map
-      setTutorialScene("tt2battle");
+    case "h2h-rival-stinger":
+      setTutorialScene("h2h2battle");
       showTutorialCityMap();
       saveState();
       renderTutorial();
       break;
 
-    case "tt2battle":
+    case "h2h2battle":
       // Auto-click battle → show battle-intro level preview
       setTutorialScene("battle-intro");
       setupTutorialScene();
@@ -6858,26 +11506,25 @@ function advanceTutorial() {
       break;
 
     case "battle":
-      // Continue → set up and start battle
+      // Continue → set up and start battle.
       state.selectedStoryCar = tutorialCarId;
       state.selectedBattleBoss = bosses[0].id;
-      setTutorialScene("pre-battle");
-      setupTutorialScene();
-      saveState();
-      render();
-      break;
-
-    case "pre-battle":
-      // Continue → actually start battle
       if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
         beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
       }
-      setTutorialScene("post-battle");
+      setTutorialScene("battle-win");
       saveState();
       renderTutorial();
       break;
 
-    case "post-battle":
+    case "battle-win":
+      setTutorialScene("map-final");
+      showTutorialCityMap();
+      saveState();
+      renderTutorial();
+      break;
+
+    case "map-final":
       // Battle win → go to garage
       setTutorialScene("garage");
       setupTutorialScene();
@@ -6901,30 +11548,35 @@ function advanceTutorial() {
       break;
 
     case "evolve":
-      // Await user clicking Evolve button (handled above via tutorialEvolvePromptIndex)
-      state.tutorialAwaitingEvolve = true;
+      closeEvolutionModal();
+      setTutorialScene("tyree-final");
+      setupTutorialScene();
       saveState();
-      renderTutorial();
+      render();
       break;
 
     case "evolved-form":
-      // After evolution → go to VINdex
-      setTutorialScene("vindex");
+      setTutorialScene("evolve");
       setupTutorialScene();
       saveState();
       render();
       break;
 
-    case "vindex":
-      // VINdex done → go to Achievements
-      setTutorialScene("achievements");
+    case "tyree-final":
+      setTutorialScene("empty-garage");
       setupTutorialScene();
       saveState();
       render();
       break;
 
-    case "achievements":
-      // Achievements done → go to The Forge
+    case "empty-garage":
+      setTutorialScene("ashley-intro");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "ashley-intro":
       setTutorialScene("the-forge");
       setupTutorialScene();
       saveState();
@@ -6938,6 +11590,12 @@ function advanceTutorial() {
       renderTutorial();
       break;
 
+    case "medallion-unlock":
+      state.tutorialAwaitingForge = true;
+      saveState();
+      renderTutorial();
+      break;
+
     case "unlocked":
       // Close the forge unlock popup then advance to starters
       if (el.forgeUnlockedPopup) {
@@ -6945,13 +11603,27 @@ function advanceTutorial() {
         el.forgeUnlockedPopup.setAttribute("hidden", "");
         el.forgeUnlockedPopup.setAttribute("aria-hidden", "true");
       }
-      setTutorialScene("starters");
+      setTutorialScene("vindex");
       setupTutorialScene();
       saveState();
       render();
       break;
 
-    case "starters":
+    case "vindex":
+      setTutorialScene("achievements");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "achievements":
+      setTutorialScene("end");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "end":
       finishTutorial();
       break;
 
@@ -6966,6 +11638,12 @@ function advanceTutorial() {
 }
 
 function rewindTutorial() {
+  if (state.tutorialChoiceResponse) {
+    state.tutorialChoiceResponse = null;
+    saveState();
+    renderTutorial();
+    return;
+  }
   state.tutorialAwaitingUpgrade = false;
   state.tutorialAwaitingEvolve = false;
   state.tutorialAwaitingForge = false;
@@ -6993,6 +11671,14 @@ function renderTutorial() {
   el.tutorialOverlay.setAttribute("aria-hidden", active ? "false" : "true");
   if (!active) return;
   const scene = currentTutorialScene();
+  el.tutorialOverlay.dataset.mode = scene.mode || "dialogueOverlay";
+  el.tutorialOverlay.classList.toggle("splashing", Boolean(state.tutorialSplash));
+  const sceneBackground = scene.background && !scene.background.startsWith("TODO") ? scene.background : "";
+  if (sceneBackground && ["vnScene", "comicSplash"].includes(scene.mode)) {
+    el.tutorialOverlay.style.backgroundImage = `linear-gradient(180deg, rgba(5, 8, 14, 0.34), rgba(5, 8, 14, 0.58)), url("${sceneBackground}")`;
+  } else {
+    el.tutorialOverlay.style.backgroundImage = "";
+  }
   const countdownRunning = el.dragCountdown.classList.contains("active")
     || el.storyCountdown.classList.contains("active")
     || el.timeCountdown.classList.contains("active");
@@ -7014,23 +11700,57 @@ function renderTutorial() {
     countdownRunning ||
     (race && !race.finished) ||
     (verticalRace && !verticalRace.finished) ||
+    (betaState && !betaState.finished) ||
     (battleState && !battleState.finished)
   );
   el.tutorialOverlay.classList.toggle("active", !waitingOnRace);
   if (waitingOnRace) return;
+  if (state.tutorialSplash) {
+    el.tutorialOverlay.style.backgroundImage = `linear-gradient(180deg, rgba(5, 8, 14, 0.08), rgba(5, 8, 14, 0.18)), url("${state.tutorialSplash}")`;
+    el.tutorialKicker.textContent = "";
+    el.tutorialTitle.textContent = "";
+    el.tutorialCopy.innerHTML = "";
+    el.tutorialPortrait.innerHTML = "";
+    if (el.tutorialChoices) {
+      el.tutorialChoices.hidden = true;
+      el.tutorialChoices.innerHTML = "";
+    }
+    el.tutorialBack.hidden = true;
+    el.tutorialNext.textContent = "Continue";
+    el.tutorialNext.hidden = false;
+    el.tutorialNext.classList.add("finish");
+    el.tutorialCard.dataset.scene = scene.id;
+    el.tutorialCard.dataset.mode = "comicSplash";
+    el.tutorialCard.dataset.speaker = "splash";
+    return;
+  }
   const lines = tutorialLinesForScene(scene);
   state.tutorialLine = Math.max(0, Math.min(state.tutorialLine || 0, lines.length - 1));
-  const line = normalizeTutorialLine(lines[state.tutorialLine]);
+  const response = state.tutorialChoiceResponse;
+  const line = response?.lines?.length
+    ? response.lines[Math.min(response.index || 0, response.lines.length - 1)]
+    : normalizeTutorialLine(lines[state.tutorialLine]);
   const speaker = tutorialSpeakerProfile(line.speaker);
   el.tutorialKicker.textContent = "";
   el.tutorialTitle.textContent = speaker.name;
-  el.tutorialCopy.innerHTML = line.text;
+  el.tutorialCopy.innerHTML = line.text === "TUTORIAL_CHOICE_PROMPT" ? "Choose a response." : line.text;
   el.tutorialPortrait.innerHTML = characterMarkup(speaker);
+  if (el.tutorialChoices) {
+    const choices = response ? [] : line.choices || [];
+    el.tutorialChoices.hidden = !choices.length;
+    el.tutorialChoices.innerHTML = choices.map((choice, index) => `
+      <button class="tutorial-choice-button" type="button" data-tutorial-choice="${index}">
+        ${tutorialText(choice.labelKey || choice.label || `TUTORIAL_CHOICE_${index + 1}`)}
+      </button>
+    `).join("");
+  }
   el.tutorialBack.hidden = state.tutorialScene === 0 && state.tutorialLine === 0;
   const tutorialLineIsLast = state.tutorialLine === lines.length - 1;
   el.tutorialNext.textContent = tutorialLineIsLast ? "Continue" : "Next";
+  el.tutorialNext.hidden = Boolean(!response && line.choices?.length);
   el.tutorialNext.classList.toggle("finish", tutorialLineIsLast);
   el.tutorialCard.dataset.scene = scene.id;
+  el.tutorialCard.dataset.mode = scene.mode || "dialogueOverlay";
   el.tutorialCard.dataset.speaker = line.speaker;
 }
 
@@ -7080,6 +11800,7 @@ function completeCampaignLevel(index) {
   const willUnlockNextCity = completedLevel?.type === "boss"
     && nextCityIndex < storyCities.length
     && !storyCityUnlocked(nextCityIndex);
+  const wasCompleted = Boolean(state.completedCampaignLevels[index]);
   state.completedCampaignLevels[index] = true;
   while (state.highestCampaignIndex < campaignLevels.length - 1 && state.completedCampaignLevels[state.highestCampaignIndex]) {
     state.highestCampaignIndex += 1;
@@ -7093,6 +11814,13 @@ function completeCampaignLevel(index) {
     }
   }
   if (completedLevel?.type === "boss") unlockNextTrainingBossFromBoss((completedLevel.final ? finalBoss : bosses[completedLevel.bossIndex])?.id);
+  if (!wasCompleted && featureEnabled("enableReputationAnimations") && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type)) {
+    playAudioCue("reputationGain");
+    showToast("REPUTATION_GAIN_PLACEHOLDER_TITLE", "REPUTATION_GAIN_PLACEHOLDER_BODY");
+  }
+  if (!wasCompleted && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type) && cityIndex >= 0) {
+    maybeTriggerMedallionGauntlet(storyCities[cityIndex]);
+  }
   checkAchievements();
   saveState();
 }
@@ -7259,6 +11987,27 @@ function startStory2dRace(index, level) {
   saveState();
   showView("beta");
   startBetaDemo(betaPendingMode);
+}
+
+function prepareTutorialHeadToHeadRace() {
+  betaRaceContext = { source: "tutorial", nextScene: "head2head-win" };
+  betaPendingMode = "duel";
+  betaPreviewMode = "duel";
+  betaDuelDriverIndex = 0;
+  betaSelectedTrackId = betaTrackIdForStoryTrack(tutorialTrack);
+  betaTrack = betaTrackById(betaSelectedTrackId, "duel");
+  betaSelectedTrackId = betaTrack.id;
+  syncBetaTrackDerived();
+  state.selectedCar = tutorialCarId;
+  state.selectedStoryCar = tutorialCarId;
+  betaPreviewOpponents = betaOpponentSetForMode("duel");
+  showView("beta");
+  openBetaPreview("duel", true);
+}
+
+function startTutorialHeadToHeadRace() {
+  prepareTutorialHeadToHeadRace();
+  startBetaDemo("duel");
 }
 
 function openRivalDialogue(level, phase, onContinue) {
@@ -7571,6 +12320,7 @@ function runCountdown(node, done) {
   let index = 0;
   node.classList.add("active");
   node.textContent = steps[index];
+  playAudioCue("raceCountdown");
   const timer = setInterval(() => {
     index += 1;
     if (index >= steps.length) {
@@ -7581,6 +12331,7 @@ function runCountdown(node, done) {
       return;
     }
     node.textContent = steps[index];
+    playAudioCue(index === steps.length - 1 ? "raceStart" : "raceCountdown");
   }, 700);
 }
 
@@ -7799,6 +12550,10 @@ function finishVerticalRace(playerWon) {
   const partReward = isStoryRace && resultWon ? rollStoryPartReward() : null;
   if (partReward) resultLines.push(partRewardResultMarkup(partReward));
   recordStoryRaceOutcome(resultWon, isStoryRace);
+  const medalResult = isStoryRace
+    ? saveStoryMedal(raceState.campaignLevelIndex, { won: resultWon, medalKey: state.storyTimeTrials?.[raceState.campaignLevelIndex]?.medalKey })
+    : { medal: "none", improved: false };
+  evaluateMicroObjectives({ eventId: isStoryRace ? storyEventId(raceState.campaignLevelIndex) : raceState.mode, won: resultWon, elapsed });
   saveState();
   render();
   // Only apply tutorial overrides when tutorial is specifically running this time trial
@@ -7807,6 +12562,8 @@ function finishVerticalRace(playerWon) {
     won: resultWon,
     title: tutorialActive() && !resultWon ? "RACE LOST" : undefined,
     sprox: resultSprox,
+    medal: resultWon ? medalResult.medal : "none",
+    medalImproved: medalResult.improved,
     lines: tutorialActive() && !resultWon ? [] : resultLines,
     primaryLabel: tutorialInTime && resultWon ? "Next" : tutorialInTime && !resultWon ? "Try Again" : isStoryRace ? "Next" : raceState.mode === "time" ? "Select Map" : "Select Opponent",
     primaryTone: tutorialInTime && resultWon ? "success" : "",
@@ -7816,14 +12573,13 @@ function finishVerticalRace(playerWon) {
     disableActions: tutorialInTime && resultWon,
     onPrimary: () => {
       if (tutorialInTime && !resultWon) {
-        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-        startVerticalCountdown();
-        setTutorialScene("tt-after");
+        startTutorialHeadToHeadRace();
+        setTutorialScene("head2head-win");
         saveState();
         renderTutorial();
         return;
       }
-      if (tutorialInTime && resultWon && currentTutorialScene().id === "tt-after") {
+      if (tutorialInTime && resultWon && currentTutorialScene().id === "head2head-win") {
         advanceTutorial();
         return;
       }
@@ -7898,9 +12654,8 @@ function failVerticalRace(title) {
     hideSprox: tutorialInTime,
     onPrimary: () => {
       if (tutorialInTime) {
-        beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-        startVerticalCountdown();
-        setTutorialScene("tt-after");
+        startTutorialHeadToHeadRace();
+        setTutorialScene("head2head-win");
         saveState();
         renderTutorial();
         return;
@@ -8176,17 +12931,22 @@ el.storyMapStage.addEventListener("click", (event) => {
   if (tutorialActive()) {
     const tutorialButton = event.target.closest("[data-tutorial-level]");
     if (!tutorialButton || tutorialButton.disabled) return;
-    const sceneByLevel = {
-      drag: "drag-race-intro",
-      trial: "time-trial-intro",
-      battle: "battle-intro"
-    };
+  const sceneByLevel = {
+    drag: "drag-race-intro",
+    head2head: "head2head-intro",
+    battle: "battle-intro"
+  };
     const nextScene = sceneByLevel[tutorialButton.dataset.tutorialLevel];
     if (!nextScene) return;
     setTutorialScene(nextScene);
     setupTutorialScene();
     saveState();
     renderTutorial();
+    return;
+  }
+  const gauntletButton = event.target.closest("[data-gauntlet-city]");
+  if (gauntletButton && !gauntletButton.disabled) {
+    startMedallionGauntlet(gauntletButton.dataset.gauntletCity);
     return;
   }
   const button = event.target.closest("[data-story-level]");
@@ -8201,7 +12961,7 @@ el.storyCityGrid.addEventListener("click", (event) => {
 el.startStory.addEventListener("click", () => openBossIntro());
 el.startBattle.addEventListener("click", () => {
   if (tutorialActive() && currentTutorialScene().id === "battle") {
-    setTutorialScene("pre-battle");
+    setTutorialScene("battle");
     setupTutorialScene();
     saveState();
     return;
@@ -8238,15 +12998,15 @@ el.continueCutscene.addEventListener("click", advanceCutscene);
 el.skipCutscene.addEventListener("click", closeStoryCutsceneAndStart);
 el.closeCutscene?.addEventListener("click", closeStoryCutsceneAndStart);
 el.startTimeTrial.addEventListener("click", () => {
-  modeFlow.time = "race";
-  renderFlowScreens();
-  if (tutorialActive() && currentTutorialScene().id === "time-trial") {
-    beginVerticalRace("tutorial-time", true, { track: tutorialTrack });
-    setTutorialScene("tt-controls");
+  if (tutorialActive() && currentTutorialScene().id === "head2head") {
+    startTutorialHeadToHeadRace();
+    setTutorialScene("head2head-win");
     saveState();
     renderTutorial();
     return;
   }
+  modeFlow.time = "race";
+  renderFlowScreens();
   beginVerticalRace("time", true);
 });
 el.storyMapStart.addEventListener("click", startVerticalCountdown);
@@ -8383,8 +13143,9 @@ el.evolveButton.addEventListener("click", async () => {
     el.evolutionModal.setAttribute("aria-hidden", "false");
     if (tutorialEvolving) {
       state.tutorialAwaitingEvolve = false;
-      // Advance to evolved-form scene so player sees Snaytan before we continue
-      setTutorialScene("evolved-form");
+      // Combined T-021/T-022/T-023: after the animation/splash, continue the
+      // evolve dialogue while the evolved form is visible.
+      setTutorialScene("evolve");
       state.tutorialLine = 0;
       saveState();
       renderTutorial();
@@ -8481,7 +13242,17 @@ el.confirmPinkSlipRisk?.addEventListener("click", confirmPinkSlipRisk);
 el.cancelPinkSlipRisk?.addEventListener("click", closePinkSlipWarning);
 el.tutorialBack.addEventListener("click", rewindTutorial);
 el.tutorialNext.addEventListener("click", advanceTutorial);
-el.tutorialSkip.addEventListener("click", skipTutorial);
+el.tutorialSkip.addEventListener("click", openSkipTutorialConfirm);
+el.tutorialChoices?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-tutorial-choice]");
+  if (!button) return;
+  chooseTutorialResponse(Number(button.dataset.tutorialChoice));
+});
+el.cancelTutorialSkip?.addEventListener("click", closeSkipTutorialConfirm);
+el.confirmTutorialSkip?.addEventListener("click", () => {
+  closeSkipTutorialConfirm();
+  skipTutorial();
+});
 el.godCode.addEventListener("input", () => {
   el.godCodeError.textContent = "";
 });
@@ -8507,6 +13278,12 @@ el.godModal.addEventListener("click", (event) => {
 el.tutorialReplayModal.addEventListener("click", (event) => {
   if (event.target === el.tutorialReplayModal) {
     closeTutorialReplayModal();
+  }
+});
+
+el.tutorialSkipModal?.addEventListener("click", (event) => {
+  if (event.target === el.tutorialSkipModal) {
+    closeSkipTutorialConfirm();
   }
 });
 
@@ -9091,6 +13868,8 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
 }
 
 function betaCurrentCarId() {
+  if (betaRaceContext?.source === "tutorial") return tutorialCarId;
+  if (["story", "gauntlet"].includes(betaRaceContext?.source)) return isSelectablePlayerCar(state.selectedStoryCar) ? state.selectedStoryCar : firstSelectablePlayerCarId();
   return selectedCarIdForMode("beta");
 }
 
@@ -10055,6 +14834,7 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
   const savedGhost = config.id === "time" ? state.betaTimeTrials?.testTrack?.ghost || null : null;
   betaState = {
     config,
+    context: betaRaceContext,
     player,
     racers: [player].concat(opponents),
     ghost: savedGhost,
@@ -10319,11 +15099,46 @@ function finishBetaDemo() {
   if (context?.source === "story") {
     el.betaResults.hidden = true;
     finishStory2dRace(context, success, placement, elapsed, resultLine);
+  } else if (context?.source === "tutorial") {
+    el.betaResults.hidden = true;
+    finishTutorialHeadToHeadRace(context, success, placement, elapsed, resultLine);
+  } else if (context?.source === "gauntlet") {
+    el.betaResults.hidden = true;
+    finishGauntlet2dRace(context, success, placement, elapsed, resultLine);
   } else {
+    const betaMedal = calculateMedalForRace({ won: success, placement }, { type: betaState.config.id });
+    const betaMedalResult = saveBestMedalForEvent(`beta:${context?.source || "prototype"}:${betaState.config.id}:${betaTrack.id}`, betaMedal);
+    if (normalizeMedal(betaMedal) !== "none") {
+      resultLine += ` · ${medalLabel(betaMedalResult.medal)}${betaMedalResult.improved ? " · NEW BEST" : ""}`;
+      if (betaMedalResult.improved) playAudioCue("medalReveal");
+    }
+    evaluateMicroObjectives({ eventId: `beta:${betaState.config.id}:${betaTrack.id}`, won: success, placement, elapsed });
+    saveState();
     el.betaFinalTime.textContent = resultLine;
     el.betaResults.hidden = false;
   }
   drawBetaFrame();
+}
+
+function finishGauntlet2dRace(context, won, placement, elapsed, resultLine) {
+  const carId = betaState.player.carId;
+  recordRaceUsage(carId);
+  recordStoryRaceOutcome(won, false);
+  saveState();
+  showRaceResult(el.betaRace, {
+    won,
+    sprox: 0,
+    hideSprox: true,
+    lines: [resultLine],
+    primaryLabel: "Next",
+    raceAgainLabel: "Try Again",
+    onRaceAgain: () => startGauntlet2dRace(context.cityId),
+    onPrimary: () => {
+      completeGauntletStage(won);
+      betaRaceContext = null;
+      finishStoryRaceScreen();
+    }
+  });
 }
 
 function story2dReward(level) {
@@ -10350,10 +15165,14 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
   }
   const partReward = won ? rollStoryPartReward() : null;
   if (won) completeCampaignLevel(context.campaignLevelIndex);
+  const medalResult = saveStoryMedal(context.campaignLevelIndex, { won, placement });
+  evaluateMicroObjectives({ eventId: storyEventId(context.campaignLevelIndex), won, placement, elapsed });
   saveState();
   showRaceResult(el.betaRace, {
     won,
     sprox: earned,
+    medal: medalResult.medal,
+    medalImproved: medalResult.improved,
     lines: [resultLine, penaltyLine, partReward ? partRewardResultMarkup(partReward) : ""].filter(Boolean),
     primaryLabel: "Next",
     raceAgainLabel: "Race Again",
@@ -10374,6 +15193,30 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
       finishStory();
     }
   });
+}
+
+function finishTutorialHeadToHeadRace(context, won, placement, elapsed, resultLine) {
+  state.tutorialTimeMedal = won ? "Gold" : "";
+  if (won) {
+    setTutorialScene(context.nextScene || "head2head-win");
+  }
+  saveState();
+  showRaceResult(el.betaRace, {
+    won,
+    title: won ? "VICTORY" : "RACE LOST",
+    sprox: 0,
+    hideSprox: true,
+    lines: [resultLine],
+    primaryLabel: won ? "NEXT" : "Try Again",
+    primaryTone: won ? "success" : "",
+    raceAgainLabel: "Try Again",
+    hideRaceAgain: true,
+    disableActions: won,
+    onPrimary: () => {
+      if (!won) startTutorialHeadToHeadRace();
+    }
+  });
+  renderTutorial();
 }
 
 function betaTileIsHorizontal(tile) {
@@ -12173,6 +17016,12 @@ document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
 });
 
 if (beta3dDevEnabled()) document.body.classList.add("beta-dev-enabled");
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("button, [role='button'], .menu-card, .story-map-node, .vindex-button, .garage-card")) {
+    playAudioCue("uiSelect");
+  }
+});
 
 const loadingExperience = startLoadingExperience();
 checkAchievements(true);
