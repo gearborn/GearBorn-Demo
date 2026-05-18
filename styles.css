@@ -1853,6 +1853,28 @@ body:not(.mode-active) .nav {
   color: #ffffff;
 }
 
+.city-transport-button,
+.ghost.city-transport-button {
+  width: clamp(132px, 19vw, 230px);
+  height: clamp(64px, 9vw, 112px);
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 200, 87, 0.56);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(9, 13, 22, 0.52), rgba(0, 0, 0, 0.22));
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.city-transport-button img {
+  width: 112%;
+  height: 116%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.46));
+}
+
 .campaign-change-car {
   border-color: rgba(255, 255, 255, 0.72);
   background: rgba(255, 255, 255, 0.92);
@@ -2176,6 +2198,12 @@ body:not(.mode-active) .nav {
 .story-node-icon.layered .pink-car {
   width: 70%;
   height: 70%;
+}
+
+.story-node-icon.layered .pink-medallion {
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.46));
 }
 
 .story-node-icon.layered .rival-headshot {
@@ -3331,14 +3359,18 @@ small {
 }
 
 .race-result-popup {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 6;
+  z-index: 90;
   display: grid;
-  align-items: start;
-  justify-items: center;
-  padding-top: 28px;
-  background: rgba(0, 0, 0, 0.18);
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.race-result-popup.tutorial-passive {
+  z-index: 20;
+  pointer-events: none;
 }
 
 .race-result-card {
@@ -3352,6 +3384,12 @@ small {
   color: var(--ink);
   text-align: center;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  animation: resultPop 240ms ease both;
+}
+
+@keyframes resultPop {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .race-result-popup.win .race-result-card {
@@ -3374,6 +3412,50 @@ small {
   margin: 0;
   color: var(--ink);
   font-weight: 850;
+}
+
+.tutorial-medallion-acquired {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px 10px 6px;
+}
+
+.tutorial-medallion-acquired .tutorial-sparkle {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(76%, 420px);
+  opacity: 0.42;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tutorial-medallion-acquired strong {
+  position: relative;
+  z-index: 1;
+  color: var(--gold);
+  font-size: clamp(1.05rem, 3.4vw, 2rem);
+  font-weight: 1000;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.58);
+}
+
+.tutorial-medallion-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.tutorial-medallion-row img {
+  width: clamp(58px, 14vw, 116px);
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.42));
 }
 
 .race-result-medal {
@@ -4702,14 +4784,14 @@ small {
 
 .vindex-row-number {
   color: var(--vindex-gold);
-  font-size: clamp(0.28rem, 0.48cqw, 0.48rem);
+  font-size: clamp(0.36rem, 0.62cqw, 0.56rem);
   font-weight: 1000;
   line-height: 1;
 }
 
 .vindex-stage .vindex-button strong {
   color: #fff7dc;
-  font-size: clamp(0.31rem, 0.58cqw, 0.58rem);
+  font-size: clamp(0.44rem, 0.86cqw, 0.72rem);
   line-height: 1;
   min-width: 0;
   overflow-wrap: normal;
@@ -4778,6 +4860,17 @@ small {
   z-index: 3;
   width: clamp(42px, 8cqw, 120px);
   height: clamp(42px, 8cqw, 120px);
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.36));
+}
+
+.vindex-type-stamp {
+  position: absolute;
+  top: 15.6%;
+  right: 4.8%;
+  z-index: 3;
+  width: clamp(38px, 7cqw, 108px);
+  height: clamp(38px, 7cqw, 108px);
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.36));
 }
@@ -5081,11 +5174,11 @@ small {
 }
 
 .vindex-stage .vindex-button strong {
-  font-size: clamp(0.31rem, 0.58cqw, 0.58rem);
+  font-size: clamp(0.44rem, 0.86cqw, 0.72rem);
 }
 
 .vindex-stage .vindex-row-number {
-  font-size: clamp(0.28rem, 0.48cqw, 0.48rem);
+  font-size: clamp(0.36rem, 0.62cqw, 0.56rem);
 }
 
 .vindex-stage .vindex-preview-head p {
@@ -5424,13 +5517,15 @@ small {
   text-align: center;
 }
 
-.garage-class-badge img {
+.garage-class-badge img,
+.garage-type-badge img {
   width: 42px;
   height: 42px;
   object-fit: contain;
 }
 
-.garage-class-badge strong {
+.garage-class-badge strong,
+.garage-type-badge strong {
   color: var(--gold);
   font-size: 1rem;
   font-weight: 1000;
@@ -5438,12 +5533,11 @@ small {
 
 .garage-type-badge {
   padding: 4px 6px;
-  color: rgba(236, 238, 242, 0.82);
-  font-size: clamp(0.5rem, 1.2vw, 0.68rem);
-  font-weight: 1000;
-  line-height: 1.05;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
+}
+
+.garage-type-badge img {
+  width: 48px;
+  height: 48px;
 }
 
 .garage-license-plate img {
@@ -5665,8 +5759,63 @@ small {
 
 .tutorial-overlay.splashing {
   background-color: #05080e;
-  background-size: contain;
-  background-repeat: no-repeat;
+  background-image: none !important;
+}
+
+.tutorial-visual-stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.tutorial-visual-stage[hidden] {
+  display: none !important;
+}
+
+.tutorial-visual-stage.splash-stage {
+  align-items: start;
+  padding: clamp(10px, 2vw, 20px) clamp(10px, 2vw, 22px) 128px;
+}
+
+.tutorial-splash-image {
+  display: block;
+  width: min(100%, 178vh);
+  max-height: calc(100svh - 140px);
+  object-fit: contain;
+  filter: drop-shadow(0 18px 42px rgba(0, 0, 0, 0.55));
+}
+
+.tutorial-visual-stage.vn-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  gap: clamp(8px, 2.4vw, 34px);
+  padding: 22vh 3vw 3vh;
+  overflow: hidden;
+}
+
+.tutorial-vn-character {
+  max-width: min(22vw, 300px);
+  max-height: 72vh;
+  object-fit: contain;
+  opacity: 0.78;
+  transform: translateY(10px) scale(0.98);
+  filter: drop-shadow(0 24px 34px rgba(0, 0, 0, 0.58));
+  transition: transform 0.24s ease, opacity 0.24s ease, filter 0.24s ease;
+}
+
+.tutorial-vn-character.active {
+  opacity: 1;
+  transform: translateY(0) scale(1.03);
+  filter: drop-shadow(0 28px 38px rgba(0, 0, 0, 0.62)) drop-shadow(0 0 16px rgba(255, 200, 87, 0.22));
+  animation: tutorialSpeakerBob 1.8s ease-in-out infinite;
+}
+
+@keyframes tutorialSpeakerBob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -5px; }
 }
 
 .tutorial-card {
@@ -5722,9 +5871,12 @@ small {
 .tutorial-card[data-mode="comicSplash"] {
   left: 50%;
   right: auto;
-  bottom: 28px;
+  top: 18px;
+  bottom: auto;
   width: min(620px, calc(100vw - 36px));
   transform: translateX(-50%);
+  max-height: 30svh;
+  overflow: auto;
 }
 
 .tutorial-card[data-mode="vnScene"] {
@@ -5742,7 +5894,7 @@ small {
 }
 
 .tutorial-overlay.splashing .tutorial-card {
-  bottom: 24px;
+  bottom: 18px;
   width: auto;
   min-width: 0;
   padding: 0;
@@ -5760,6 +5912,14 @@ small {
 .tutorial-overlay.splashing #tutorial-next {
   min-width: 180px;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38), 0 0 24px rgba(255, 200, 87, 0.32);
+}
+
+.tutorial-card.choices-active .tutorial-actions {
+  display: none !important;
+}
+
+.tutorial-card.choices-active #tutorial-next {
+  display: none !important;
 }
 
 .tutorial-speaker {
@@ -5784,8 +5944,8 @@ small {
 }
 
 .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame {
-  width: min(160px, 52vw);
-  height: 160px;
+  width: min(220px, 56vw);
+  height: min(220px, 26svh);
   min-height: 0;
   margin-bottom: 8px;
 }
@@ -5873,6 +6033,10 @@ small {
   display: none;
 }
 
+.tutorial-actions #tutorial-next[hidden] {
+  display: none;
+}
+
 .tutorial-actions:has(#tutorial-back[hidden]) #tutorial-next {
   grid-column: 1 / -1;
   justify-self: center;
@@ -5896,6 +6060,10 @@ small {
 
 .tutorial-confirm-modal {
   border-color: rgba(242, 95, 92, 0.62);
+}
+
+#tutorial-skip-modal {
+  z-index: 1600;
 }
 
 .tutorial-confirm-modal h2 {
@@ -6352,6 +6520,7 @@ small {
 .beta-race {
   display: grid;
   gap: 10px;
+  position: relative;
 }
 
 .beta-3d-race {
@@ -6426,6 +6595,28 @@ small {
   gap: 8px;
   padding: 8px 14px 0;
   pointer-events: auto;
+}
+
+#beta-debug,
+#beta-exit {
+  display: none !important;
+}
+
+#beta-speed {
+  position: absolute;
+  right: clamp(132px, 19vw, 214px);
+  bottom: clamp(15px, 2.4vw, 28px);
+  z-index: 4;
+  display: grid !important;
+  min-height: 0 !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 999px !important;
+  background: rgba(10, 14, 20, 0.78) !important;
+  color: #fff7dc;
+  font-weight: 1000;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  pointer-events: none;
 }
 
 .beta-hud > div,
@@ -8230,6 +8421,13 @@ small {
     padding-inline: 8px;
   }
 
+  .city-transport-button,
+  .ghost.city-transport-button {
+    width: clamp(116px, 34vw, 156px);
+    height: clamp(58px, 17vw, 76px);
+    padding: 0;
+  }
+
   .boss-unlock-note {
     top: 154px;
     font-size: 0.78rem;
@@ -8325,6 +8523,23 @@ small {
     padding: 12px;
   }
 
+  .tutorial-card[data-mode="vnScene"],
+  .tutorial-card[data-mode="comicSplash"] {
+    top: 10px;
+    bottom: auto;
+    max-height: 34svh;
+  }
+
+  .tutorial-visual-stage.vn-stage {
+    padding: 26vh 2vw 2vh;
+    gap: 4px;
+  }
+
+  .tutorial-vn-character {
+    max-width: min(25vw, 150px);
+    max-height: 68vh;
+  }
+
   .tutorial-portrait .character-frame {
     width: min(140px, 42vw);
     height: 140px;
@@ -8336,8 +8551,8 @@ small {
   }
 
   .tutorial-card[data-speaker="key"] .tutorial-portrait .character-frame {
-    width: min(180px, 58vw);
-    height: 180px;
+    width: min(150px, 52vw);
+    height: 130px;
     min-height: 0;
   }
 
@@ -8607,13 +8822,13 @@ small {
   z-index: 10;
   pointer-events: none;
   --forge-platform-w: clamp(245px, 28vw, 405px);
-  --forge-cover-w: clamp(288px, 33vw, 475px);
+  --forge-cover-w: clamp(318px, 36vw, 515px);
   --forge-magnet-w: clamp(118px, 13.5vw, 188px);
-  --forge-car-w: clamp(160px, 18vw, 270px);
+  --forge-car-w: clamp(180px, 20vw, 292px);
   --forge-platform-top: clamp(42%, 48vh, 50%);
   --forge-cover-top: calc(var(--forge-platform-top) - clamp(84px, 9.4vw, 134px));
   --forge-magnet-top: calc(var(--forge-cover-top) - clamp(152px, 17vw, 238px));
-  --forge-car-top: calc(var(--forge-platform-top) - clamp(35px, 4.2vw, 64px));
+  --forge-car-top: calc(var(--forge-platform-top) - clamp(22px, 2.8vw, 44px));
   --forge-rise-distance: 92vh;
   --forge-lift-distance: -112vh;
 }
@@ -8715,7 +8930,7 @@ small {
 
 .forge-anim-car-reveal .car {
   width: 100%;
-  height: clamp(126px, 14vw, 210px);
+  height: clamp(140px, 15.6vw, 226px);
 }
 
 .forge-anim-car-reveal .car-image {
@@ -8917,6 +9132,11 @@ small {
 #medallion-earned-popup,
 #forge-unlocked-popup {
   z-index: 1400;
+}
+
+#forge-unlocked-popup.tutorial-passive {
+  z-index: 24;
+  pointer-events: none;
 }
 
 .forge-popup {
