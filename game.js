@@ -6670,7 +6670,12 @@ function gauntletConfigByKey(gauntletKey) {
   return medallionGauntlets[gauntletKey] || specialMedallionGauntlets[gauntletKey] || null;
 }
 
+function gauntletRewardAlreadyUnlocked(config) {
+  return Boolean(config?.gearBornLineId && isCarUnlocked(config.gearBornLineId));
+}
+
 function gauntletAssignedCityId(gauntletKey) {
+  if (gauntletKey === "rides-hair-special") return "indianapolis";
   const progress = gauntletProgress(gauntletKey);
   return progress.assignedCityId || (medallionGauntlets[gauntletKey] ? gauntletKey : state.selectedStoryCity != null ? storyCities[state.selectedStoryCity]?.id : storyCities[0]?.id);
 }
@@ -6682,10 +6687,11 @@ function gauntletForCity(city) {
 function maybeTriggerMedallionGauntlet(city) {
   const config = gauntletForCity(city);
   if (!config?.enabled) return;
+  if (gauntletRewardAlreadyUnlocked(config)) return;
   const progress = gauntletProgress(city.id);
   if (progress.popupShown || progress.completed) return;
   if (cityReputationPercent(city) < config.unlockReputationPercent) return;
-  saveGauntletProgress(city.id, { revealed: true, popupShown: true });
+  saveGauntletProgress(city.id, { revealed: true, popupShown: true, currentStage: 1 });
   saveState();
   openGauntletPopup(city.id);
 }
@@ -6693,9 +6699,10 @@ function maybeTriggerMedallionGauntlet(city) {
 function revealSpecialMedallionGauntlet(gauntletKey, cityId) {
   const config = specialMedallionGauntlets[gauntletKey];
   if (!config?.enabled || !cityId) return false;
+  if (gauntletRewardAlreadyUnlocked(config)) return false;
   const progress = gauntletProgress(gauntletKey);
   if (progress.revealed || progress.completed || progress.rewardClaimed) return false;
-  saveGauntletProgress(gauntletKey, { revealed: true, popupShown: true, assignedCityId: cityId });
+  saveGauntletProgress(gauntletKey, { revealed: true, popupShown: true, assignedCityId: cityId, currentStage: 1 });
   saveState();
   openGauntletPopup(gauntletKey);
   return true;
@@ -6713,13 +6720,14 @@ function evolvedLineCountForRidesHairTrigger() {
   return cars.filter((car) => {
     if (car.tutorialOnly || ["rainbowlt", "metal-snake", "training-car", "rides-hair", "royal-flush"].includes(car.id)) return false;
     if (!isCarUnlocked(car.id)) return false;
-    return unlockedEvolutionIndex(car.id) >= 1;
+    if (car.id === "art-van") return (state.unlockedArtVanForms || []).some((index) => index > 0);
+    return unlockedEvolutionIndex(car.id) >= car.evolutions.length - 1;
   }).length;
 }
 
 function maybeTriggerRidesHairGauntlet() {
-  if (evolvedLineCountForRidesHairTrigger() < 6) return false;
-  const city = storyCities[highestUnlockedStoryCityIndex()] || storyCities[0];
+  if (evolvedLineCountForRidesHairTrigger() < 5) return false;
+  const city = storyCities.find((item) => item.id === "indianapolis") || storyCities[0];
   return revealSpecialMedallionGauntlet("rides-hair-special", city.id);
 }
 
@@ -6862,7 +6870,7 @@ function gauntletMapNodeMarkup(city) {
   if (normal) nodes.push(normal);
   Object.keys(specialMedallionGauntlets).forEach((gauntletKey, index) => {
     const progress = gauntletProgress(gauntletKey);
-    if (progress.revealed && progress.assignedCityId === city.id) {
+    if (progress.revealed && gauntletAssignedCityId(gauntletKey) === city.id) {
       const specialNode = gauntletNodeMarkup(gauntletKey, city, 82, 36 + index * 12);
       if (specialNode) nodes.push(specialNode);
     }
@@ -6873,6 +6881,7 @@ function gauntletMapNodeMarkup(city) {
 function gauntletNodeMarkup(gauntletKey, city, x, y) {
   const config = gauntletConfigByKey(gauntletKey);
   if (!config?.enabled) return "";
+  if (gauntletRewardAlreadyUnlocked(config)) return "";
   const progress = gauntletProgress(gauntletKey);
   if (!progress.revealed) return "";
   const car = cars.find((item) => item.id === config.gearBornLineId);
@@ -6975,6 +6984,7 @@ function closeGauntletPopup() {
 function startMedallionGauntlet(cityId) {
   const config = gauntletConfigByKey(cityId);
   if (!config?.enabled) return;
+  if (gauntletRewardAlreadyUnlocked(config)) return;
   const progress = gauntletProgress(cityId);
   if (progress.completed) return;
   saveGauntletProgress(cityId, { revealed: true, popupShown: true });
@@ -6983,6 +6993,7 @@ function startMedallionGauntlet(cityId) {
   saveState();
   const opponent = gauntletOpponentForStage(cityId, stageNumber);
   if (stageNumber === 1) {
+    betaRaceContext = null;
     state.selectedCar = state.selectedStoryCar;
     mountCampaignRace("play");
     prepareDragRace(null, {
@@ -6997,6 +7008,7 @@ function startMedallionGauntlet(cityId) {
     return;
   }
   if (stageNumber === 2) {
+    betaRaceContext = null;
     mountCampaignRace("battle");
     beginBattle("gauntlet-battle", {
       boss: { id: `gauntlet-${cityId}`, name: opponent.form.name, car: opponent.form.name },
@@ -7973,7 +7985,7 @@ function renderVindex() {
   `;
   el.vindexNumber.textContent = discovered ? `#${entry.number}` : "#???";
   el.vindexName.textContent = discovered ? entry.name : "???";
-  el.vindexLine.textContent = discovered ? `${entry.line}${typeLabel ? ` · Type: ${typeLabel}` : ""}` : "Mystery GearBorn";
+  el.vindexLine.textContent = discovered ? entry.line : "Mystery GearBorn";
   if (el.vindexStatus) {
     el.vindexStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
     el.vindexStatus.className = `status-${status}`;
@@ -9587,6 +9599,8 @@ const forgeMedallionMap = {
   "silly-goose":        "assets/medallions/medallion-honky.png",
   "construction-blok":  "assets/medallions/medallion-blokparty.png",
   "skater-koala":       "assets/medallions/medallion-koaster.png",
+  "royal-flush":        "assets/medallions/medallion-whiffleton.png",
+  "rides-hair":         "assets/medallions/medallion-staschel.png",
   "hornula1":           "assets/medallions/medallion-hornula1.png",
 };
 
@@ -13666,6 +13680,19 @@ function betaStraightAssistAngle(racer) {
 
 function betaNearestRoadSpawn(racer) {
   const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+  let bestIndex = betaNearestAiLineIndex(racer, line);
+  const point = line[bestIndex] || { x: (betaTrack.startTile.x + 0.5) * betaTileSize, y: (betaTrack.startTile.y + 0.5) * betaTileSize };
+  const next = line[(bestIndex + 1) % line.length] || point;
+  return {
+    x: point.x,
+    y: point.y,
+    angle: Math.atan2(next.y - point.y, next.x - point.x),
+    index: bestIndex
+  };
+}
+
+function betaNearestAiLineIndex(racer, line = betaAiRacingLine) {
+  if (!racer || !line?.length) return 0;
   let bestIndex = 0;
   let bestDistance = Infinity;
   line.forEach((point, index) => {
@@ -13675,14 +13702,7 @@ function betaNearestRoadSpawn(racer) {
       bestIndex = index;
     }
   });
-  const point = line[bestIndex] || { x: (betaTrack.startTile.x + 0.5) * betaTileSize, y: (betaTrack.startTile.y + 0.5) * betaTileSize };
-  const next = line[(bestIndex + 1) % line.length] || point;
-  return {
-    x: point.x,
-    y: point.y,
-    angle: Math.atan2(next.y - point.y, next.x - point.x),
-    index: bestIndex
-  };
+  return bestIndex;
 }
 
 function betaRespawnRacer(racer, now = betaNowMs()) {
@@ -13713,35 +13733,30 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
   if (racer.respawnUntil && racer.respawnUntil > now) return;
   const surface = betaSurfaceAt(racer.x, racer.y);
   if (racer.ai) {
-    const moved = Math.hypot(racer.x - (racer.lastRecoveryX ?? racer.x), racer.y - (racer.lastRecoveryY ?? racer.y));
-    const score = betaProgressScore(racer);
-    const waypoint = betaAiRacingLine?.[racer.aiWaypoint || 0];
-    const waypointDistance = waypoint ? Math.hypot(waypoint.x - racer.x, waypoint.y - racer.y) : 0;
+    const nearestIndex = betaNearestAiLineIndex(racer);
+    if (betaAiRacingLine?.length && surface !== "wall") {
+      const lineAhead = surface === "road" ? 2 : 3;
+      racer.aiWaypoint = (nearestIndex + lineAhead) % betaAiRacingLine.length;
+    }
     if (!racer.lastProgressAt) {
-      racer.lastProgressScore = score;
       racer.lastProgressAt = now;
-      racer.lastWaypointDistance = waypointDistance;
+      racer.lastRecoveryX = racer.x;
+      racer.lastRecoveryY = racer.y;
     }
-    const progressed = score > (racer.lastProgressScore ?? score) + 0.015 || waypointDistance < (racer.lastWaypointDistance ?? Infinity) - 18;
-    if (progressed) {
-      racer.lastProgressScore = score;
+    if (now - racer.lastProgressAt >= 900) {
+      const moved = Math.hypot(racer.x - (racer.lastRecoveryX ?? racer.x), racer.y - (racer.lastRecoveryY ?? racer.y));
+      if (moved < 18 && Math.abs(racer.speed || 0) < 32) {
+        racer.stuckSince = racer.stuckSince || now;
+      } else {
+        racer.stuckSince = null;
+      }
+      racer.lastRecoveryX = racer.x;
+      racer.lastRecoveryY = racer.y;
       racer.lastProgressAt = now;
-      racer.lastWaypointDistance = waypointDistance;
-    }
-    racer.lastRecoveryX = racer.x;
-    racer.lastRecoveryY = racer.y;
-    if (moved < 2 && Math.abs(racer.speed || 0) < 18) {
-      racer.stuckSince = racer.stuckSince || now;
-      if (now - racer.stuckSince >= 1800) {
+      if (racer.stuckSince && now - racer.stuckSince >= 3200) {
         betaRespawnRacer(racer, now);
         return;
       }
-    } else {
-      racer.stuckSince = null;
-    }
-    if (now - (racer.lastProgressAt || now) >= 2400) {
-      betaRespawnRacer(racer, now);
-      return;
     }
   }
   if (surface === "road") {
@@ -13749,7 +13764,7 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
     return;
   }
   racer.offTrackSince = racer.offTrackSince || now;
-  const limit = racer.ai ? 2200 : 5000;
+  const limit = racer.ai ? 4200 : 5000;
   if (now - racer.offTrackSince >= limit) betaRespawnRacer(racer, now);
 }
 
@@ -15996,24 +16011,35 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
 }
 
 function betaAiControls(racer) {
-  const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
-  if (Math.hypot(target.x - racer.x, target.y - racer.y) < 74) {
-    racer.aiWaypoint = ((racer.aiWaypoint || 0) + 1) % betaAiRacingLine.length;
+  const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+  if (!line?.length) return { up: true, down: false, left: false, right: false };
+  const nearestIndex = betaNearestAiLineIndex(racer, line);
+  const currentWaypoint = Number.isFinite(racer.aiWaypoint) ? racer.aiWaypoint : nearestIndex;
+  const currentTarget = line[currentWaypoint] || line[nearestIndex];
+  const currentForward = currentTarget
+    ? Math.cos(racer.angle) * (currentTarget.x - racer.x) + Math.sin(racer.angle) * (currentTarget.y - racer.y)
+    : 0;
+  const currentDistance = currentTarget ? Math.hypot(currentTarget.x - racer.x, currentTarget.y - racer.y) : 0;
+  if (currentForward < -24 || currentDistance > betaTileSize * 1.35) {
+    racer.aiWaypoint = (nearestIndex + 2) % line.length;
   }
-  const nextTarget = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
+  while (Math.hypot((line[racer.aiWaypoint || 0]?.x || racer.x) - racer.x, (line[racer.aiWaypoint || 0]?.y || racer.y) - racer.y) < 92) {
+    racer.aiWaypoint = ((racer.aiWaypoint || 0) + 1) % line.length;
+    if (racer.aiWaypoint === currentWaypoint) break;
+  }
+  const lookAhead = Math.max(1, Math.min(4, 1 + Math.floor(Math.abs(racer.speed || 0) / 120)));
+  const nextTarget = line[((racer.aiWaypoint || 0) + lookAhead) % line.length] || line[0];
   const desired = Math.atan2(nextTarget.y - racer.y, nextTarget.x - racer.x);
   const delta = Math.atan2(Math.sin(desired - racer.angle), Math.cos(desired - racer.angle));
-  const aheadX = racer.x + Math.cos(racer.angle) * 72;
-  const aheadY = racer.y + Math.sin(racer.angle) * 72;
-  const onRoad = betaSurfaceAt(racer.x, racer.y) === "road";
+  const aheadX = racer.x + Math.cos(racer.angle) * 86;
+  const aheadY = racer.y + Math.sin(racer.angle) * 86;
   const aheadWall = betaSurfaceAt(aheadX, aheadY) === "wall";
-  // Always keep driving — only brake when heading straight into a wall
-  // On grass, keep going and steer back to track (handled in betaDriveRacer)
+  const sharpTurn = Math.abs(delta) > 1.0;
   return {
-    up: !aheadWall,
-    down: aheadWall && racer.speed > 60,
-    left: delta < -0.07,
-    right: delta > 0.07
+    up: !aheadWall || Math.abs(racer.speed || 0) < 55,
+    down: (aheadWall && racer.speed > 55) || (sharpTurn && racer.speed > racer.physics.maxSpeed * 0.58),
+    left: delta < -0.065,
+    right: delta > 0.065
   };
 }
 
@@ -16173,11 +16199,13 @@ function betaDriveRacer(racer, dt, controls = {}) {
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
   } else if (racer.ai && nextClass === "grass") {
-    racer.x = racer.prevX;
-    racer.y = racer.prevY;
-    racer.speed *= 0.72;
-    const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
-    racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
+    racer.speed *= 0.94;
+    const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+    const nearest = betaNearestAiLineIndex(racer, line);
+    const target = line[(nearest + 2) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
+    const desired = Math.atan2(target.y - racer.y, target.x - racer.x);
+    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 4.2 * dt);
+    racer.aiWaypoint = (nearest + 2) % line.length;
   }
 }
 

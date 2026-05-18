@@ -4861,8 +4861,8 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(17px, 2.3cqw, 31px) minmax(0, 1fr);
-  gap: clamp(1px, 0.3cqw, 5px);
+  grid-template-columns: clamp(16px, 2cqw, 28px) minmax(0, 1fr);
+  gap: clamp(2px, 0.34cqw, 6px);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -4906,14 +4906,14 @@ small {
 
 .vindex-row-number {
   color: var(--vindex-gold);
-  font-size: clamp(0.36rem, 0.62cqw, 0.56rem);
+  font-size: clamp(0.38rem, 0.68cqw, 0.58rem);
   font-weight: 1000;
   line-height: 1;
 }
 
 .vindex-stage .vindex-button strong {
   color: #fff7dc;
-  font-size: clamp(0.44rem, 0.86cqw, 0.72rem);
+  font-size: clamp(0.54rem, 1.06cqw, 0.86rem);
   line-height: 1;
   min-width: 0;
   overflow-wrap: normal;
@@ -5168,7 +5168,7 @@ small {
   display: grid;
   align-content: start;
   justify-items: center;
-  gap: clamp(8px, 1vw, 14px);
+  gap: clamp(4px, 0.62vw, 9px);
   padding: clamp(4px, 0.65vw, 9px);
 }
 
@@ -5176,14 +5176,14 @@ small {
   display: grid;
   justify-items: center;
   width: 100%;
-  transform: translateX(-4%);
-  gap: clamp(6px, 0.85vw, 12px);
+  transform: translateX(-7%);
+  gap: clamp(3px, 0.45vw, 7px);
 }
 
 .vindex-filter-buttons button {
   display: grid;
   width: min(100%, 180px);
-  min-height: clamp(36px, 4.5vw, 70px);
+  min-height: clamp(28px, 3.8vw, 58px);
   place-items: center;
   padding: 0;
   border: 0;
@@ -5201,16 +5201,16 @@ small {
 
 .vindex-filter-buttons img {
   width: 100%;
-  height: clamp(36px, 4.5vw, 70px);
+  height: clamp(28px, 3.8vw, 58px);
   object-fit: contain;
 }
 
 .vindex-progress {
   display: grid;
   width: min(100%, 190px);
-  gap: 6px;
-  margin-top: clamp(4px, 1vw, 12px);
-  transform: translateX(-4%);
+  gap: clamp(2px, 0.35vw, 5px);
+  margin-top: clamp(1px, 0.35vw, 5px);
+  transform: translateX(-7%);
   color: #2c261a;
   font-weight: 1000;
   text-transform: uppercase;
@@ -5218,14 +5218,18 @@ small {
 }
 
 .vindex-progress p {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 1px;
   margin: 0;
-  padding: clamp(4px, 0.58vw, 7px) clamp(5px, 0.7vw, 9px);
+  padding: clamp(3px, 0.42vw, 6px) clamp(4px, 0.58vw, 8px);
   border-radius: 8px;
   background: rgba(255, 248, 207, 0.34);
-  font-size: clamp(0.56rem, 0.92vw, 0.78rem);
+  font-size: clamp(0.5rem, 0.78vw, 0.72rem);
+  line-height: 1.02;
+  text-align: center;
+  white-space: nowrap;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
@@ -5282,7 +5286,7 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(17px, 2.3cqw, 31px) minmax(0, 1fr);
+  grid-template-columns: clamp(16px, 2cqw, 28px) minmax(0, 1fr);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   overflow: hidden;
@@ -5297,11 +5301,11 @@ small {
 }
 
 .vindex-stage .vindex-button strong {
-  font-size: clamp(0.44rem, 0.86cqw, 0.72rem);
+  font-size: clamp(0.54rem, 1.06cqw, 0.86rem);
 }
 
 .vindex-stage .vindex-row-number {
-  font-size: clamp(0.36rem, 0.62cqw, 0.56rem);
+  font-size: clamp(0.38rem, 0.68cqw, 0.58rem);
 }
 
 .vindex-stage .vindex-preview-head p {
