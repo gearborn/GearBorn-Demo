@@ -898,7 +898,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "You haven’t even touched a steering wheel yet and you’re already trying to get under my skin."
+      "text": "You haven’t even touched a steering wheel and you’re already trying to get under my skin."
     },
     {
       "speaker": "user",
@@ -907,18 +907,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "A little."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Every Tuner in the world starts somewhere."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Some become champions."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Most don’t."
     },
     {
       "speaker": "user",
@@ -979,11 +967,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "No."
-    },
-    {
-      "speaker": "tyree",
-      "text": "But you should take this seriously."
+      "text": "You should take this seriously."
     },
     {
       "speaker": "tyree",
@@ -1004,14 +988,6 @@ const tutorialRewriteDialogue = {
       "text": "This is becoming your brand."
     },
     {
-      "speaker": "user",
-      "text": "I got here, didn’t I?"
-    },
-    {
-      "speaker": "rival",
-      "text": "Barely."
-    },
-    {
       "speaker": "tyree",
       "text": "Good. You’re both here."
     },
@@ -1021,7 +997,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "rival",
-      "text": "Sounds like something you’d say."
+      "text": "Nervous?"
     },
     {
       "speaker": "user",
@@ -1032,15 +1008,15 @@ const tutorialRewriteDialogue = {
           "responseLines": [
             {
               "speaker": "rival",
-              "text": "Not remotely."
+              "text": "Such quick wit that you just repeat me."
             },
             {
               "speaker": "user",
-              "text": "Cool. Me neither."
+              "text": "I was also thinking that."
             },
             {
               "speaker": "rival",
-              "text": "That was convincing."
+              "text": "Sure..."
             }
           ]
         },
@@ -1085,16 +1061,12 @@ const tutorialRewriteDialogue = {
       "text": "Do you get extra time like you do on tests?"
     },
     {
-      "speaker": "user",
-      "text": "Just so you know, you don’t get to park in a handicap spot because you drive slow."
-    },
-    {
       "speaker": "tyree",
       "text": "Focus."
     },
     {
       "speaker": "tyree",
-      "text": "You two are insufferable. Let’s go."
+      "text": "You two are exhausting. Let’s go."
     }
   ],
   "mamburn": [
@@ -1127,20 +1099,8 @@ const tutorialRewriteDialogue = {
       "text": "THIS is yours?"
     },
     {
-      "speaker": "user",
-      "text": "Sick!"
-    },
-    {
       "speaker": "tyree",
       "text": "Her name is Mamburn."
-    },
-    {
-      "speaker": "user",
-      "text": "You named your car Mamburn?"
-    },
-    {
-      "speaker": "tyree",
-      "text": "She named herself."
     },
     {
       "speaker": "user",
@@ -1185,15 +1145,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "So this is the part where you tell me not to press the wrong button or I explode?"
+      "text": "So what happens if I press the wrong button?"
     },
     {
       "speaker": "tyree",
-      "text": "No, it’s where I tell you if you crash my Mamburn, I’ll kill you."
+      "text": "This is where I tell you: if you crash my Mamburn, I’ll kill you."
     },
     {
       "speaker": "user",
-      "text": "This is the coolest you’ve ever been in your life."
+      "text": "That’s the coolest thing you’ve said all day."
     },
     {
       "speaker": "tyree",
@@ -1209,11 +1169,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "More than most people deserve to love their GearBorn."
-    },
-    {
-      "speaker": "user",
-      "text": "That got weirdly intense."
+      "text": "More than most people deserve."
     },
     {
       "speaker": "tyree",
@@ -1259,19 +1215,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Different GearBorn."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Different philosophies."
-    },
-    {
-      "speaker": "user",
-      "text": "Philosophies?"
-    },
-    {
-      "speaker": "tyree",
-      "text": "You’d be surprised how seriously people take racing."
+      "text": "Different GearBorn. Different styles."
     },
     {
       "speaker": "user",
@@ -1336,42 +1280,18 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "So basically..."
-    },
-    {
-      "speaker": "user",
-      "text": "Become the greatest Tuner in the world."
+      "text": "So basically… become the greatest Tuner in the world."
     },
     {
       "speaker": "tyree",
-      "text": "That is... technically the goal, yes."
+      "text": "Technically, yes."
     },
     {
       "speaker": "user",
       "text": "Sick."
-    },
-    {
-      "speaker": "rival",
-      "text": "Do you ever say anything else?"
-    },
-    {
-      "speaker": "user",
-      "text": "No."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Save this for the track."
     }
   ],
   "drag-race-intro": [
-    {
-      "speaker": "tyree",
-      "text": "This is the race preview screen."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Here, Tuners can review the track, distance, and opponent before a race begins."
-    },
     {
       "speaker": "user",
       "text": "And today I’ll be humiliating…"
@@ -1394,7 +1314,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Okay, first of all, rude."
+      "text": "That’s a weird way to say “this thing is hella old.”"
     },
     {
       "speaker": "tyree",
@@ -1414,7 +1334,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Exactly. I’m undefeated."
+      "text": "Still undefeated."
     },
     {
       "speaker": "user",
@@ -1467,31 +1387,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Good thing I don’t make mistakes."
-    },
-    {
-      "speaker": "rival",
-      "text": "Pff… That was so lame."
-    },
-    {
-      "speaker": "user",
-      "text": "N… no… no it wasn’t."
+      "text": "Why are you looking at me?"
     },
     {
       "speaker": "mamburn",
       "text": "VRROOOOOOOM!"
     },
     {
-      "speaker": "tyree",
-      "text": "She’s eager."
-    },
-    {
       "speaker": "user",
-      "text": "At least she gets me."
-    },
-    {
-      "speaker": "rival",
-      "text": "Hey, that’s one for you."
+      "text": "See? She gets me."
     },
     {
       "speaker": "tyree",
@@ -1512,16 +1416,12 @@ const tutorialRewriteDialogue = {
       "text": "Press SPACE when the indicator reaches the shift zone to change gears."
     },
     {
-      "speaker": "user",
-      "text": "Hit the NOS. Got it."
-    },
-    {
       "speaker": "tyree",
       "text": "After 4 Perfect Shifts, you’ll be able to use your nitrous."
     },
     {
       "speaker": "user",
-      "text": "Like I said… hit the NOS. Got it."
+      "text": "Hit the NOS. Got it."
     },
     {
       "speaker": "tyree",
@@ -1533,11 +1433,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "If you miss too many shifts, your engine will overheat."
+      "text": "Miss too many shifts and your engine overheats."
     },
     {
       "speaker": "user",
-      "text": "So the car explodes."
+      "text": "So don’t explode the car. Got it."
     },
     {
       "speaker": "tyree",
@@ -1545,31 +1445,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "But I will judge you silently."
-    },
-    {
-      "speaker": "mamburn",
-      "text": "VROOOM."
-    },
-    {
-      "speaker": "tyree",
-      "text": "And Mamburn will judge you loudly."
-    },
-    {
-      "speaker": "user",
-      "text": "See?"
-    },
-    {
-      "speaker": "user",
-      "text": "We’re bonding already."
-    },
-    {
-      "speaker": "rival",
-      "text": "That’s not what that sound meant."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Once the lights count down, the race begins immediately."
+      "text": "But I will judge you."
     },
     {
       "speaker": "user",
@@ -1617,14 +1493,6 @@ const tutorialRewriteDialogue = {
       "text": "Positions."
     },
     {
-      "speaker": "rival",
-      "text": "Try to keep up."
-    },
-    {
-      "speaker": "user",
-      "text": "Try not to cry when I win."
-    },
-    {
       "speaker": "tutorque",
       "text": "HONK!"
     },
@@ -1648,11 +1516,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Your shifting was sloppy, your launch timing needs work, and you almost overheated Mamburn twice..."
-    },
-    {
-      "speaker": "tyree",
-      "text": "But you won."
+      "text": "Your shifting needs work. Your launch timing needs work. But you won."
     },
     {
       "speaker": "user",
@@ -1687,24 +1551,8 @@ const tutorialRewriteDialogue = {
       "text": "Sprox can be used for upgrades, modifications, and progression throughout the Academy circuit."
     },
     {
-      "speaker": "user",
-      "text": "Modifications sounds expensive."
-    },
-    {
       "speaker": "tyree",
-      "text": "It is."
-    },
-    {
-      "speaker": "user",
-      "text": "Sick."
-    },
-    {
-      "speaker": "tyree",
-      "text": "You earned enough for a decent start."
-    },
-    {
-      "speaker": "tyree",
-      "text": "But raw speed alone won’t carry you very far."
+      "text": "Raw speed won’t carry you far."
     },
     {
       "speaker": "user",
@@ -1758,10 +1606,6 @@ const tutorialRewriteDialogue = {
       "text": "Don’t get comfortable."
     },
     {
-      "speaker": "user",
-      "text": "You sound nervous."
-    },
-    {
       "speaker": "rival",
       "text": "You won one training race."
     },
@@ -1790,16 +1634,12 @@ const tutorialRewriteDialogue = {
       "text": "No. I’ve just met you before."
     },
     {
-      "speaker": "user",
-      "text": "Hurtful."
-    },
-    {
       "speaker": "tyree",
       "text": "Enough talking."
     },
     {
       "speaker": "tyree",
-      "text": "Your next evaluation starts now."
+      "text": "Next evaluation. Move."
     }
   ],
   "drag2h2h": [
@@ -1817,23 +1657,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Reputation determines which races, cities, and Boss Challenges you can access."
-    },
-    {
-      "speaker": "tyree",
-      "text": "The higher your reputation, the more opportunities become available."
-    },
-    {
-      "speaker": "user",
-      "text": "So basically the world’s giant racing gatekeeping."
-    },
-    {
-      "speaker": "tyree",
-      "text": "The Academy prefers the term “earned progression.”"
-    },
-    {
-      "speaker": "user",
-      "text": "That somehow sounded even more gatekeep-y."
+      "text": "Reputation unlocks new races, cities, and Boss Challenges."
     },
     {
       "speaker": "tyree",
@@ -1848,27 +1672,15 @@ const tutorialRewriteDialogue = {
       "text": "Head-to-Head racing."
     },
     {
-      "speaker": "user",
-      "text": "Less exciting, but okay."
-    },
-    {
       "speaker": "rival",
       "text": "(User’s name) is good with straight lines, but I think (he/she) struggles with turning."
-    },
-    {
-      "speaker": "user",
-      "text": "When did you become so mean?"
-    },
-    {
-      "speaker": "rival",
-      "text": "You know what this is about."
     },
     {
       "speaker": "user",
       "text": "TUTORIAL_CHOICE_PROMPT",
       "choices": [
         {
-          "label": "You sure you want to lose in front of Tyree?",
+          "label": "You sure you wanna lose in front of Tyree?",
           "responseLines": [
             {
               "speaker": "rival",
@@ -1882,14 +1694,6 @@ const tutorialRewriteDialogue = {
             {
               "speaker": "rival",
               "text": "I don’t even have a parking spot."
-            },
-            {
-              "speaker": "user",
-              "text": "Then I’m taking Tyree’s."
-            },
-            {
-              "speaker": "tyree",
-              "text": "It’s Dr."
             }
           ]
         },
@@ -1968,43 +1772,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Reckless driving leads to collisions, lost speed, and bad positioning."
-    },
-    {
-      "speaker": "user",
-      "text": "You say that like crashing isn’t cool."
-    },
-    {
-      "speaker": "tyree",
-      "text": "It is significantly less cool when you are inside the vehicle.."
-    },
-    {
-      "speaker": "tyree",
-      "text": "The Academy track was designed specifically to test reaction speed and racing instincts."
-    },
-    {
-      "speaker": "tyree",
       "text": "During the race, watch your speed entering corners."
     },
     {
       "speaker": "tyree",
-      "text": "A perfect line is often faster than raw acceleration."
-    },
-    {
-      "speaker": "user",
-      "text": "You just described my entire academic career."
-    },
-    {
-      "speaker": "rival",
-      "text": "Fast in straight lines. Disaster in corners?"
-    },
-    {
-      "speaker": "user",
-      "text": "Exactly."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Positions."
+      "text": "A clean line beats raw speed."
     },
     {
       "speaker": "tyree",
@@ -2014,11 +1786,11 @@ const tutorialRewriteDialogue = {
   "head2head": [
     {
       "speaker": "tyree",
-      "text": "Use WASD to steer during the race."
+      "text": "Use WASD to steer."
     },
     {
       "speaker": "tyree",
-      "text": "Look out for items on the road which can be activated with the SPACE bar."
+      "text": "Items activate with SPACE."
     },
     {
       "speaker": "user",
@@ -2034,7 +1806,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "rival",
-      "text": "(He’s/She’s) actually right about this one. Seriously?"
+      "text": "Okay, I’m with (him/her). Seriously?"
     },
     {
       "speaker": "tyree",
@@ -2051,14 +1823,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "rival",
       "text": "Shut up."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Head-to-Head races are won through consistency."
-    },
-    {
-      "speaker": "tyree",
-      "text": "One mistake can decide everything."
     },
     {
       "speaker": "user",
@@ -2083,7 +1847,7 @@ const tutorialRewriteDialogue = {
           ]
         },
         {
-          "label": "Wait, are we allowed to bump each other?",
+          "label": "So bumping’s legal?",
           "responseLines": [
             {
               "speaker": "tyree",
@@ -2099,11 +1863,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Ready positions."
+      "text": "Positions."
     },
     {
       "speaker": "tyree",
-      "text": "Race start in…"
+      "text": "Race starts in…"
     }
   ],
   "head2head-win": [
@@ -2116,16 +1880,8 @@ const tutorialRewriteDialogue = {
       "text": "Hm?? That’s all I get?"
     },
     {
-      "speaker": "tyree",
-      "text": "I’m reviewing the race."
-    },
-    {
-      "speaker": "user",
-      "text": "I won the race."
-    },
-    {
       "speaker": "rival",
-      "text": "Barely."
+      "text": "You deserve more?"
     },
     {
       "speaker": "user",
@@ -2145,15 +1901,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Good unusual or bad unusual?"
+      "text": "Good unusual?"
     },
     {
       "speaker": "tyree",
-      "text": "I haven’t decided yet."
+      "text": "Undetermined."
     },
     {
       "speaker": "rival",
-      "text": "That usually means bad."
+      "text": "That means bad."
     },
     {
       "speaker": "user",
@@ -2215,10 +1971,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "rival",
       "text": "You are way too excited about this."
-    },
-    {
-      "speaker": "user",
-      "text": "Cars fighting is objectively incredible."
     }
   ],
   "h2h-rival-stinger": [
@@ -2256,19 +2008,19 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "rival",
-      "text": "Tutorque doesn’t usually pay attention to first-years like this."
+      "text": "Tutorque doesn’t usually watch first-years this closely."
     },
     {
       "speaker": "user",
       "text": "Maybe it recognizes greatness."
     },
     {
-      "speaker": "rival",
-      "text": "Maybe it recognizes chaos."
-    },
-    {
       "speaker": "tutorque",
       "text": "HONK."
+    },
+    {
+      "speaker": "rival",
+      "text": "Or chaos."
     },
     {
       "speaker": "user",
@@ -2285,22 +2037,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "The final evaluation is waiting."
-    },
-    {
-      "speaker": "user",
-      "text": "Battle Arena?"
-    },
-    {
-      "speaker": "tyree",
-      "text": "Battle Arena."
-    },
-    {
-      "speaker": "user",
-      "text": "Sick."
-    },
-    {
-      "speaker": "rival",
-      "text": "There it is."
     }
   ],
   "h2h2battle": [
@@ -2338,11 +2074,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Every GearBorn possesses unique abilities tied to their Powertrain attribute."
+      "text": "Every GearBorn has unique abilities tied to Powertrain."
     },
     {
       "speaker": "tyree",
-      "text": "Strong Tuners learn how to synchronize those abilities with their own instincts."
+      "text": "Strong Tuners synchronize those abilities with instinct."
     },
     {
       "speaker": "user",
@@ -2350,15 +2086,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "For some people..."
-    },
-    {
-      "speaker": "tyree",
-      "text": "It is."
+      "text": "For some Tuners, it is."
     },
     {
       "speaker": "user",
-      "text": "Okay, this just keeps getting so much cooler."
+      "text": "This keeps getting cooler."
     },
     {
       "speaker": "user",
@@ -2386,7 +2118,7 @@ const tutorialRewriteDialogue = {
             },
             {
               "speaker": "user",
-              "text": "Seems fishy, but I’m not asking more questions"
+              "text": "Seems fishy, but I’m not asking more questions."
             }
           ]
         },
@@ -2429,7 +2161,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Seriously, there’s important…"
+      "text": "There’s important-"
     },
     {
       "speaker": "rival",
@@ -2455,23 +2187,23 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "And everyone just accepted that as normal?"
+      "text": "And everyone just accepted that?"
     },
     {
       "speaker": "rival",
-      "text": "You accepted it pretty quickly."
+      "text": "You accepted it instantly."
     },
     {
       "speaker": "user",
-      "text": "Yeah, because it rules."
+      "text": "Because it rules."
     },
     {
       "speaker": "tyree",
-      "text": "Attacking deals direct damage to your opponent."
+      "text": "Attack deals damage."
     },
     {
       "speaker": "tyree",
-      "text": "Defending reduces incoming damage and may stun an attacking opponent."
+      "text": "Defend reduces damage and can stun attackers."
     },
     {
       "speaker": "user",
@@ -2480,10 +2212,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "Defending still takes damage."
-    },
-    {
-      "speaker": "user",
-      "text": "Cowards truly suffer everywhere."
     },
     {
       "speaker": "rival",
@@ -2511,27 +2239,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "If you mistime your defense against a Special attack, you absorb the full impact without dealing any damage."
-    },
-    {
-      "speaker": "user",
-      "text": "Sounds bad."
-    },
-    {
-      "speaker": "tyree",
-      "text": "This one’s quick."
+      "text": "Try to attack or you’ll just take a full hit."
     },
     {
       "speaker": "user",
       "text": "Joke’s on you. It’s your car."
-    },
-    {
-      "speaker": "tyree",
-      "text": "So you better not lose."
-    },
-    {
-      "speaker": "user",
-      "text": "Me? Never."
     },
     {
       "speaker": "user",
@@ -2602,14 +2314,6 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tutorque",
-      "text": "..."
-    },
-    {
-      "speaker": "user",
-      "text": "Tuto’s got the same look. That “I want to pass (User’s name)” look."
-    },
-    {
-      "speaker": "tutorque",
       "text": "HONK."
     },
     {
@@ -2622,15 +2326,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "GearBorn respond differently depending on the Tuner driving them."
+      "text": "GearBorn respond differently depending on the Tuner."
     },
     {
       "speaker": "tyree",
-      "text": "Timing. Emotion. Instinct."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Compatibility matters."
+      "text": "Timing. Emotion. Instinct. Compatibility."
     },
     {
       "speaker": "user",
@@ -2699,11 +2399,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Are we done with the evaluations yet?"
+      "text": "Are we done yet?"
     },
     {
       "speaker": "user",
-      "text": "I can keep winning all day, but I figure you want me in front of the fans sooner than later."
+      "text": "I can keep winning all day, but the fans are waiting."
     },
     {
       "speaker": "tyree",
@@ -2717,7 +2417,7 @@ const tutorialRewriteDialogue = {
   "map-final": [
     {
       "speaker": "tyree",
-      "text": "As your reputation grows, more race types become available."
+      "text": "As your reputation grows, more race types unlock."
     },
     {
       "speaker": "tyree",
@@ -2725,11 +2425,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Wait."
-    },
-    {
-      "speaker": "user",
-      "text": "Do I get to race you now?"
+      "text": "Wait… Do I get to race you now?"
     },
     {
       "speaker": "tyree",
@@ -2741,7 +2437,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "You’ll also unlock Medallion Gauntlets and Pink Slip races where you can unlock new GearBorn medallions."
+      "text": "Medallion Gauntlets and Pink Slip races can unlock new GearBorn medallions."
     },
     {
       "speaker": "user",
@@ -2749,19 +2445,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Just watch out in Pink Slip races because you’ll lose your car if you lose."
+      "text": "In Pink Slips, lose the race and you lose your car."
     },
     {
       "speaker": "user",
       "text": "Cool… cool, cool, cool."
     },
     {
-      "speaker": "user",
-      "text": "No pressure."
-    },
-    {
       "speaker": "tyree",
-      "text": "Most Tuners spend years building enough reputation to challenge even one Boss."
+      "text": "Most Tuners spend years earning a Boss Challenge."
     },
     {
       "speaker": "user",
@@ -2823,10 +2515,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "user",
       "text": "I’ve been waiting for the cool customization stuff."
-    },
-    {
-      "speaker": "rival",
-      "text": "Somehow I feel like this is about to become a problem."
     }
   ],
   "garage": [
@@ -2864,55 +2552,27 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Every GearBorn possesses a unique balance of six core attributes."
+      "text": "Every GearBorn has six core attributes:"
     },
     {
       "speaker": "tyree",
       "text": "SPEED, ACCELERATION, HANDLING, TORQUE, BODY, and POWERTRAIN."
     },
     {
-      "speaker": "user",
-      "text": "I know what most of those words mean."
-    },
-    {
-      "speaker": "rival",
-      "text": "“Most” is concerning."
-    },
-    {
-      "speaker": "user",
-      "text": "Hey."
+      "speaker": "tyree",
+      "text": "SPEED affects top speed."
     },
     {
       "speaker": "tyree",
-      "text": "SPEED determines maximum velocity."
+      "text": "ACCELERATION affects how quickly a GearBorn gets there."
     },
     {
       "speaker": "tyree",
-      "text": "ACCELERATION determines how quickly a GearBorn reaches that speed."
+      "text": "HANDLING affects turning and stability."
     },
     {
       "speaker": "tyree",
-      "text": "HANDLING affects turning precision and corner stability."
-    },
-    {
-      "speaker": "user",
-      "text": "Okay, that one’s obvious."
-    },
-    {
-      "speaker": "tyree",
-      "text": "You want to take it from here?"
-    },
-    {
-      "speaker": "user",
-      "text": "Keep going. (Rival’s name) probably needs to hear it."
-    },
-    {
-      "speaker": "rival",
-      "text": "Sure."
-    },
-    {
-      "speaker": "tyree",
-      "text": "TORQUE affects shifting performance and acceleration output during gear transitions."
+      "text": "TORQUE improves shifting performance."
     },
     {
       "speaker": "user",
@@ -2920,7 +2580,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "BODY determines durability and resistance to impacts."
+      "text": "BODY affects durability."
     },
     {
       "speaker": "user",
@@ -2928,7 +2588,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "POWERTRAIN governs a GearBorn’s unique abilities and combat specialization."
+      "text": "POWERTRAIN governs unique abilities."
     },
     {
       "speaker": "tutorque",
@@ -2936,21 +2596,17 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Thank you."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Let’s move on to upgrading."
+      "text": "Gesundheit."
     }
   ],
   "upgrade": [
     {
       "speaker": "tyree",
-      "text": "Upgrading increases a GearBorn’s overall performance permanently."
+      "text": "Upgrading permanently improves a GearBorn’s performance."
     },
     {
       "speaker": "tyree",
-      "text": "Higher levels improve all core attributes."
+      "text": "Higher levels improve every attribute."
     },
     {
       "speaker": "user",
@@ -2958,11 +2614,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "My Mamburn is already Level 9, so you’ll see it’s quite expensive."
-    },
-    {
-      "speaker": "tyree",
-      "text": "The higher the level, the higher the price."
+      "text": "Mamburn’s already Level 9, so upgrades get expensive fast."
     },
     {
       "speaker": "user",
@@ -2970,87 +2622,20 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "It’s okay. I’ll cover the rest."
+      "text": "It’s okay. I’ll cover the rest. It’s my car."
     },
     {
       "speaker": "user",
-      "text": "Wait, seriously?"
-    },
-    {
-      "speaker": "tyree",
-      "text": "You remember that this is my car, right?"
+      "text": "Dang, I was hoping you’d forget that."
     },
     {
       "speaker": "user",
-      "text": "Dang, I was hoping you’d forget to ask for the keys."
-    },
-    {
-      "speaker": "user",
-      "text": "Ooo."
-    },
-    {
-      "speaker": "user",
-      "text": "Big numbers."
+      "text": "Ooo. Big numbers."
     },
     {
       "speaker": "tyree",
       "text": "Click LEVEL UP."
     },
-    {
-      "speaker": "user",
-      "text": "You sound weirdly excited."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Upgrading is an important moment in a Tuner’s development."
-    },
-    {
-      "speaker": "user",
-      "text": "Nerd."
-    },
-    {
-      "speaker": "user",
-      "text": "TUTORIAL_CHOICE_PROMPT",
-      "choices": [
-        {
-          "label": "Here goes nothing.",
-          "responseLines": [
-            {
-              "speaker": "tyree",
-              "text": "Usually the preferred outcome."
-            }
-          ]
-        },
-        {
-          "label": "If this explodes, I’m blaming you.",
-          "responseLines": [
-            {
-              "speaker": "tyree",
-              "text": "I’m beginning to regret encouraging you."
-            }
-          ]
-        },
-        {
-          "label": "Mamburn, don’t embarrass me.",
-          "responseLines": [
-            {
-              "speaker": "mamburn",
-              "text": "VROOOOM."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "speaker": "tyree",
-      "text": "Go ahead."
-    },
-    {
-      "speaker": "tyree",
-      "text": "Let’s see what happens."
-    }
-  ],
-  "evolve": [
     {
       "speaker": "user",
       "text": "Was that supposed to happen?"
@@ -3061,16 +2646,14 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "Get ready."
-    },
-    {
-      "speaker": "tyree",
-      "text": "I think you’re going to like this part."
+      "text": "You’re gonna like this part."
     },
     {
       "speaker": "tyree",
       "text": "Click EVOLVE."
-    },
+    }
+  ],
+  "evolve": [
     {
       "speaker": "user",
       "text": "Uh..."
@@ -3085,7 +2668,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Stop hmm-ing and tell me what’s going on!"
+      "text": "Stop “hmm”-ing and explain!"
     },
     {
       "speaker": "snaytan",
@@ -3093,15 +2676,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "You triggered an evolution in Mamburn."
+      "text": "You triggered Mamburn’s evolution."
     },
     {
       "speaker": "tyree",
-      "text": "She’s now become the fearsome Snaytan!"
+      "text": "She’s now Snaytan."
     },
     {
       "speaker": "user",
-      "text": "How did you somehow come out of this with an even cooler car?"
+      "text": "How did YOU end up with an even cooler car?"
     },
     {
       "speaker": "tyree",
@@ -3110,10 +2693,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "Get someone to do it for them."
-    },
-    {
-      "speaker": "user",
-      "text": "Touche."
     },
     {
       "speaker": "user",
@@ -3154,7 +2733,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Why do I suddenly not like how you said that?"
+      "text": "Oh no."
     }
   ],
   "tyree-final": [
@@ -3185,10 +2764,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "user",
       "text": "I won all of the races."
-    },
-    {
-      "speaker": "user",
-      "text": "I beat Tutorque."
     },
     {
       "speaker": "user",
@@ -3224,7 +2799,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "tyree",
-      "text": "But instincts alone are not enough to become a Tuner."
+      "text": "But instinct alone isn’t enough.But instincts alone are not enough to become a Tuner."
     },
     {
       "speaker": "user",
@@ -3241,10 +2816,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "Control."
-    },
-    {
-      "speaker": "user",
-      "text": "So that’s it?"
     },
     {
       "speaker": "tyree",
@@ -3272,11 +2843,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Yeah."
+      "text": "Right."
     },
     {
       "speaker": "user",
-      "text": "Well, apparently everybody knew except me."
+      "text": "Apparently everybody knew except me."
     },
     {
       "speaker": "tyree",
@@ -3284,7 +2855,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "Right."
+      "text": "Oh… yeah…"
     },
     {
       "speaker": "key",
@@ -3293,10 +2864,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "tyree",
       "text": "Mamburn performed exceptionally today."
-    },
-    {
-      "speaker": "user",
-      "text": "Cool."
     },
     {
       "speaker": "user",
@@ -3315,10 +2882,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "user",
       "text": "Cool."
-    },
-    {
-      "speaker": "user",
-      "text": "Awesome."
     },
     {
       "speaker": "user",
@@ -3362,11 +2925,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "user",
-      "text": "That was weird."
-    },
-    {
-      "speaker": "user",
-      "text": "I wish I understood those honks."
+      "text": "I really wish I understood those honks."
     },
     {
       "speaker": "narration",
@@ -3432,19 +2991,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Ashley Racem."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Former Academy problem child."
-    },
-    {
-      "speaker": "user",
-      "text": "Was that an official title?"
-    },
-    {
-      "speaker": "ashley",
-      "text": "Pretty well known."
+      "text": "Ashley Racem. Basically, the Spindell Academy’s worst enemy."
     },
     {
       "speaker": "ashley",
@@ -3460,15 +3007,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Not keys."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Not rankings."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Not Academy approval."
+      "text": "Not keys. Not rankings. Not Academy approval."
     },
     {
       "speaker": "ashley",
@@ -3558,7 +3097,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "You use the Forge to awaken them."
+      "text": "The Forge awakens them."
     },
     {
       "speaker": "user",
@@ -3569,16 +3108,8 @@ const tutorialRewriteDialogue = {
       "text": "That is the least magical way you could’ve phrased that."
     },
     {
-      "speaker": "user",
-      "text": "Thank you."
-    },
-    {
       "speaker": "ashley",
-      "text": "Pick one."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Let’s see who answered your bond."
+      "text": "Pick one. Let’s see who answered you."
     },
     {
       "speaker": "user",
@@ -3641,10 +3172,6 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Congratulations."
-    },
-    {
-      "speaker": "ashley",
       "text": "Your first real GearBorn answered your call."
     }
   ],
@@ -3679,19 +3206,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "There are hundreds of GearBorn out there."
+      "text": "Hundreds of GearBorn."
     },
     {
       "speaker": "ashley",
-      "text": "Different cities."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Different Tuners."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Different stories."
+      "text": "Different cities. Different Tuners. Different GearBorn."
     },
     {
       "speaker": "user",
@@ -3723,15 +3242,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Unlocking one gives you deeper data, evolution paths, and compatibility records."
+      "text": "Unlocking one reveals evolution paths and deeper data."
     },
     {
       "speaker": "user",
       "text": "So basically a giant GearBorn encyclopedia."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Please never call it that around serious Tuners."
     },
     {
       "speaker": "user",
@@ -3786,7 +3301,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "The VINdex logs every GearBorn you encounter across the world."
+      "text": "The VINdex logs every GearBorn you encounter."
     },
     {
       "speaker": "ashley",
@@ -3795,10 +3310,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "ashley",
       "text": "Bonded GearBorn unlock full records."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Evolutions, attributes, histories... all of it."
     },
     {
       "speaker": "user",
@@ -3810,19 +3321,11 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Others just chase strength."
+      "text": "Others chase strength. Reputation. Money."
     },
     {
       "speaker": "ashley",
-      "text": "Or reputation."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Or money."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Depends what kind of Tuner you become."
+      "text": "Depends."
     },
     {
       "speaker": "user",
@@ -3901,31 +3404,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Achievements track major milestones across your journey."
+      "text": "Achievements track major milestones:"
     },
     {
       "speaker": "ashley",
-      "text": "Race wins."
+      "text": "Race wins, Boss victories, discoveries, evolutions."
     },
     {
       "speaker": "ashley",
-      "text": "Boss victories."
-    },
-    {
-      "speaker": "ashley",
-      "text": "GearBorn discoveries."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Evolutions."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Some are easy."
-    },
-    {
-      "speaker": "ashley",
-      "text": "Some are completely harder."
+      "text": "Some are easy. Some are brutal."
     },
     {
       "speaker": "user",
@@ -3936,16 +3423,12 @@ const tutorialRewriteDialogue = {
       "text": "This is so simple."
     },
     {
-      "speaker": "user",
-      "text": "Uh…"
+      "speaker": "ashley",
+      "text": "Achievements reward Sprox, medallions, and rare unlocks."
     },
     {
       "speaker": "ashley",
-      "text": "Achievements also reward Sprox, medallions, and rare unlocks."
-    },
-    {
-      "speaker": "ashley",
-      "text": "So don’t ignore them."
+      "text": "Don’t ignore them."
     },
     {
       "speaker": "user",
@@ -3954,10 +3437,6 @@ const tutorialRewriteDialogue = {
     {
       "speaker": "ashley",
       "text": "Now you’re understanding competitive racing culture."
-    },
-    {
-      "speaker": "ashley",
-      "text": "One last thing."
     },
     {
       "speaker": "ashley",
@@ -3990,10 +3469,6 @@ const tutorialRewriteDialogue = {
       "text": "GearBorn care about connection."
     },
     {
-      "speaker": "ashley",
-      "text": "Everything else is noise."
-    },
-    {
       "speaker": "user",
       "text": "So what now?"
     },
@@ -4007,15 +3482,15 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "You challenge the city bosses."
+      "text": "Challenge city bosses."
     },
     {
       "speaker": "ashley",
-      "text": "You unlock stronger GearBorn."
+      "text": "Unlock stronger GearBorn."
     },
     {
       "speaker": "ashley",
-      "text": "You figure out what kind of Tuner you actually want to become."
+      "text": "Figure out what kind of Tuner you want to become."
     },
     {
       "speaker": "user",
@@ -4031,11 +3506,7 @@ const tutorialRewriteDialogue = {
     },
     {
       "speaker": "ashley",
-      "text": "Yeah."
-    },
-    {
-      "speaker": "ashley",
-      "text": "It kinda is."
+      "text": "Yeah. It kinda is."
     },
     {
       "speaker": "ashley",
@@ -4043,6 +3514,7 @@ const tutorialRewriteDialogue = {
     }
   ]
 };
+
 Object.assign(tutorialDialogue, tutorialRewriteDialogue);
 
 
@@ -10187,94 +9659,106 @@ function selectForgeMedallion(carId) {
 
 async function runForgeAnimation(carId) {
   if (forgeAnimating) return;
+  if (!forgeSelectedCarId || forgeSelectedCarId !== carId) return;
+  if (!(state.medallionsOwned || []).includes(carId)) return;
+  if (isCarUnlocked(carId)) return;
   forgeAnimating = true;
-  el.forgeUnlockBtn.disabled = true;
+  if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = true;
 
   const overlay = document.getElementById("forge-fullscreen");
   const area    = document.getElementById("forge-fs-anim-area");
   const fsVat   = document.getElementById("forge-fs-vat");
-  if (!overlay || !area) { forgeAnimating = false; return; }
-
-  area.innerHTML = "";
-  overlay.classList.add("active");
-  overlay.setAttribute("aria-hidden", "false");
-
-  area.innerHTML = `
-    <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion">
-    <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="">
-    <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform_stage.png" alt="">
-    <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
-    <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover_stage.png" alt="">
-    <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet_stage.png" alt="">
-  `;
-
-  const step = (ms) => new Promise((r) => setTimeout(r, ms));
-  const get  = (cls) => area.querySelector("." + cls);
-
-  const medallionEl = get("forge-anim-medallion");
-  const platformEl  = get("forge-anim-platform");
-  const coverEl     = get("forge-anim-cover");
-  const magnetEl    = get("forge-anim-magnet");
-  const carEl       = get("forge-anim-car-reveal");
-  const smokeEl     = get("forge-anim-smoke");
-
-  // ── Step 1: Medallion appears above the vat ──────────────────────────────
-  await step(120);
-  medallionEl.classList.add("step-appear");
-  await step(750);
-
-  // ── Step 2: Medallion drops into the vat ─────────────────────────────────
-  medallionEl.classList.add("step-drop");
-  await step(800);
-  medallionEl.classList.add("step-gone");
-
-  // ── Step 3: Vat shakes, smoke erupts (2.6s) ──────────────────────────────
-  if (fsVat) fsVat.classList.add("forge-shake");
-  smokeEl.classList.add("step-smoke");
-  await step(2600);
-  if (fsVat) fsVat.classList.remove("forge-shake");
-
-  // ── Step 4: Platform + cover rise together from the lava ─────────────────
-  // Platform and cover transition use the same duration so they move in lock-step
-  platformEl.classList.add("step-rise");
-  coverEl.classList.add("step-rise");
-  await step(1100);  // let the 1.0s rise transition finish
-
-  // ── Step 5: Magnet descends from top until it meets the cover ────────────
-  magnetEl.classList.add("step-magnet-drop");
-  await step(700);
-
-  // ── Step 6: Magnet lifts — cover moves in perfect sync upward ────────────
-  // Both use the same transition duration (0.7s) so they exit together
-  coverEl.classList.add("step-lift");
-  magnetEl.classList.add("step-magnet-lift");
-  await step(750);
-  coverEl.classList.add("step-gone");
-  magnetEl.classList.add("step-gone");
-
-  // ── Step 7: GearBorn revealed ─────────────────────────────────────────────
-  carEl.classList.add("step-reveal");
-  await step(2400);
-
-  // ── Unlock and close overlay ──────────────────────────────────────────────
-  unlockGearbornLine(carId);
-  state.medallionsOwned = (state.medallionsOwned || []).filter((id) => id !== carId);
-  saveState();
-
-  overlay.classList.remove("active");
-  overlay.setAttribute("aria-hidden", "true");
-  area.innerHTML = "";
-  forgeAnimating = false;
-
-  // During tutorial forge, advance tutorial first then show popup
-  if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
-    state.tutorialAwaitingForge = false;
-    state.tutorialUnlockedCarId = carId;
-    saveState();
+  if (!overlay || !area) {
+    forgeAnimating = false;
+    if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = false;
+    return;
   }
 
-  render();
-  showForgeUnlockedPopup(carId);
+  let unlocked = false;
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const speed = reduced ? 0.35 : 1;
+  const step = (ms) => new Promise((r) => setTimeout(r, Math.max(80, Math.round(ms * speed))));
+  const add = (node, className) => node?.classList.add(className);
+  const remove = (node, className) => node?.classList.remove(className);
+
+  try {
+    area.innerHTML = "";
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden", "false");
+
+    area.innerHTML = `
+      <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+      <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="" onerror="this.classList.add('asset-missing')">
+      <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform_stage.png" alt="" onerror="this.classList.add('asset-missing')">
+      <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
+      <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover_stage.png" alt="" onerror="this.classList.add('asset-missing')">
+      <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet_stage.png" alt="" onerror="this.classList.add('asset-missing')">
+    `;
+
+    const get = (cls) => area.querySelector("." + cls);
+    const medallionEl = get("forge-anim-medallion");
+    const platformEl  = get("forge-anim-platform");
+    const coverEl     = get("forge-anim-cover");
+    const magnetEl    = get("forge-anim-magnet");
+    const carEl       = get("forge-anim-car-reveal");
+    const smokeEl     = get("forge-anim-smoke");
+
+    await step(180);
+    add(medallionEl, "step-appear");
+    await step(760);
+    add(medallionEl, "step-drop");
+    await step(820);
+    add(medallionEl, "step-gone");
+
+    add(fsVat, "forge-shake");
+    add(smokeEl, "step-smoke");
+    await step(1800);
+    remove(fsVat, "forge-shake");
+
+    add(platformEl, "step-rise");
+    add(coverEl, "step-rise");
+    await step(1180);
+
+    add(magnetEl, "step-magnet-drop");
+    await step(760);
+    await step(260);
+
+    add(coverEl, "step-lift");
+    add(magnetEl, "step-magnet-lift");
+    await step(820);
+    add(coverEl, "step-gone");
+    add(magnetEl, "step-gone");
+
+    add(carEl, "step-reveal");
+    await step(2800);
+
+    if (!(state.medallionsOwned || []).includes(carId) || isCarUnlocked(carId)) return;
+    unlockGearbornLine(carId);
+    state.medallionsOwned = (state.medallionsOwned || []).filter((id) => id !== carId);
+    unlocked = true;
+
+    if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
+      state.tutorialAwaitingForge = false;
+      state.tutorialUnlockedCarId = carId;
+    }
+    saveState();
+  } catch (error) {
+    console.warn("Forge animation failed", error);
+  } finally {
+    remove(fsVat, "forge-shake");
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+    area.innerHTML = "";
+    forgeAnimating = false;
+    if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = !forgeSelectedCarId || isCarUnlocked(forgeSelectedCarId);
+  }
+
+  if (unlocked) {
+    render();
+    showForgeUnlockedPopup(carId);
+  } else {
+    renderForgeInventory();
+  }
 }
 
 function showForgeUnlockedPopup(carId) {
