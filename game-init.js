@@ -279,7 +279,10 @@ document.querySelector("#forge-unlock-btn")?.addEventListener("click", () => {
     state.tutorialAwaitingForge = true;
     saveState();
   }
-  if (forgeSelectedCarId && !forgeAnimating) runForgeAnimation(forgeSelectedCarId);
+  if (forgeSelectedCarId && !forgeAnimating) {
+    playAudioCue("uiConfirm");
+    runForgeAnimation(forgeSelectedCarId);
+  }
 });
 
 document.querySelector("#forge-card-btn")?.addEventListener("click", () => {

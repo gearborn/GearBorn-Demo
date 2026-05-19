@@ -330,18 +330,33 @@ const microObjectiveDefinitions = [
 
 const idleBehaviorProfiles = {
   playful: { bob: 1, bounce: 0.8, glowPulse: 0.7, tilt: 0.45 },
-  calm: { bob: 0.45, bounce: 0.25, glowPulse: 0.35, tilt: 0.12 },
+  calm: { bob: 0.36, bounce: 0.18, glowPulse: 0.28, tilt: 0.08 },
   aggressive: { bob: 0.35, bounce: 0.7, glowPulse: 0.9, tilt: 0.55 },
-  luxury: { bob: 0.35, bounce: 0.2, glowPulse: 0.75, tilt: 0.08 },
+  luxury: { bob: 0.28, bounce: 0.14, glowPulse: 0.55, tilt: 0.06 },
   spooky: { bob: 0.65, bounce: 0.12, glowPulse: 1, tilt: 0.28 },
-  heavy: { bob: 0.2, bounce: 0.15, glowPulse: 0.45, tilt: 0.08 },
+  heavy: { bob: 0.14, bounce: 0.08, glowPulse: 0.34, tilt: 0.04 },
   speedy: { bob: 0.55, bounce: 0.75, glowPulse: 0.85, tilt: 0.5 }
 };
 
+// TODO: Add per-GearBorn idle tuning and approved honk sound keys here as assets arrive.
 const gearbornIdleConfig = {};
 
+// Phase 3 optional audio manifest. Leave values empty until files are approved;
+// playAudioCue intentionally fails silently when a file is missing.
+// Expected paths:
+// uiSelect: assets/audio/ui-select.mp3
+// uiConfirm: assets/audio/ui-confirm.mp3
+// raceCountdown: assets/audio/race-countdown.mp3
+// raceStart: assets/audio/race-start.mp3
+// medalReveal: assets/audio/medal-reveal.mp3
+// newVindexEntry: assets/audio/new-vindex-entry.mp3
+// evolutionBuild: assets/audio/evolution-build.mp3
+// evolutionReveal: assets/audio/evolution-reveal.mp3
+// gearbornIdle: assets/audio/gearborn-idle.mp3
+// reputationGain: assets/audio/reputation-gain.mp3
+// Future asset TODOs: unique GearBorn honks, medal frame PNGs, garage trophy shelf,
+// medallion display, city stickers, boss memorabilia, VINdex state art, evolution FX overlays.
 const audioCueAssets = {
-  // TODO: Wire approved audio files here when available. Missing cues intentionally fail silently.
   uiSelect: "",
   uiConfirm: "",
   raceCountdown: "",
@@ -556,4 +571,3 @@ const defaultState = {
   storyTimeTrials: {},
   garage: Object.fromEntries(cars.map((car) => [car.id, { level: 1, xp: 0, evolution: 0, pendingEvolution: null }]))
 };
-

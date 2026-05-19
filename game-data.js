@@ -3,6 +3,18 @@ const distances = [
   { meters: 800, label: "800 m", xp: 180, difficulty: 1.05 },
   { meters: 1600, label: "1600 m", xp: 420, difficulty: 1.22 }
 ];
+
+// Data helpers needed while this file builds story/campaign config. Keep this
+// tiny and dependency-free so split script loading does not depend on game-logic.
+function imageFor(entry, role) {
+  if (!entry) return "";
+  if (entry.images?.[role]) return entry.images[role];
+  if (role === "topdown" && entry.images?.race) {
+    return entry.images.race.replace("-race.", "-topdown.");
+  }
+  return entry.image || "";
+}
+
 const dragNitroMultiplier = 1.25;
 const dragNitroDuration = 1.7;
 

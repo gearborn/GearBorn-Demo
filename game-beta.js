@@ -1,3 +1,213 @@
+// ─── BETA TRACK DATA & CIRCUIT MODE ───────────────────────────────────────
+const betaTileSize = 256;
+const betaLapsRequired = 2;
+const betaTileImages = {};
+const betaTileAssets = {
+  grass: "assets/tracks/grass.png",
+  wall_straight: "assets/tracks/wall_straight.png",
+  wall_corner: "assets/tracks/wall_corner.png",
+  road_turn: "assets/tracks/track-turn.png",
+  road_t_intersection: "assets/tracks/road_t_intersection.png",
+  road_cross: "assets/tracks/road_cross.png",
+  road_curve_wide: "assets/tracks/road_curve_wide.png",
+  road_straight_h: "assets/tracks/track-horizontal.png",
+  road_straight_v: "assets/tracks/track-vertical.png",
+  start_finish: "assets/tracks/start-finish-line.png",
+  checkpoint_neutral: "assets/tracks/checkpoint-neutral.png",
+  checkpoint_active: "assets/tracks/checkpoint-active.png"
+};
+Object.entries(betaTileAssets).forEach(([key, src]) => {
+  const img = new Image();
+  img.src = src;
+  betaTileImages[key] = img;
+});
+
+function betaEmptyTrackGrid(width = 16, height = 12) {
+  return Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => {
+    if (y === 0) return { type: "wall_straight", rotation: 180 };
+    if (y === height - 1) return { type: "wall_straight", rotation: 0 };
+    if (x === 0) return { type: "wall_straight", rotation: 90 };
+    if (x === width - 1) return { type: "wall_straight", rotation: 270 };
+    return { type: "grass", rotation: 0 };
+  }));
+}
+
+function betaExpandCorners(corners) {
+  const points = [];
+  const addPoint = (x, y) => points.push({ x, y });
+  corners.forEach((corner, index) => {
+    const next = corners[(index + 1) % corners.length];
+    const dx = Math.sign(next.x - corner.x);
+    const dy = Math.sign(next.y - corner.y);
+    const steps = Math.max(Math.abs(next.x - corner.x), Math.abs(next.y - corner.y));
+    for (let step = 0; step < steps; step += 1) addPoint(corner.x + dx * step, corner.y + dy * step);
+  });
+  return points.filter((point, index) => index === 0 || point.x !== points[index - 1].x || point.y !== points[index - 1].y);
+}
+
+function betaDirection(a, b) {
+  if (b.x > a.x) return "E";
+  if (b.x < a.x) return "W";
+  if (b.y > a.y) return "S";
+  return "N";
+}
+
+function betaRoadTileFor(prev, current, next) {
+  const dirs = [betaDirection(current, prev), betaDirection(current, next)].sort().join("");
+  if (dirs === "EW") return { type: "road_straight", rotation: 0 };
+  if (dirs === "NS") return { type: "road_straight", rotation: 90 };
+  const turnRotations = { ES: 0, SW: 90, NW: 180, EN: 270 };
+  return { type: "road_turn", rotation: turnRotations[dirs] ?? 0 };
+}
+
+function betaMakeTrack(id, name, corners, width = 20, height = 15) {
+  const path = betaExpandCorners(corners);
+  const grid = betaEmptyTrackGrid(width, height);
+  path.forEach((point, index) => {
+    const prev = path[(index - 1 + path.length) % path.length];
+    const next = path[(index + 1) % path.length];
+    grid[point.y][point.x] = betaRoadTileFor(prev, point, next);
+  });
+  const checkpointIndexes = [0.25, 0.5, 0.75].map((pct) => Math.floor(path.length * pct));
+  const checkpoints = checkpointIndexes.map((index) => path[index]);
+  const next = path[1] || path[0];
+  return {
+    id,
+    name,
+    width,
+    height,
+    grid,
+    path,
+    aiLine: path.map((point) => ({ x: (point.x + 0.5) * betaTileSize, y: (point.y + 0.5) * betaTileSize })),
+    startTile: path[0],
+    startAngle: Math.atan2(next.y - path[0].y, next.x - path[0].x),
+    checkpoints
+  };
+}
+
+const betaTracks = [
+  betaMakeTrack("training", "Training", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 13 }]),
+  betaMakeTrack("indy", "Indy", [{ x: 5, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 12 }]),
+  betaMakeTrack("berlin", "Berlin", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 9, y: 9 }, { x: 9, y: 6 }, { x: 17, y: 6 }, { x: 17, y: 3 }, { x: 5, y: 3 }, { x: 5, y: 6 }, { x: 3, y: 6 }, { x: 3, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }]),
+  betaMakeTrack("dubai", "Dubai", [{ x: 5, y: 12 }, { x: 17, y: 12 }, { x: 17, y: 8 }, { x: 18, y: 8 }, { x: 18, y: 3 }, { x: 13, y: 3 }, { x: 13, y: 7 }, { x: 7, y: 7 }, { x: 7, y: 3 }, { x: 1, y: 3 }, { x: 1, y: 12 }]),
+  betaMakeTrack("rio", "Rio", [{ x: 5, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 10 }, { x: 18, y: 10 }, { x: 18, y: 3 }, { x: 12, y: 3 }, { x: 12, y: 7 }, { x: 8, y: 7 }, { x: 8, y: 3 }, { x: 2, y: 3 }, { x: 2, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }]),
+  betaMakeTrack("la", "LA", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 2 }, { x: 13, y: 2 }, { x: 13, y: 6 }, { x: 9, y: 6 }, { x: 9, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 9 }, { x: 6, y: 9 }, { x: 6, y: 11 }, { x: 1, y: 11 }, { x: 1, y: 13 }]),
+  betaMakeTrack("seoul", "Seoul", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 12, y: 9 }, { x: 12, y: 7 }, { x: 17, y: 7 }, { x: 17, y: 3 }, { x: 6, y: 3 }, { x: 6, y: 7 }, { x: 2, y: 7 }, { x: 2, y: 11 }, { x: 1, y: 11 }, { x: 1, y: 13 }]),
+  betaMakeTrack("safrica", "S. Africa", [{ x: 5, y: 13 }, { x: 17, y: 13 }, { x: 17, y: 9 }, { x: 14, y: 9 }, { x: 14, y: 5 }, { x: 18, y: 5 }, { x: 18, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 }, { x: 9, y: 5 }, { x: 9, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 13 }]),
+  betaMakeTrack("india", "India", [{ x: 5, y: 13 }, { x: 16, y: 13 }, { x: 16, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 16, y: 8 }, { x: 16, y: 6 }, { x: 15, y: 6 }, { x: 15, y: 2 }, { x: 7, y: 2 }, { x: 7, y: 6 }, { x: 3, y: 6 }, { x: 3, y: 9 }, { x: 1, y: 9 }, { x: 1, y: 13 }]),
+  betaMakeTrack("space", "Space", [{ x: 5, y: 13 }, { x: 15, y: 13 }, { x: 15, y: 11 }, { x: 18, y: 11 }, { x: 18, y: 8 }, { x: 14, y: 8 }, { x: 14, y: 5 }, { x: 18, y: 5 }, { x: 18, y: 2 }, { x: 10, y: 2 }, { x: 10, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 7 }, { x: 6, y: 7 }, { x: 6, y: 10 }, { x: 1, y: 10 }, { x: 1, y: 13 }])
+];
+const betaDirectionDelta = {
+  N: { x: 0, y: -1 },
+  E: { x: 1, y: 0 },
+  S: { x: 0, y: 1 },
+  W: { x: -1, y: 0 }
+};
+const betaOppositeDirection = { N: "S", E: "W", S: "N", W: "E" };
+
+function betaTileConnections(tile) {
+  const type = tile?.type;
+  const rotation = ((Number(tile?.rotation) || 0) + 360) % 360;
+  if (type === "road_straight" || type === "start_finish" || type === "checkpoint") {
+    return rotation === 90 || rotation === 270 ? ["N", "S"] : ["E", "W"];
+  }
+  if (type === "road_turn") {
+    return ({ 0: ["E", "S"], 90: ["S", "W"], 180: ["N", "W"], 270: ["N", "E"] })[rotation] || ["E", "S"];
+  }
+  return [];
+}
+
+function betaBuilderTileToRaceTile(tile) {
+  if (!tile || tile.type === "grass") return { type: "grass", rotation: 0 };
+  if (tile.type?.startsWith("wall")) return { type: tile.type, rotation: Number(tile.rotation) || 0 };
+  if (tile.type === "start_finish" || tile.type === "checkpoint") {
+    return { type: "road_straight", rotation: Number(tile.rotation) || 0 };
+  }
+  if (tile.type === "road_straight" || tile.type === "road_turn") {
+    return { type: tile.type, rotation: Number(tile.rotation) || 0 };
+  }
+  return { type: "grass", rotation: 0 };
+}
+
+function betaRoadTilesFromGrid(grid) {
+  const tiles = [];
+  grid.forEach((row, y) => row.forEach((tile, x) => {
+    if (betaTileConnections(tile).length) tiles.push({ x, y });
+  }));
+  return tiles;
+}
+
+function betaWalkCustomPath(grid, start) {
+  const roadTiles = betaRoadTilesFromGrid(grid);
+  if (!start || !roadTiles.length) return roadTiles;
+  const path = [start];
+  let previous = null;
+  let current = start;
+  const maxSteps = roadTiles.length + 4;
+  for (let step = 0; step < maxSteps; step += 1) {
+    const currentTile = grid[current.y]?.[current.x];
+    const candidates = betaTileConnections(currentTile).map((dir) => {
+      const delta = betaDirectionDelta[dir];
+      return { x: current.x + delta.x, y: current.y + delta.y, from: betaOppositeDirection[dir] };
+    }).filter((candidate) => betaTileConnections(grid[candidate.y]?.[candidate.x]).includes(candidate.from));
+    const next = candidates.find((candidate) => !previous || candidate.x !== previous.x || candidate.y !== previous.y) || candidates[0];
+    if (!next) break;
+    if (next.x === start.x && next.y === start.y && path.length >= 8) break;
+    if (path.some((point) => point.x === next.x && point.y === next.y)) break;
+    previous = current;
+    current = { x: next.x, y: next.y };
+    path.push(current);
+  }
+  return path.length >= 8 ? path : roadTiles;
+}
+
+function betaCustomTrackFromBuilder(track) {
+  const sourceGrid = cloneBuilderGrid(track.grid);
+  const markers = [];
+  sourceGrid.forEach((row, y) => row.forEach((tile, x) => {
+    if (tile.type === "start_finish" || tile.type === "checkpoint") markers.push({ x, y, type: tile.type, rotation: Number(tile.rotation) || 0 });
+  }));
+  const grid = sourceGrid.map((row) => row.map(betaBuilderTileToRaceTile));
+  const width = grid[0]?.length || builderGridSize;
+  const height = grid.length || builderGridSize;
+  const startMarker = markers.find((marker) => marker.type === "start_finish");
+  const firstRoad = betaRoadTilesFromGrid(grid)[0] || { x: 1, y: 1 };
+  const startTile = startMarker ? { x: startMarker.x, y: startMarker.y } : firstRoad;
+  const path = betaWalkCustomPath(grid, startTile);
+  const checkpoints = markers.filter((marker) => marker.type === "checkpoint").map((marker) => ({ x: marker.x, y: marker.y }));
+  const fallbackCheckpoints = [0.25, 0.5, 0.75].map((pct) => path[Math.floor(path.length * pct)]).filter(Boolean);
+  const next = path[1] || startTile;
+  return {
+    id: `custom:${track.id}`,
+    custom: true,
+    name: track.name || "Custom Track",
+    width,
+    height,
+    grid,
+    path,
+    aiLine: path.map((point) => ({ x: (point.x + 0.5) * betaTileSize, y: (point.y + 0.5) * betaTileSize })),
+    startTile,
+    startAngle: Math.atan2(next.y - startTile.y, next.x - startTile.x),
+    checkpoints: checkpoints.length ? checkpoints : fallbackCheckpoints
+  };
+}
+
+function betaCustomTracks() {
+  return loadCustomTracks().map(betaCustomTrackFromBuilder).filter((track) => track.path.length >= 2);
+}
+
+function betaSavedTracksAvailableForMode(mode = betaPreviewMode || betaPendingMode) {
+  return betaRaceContext?.source === "training" && ["race4", "race6", "duel"].includes(mode);
+}
+
+function betaSelectableTracks(mode = betaPreviewMode || betaPendingMode) {
+  return betaSavedTracksAvailableForMode(mode) ? betaTracks.concat(betaCustomTracks()) : betaTracks;
+}
+
+function betaTrackById(trackId, mode = betaPreviewMode || betaPendingMode) {
+  return betaSelectableTracks(mode).find((track) => track.id === trackId) || betaTracks.find((track) => track.id === trackId) || betaTracks[0];
+}
+
 // ─── BETA MODE (2D RACING) ──────────────────────────────────────────────────
 let betaSelectedTrackId = betaTracks[0].id;
 let betaTrack = betaTracks[0];

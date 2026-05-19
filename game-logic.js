@@ -143,6 +143,8 @@ function evolutionByIndex(carId, evolutionIndex) {
 
 let honkAudioContext = null;
 let honkVisualTimer = null;
+// Per-GearBorn honk overrides. Missing files fall back to the procedural honk.
+// TODO: Fill in starters, Tutorque, bosses, and other forms once approved honks exist.
 const honkSoundOverrides = {
   honky: "assets/audio/honks/honk-honky.m4a",
   whiffleton: "assets/audio/honks/honk-whiffleton.m4a",
@@ -3575,6 +3577,7 @@ function showRaceResult(trackNode, result) {
     const button = event.target.closest("[data-result-action]");
     if (!button || button.disabled) return;
     const action = button.dataset.resultAction;
+    playAudioCue("uiConfirm");
     popup.remove();
     if (action === "again") {
       result.onRaceAgain?.();
@@ -3968,6 +3971,7 @@ async function runForgeAnimation(carId) {
     area.innerHTML = "";
     overlay.classList.add("active");
     overlay.setAttribute("aria-hidden", "false");
+    playAudioCue("evolutionBuild");
 
     area.innerHTML = `
       <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
@@ -4012,6 +4016,7 @@ async function runForgeAnimation(carId) {
     add(coverEl, "step-gone");
     add(magnetEl, "step-gone");
 
+    playAudioCue("evolutionReveal");
     add(carEl, "step-reveal");
     await step(2800);
 
@@ -4308,15 +4313,6 @@ function activateGodMode() {
   showView("garage");
   el.raceMessage.className = "race-message win";
   el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, evolved, and stocked with unlimited Sprox.";
-}
-
-function imageFor(entry, role) {
-  if (!entry) return "";
-  if (entry.images?.[role]) return entry.images[role];
-  if (role === "topdown" && entry.images?.race) {
-    return entry.images.race.replace("-race.", "-topdown.");
-  }
-  return entry.image || "";
 }
 
 function carNameKey(name = "") {
@@ -6917,4 +6913,3 @@ function updateVerticalControlVisuals() {
     });
   });
 }
-
