@@ -390,6 +390,7 @@ function nextBondMilestone(carId) {
 
 function recordRaceUsage(carId) {
   if (!carId || !cars.some((car) => car.id === carId)) return [];
+  recordCarUsage(carId);
   state.bond = state.bond || {};
   const bond = state.bond[carId] || { races: 0, milestones: [] };
   bond.races = Math.max(0, Math.floor(Number(bond.races) || 0)) + 1;
@@ -410,7 +411,82 @@ function recordRaceUsage(carId) {
       showToast("Bond Boost Unlocked!", `${form.name} gained ${formatBondBoosts(milestone.boosts)}!`);
     });
   }
+  checkBondMilestones(carId);
   return unlocked;
+}
+
+function recordCarUsage(carId) {
+  if (!carId || !cars.some((car) => car.id === carId)) return;
+  state.recentCarUses = Array.isArray(state.recentCarUses) ? state.recentCarUses : [];
+  state.recentCarUses = [{ carId, timestamp: Date.now() }]
+    .concat(state.recentCarUses.filter((use) => use?.carId !== carId))
+    .slice(0, 10);
+}
+
+function evolutionLineRootForCar(carId) {
+  return cars.some((car) => car.id === carId) ? carId : carId;
+}
+
+function bondLevelForLine(lineRoot) {
+  return Math.max(0, Math.floor(Number(state.bond?.[lineRoot]?.races) || 0));
+}
+
+function checkBondMilestones(carId) {
+  const lineRoot = evolutionLineRootForCar(carId);
+  const bondLevel = bondLevelForLine(lineRoot);
+  for (const threshold of bondSceneThresholds) {
+    const sceneId = `${lineRoot}-bond-${threshold}`;
+    if (bondLevel >= threshold && !state.bondScenesViewed?.[sceneId]) {
+      queueBondScene(lineRoot, threshold);
+      return;
+    }
+  }
+}
+
+function queueBondScene(lineRoot, threshold) {
+  const sceneId = `${lineRoot}-bond-${threshold}`;
+  pendingBondSceneQueue = pendingBondSceneQueue || [];
+  if (!pendingBondSceneQueue.some((scene) => scene.sceneId === sceneId)) {
+    pendingBondSceneQueue.push({ lineRoot, threshold, sceneId });
+  }
+  window.setTimeout(playQueuedBondScene, 120);
+}
+
+function playQueuedBondScene() {
+  if (!pendingBondSceneQueue?.length || activeBondScene) return;
+  const openModal = document.querySelector(".modal-overlay.active, .modal-overlay:not([hidden])[aria-hidden='false']");
+  if (openModal) return;
+  activeBondScene = pendingBondSceneQueue.shift();
+  renderBondScene();
+}
+
+function renderBondScene() {
+  if (!activeBondScene || !el.bondSceneModal) return;
+  const { lineRoot, threshold } = activeBondScene;
+  const car = cars.find((item) => item.id === lineRoot) || cars[0];
+  const progress = state.garage?.[lineRoot] || { evolution: 0 };
+  const form = car.evolutions[Math.min(progress.evolution || 0, car.evolutions.length - 1)] || car.evolutions[0];
+  const scene = bondScenes[lineRoot]?.[threshold];
+  el.bondScenePortrait.innerHTML = carMarkupForEvolution(lineRoot, progress.evolution || 0, "display");
+  el.bondSceneTitle.textContent = scene?.placeholder ? "[Bond Scene Placeholder]" : (scene?.title || "Bond Scene");
+  el.bondSceneText.textContent = scene?.placeholder
+    ? `${car.family} — Bond Level ${threshold}\nThis scene hasn't been written yet.`
+    : (scene?.lines?.[0]?.text || `${form.name} shares a quiet moment.`);
+  el.bondSceneModal.classList.add("active");
+  el.bondSceneModal.setAttribute("aria-hidden", "false");
+}
+
+function closeBondScene() {
+  if (!activeBondScene) return;
+  state.bondScenesViewed = state.bondScenesViewed || {};
+  state.bondScenesViewed[activeBondScene.sceneId] = true;
+  activeBondScene = null;
+  if (el.bondSceneModal) {
+    el.bondSceneModal.classList.remove("active");
+    el.bondSceneModal.setAttribute("aria-hidden", "true");
+  }
+  saveState();
+  window.setTimeout(playQueuedBondScene, 80);
 }
 
 function recordStoryRaceOutcome(won, isStoryRace) {
@@ -850,6 +926,9 @@ function render() {
     renderSelectionPreviews();
   }
   if (viewIsActive("garage")) renderGarage();
+  if (viewIsActive("tuner-rank")) renderTunerRankScreen();
+  if (viewIsActive("convoy")) renderConvoy();
+  if (viewIsActive("convoy-loadouts")) renderConvoyLoadouts();
   if (viewIsActive("settings")) renderSettings();
   if (viewIsActive("builder")) renderBuilder();
   paintCars();
@@ -863,6 +942,7 @@ function renderCarSelect() {
     return `<option value="${car.id}">${form.name} · ${car.family} · Lv ${progress.level}</option>`;
   }).join("");
   el.playerCar.value = state.selectedCar;
+  ensureCarPickerButton(el.playerCar, "drag");
 }
 
 function renderVerticalSelects() {
@@ -875,13 +955,138 @@ function renderVerticalSelects() {
   el.storyCar.innerHTML = options;
   el.timeCar.innerHTML = options;
   el.storyCar.value = state.selectedStoryCar;
+  ensureCarPickerButton(el.storyCar, "story");
   if (el.campaignCar) {
     el.campaignCar.innerHTML = options;
     el.campaignCar.value = state.selectedStoryCar;
+    ensureCarPickerButton(el.campaignCar, "campaign");
   }
   el.timeCar.value = state.selectedTimeCar;
+  ensureCarPickerButton(el.timeCar, "time");
   el.timeTrack.innerHTML = storyTracks.map((track) => `<option value="${track.id}">${track.city}, ${track.country}</option>`).join("");
   el.timeTrack.value = state.selectedTimeTrack;
+}
+
+function pickerTargetCarId(target) {
+  if (target === "drag") return state.selectedCar;
+  if (target === "time") return state.selectedTimeCar;
+  return state.selectedStoryCar;
+}
+
+function setPickerTargetCarId(target, carId) {
+  if (!isSelectablePlayerCar(carId)) return;
+  if (target === "drag") state.selectedCar = carId;
+  else if (target === "time") state.selectedTimeCar = carId;
+  else state.selectedStoryCar = carId;
+  if (target === "story" || target === "campaign") state.storyCarChosen = true;
+  const select = target === "drag" ? el.playerCar : target === "time" ? el.timeCar : target === "campaign" ? el.campaignCar : el.storyCar;
+  if (select) select.value = carId;
+  saveState();
+  render();
+}
+
+function ensureCarPickerButton(select, target) {
+  if (!select) return;
+  select.classList.add("native-select-hidden");
+  let button = select.nextElementSibling?.matches?.("[data-open-car-picker]") ? select.nextElementSibling : null;
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "car-picker-open-button";
+    button.dataset.openCarPicker = target;
+    select.insertAdjacentElement("afterend", button);
+  }
+  const carId = pickerTargetCarId(target);
+  const car = cars.find((item) => item.id === carId) || selectablePlayerCars()[0];
+  if (!car) return;
+  const progress = state.garage[car.id] || { level: 1, evolution: 0 };
+  const form = currentEvolution(car.id);
+  button.innerHTML = `
+    <span class="car-picker-open-thumb">${carMarkupForEvolution(car.id, progress.evolution || 0, "display")}</span>
+    <strong>${form.name}</strong>
+    <small>Lv ${progress.level || 1}</small>
+  `;
+}
+
+function openCarPicker(target) {
+  carPickerState.target = target;
+  carPickerState.highlighted = pickerTargetCarId(target);
+  carPickerState.search = "";
+  carPickerState.filters = { favorites: false, recent: false, ready: false, types: [] };
+  carPickerState.sort = "level-desc";
+  if (el.carPickerSearch) el.carPickerSearch.value = "";
+  if (el.carPickerSort) el.carPickerSort.value = "level-desc";
+  renderCarPicker();
+  el.carPickerModal?.classList.add("active");
+  el.carPickerModal?.setAttribute("aria-hidden", "false");
+}
+
+function closeCarPicker(confirm = false) {
+  if (confirm && carPickerState.highlighted) setPickerTargetCarId(carPickerState.target, carPickerState.highlighted);
+  el.carPickerModal?.classList.remove("active");
+  el.carPickerModal?.setAttribute("aria-hidden", "true");
+}
+
+function carPickerTypes() {
+  return [...new Set(selectablePlayerCars().map((car) => gearbornStatProfiles[car.id]?.type || "Neutral"))].sort();
+}
+
+function filteredPickerCars() {
+  const recentIds = (state.recentCarUses || []).slice(0, 5).map((use) => use.carId);
+  const query = carPickerState.search.trim().toLowerCase();
+  let list = selectablePlayerCars().filter((car) => {
+    const progress = state.garage[car.id] || {};
+    const form = currentEvolution(car.id);
+    const type = gearbornStatProfiles[car.id]?.type || "Neutral";
+    if (query && !`${form.name} ${car.family}`.toLowerCase().includes(query)) return false;
+    if (carPickerState.filters.favorites && !state.favoriteCarIds.includes(car.id)) return false;
+    if (carPickerState.filters.recent && !recentIds.includes(car.id)) return false;
+    if (carPickerState.filters.ready && !progress.pendingEvolution) return false;
+    if (carPickerState.filters.types.length && !carPickerState.filters.types.includes(type)) return false;
+    return true;
+  });
+  const recentlyUsedIndex = (carId) => recentIds.indexOf(carId) < 0 ? 999 : recentIds.indexOf(carId);
+  list = list.sort((a, b) => {
+    const pa = state.garage[a.id] || {};
+    const pb = state.garage[b.id] || {};
+    if (carPickerState.sort === "level-asc") return (pa.level || 1) - (pb.level || 1);
+    if (carPickerState.sort === "name-asc") return currentEvolution(a.id).name.localeCompare(currentEvolution(b.id).name);
+    if (carPickerState.sort === "recent") return recentlyUsedIndex(a.id) - recentlyUsedIndex(b.id);
+    if (carPickerState.sort === "number") return (vindexEntries.find((entry) => entry.name === currentEvolution(a.id).name)?.number || "999").localeCompare(vindexEntries.find((entry) => entry.name === currentEvolution(b.id).name)?.number || "999");
+    if (carPickerState.sort === "bond-desc") return bondLevelForLine(b.id) - bondLevelForLine(a.id);
+    return (pb.level || 1) - (pa.level || 1);
+  });
+  return list;
+}
+
+function renderCarPicker() {
+  if (!el.carPickerGrid) return;
+  const typeChips = carPickerTypes().map((type) => `<button type="button" data-car-picker-type="${type}" class="${carPickerState.filters.types.includes(type) ? "active" : ""}">Type: ${type}</button>`).join("");
+  el.carPickerFilters.innerHTML = `
+    <button type="button" data-car-picker-filter="favorites" class="${carPickerState.filters.favorites ? "active" : ""}">Favorites</button>
+    <button type="button" data-car-picker-filter="recent" class="${carPickerState.filters.recent ? "active" : ""}">Recently Used</button>
+    <button type="button" data-car-picker-filter="ready" class="${carPickerState.filters.ready ? "active" : ""}">Ready to Evolve</button>
+    ${typeChips}
+  `;
+  const selected = pickerTargetCarId(carPickerState.target);
+  const carsForPicker = filteredPickerCars();
+  el.carPickerGrid.innerHTML = carsForPicker.map((car) => {
+    const progress = state.garage[car.id] || { level: 1, evolution: 0 };
+    const form = currentEvolution(car.id);
+    const type = gearbornStatProfiles[car.id]?.type || "Neutral";
+    return `
+      <button class="car-picker-card ${carPickerState.highlighted === car.id ? "highlighted" : ""} ${selected === car.id ? "selected" : ""}" type="button" data-car-picker-card="${car.id}">
+        <span class="favorite-star ${state.favoriteCarIds.includes(car.id) ? "active" : ""}" data-car-picker-favorite="${car.id}">★</span>
+        <div class="car-picker-card-art">${carMarkupForEvolution(car.id, progress.evolution || 0, "display")}</div>
+        <strong>${form.name}</strong>
+        <small>Lv ${progress.level || 1} · Bond ${bondLevelForLine(car.id)}</small>
+        <em>${type}</em>
+        ${progress.pendingEvolution ? `<b>Ready</b>` : ""}
+      </button>
+    `;
+  }).join("") || `<p class="empty-note">No GearBorn match.</p>`;
+  const highlighted = cars.find((car) => car.id === carPickerState.highlighted);
+  el.carPickerSummary.textContent = highlighted ? `${currentEvolution(highlighted.id).name} · Level ${state.garage[highlighted.id]?.level || 1}` : "Select a GearBorn.";
 }
 
 function storyLevelCompleted(index) {
@@ -1054,6 +1259,7 @@ function renderCampaign() {
   }
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   const cityUnlocked = storyCityUnlocked(state.selectedStoryCity);
+  renderTunerRankBadge();
   el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
   el.storyCityTitle.textContent = `${city.city}, ${city.country}`.toUpperCase();
   el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.cityMap || city.track.map}")`;
@@ -1082,6 +1288,7 @@ function renderCampaign() {
   if (el.storyCitySelect) el.storyCitySelect.hidden = false;
   if (el.changeStoryCar) el.changeStoryCar.hidden = false;
   renderStoryCityGrid();
+  renderConvoyEntry();
   renderStoryLevelPreview();
 }
 
@@ -1285,6 +1492,7 @@ function startMedallionGauntlet(cityId) {
       boss: { id: `gauntlet-${cityId}`, name: opponent.form.name, car: opponent.form.name },
       carId: state.selectedStoryCar,
       opponentName: opponent.form.name,
+      opponentCarId: opponent.car.id,
       opponentImage: imageFor(opponent.form, "race"),
       opponentStats: opponent.stats,
       reward: 0,
@@ -1438,6 +1646,238 @@ function storyNodeLabel(level, completed, visual) {
 function rivalTuner() {
   const playerId = selectedTuner().id;
   return tuners.find((tuner) => tuner.id === (playerId === "cha-cha" ? "mylo" : "cha-cha")) || tuners[1] || tuners[0];
+}
+
+function formatRank(rank) {
+  return rank ? `#${rank}` : "UR";
+}
+
+function computeTunerRankList() {
+  const rankState = state.tunerRank || {};
+  const rival = rivalTuner();
+  const player = selectedTuner();
+  const playerRank = rankState.playerRank || null;
+  const rivalRank = playerRank ? playerRank + 1 : 9;
+  state.tunerRank.rivalRank = playerRank ? rivalRank : null;
+  const rows = tunerRankBaseList.map((entry) => ({
+    ...entry,
+    displayRank: entry.rank,
+    name: entry.isRival ? rival.name : entry.name,
+    headshot: entry.isRival ? (rival.headshot || rival.image) : entry.headshot
+  })).filter((entry) => !entry.isRival || !playerRank);
+
+  if (playerRank) {
+    rows.forEach((row) => {
+      if (row.displayRank >= playerRank) row.displayRank += 1;
+    });
+    rows.push({
+      rank: playerRank,
+      displayRank: playerRank,
+      id: "player",
+      name: player.name,
+      headshot: player.headshot || player.image,
+      isPlayer: true
+    });
+    rows.push({
+      rank: rivalRank,
+      displayRank: rivalRank,
+      id: "rival",
+      name: rival.name,
+      headshot: rival.headshot || rival.image,
+      isRival: true,
+      rivalId: rival.id
+    });
+  }
+
+  (rankState.defeatedBossIds || []).forEach((bossId) => {
+    const bossRow = rows.find((row) => row.bossId === bossId);
+    if (bossRow && playerRank && bossRow.displayRank <= playerRank) bossRow.displayRank = playerRank + 1;
+  });
+  (rankState.bossesFirstSeen || []).forEach((cityId) => {
+    const cityIndex = storyCities.findIndex((city) => city.id === cityId);
+    const previousBoss = cityIndex > 0 ? bosses[cityIndex - 1] : null;
+    const bossRow = previousBoss ? rows.find((row) => row.bossId === previousBoss.id) : null;
+    if (bossRow && playerRank) bossRow.displayRank = Math.max(bossRow.displayRank, playerRank + 2);
+  });
+
+  return rows
+    .sort((a, b) => {
+      const priority = (row) => row.isPlayer ? 0 : row.isRival ? 1 : 2;
+      return a.displayRank - b.displayRank || priority(a) - priority(b) || (a.rank || 999) - (b.rank || 999);
+    })
+    .map((row, index) => ({ ...row, displayRank: index + 1 }));
+}
+
+function currentTunerRankForBoss(bossId) {
+  return computeTunerRankList().find((row) => row.bossId === bossId)?.displayRank || null;
+}
+
+function advanceTunerRankForBossWin(bossId) {
+  if (!bossId) return null;
+  state.tunerRank = state.tunerRank || { playerRank: null, defeatedBossIds: [], bossesFirstSeen: [], rivalRank: null };
+  if (state.tunerRank.defeatedBossIds.includes(bossId)) return null;
+  const oldRank = state.tunerRank.playerRank || null;
+  const bossRank = currentTunerRankForBoss(bossId) || 8;
+  state.tunerRank.playerRank = oldRank ? Math.min(oldRank, bossRank) : bossRank;
+  state.tunerRank.defeatedBossIds.push(bossId);
+  state.tunerRank.rivalRank = state.tunerRank.playerRank + 1;
+  return { oldRank, newRank: state.tunerRank.playerRank, bossId };
+}
+
+function advanceTunerRankForCityEntry(cityId) {
+  if (!cityId || tutorialActive()) return;
+  state.tunerRank = state.tunerRank || { playerRank: null, defeatedBossIds: [], bossesFirstSeen: [], rivalRank: null };
+  if (state.tunerRank.bossesFirstSeen.includes(cityId)) return;
+  const cityIndex = storyCities.findIndex((city) => city.id === cityId);
+  const previousBoss = cityIndex > 0 ? bosses[cityIndex - 1] : null;
+  if (previousBoss && state.tunerRank.defeatedBossIds.includes(previousBoss.id)) {
+    state.tunerRank.bossesFirstSeen.push(cityId);
+    state.tunerRank.rivalRank = state.tunerRank.playerRank ? state.tunerRank.playerRank + 1 : null;
+  }
+}
+
+function renderTunerRankBadge() {
+  if (!el.tunerRankBadge) return;
+  el.tunerRankBadge.textContent = formatRank(state.tunerRank?.playerRank || null);
+}
+
+function renderTunerRankScreen() {
+  if (!el.tunerRankList) return;
+  el.tunerRankList.innerHTML = computeTunerRankList().map((row) => `
+    <article class="tuner-rank-row ${row.isPlayer ? "player" : ""} ${row.isRival ? "rival" : ""}">
+      <strong class="tuner-rank-number">#${row.displayRank}</strong>
+      <img src="${row.headshot || "assets/characters/headshot-mylo.png"}" alt="" loading="lazy" decoding="async">
+      <span>${row.name}</span>
+    </article>
+  `).join("");
+}
+
+function openTunerRankScreen() {
+  renderTunerRankScreen();
+  showView("tuner-rank");
+}
+
+function showTunerRankRisePopup(rankChange, onReturn) {
+  let modal = document.querySelector("#tuner-rank-rise-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "tuner-rank-rise-modal";
+    modal.className = "modal-overlay tuner-rank-rise-modal";
+    modal.setAttribute("aria-hidden", "true");
+    modal.innerHTML = `
+      <div class="confirm-modal tuner-rank-rise-card" role="dialog" aria-modal="true">
+        <p class="modal-kicker">Tuner Rank</p>
+        <h2>You've risen in the rankings!</h2>
+        <div class="tuner-rank-change"></div>
+        <div class="modal-actions">
+          <button class="primary" type="button" data-rank-view>View Leaderboard</button>
+          <button class="ghost" type="button" data-rank-return>Return to City</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  const boss = bossChallengeBosses.find((item) => item.id === rankChange.bossId) || {};
+  const player = selectedTuner();
+  modal.querySelector(".tuner-rank-change").innerHTML = `
+    <div class="rank-face-stack">
+      <img src="${player.headshot || player.image}" alt="" loading="lazy" decoding="async">
+      <span>${formatRank(rankChange.oldRank)} → ${formatRank(rankChange.newRank)}</span>
+      <img class="dropping" src="${boss.headshot || boss.portrait || ""}" alt="" loading="lazy" decoding="async">
+    </div>
+  `;
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  modal.querySelector("[data-rank-view]").onclick = () => {
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+    openTunerRankScreen();
+  };
+  modal.querySelector("[data-rank-return]").onclick = () => {
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+    if (typeof onReturn === "function") onReturn();
+  };
+}
+
+function setConvoyAvailable(convoyId, available = true) {
+  if (!convoyDefinitions[convoyId]) return;
+  state.convoy = state.convoy || {};
+  state.convoy.available = state.convoy.available || {};
+  state.convoy.available[convoyId] = Boolean(available);
+  state.convoy.loadoutsUnlocked = state.convoy.loadoutsUnlocked || Boolean(available);
+  saveState();
+  renderConvoyEntry();
+}
+
+function renderConvoyEntry() {
+  if (!el.convoyEntryNode || !el.convoyButtons) return;
+  const availableIds = Object.keys(convoyDefinitions).filter((id) => state.convoy?.available?.[id]);
+  el.convoyEntryNode.hidden = false;
+  el.convoyButtons.innerHTML = availableIds.map((id) => {
+    const convoy = convoyDefinitions[id];
+    return `
+      <button class="convoy-entry-button" type="button" data-convoy-open="${id}">
+        <span class="convoy-medallion">
+          <img class="convoy-medallion-base" src="${convoy.icon}" alt="" loading="lazy" decoding="async">
+          <img class="convoy-medallion-face" src="${convoy.headshot}" alt="" loading="lazy" decoding="async">
+        </span>
+        <strong>${convoy.name}</strong>
+      </button>
+    `;
+  }).join("");
+}
+
+function openConvoy(convoyId) {
+  if (!convoyDefinitions[convoyId]) return;
+  state.convoy.inProgress = state.convoy.inProgress || { convoyId, currentStage: 0, stageProgress: {} };
+  state.convoy.inProgress.convoyId = convoyId;
+  renderConvoy();
+  showView("convoy");
+}
+
+function renderConvoy() {
+  if (!el.convoyTitle || !el.convoyStageList) return;
+  const convoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || "tyree";
+  const convoy = convoyDefinitions[convoyId] || convoyDefinitions.tyree;
+  el.convoyTitle.textContent = convoy.name;
+  el.convoySummary.textContent = `${convoy.sponsor} · 3 stages · no car reuse`;
+  const progress = state.convoy?.inProgress?.stageProgress || {};
+  el.convoyStageList.innerHTML = convoy.stages.map((stage, index) => `
+    <article class="convoy-stage-card ${progress[index] || ""}">
+      <span>Stage ${index + 1}</span>
+      <strong>${stage.type === "h2h" ? "Head-to-Head" : stage.type.toUpperCase()}</strong>
+      <p>${stage.opponentName}</p>
+      <button class="primary" type="button" data-convoy-stage="${index}" ${index > 0 && progress[index - 1] !== "won" ? "disabled" : ""}>${progress[index] === "lost" ? "Retry Stage" : "Start Stage"}</button>
+    </article>
+  `).join("");
+}
+
+function renderConvoyLoadouts() {
+  if (!el.convoyLoadoutSlots) return;
+  const owned = selectablePlayerCars();
+  el.convoyLoadoutSlots.innerHTML = state.convoy.loadouts.map((loadout, index) => `
+    <article class="convoy-loadout-slot">
+      <h3>${loadout?.name || `Empty Slot ${index + 1}`}</h3>
+      <input type="text" value="${loadout?.name || `Loadout ${index + 1}`}" maxlength="32" data-convoy-loadout-name="${index}">
+      <div class="convoy-loadout-selects">
+        ${[0, 1, 2].map((slot) => `
+          <select data-convoy-loadout-car="${index}:${slot}">
+            ${owned.map((car) => `<option value="${car.id}" ${loadout?.carIds?.[slot] === car.id ? "selected" : ""}>${currentEvolution(car.id).name}</option>`).join("")}
+          </select>
+        `).join("")}
+      </div>
+      <button class="primary" type="button" data-save-convoy-loadout="${index}">Save</button>
+    </article>
+  `).join("");
+}
+
+function saveConvoyLoadout(index) {
+  const nameInput = document.querySelector(`[data-convoy-loadout-name="${index}"]`);
+  const carIds = [0, 1, 2].map((slot) => document.querySelector(`[data-convoy-loadout-car="${index}:${slot}"]`)?.value).filter(Boolean);
+  state.convoy.loadouts[index] = { name: nameInput?.value?.trim() || `Loadout ${index + 1}`, carIds };
+  saveState();
+  renderConvoyLoadouts();
 }
 
 function rivalCarIdForPlayer(playerCarId = state.selectedStoryCar) {
@@ -1624,6 +2064,7 @@ function closeCitySelect() {
 function selectStoryCity(index) {
   if (!storyCityUnlocked(index)) return;
   state.selectedStoryCity = index;
+  advanceTunerRankForCityEntry(storyCities[index]?.id);
   state.selectedCampaign = firstPlayableStoryLevelForCity(index)?.campaignIndex ?? state.selectedCampaign;
   closeCitySelect();
   closeStoryPreview();
@@ -1854,9 +2295,48 @@ function bossBattleStats(boss) {
   return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Math.min(100, Math.round(value * scale))]));
 }
 
-function battleUnitFromStats(name, image, stats, isPlayer = false) {
+function battleProfileForCarId(carId, fallbackName = "") {
+  const profile = gearbornStatProfiles[carId] || gearbornStatProfiles[slugify(fallbackName)] || {};
+  return { type: profile.type || "Neutral", profile };
+}
+
+function battleStrongestStat(stats = {}) {
+  const order = ["speed", "acceleration", "handling", "torque", "body", "powertrain"];
+  return order.reduce((best, key) => (Number(stats[key] || 0) > Number(stats[best] || 0) ? key : best), order[0]);
+}
+
+function battleMovesetFor(stats = {}, type = "Neutral") {
+  const normalizedType = String(type || "Neutral").toLowerCase();
+  let middle = ["defend", "rev"];
+  if (["endurance", "transmission"].includes(normalizedType)) {
+    middle = ["defend", "rev"];
+  } else if (["agility", "grip"].includes(normalizedType)) {
+    middle = ["dodge", "sneak"];
+  } else if ((Number(stats.acceleration || 0) + Number(stats.handling || 0)) > (Number(stats.torque || 0) + Number(stats.body || 0))) {
+    middle = ["dodge", "sneak"];
+  }
+  return ["attack", ...middle, "special"];
+}
+
+function battleUnitFromStats(name, image, stats, isPlayer = false, carId = "", type = "Neutral") {
   const hpMax = Math.round(165 + stats.body * 3.2);
-  return { name, image, stats, hp: hpMax, hpMax, sp: 0, stunned: false, isPlayer };
+  return {
+    name,
+    image,
+    stats,
+    hp: hpMax,
+    hpMax,
+    sp: 0,
+    shield: 0,
+    shieldTurns: 0,
+    dodgeBuffTurns: 0,
+    stunned: false,
+    revState: null,
+    isPlayer,
+    carId,
+    type,
+    moveset: battleMovesetFor(stats, type)
+  };
 }
 
 function beginBattle(mode = "battle", options = {}) {
@@ -1864,18 +2344,21 @@ function beginBattle(mode = "battle", options = {}) {
   const boss = options.boss || bossChallengeBosses.find((item) => item.id === state.selectedBattleBoss) || bossChallengeBosses[0];
   const carId = options.carId || state.selectedStoryCar;
   const playerForm = currentEvolution(carId);
-  const player = battleUnitFromStats(playerForm.name, imageFor(playerForm, "race"), displayedGearbornStats(carId), true);
+  const playerProfile = battleProfileForCarId(carId, playerForm.name);
+  const player = battleUnitFromStats(playerForm.name, imageFor(playerForm, "race"), displayedGearbornStats(carId), true, carId, playerProfile.type);
   const opponentStats = options.tutorial
     ? displayedGearbornStatsAtLevel(tutorialOpponentCarId, 1)
     : options.opponentStats || bossBattleStats(boss);
   const opponentImage = options.tutorial ? "assets/cars/tutorque-race.png" : options.opponentImage || battleCarImageForBoss(boss);
   const opponentName = options.tutorial ? "Tutorque" : options.opponentName || boss.car;
+  const opponentCarId = options.opponentCarId || (options.tutorial ? tutorialOpponentCarId : "");
+  const opponentProfile = battleProfileForCarId(opponentCarId, opponentName || boss.car);
   battleState = {
     mode,
     boss,
     carId,
     player,
-    opponent: battleUnitFromStats(opponentName, opponentImage, opponentStats),
+    opponent: battleUnitFromStats(opponentName, opponentImage, opponentStats, false, opponentCarId, opponentProfile.type),
     waitingNext: false,
     finished: false,
     campaignLevelIndex: options.campaignLevelIndex ?? null,
@@ -1889,31 +2372,133 @@ function beginBattle(mode = "battle", options = {}) {
   renderBattle();
 }
 
-function battleDamage(attacker, defender, move, defenderMove) {
-  if (move === "defend") return 0;
-  const base = move === "special" ? 42 : 26;
-  const attack = base + attacker.stats.speed * 0.16 + attacker.stats.acceleration * 0.2;
-  const crit = 1.12 + normalizedGearbornStat(attacker.stats.powertrain) * 0.28;
-  let damage = move === "special" ? attack * crit : attack;
-  if (defenderMove === "defend" && move !== "special") {
-    damage *= 0.34 - normalizedGearbornStat(defender.stats.body) * 0.14;
+function battleAttackDamage(attacker) {
+  return 26 + attacker.stats.speed * 0.16 + attacker.stats.acceleration * 0.2;
+}
+
+function battleMoveChance(unit, move) {
+  if (move === "dodge") {
+    const acc = Number(unit.stats.acceleration || 0) + (unit.dodgeBuffTurns > 0 ? 20 : 0);
+    return Math.max(0.1, Math.min(0.9, 0.5 + (acc - 80) * 0.01));
   }
-  return Math.max(8, Math.round(damage));
+  if (move === "sneak") {
+    return Math.max(0.05, Math.min(0.8, 0.35 + (Number(unit.stats.handling || 0) - 80) * 0.01));
+  }
+  return 0;
+}
+
+function battleShieldAbsorb(unit, damage) {
+  if (!unit.shield || unit.shield <= 0 || damage <= 0) return damage;
+  const absorbed = Math.min(unit.shield, damage);
+  unit.shield = Math.max(0, unit.shield - absorbed);
+  return Math.max(0, damage - absorbed);
+}
+
+function battleSpecialDamage(attacker, defender, logLines) {
+  const strongest = battleStrongestStat(attacker.stats);
+  const attack = battleAttackDamage(attacker);
+  if (strongest === "speed") {
+    logLines.push(`${attacker.name} used SPECIAL: Power Strike.`);
+    return { damage: Math.round(attack * 1.8), bypassDefend: false };
+  }
+  if (strongest === "acceleration") {
+    attacker.dodgeBuffTurns = 3;
+    logLines.push(`${attacker.name} used SPECIAL: Dodge Stance.`);
+    return { damage: 0, bypassDefend: true };
+  }
+  if (strongest === "handling") {
+    logLines.push(`${attacker.name} used SPECIAL: Phantom Strike.`);
+    return { damage: Math.round(attack * 1.4), bypassDefend: false, guaranteedSneak: true };
+  }
+  if (strongest === "torque") {
+    logLines.push(`${attacker.name} used SPECIAL: Crushing Blow.`);
+    return { damage: Math.round(attack * 2), bypassDefend: true };
+  }
+  if (strongest === "body") {
+    attacker.shield = Math.max(attacker.shield || 0, Math.round(attacker.hpMax * 0.25));
+    attacker.shieldTurns = 3;
+    logLines.push(`${attacker.name} used SPECIAL: Iron Shield.`);
+    return { damage: 0, bypassDefend: true };
+  }
+  attacker.sp = Math.min(4, attacker.sp + 2);
+  logLines.push(`${attacker.name} used SPECIAL: Overcharge.`);
+  return { damage: Math.round(attack * 1.5), bypassDefend: false };
+}
+
+function battleResolveAttack(attacker, defender, attackMove, defendMove, logLines) {
+  if (["defend", "dodge"].includes(attackMove)) return 0;
+  if (attackMove === "sneak") {
+    const success = Math.random() < battleMoveChance(attacker, "sneak");
+    if (!success) {
+      logLines.push(`${attacker.name} used SNEAK. Failed sneak.`);
+      return 0;
+    }
+    logLines.push(`${attacker.name} used SNEAK. Successful sneak.`);
+  }
+  if (attackMove === "rev") {
+    const mod = 0.85 + (Number(attacker.stats.torque || 0) - 80) * 0.005;
+    logLines.push(`${attacker.name} REV fired!`);
+    return Math.max(8, Math.round(2.5 * battleAttackDamage(attacker) * mod));
+  }
+  if (attackMove === "special") {
+    const special = battleSpecialDamage(attacker, defender, logLines);
+    if (!special.damage) return 0;
+    return Math.max(8, special.damage);
+  }
+  return Math.max(8, Math.round(battleAttackDamage(attacker)));
+}
+
+function battleApplyDefense(defender, attacker, incomingMove, defenderMove, rawDamage, logLines) {
+  if (rawDamage <= 0) return 0;
+  if (defenderMove === "dodge") {
+    if (Math.random() < battleMoveChance(defender, "dodge")) {
+      logLines.push(`Successful dodge — ${defender.name} took no damage.`);
+      return 0;
+    }
+    logLines.push(`Failed dodge — ${defender.name} took full damage.`);
+  }
+  if (defenderMove === "sneak") {
+    if (Math.random() < battleMoveChance(defender, "sneak")) {
+      const counter = Math.round(battleAttackDamage(defender) * 0.4);
+      attacker.hp = Math.max(0, attacker.hp - counter);
+      logLines.push(`Successful sneak — ${defender.name} avoided damage and countered for ${counter}.`);
+      return 0;
+    }
+    logLines.push(`Failed sneak — ${defender.name} took full damage.`);
+  }
+  if (defenderMove === "defend" && (incomingMove === "attack" || incomingMove === "sneak")) {
+    const reduced = rawDamage * (0.34 - normalizedGearbornStat(defender.stats.body) * 0.14);
+    attacker.stunned = true;
+    defender.sp = Math.min(4, defender.sp + 1);
+    logLines.push(`Successful defense — ${attacker.name} is stunned.`);
+    return Math.max(3, Math.round(reduced));
+  }
+  return Math.max(0, Math.round(rawDamage));
 }
 
 function chooseOpponentBattleMove() {
-  if (battleState.opponent.stunned) return "stunned";
-  if (battleState.opponent.sp >= 4) return Math.random() < 0.7 ? "special" : "attack";
-  if (battleState.opponent.hp < battleState.opponent.hpMax * 0.35 && Math.random() < 0.35) return "defend";
-  return Math.random() < 0.72 ? "attack" : "defend";
+  const opponent = battleState.opponent;
+  const player = battleState.player;
+  if (opponent.stunned) return "stunned";
+  if (opponent.revState === "loading") return "rev";
+  const moves = opponent.moveset || ["attack", "defend", "special"];
+  if (opponent.sp >= 4 && Math.random() < 0.7) return "special";
+  if (moves.includes("rev") && opponent.hp > opponent.hpMax * 0.45 && 2.5 * battleAttackDamage(opponent) >= player.hp * 0.75 && Math.random() < 0.55) return "rev";
+  if (moves.includes("dodge") && (opponent.hp < opponent.hpMax * 0.35 || player.sp >= 4) && Math.random() < 0.58) return "dodge";
+  if (moves.includes("sneak") && opponent.hp < opponent.hpMax * 0.8 && Math.random() < 0.28) return "sneak";
+  if (moves.includes("defend") && opponent.hp < opponent.hpMax * 0.4 && Math.random() < 0.4) return "defend";
+  return Math.random() < 0.72 ? "attack" : (moves.includes("sneak") ? "sneak" : moves.includes("rev") ? "rev" : "defend");
 }
 
 function battleMoveLabel(move) {
   return {
-    attack: "attack",
-    defend: "defend",
-    special: "special",
-    stunned: "stunned"
+    attack: "ATTACK",
+    defend: "DEFEND",
+    dodge: "DODGE",
+    sneak: "SNEAK",
+    rev: "REV",
+    special: "SPECIAL",
+    stunned: "STUNNED"
   }[move] || move;
 }
 
@@ -1921,6 +2506,9 @@ function battleMoveIcon(move) {
   return {
     attack: "assets/items/battle-attack.png",
     defend: "assets/items/battle-defend.png",
+    dodge: "assets/items/battle-dodge.png",
+    sneak: "assets/items/battle-sneak.png",
+    rev: "assets/items/battle-rev.png",
     special: "assets/items/battle-special.png"
   }[move] || "";
 }
@@ -1931,48 +2519,76 @@ function handleBattleMove(playerMove) {
   const player = battleState.player;
   const opponent = battleState.opponent;
   const playerWasStunned = player.stunned;
+  if (!playerWasStunned && !(player.moveset || []).includes(playerMove)) return;
   if (!playerWasStunned && playerMove === "special" && player.sp < 4) return;
-  const playerAction = playerWasStunned ? "stunned" : playerMove;
-  const opponentMove = playerWasStunned ? "attack" : chooseOpponentBattleMove();
+  const playerAction = playerWasStunned ? "stunned" : player.revState === "loading" ? "rev" : playerMove;
+  const opponentMove = chooseOpponentBattleMove();
   const opponentWasStunned = opponentMove === "stunned";
-  const opponentCanAct = opponentMove !== "stunned";
-  const playerDamage = opponentCanAct ? battleDamage(opponent, player, opponentMove, playerAction) : 0;
-  const opponentDamage = playerWasStunned ? 0 : battleDamage(player, opponent, playerAction, opponentMove);
+  const logLines = [];
+  const playerRevWasLoading = player.revState === "loading";
+  const opponentRevWasLoading = opponent.revState === "loading";
+
+  player.stunned = false;
+  opponent.stunned = false;
+
+  if (playerAction === "rev" && player.revState !== "loading") {
+    player.revState = "loading";
+    logLines.push(`${player.name} is revving up...`);
+  }
+  if (opponentMove === "rev" && opponent.revState !== "loading") {
+    opponent.revState = "loading";
+    logLines.push(`${opponent.name} is revving up...`);
+  }
+
+  const playerFires = playerAction !== "stunned" && (playerAction !== "rev" || playerRevWasLoading);
+  const opponentFires = opponentMove !== "stunned" && (opponentMove !== "rev" || opponentRevWasLoading);
+  const playerAttackMove = playerAction;
+  const opponentAttackMove = opponentMove;
+
+  let opponentDamage = playerFires ? battleResolveAttack(player, opponent, playerAttackMove, opponentMove, logLines) : 0;
+  let playerDamage = opponentFires ? battleResolveAttack(opponent, player, opponentAttackMove, playerAction, logLines) : 0;
+
+  opponentDamage = battleApplyDefense(opponent, player, playerAttackMove, opponentMove, opponentDamage, logLines);
+  playerDamage = battleApplyDefense(player, opponent, opponentAttackMove, playerAction, playerDamage, logLines);
+  playerDamage = battleShieldAbsorb(player, playerDamage);
+  opponentDamage = battleShieldAbsorb(opponent, opponentDamage);
+
   player.hp = Math.max(0, player.hp - playerDamage);
   opponent.hp = Math.max(0, opponent.hp - opponentDamage);
   if (playerAction === "special") player.sp = 0;
   if (opponentMove === "special") opponent.sp = 0;
-  if (playerAction === "attack" && opponentDamage > 0) player.sp = Math.min(4, player.sp + 1);
-  if (opponentMove === "attack" && playerDamage > 0) opponent.sp = Math.min(4, opponent.sp + 1);
-  let stunnedName = "";
-  if (playerAction === "defend" && opponentMove === "attack") {
-    player.sp = Math.min(4, player.sp + 1);
-    opponent.stunned = true;
-    stunnedName = opponent.name;
-  } else {
-    opponent.stunned = false;
-  }
-  if (opponentMove === "defend" && playerAction === "attack") {
-    opponent.sp = Math.min(4, opponent.sp + 1);
-    player.stunned = true;
-    stunnedName = player.name;
-  } else {
-    player.stunned = false;
-  }
+  if (["attack", "sneak", "rev"].includes(playerAttackMove) && opponentDamage > 0) player.sp = Math.min(4, player.sp + 1);
+  if (["attack", "sneak", "rev"].includes(opponentAttackMove) && playerDamage > 0) opponent.sp = Math.min(4, opponent.sp + 1);
+  if (playerRevWasLoading && playerAction === "rev" && playerFires) player.revState = null;
+  if (opponentRevWasLoading && opponentMove === "rev" && opponentFires) opponent.revState = null;
+  [player, opponent].forEach((unit) => {
+    if (unit.dodgeBuffTurns > 0) unit.dodgeBuffTurns -= 1;
+    if (unit.shieldTurns > 0) unit.shieldTurns -= 1;
+    if (unit.shieldTurns <= 0) unit.shield = 0;
+  });
   battleState.waitingNext = true;
   el.battleArena.classList.add("resolving");
-  el.battlePlayerMove.style.backgroundImage = playerAction === "stunned" ? "" : `url("${battleMoveIcon(playerAction)}")`;
-  el.battleOpponentMove.style.backgroundImage = opponentMove === "stunned" ? "" : `url("${battleMoveIcon(opponentMove)}")`;
-  el.battlePlayerMove.classList.toggle("active", playerAction !== "stunned");
-  el.battleOpponentMove.classList.toggle("active", opponentMove !== "stunned");
+  const moveSucceeded = (unit, move, revWasLoading) => {
+    if (move === "stunned") return false;
+    if (move === "rev") return revWasLoading;
+    if (move === "dodge") return logLines.some((line) => line.includes(`Successful dodge`) && line.includes(unit.name));
+    if (move === "sneak") return logLines.some((line) => line.includes(`Successful sneak`) && line.includes(unit.name));
+    return true;
+  };
+  const showPlayerMove = moveSucceeded(player, playerAction, playerRevWasLoading);
+  const showOpponentMove = moveSucceeded(opponent, opponentMove, opponentRevWasLoading);
+  el.battlePlayerMove.style.backgroundImage = showPlayerMove ? `url("${battleMoveIcon(playerAction)}")` : "";
+  el.battleOpponentMove.style.backgroundImage = showOpponentMove ? `url("${battleMoveIcon(opponentMove)}")` : "";
+  el.battlePlayerMove.classList.toggle("active", showPlayerMove);
+  el.battleOpponentMove.classList.toggle("active", showOpponentMove);
   if (playerWasStunned) {
     el.battleLog.textContent = `${player.name} is stunned and can't attack.`;
   } else if (opponentWasStunned) {
     el.battleLog.textContent = `${opponent.name} is stunned and can't attack.`;
-  } else if (stunnedName) {
-    el.battleLog.textContent = `${stunnedName} is stunned.`;
   } else {
-    el.battleLog.textContent = `${player.name} used ${battleMoveLabel(playerAction)}. ${opponent.name} used ${battleMoveLabel(opponentMove)}.`;
+    el.battleLog.textContent = logLines.length
+      ? logLines.join(" ")
+      : `${player.name} used ${battleMoveLabel(playerAction)}. ${opponent.name} used ${battleMoveLabel(opponentMove)}.`;
   }
   renderBattle();
   if (player.hp <= 0 || opponent.hp <= 0) finishBattle();
@@ -1986,6 +2602,10 @@ function nextBattleTurn() {
   el.battleOpponentMove.classList.remove("active");
   el.battleLog.textContent = "Choose a move.";
   renderBattle();
+  if (battleState.player?.revState === "loading") {
+    el.battleLog.textContent = "REV firing...";
+    setTimeout(() => handleBattleMove("rev"), 360);
+  }
 }
 
 function finishBattle() {
@@ -2003,6 +2623,10 @@ function finishBattle() {
     unlockedBossName = unlockNextTrainingBossFromBoss(battleState.boss.id);
   }
   if (tutorialActive() && won) setTutorialScene("battle-win");
+  const level = battleState.campaignLevelIndex !== null ? campaignLevels[battleState.campaignLevelIndex] : null;
+  const rankChange = won && !tutorialActive() && !isGauntlet && level?.type === "boss"
+    ? advanceTunerRankForBossWin(battleState.boss.id)
+    : null;
   if (won && battleState.campaignLevelIndex !== null) completeCampaignLevel(battleState.campaignLevelIndex);
   saveState();
   if (tutorialActive() && won) renderTutorial();
@@ -2032,7 +2656,16 @@ function finishBattle() {
         return;
       }
       if (battleState.campaignLevelIndex !== null) {
-        const level = campaignLevels[battleState.campaignLevelIndex];
+        if (rankChange) {
+          showTunerRankRisePopup(rankChange, () => {
+            if (won && level?.type === "rival") {
+              openRivalDialogue(level, "post", finishStoryRaceScreen);
+              return;
+            }
+            finishStoryRaceScreen();
+          });
+          return;
+        }
         if (won && level?.type === "rival") {
           openRivalDialogue(level, "post", finishStoryRaceScreen);
           return;
@@ -2056,17 +2689,25 @@ function renderBattle() {
   el.battleOpponentHp.textContent = `${opponent.hp}/${opponent.hpMax}`;
   el.battlePlayerHpFill.style.width = `${Math.max(0, player.hp / player.hpMax) * 100}%`;
   el.battleOpponentHpFill.style.width = `${Math.max(0, opponent.hp / opponent.hpMax) * 100}%`;
-  el.battlePlayerSp.textContent = `${player.sp}/4`;
-  el.battleOpponentSp.textContent = `${opponent.sp}/4`;
+  el.battlePlayerSp.textContent = `${player.sp}/4${player.shield ? ` · Shield ${player.shield}` : ""}`;
+  el.battleOpponentSp.textContent = `${opponent.sp}/4${opponent.shield ? ` · Shield ${opponent.shield}` : ""}`;
   el.battlePlayerSpFill.style.width = `${player.sp / 4 * 100}%`;
   el.battleOpponentSpFill.style.width = `${opponent.sp / 4 * 100}%`;
   el.battlePlayerCar.style.backgroundImage = `url("${player.image}")`;
   el.battleOpponentCar.style.backgroundImage = `url("${opponent.image}")`;
   el.battleNextTurn.hidden = !battleState.waitingNext || battleState.finished;
-  el.battleActions.querySelectorAll("[data-battle-move]").forEach((button) => {
-    const move = button.dataset.battleMove;
-    button.disabled = battleState.tutorialPaused || battleState.waitingNext || battleState.finished || (!player.stunned && move === "special" && player.sp < 4);
-  });
+  const locked = Boolean(player.stunned || player.revState === "loading");
+  const moves = player.moveset || ["attack", "defend", "special"];
+  el.battleActions.innerHTML = moves.map((move) => {
+    const disabled = battleState.tutorialPaused || battleState.waitingNext || battleState.finished || locked || (move === "special" && player.sp < 4);
+    const label = locked && player.revState === "loading" ? "REV LOADING" : battleMoveLabel(move);
+    return `
+      <button class="battle-action ${move} ${locked ? "locked-turn" : ""}" data-battle-move="${move}" type="button" ${disabled ? "disabled" : ""} title="${battleMoveLabel(move)}">
+        <img src="${battleMoveIcon(move)}" alt="" onerror="this.style.display='none'">
+        ${label}
+      </button>
+    `;
+  }).join("");
 }
 
 function renderTimeTargets() {
@@ -2278,6 +2919,40 @@ function renderVindex() {
     }
   }
   if (el.vindexPlate) el.vindexPlate.innerHTML = vindexPlateMarkup(entry, discovered);
+  renderVindexMemories(entry, discovered);
+}
+
+function renderVindexMemories(entry, discovered) {
+  if (!el.vindexMemoriesButton || !el.vindexMemoriesPanel) return;
+  const playable = playableEntryMeta(entry);
+  el.vindexMemoriesButton.hidden = !discovered || !playable;
+  el.vindexMemoriesPanel.hidden = true;
+  if (!playable) {
+    el.vindexMemoriesPanel.innerHTML = "";
+    return;
+  }
+  const lineRoot = playable.car.id;
+  const bondLevel = bondLevelForLine(lineRoot);
+  el.vindexMemoriesPanel.innerHTML = bondSceneThresholds.map((threshold) => {
+    const sceneId = `${lineRoot}-bond-${threshold}`;
+    const unlocked = Boolean(state.bondScenesViewed?.[sceneId]) || bondLevel >= threshold;
+    return `
+      <button class="vindex-memory-row ${unlocked ? "unlocked" : "locked"}" type="button" data-vindex-memory="${lineRoot}:${threshold}" ${unlocked ? "" : "disabled"}>
+        <span>Bond ${threshold}</span>
+        <strong>${unlocked ? (bondScenes[lineRoot]?.[threshold]?.title || "Memory") : `Bond ${threshold} required`}</strong>
+      </button>
+    `;
+  }).join("");
+}
+
+function toggleVindexMemories() {
+  if (!el.vindexMemoriesPanel) return;
+  el.vindexMemoriesPanel.hidden = !el.vindexMemoriesPanel.hidden;
+}
+
+function replayBondScene(lineRoot, threshold) {
+  activeBondScene = { lineRoot, threshold: Number(threshold), sceneId: `${lineRoot}-bond-${threshold}` };
+  renderBondScene();
 }
 
 function playableEntryMeta(entry) {
@@ -2516,6 +3191,9 @@ function renderDistanceOptions() {
 }
 
 function renderOpponents() {
+  el.dragOpponentCount?.querySelectorAll("[data-drag-opponents]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.dragOpponents) === (state.selectedDragOpponents || 1));
+  });
   if (tutorialActive() && currentTutorialScene().id === "drag-race") {
     el.opponentList.innerHTML = `
       <button class="opponent-button active" type="button" data-rank="F">
@@ -2553,23 +3231,7 @@ function renderSelectionPreviews() {
   el.opponentPreviewMeta.textContent = `Difficulty tier ${rankIndex + 1} of ${ranks.length}`;
 }
 
-function renderGarage() {
-  if (tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene().id)) {
-    renderTutorialGarage();
-    return;
-  }
-  // TODO garage extension hooks: trophy shelf, medallion display, city stickers,
-  // boss memorabilia, NPC garage appearances, and Ashley/Dr. Tyree moments.
-  const godModeActive = garageGodModeActive();
-  el.garageStatus.hidden = !godModeActive;
-  el.garageStatus.textContent = godModeActive
-    ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
-    : "";
-  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
-  el.garageGrid.innerHTML = garageCars.map((car) => {
-    if (!isCarUnlocked(car.id)) {
-      return lockedGarageCard(car);
-    }
+function garageDetailedCardMarkup(car, extraClass = "") {
     const progress = state.garage[car.id];
     const maxed = progress.level >= maxCarLevel;
     const stats = displayedGearbornStats(car.id);
@@ -2578,7 +3240,7 @@ function renderGarage() {
     const form = currentEvolution(car.id);
     const idle = idleProfileForGearborn(car.id);
     return `
-      <article class="garage-card idle-profile-${idle.idleProfile}" style="--idle-intensity:${idle.animationIntensity}">
+      <article class="garage-card ${extraClass} idle-profile-${idle.idleProfile}" style="--idle-intensity:${idle.animationIntensity}">
         <div class="garage-art">
           ${carMarkupForEvolution(car.id, progress.evolution, "display")}
           ${honkButtonMarkup(`data-honk-car="${car.id}"`)}
@@ -2608,9 +3270,54 @@ function renderGarage() {
           </div>
           <button class="garage-upgrade" type="button" data-upgrade-car="${car.id}">${maxed ? "Parts / Stats" : "Upgrade"}</button>
           ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${car.id}">Evolve</button>` : ""}
+          ${extraClass ? `<button class="ghost garage-collapse" type="button" data-collapse-garage-card="${car.id}">Collapse</button>` : ""}
         </div>
       </article>
     `;
+}
+
+function garageCompactCardMarkup(car) {
+  if (!isCarUnlocked(car.id)) {
+    return `
+      <article class="garage-compact-card locked">
+        <div class="garage-compact-art"><div class="mystery-mark">?</div></div>
+        <strong>???</strong>
+        <span>${car.unlockInstruction || "Locked"}</span>
+      </article>
+    `;
+  }
+  const progress = state.garage[car.id];
+  const form = currentEvolution(car.id);
+  return `
+    <article class="garage-compact-card" data-expand-garage-card="${car.id}">
+      <div class="garage-compact-art">${carMarkupForEvolution(car.id, progress.evolution || 0, "display")}</div>
+      <strong>${form.name}</strong>
+      <span>Lv ${progress.level || 1} · Bond ${bondLevelForLine(car.id)}</span>
+      ${progress.pendingEvolution ? `<em>Ready to evolve</em>` : ""}
+    </article>
+  `;
+}
+
+function renderGarage() {
+  if (tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene().id)) {
+    renderTutorialGarage();
+    return;
+  }
+  // TODO garage extension hooks: trophy shelf, medallion display, city stickers,
+  // boss memorabilia, NPC garage appearances, and Ashley/Dr. Tyree moments.
+  const godModeActive = garageGodModeActive();
+  el.garageStatus.hidden = !godModeActive;
+  el.garageStatus.textContent = godModeActive
+    ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
+    : "";
+  document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
+  if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = !state.convoy?.loadoutsUnlocked;
+  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
+  el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
+  el.garageGrid.innerHTML = garageCars.map((car) => {
+    if (state.garageViewMode !== "compact") return isCarUnlocked(car.id) ? garageDetailedCardMarkup(car) : lockedGarageCard(car);
+    if (expandedGarageCardIds.has(car.id) && isCarUnlocked(car.id)) return garageDetailedCardMarkup(car, "garage-expanded-card");
+    return garageCompactCardMarkup(car);
   }).join("");
 }
 
@@ -3116,15 +3823,207 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   race = null;
   updateNitroHud();
   paintCars();
+  updateGearshiftIndicator(false);
 }
 
 function startPendingDragRace() {
   const config = pendingDragRace || { campaignLevelIndex: null, dragStage: null };
   el.dragMapStart.classList.remove("active");
-  runCountdown(el.dragCountdown, () => {
-    startDragRace(config.campaignLevelIndex, config.dragStage);
-    pendingDragRace = null;
+  startDragRace(config.campaignLevelIndex, config.dragStage);
+  pendingDragRace = null;
+}
+
+function dragBackgroundFor(campaignLevelIndex, dragStage) {
+  const level = campaignLevelIndex !== null && campaignLevelIndex !== undefined ? campaignLevels[campaignLevelIndex] : null;
+  const rawId = dragStage?.trackId || level?.track?.id || storyCityForCampaignIndex(campaignLevelIndex)?.id || (dragStage?.tutorial ? "academy" : "academy");
+  const normalized = rawId === "bangalore" ? "bengaluru" : rawId;
+  const available = new Set(["academy", "indianapolis", "berlin", "dubai", "rio", "seoul", "cape-town", "bengaluru"]);
+  return `assets/race/dragbg-${available.has(normalized) ? normalized : "academy"}.png`;
+}
+
+function dragOpponentSeed(rank, distance, dragStage, rankIndex) {
+  if (dragStage?.opponents?.length) return dragStage.opponents;
+  if (dragStage) return [{ name: dragStage.name, image: dragStage.image, power: dragStage.power }];
+  const count = Math.max(1, Math.min(3, state.selectedDragOpponents || 1));
+  const startIndex = Math.max(0, rankIndex);
+  return Array.from({ length: count }, (_, offset) => {
+    const fallbackRank = ranks[Math.min(ranks.length - 1, startIndex + offset)] || rank;
+    return {
+      name: fallbackRank.name,
+      image: imageFor(fallbackRank, "race"),
+      power: fallbackRank.power * (1 + offset * 0.05),
+      rankKey: fallbackRank.key
+    };
   });
+}
+
+function makeDragOpponent(seed, index, rank, distance, dragStage, rankIndex) {
+  const skillIndex = Math.max(0, rankIndex + index * 0.45);
+  const classScale = dragStage?.tutorial ? 0.5 : 0.9 + skillIndex * 0.09;
+  const power = Number(seed.power || rank.power || 1) * classScale * distance.difficulty * difficultyMultiplier();
+  const lanePool = race?.visibleLanes || [1, 2, 3, 4];
+  const defaultLanes = lanePool.length <= 2 ? [2] : lanePool.length === 3 ? [1, 2] : [1, 2, 4];
+  return {
+    id: `opponent-${index}`,
+    name: seed.name || rank.name,
+    image: seed.image || imageFor(rank, "race"),
+    lane: defaultLanes[index] || lanePool.find((lane) => lane !== 3) || 2,
+    lanePreference: defaultLanes[index] || 2,
+    laneTransition: null,
+    laneThink: 2.4 + Math.random() * 2.2,
+    speed: 0,
+    distance: 0,
+    maxSpeed: 92 + power * 42,
+    acceleration: 17 + power * 12,
+    nitroCharge: 0,
+    nitroActive: false,
+    nitroTimer: 0,
+    nitroSkill: Math.max(0, skillIndex) / Math.max(1, ranks.length - 1),
+    nitroUsed: false,
+    shiftTimer: Math.max(0.65, 1.3 - (Math.max(0, skillIndex) / Math.max(1, ranks.length - 1)) * 0.35),
+    nitroDelay: 0,
+    power
+  };
+}
+
+function setLaunchPhase(phase) {
+  if (!race?.active || race.finished || race.launchPhase === "launched") return;
+  race.launchPhase = phase;
+  race.launchPhaseStartTime = performance.now();
+  el.dragLaunchLights?.querySelectorAll(".launch-light").forEach((light) => {
+    light.classList.toggle("active", light.dataset.launchLight === phase);
+  });
+  if (phase === "green") {
+    el.dragCountdown.classList.add("active");
+    el.dragCountdown.textContent = "GO";
+    playAudioCue("raceStart");
+  } else {
+    el.dragCountdown.classList.add("active");
+    el.dragCountdown.textContent = phase.toUpperCase();
+    playAudioCue("raceCountdown");
+  }
+}
+
+function launchDragPlayer() {
+  if (!race?.active || race.finished || race.gear !== 0) return;
+  const now = performance.now();
+  let message = "Clean Launch";
+  if (race.launchPhase === "green") {
+    const reaction = now - race.launchPhaseStartTime;
+    race.launchBonus = reaction <= 250 ? 1.15 : 1;
+    message = reaction <= 250 ? "Perfect Launch" : "Clean Launch";
+  } else if (race.launchPhase === "red" || race.launchPhase === "yellow") {
+    race.launchBonus = 0.7;
+    message = "Jumped Start";
+  } else {
+    race.launchBonus = 1;
+  }
+  race.launchBonusUntil = now + 2000;
+  race.launchPhase = "launched";
+  race.gear = 1;
+  race.rpm = 0.2;
+  el.shiftReadout.textContent = message;
+  el.dragLaunchLights?.querySelectorAll(".launch-light").forEach((light) => light.classList.remove("active"));
+  el.dragCountdown.classList.remove("active");
+  updateGearshiftIndicator(true);
+  updateNitroHud();
+  beep(message);
+}
+
+function updateGearshiftIndicator(animate = false) {
+  if (!el.gearshiftIndicator) return;
+  const gear = race?.gear || 0;
+  el.gearshiftIndicator.src = `assets/race/gearshift-${gear > 0 ? Math.min(6, gear) : "p"}.png`;
+  if (animate) {
+    el.gearshiftIndicator.classList.remove("shifting");
+    void el.gearshiftIndicator.offsetWidth;
+    el.gearshiftIndicator.classList.add("shifting");
+  }
+}
+
+function moveDragLane(delta) {
+  if (!race?.active || race.finished || race.gear === 0 || race.laneTransition) return;
+  const lanes = race.visibleLanes || [1, 2, 3, 4];
+  const current = race.playerLane || 3;
+  const next = current + delta;
+  if (!lanes.includes(next)) return;
+  const now = performance.now();
+  race.laneTransition = { from: current, to: next, startTime: now };
+  race.playerLane = next;
+}
+
+function updateLaneTransition(now) {
+  if (!race?.laneTransition) return;
+  if (now - race.laneTransition.startTime >= 400) race.laneTransition = null;
+}
+
+function renderedLaneValue(unit) {
+  const transition = unit?.laneTransition;
+  if (!transition) return unit?.lane || race?.playerLane || 3;
+  const progress = Math.min(1, (performance.now() - transition.startTime) / 400);
+  return transition.from + (transition.to - transition.from) * progress;
+}
+
+function dragLaneTop(lane) {
+  return `${18 + (lane - 1) * 20}%`;
+}
+
+function dragDraftBonus(subject, others) {
+  const lane = Math.round(subject.lane || 1);
+  const distance = Number(subject.distance || 0);
+  const speed = Number(subject.speed || 0);
+  if (speed <= 0 && subject !== race) return 1;
+  const ahead = others
+    .filter((other) => Math.round(other.lane || 1) === lane)
+    .map((other) => Number(other.distance || 0) - distance)
+    .filter((gap) => gap > 0 && gap <= 60)
+    .sort((a, b) => a - b)[0];
+  if (!ahead) return 1;
+  if (ahead >= 30) return 1.18;
+  return 1 + 0.18 * (ahead / 30);
+}
+
+function updateOpponentLaneAI(dt) {
+  const lanes = race.visibleLanes || [1, 2, 3, 4];
+  (race.opponents || []).forEach((opponent) => {
+    if (opponent.laneTransition) {
+      if (performance.now() - opponent.laneTransition.startTime >= 400) opponent.laneTransition = null;
+      return;
+    }
+    opponent.laneThink -= dt;
+    if (opponent.laneThink > 0) return;
+    opponent.laneThink = 3 + Math.random() * 2;
+    if (Math.random() > 0.3) return;
+    const candidates = lanes.filter((lane) => Math.abs(lane - opponent.lane) === 1);
+    if (!candidates.length) return;
+    const carsAhead = [{ lane: race.playerLane, distance: race.playerDistance }].concat((race.opponents || []).filter((item) => item !== opponent));
+    const preferred = candidates.find((lane) => carsAhead.some((other) => Math.round(other.lane) === lane && other.distance > opponent.distance && other.distance - opponent.distance < 70));
+    const targetLane = preferred || candidates[Math.floor(Math.random() * candidates.length)];
+    opponent.laneTransition = { from: opponent.lane, to: targetLane, startTime: performance.now() };
+    opponent.lane = targetLane;
+  });
+}
+
+function syncPrimaryRivalFields() {
+  const first = race?.opponents?.[0];
+  if (!first) return;
+  race.rivalSpeed = first.speed;
+  race.rivalDistance = first.distance;
+  race.rivalMaxSpeed = first.maxSpeed;
+  race.rivalAcceleration = first.acceleration;
+  race.rivalNitroCharge = first.nitroCharge;
+  race.rivalNitroActive = first.nitroActive;
+  race.rivalNitroTimer = first.nitroTimer;
+  race.rivalNitroSkill = first.nitroSkill;
+  race.rivalNitroUsed = first.nitroUsed;
+  race.rivalShiftTimer = first.shiftTimer;
+  race.rivalNitroDelay = first.nitroDelay;
+}
+
+function dragVisibleLanes(opponentCount) {
+  if (opponentCount <= 1) return [2, 3];
+  if (opponentCount === 2) return [1, 2, 3];
+  return [1, 2, 3, 4];
 }
 
 function startDragRace(campaignLevelIndex = null, dragStage = null) {
@@ -3134,16 +4033,14 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   const rank = dragStage
     ? { key: dragStage.rankKey, name: dragStage.name, xpBonus: dragStage.xp / 180, power: dragStage.power, color: "#f25f5c", images: { race: dragStage.image } }
     : ranks.find((item) => item.key === state.selectedRank);
-  const distance = dragStage?.tutorial ? tutorialDistance : distances.find((item) => item.meters === state.selectedDistance);
+  const distance = dragStage?.tutorial ? tutorialDistance : distances.find((item) => item.meters === (dragStage?.distance || state.selectedDistance));
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
-  const classScale = dragStage?.tutorial ? 0.5 : 0.9 + rankIndex * 0.09;
-  const rivalPower = rank.power * classScale * distance.difficulty * difficultyMultiplier();
-  const rivalNitroSkill = Math.max(0, rankIndex) / Math.max(1, ranks.length - 1);
+  const seeds = dragOpponentSeed(rank, distance, dragStage, rankIndex).slice(0, 3);
   race = {
     active: true,
     finished: false,
     target: distance.meters,
-    gear: 1,
+    gear: 0,
     rpm: 0.18,
     playerSpeed: 0,
     rivalSpeed: 0,
@@ -3156,36 +4053,45 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     accelPenalty: 1,
     topGearBoost: 1,
     shiftWindow: car.shiftWindow,
-    rivalMaxSpeed: 92 + rivalPower * 42,
-    rivalAcceleration: 17 + rivalPower * 12,
     nitroCharge: 0,
     nitroActive: false,
     nitroTimer: 0,
     overheatCount: 0,
     overheatLatched: false,
-    rivalNitroCharge: 0,
-    rivalNitroActive: false,
-    rivalNitroTimer: 0,
-    rivalNitroSkill,
-    rivalNitroUsed: false,
-    rivalShiftTimer: Math.max(0.65, 1.3 - rivalNitroSkill * 0.35),
-    rivalNitroDelay: 0,
     shiftScore: [],
     rank,
     distance,
     dragStage,
     campaignLevelIndex,
     carId: state.selectedCar,
-    gauntlet: state.activeGauntlet?.mode === "drag" ? { ...state.activeGauntlet } : null
+    gauntlet: state.activeGauntlet?.mode === "drag" ? { ...state.activeGauntlet } : null,
+    launchPhase: "red",
+    launchPhaseStartTime: performance.now(),
+    launchBonus: 1,
+    launchBonusUntil: 0,
+    playerLane: 3,
+    laneTransition: null,
+    draftBonus: 1,
+    visibleLanes: dragVisibleLanes(seeds.length),
+    opponents: [],
+    roadScroll: 0,
+    bgScroll: 0,
+    backgroundImage: dragBackgroundFor(campaignLevelIndex, dragStage)
   };
+  race.opponents = seeds.map((seed, index) => makeDragOpponent(seed, index, rank, distance, dragStage, rankIndex));
+  syncPrimaryRivalFields();
   if (dragStage) {
     el.rivalRacer.style.setProperty("--car-color", rank.color);
-    setRacerImage(el.rivalRacer, el.rivalRacerImage, dragStage.image, dragStage.name);
+    setRacerImage(el.rivalRacer, el.rivalRacerImage, race.opponents[0]?.image || dragStage.image, race.opponents[0]?.name || dragStage.name);
   }
   lastFrame = performance.now();
   el.raceMessage.className = "race-message";
-  el.raceMessage.textContent = `Race started. Press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
+  el.raceMessage.textContent = `Launch on green, then press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
   updateNitroHud();
+  updateGearshiftIndicator(false);
+  setLaunchPhase("red");
+  setTimeout(() => setLaunchPhase("yellow"), 1000);
+  setTimeout(() => setLaunchPhase("green"), 2000);
   requestAnimationFrame(updateRace);
 }
 
@@ -3194,35 +4100,58 @@ function updateRace(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
 
-  if (race.gear >= 6) {
-    const speedRatio = Math.min(1, race.playerSpeed / race.playerMaxSpeed);
-    const topGearPull = Math.max(0.16, 1 - speedRatio);
-    race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * race.accelPenalty * topGearPull * dt;
-    race.rpm = 0.74;
-  } else {
-    const gearDrag = 1 - (race.gear - 1) * 0.08;
-    const rpmPower = 0.52 + race.rpm * 0.72;
-    if (race.rpm > 0.86) {
-      race.accelPenalty = Math.max(0.42, race.accelPenalty - 0.34 * dt);
+  if (race.launchPhase === "red" || race.launchPhase === "yellow") {
+    drawRace();
+    requestAnimationFrame(updateRace);
+    return;
+  }
+
+  updateLaneTransition(now);
+  if (race.gear > 0) {
+    const launchBoost = race.launchBonusUntil > now ? race.launchBonus : 1;
+    const draftBoost = dragDraftBonus({ lane: race.playerLane, distance: race.playerDistance, speed: race.playerSpeed }, race.opponents || []);
+    race.draftBonus = draftBoost;
+    if (race.gear >= 6) {
+      const speedRatio = Math.min(1, race.playerSpeed / race.playerMaxSpeed);
+      const topGearPull = Math.max(0.16, 1 - speedRatio);
+      race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * race.accelPenalty * launchBoost * draftBoost * topGearPull * dt;
+      race.rpm = 0.74;
+    } else {
+      const gearDrag = 1 - (race.gear - 1) * 0.08;
+      const rpmPower = 0.52 + race.rpm * 0.72;
+      if (race.rpm > 0.86) {
+        race.accelPenalty = Math.max(0.42, race.accelPenalty - 0.34 * dt);
+      }
+      race.playerSpeed += race.playerAcceleration * race.playerPower * race.accelPenalty * launchBoost * draftBoost * gearDrag * rpmPower * dt;
+      race.rpm += (0.22 + race.playerSpeed / 260) * dt;
     }
-    race.playerSpeed += race.playerAcceleration * race.playerPower * race.accelPenalty * gearDrag * rpmPower * dt;
-    race.rpm += (0.22 + race.playerSpeed / 260) * dt;
+  } else {
+    race.playerSpeed = Math.max(0, race.playerSpeed * 0.985);
+    race.rpm = 0.18;
+    race.draftBonus = 1;
   }
   updateDragNitroTimers(dt);
-  updateRivalNitro(dt);
-  race.rivalSpeed += race.rivalAcceleration * (0.78 + Math.random() * 0.08) * dt;
+  updateOpponentLaneAI(dt);
+  (race.opponents || []).forEach((opponent) => {
+    updateOpponentNitro(opponent, dt);
+    const others = [{ lane: race.playerLane, distance: race.playerDistance, speed: race.playerSpeed }].concat((race.opponents || []).filter((item) => item !== opponent));
+    const draftBoost = dragDraftBonus(opponent, others);
+    opponent.speed += opponent.acceleration * (0.78 + Math.random() * 0.08) * draftBoost * dt;
+    const nitroScale = opponent.nitroActive ? dragNitroMultiplier : 1;
+    opponent.speed = Math.min(opponent.speed, opponent.maxSpeed * nitroScale);
+    opponent.distance += mphToMetersPerSecond(opponent.speed) * dt;
+  });
 
   const playerNitroScale = race.nitroActive ? dragNitroMultiplier : 1;
-  const rivalNitroScale = race.rivalNitroActive ? dragNitroMultiplier : 1;
-  const playerCap = (race.gear >= 6 ? race.playerMaxSpeed : race.playerMaxSpeed * (0.58 + race.gear * 0.15)) * playerNitroScale;
-  const rivalCap = race.rivalMaxSpeed * rivalNitroScale;
+  const playerCap = (race.gear >= 6 ? race.playerMaxSpeed : race.gear > 0 ? race.playerMaxSpeed * (0.58 + race.gear * 0.15) : 0) * playerNitroScale;
   race.playerSpeed = Math.min(race.playerSpeed, playerCap);
-  race.rivalSpeed = Math.min(race.rivalSpeed, rivalCap);
 
   race.playerDistance += mphToMetersPerSecond(race.playerSpeed) * dt;
-  race.rivalDistance += mphToMetersPerSecond(race.rivalSpeed) * dt;
+  syncPrimaryRivalFields();
+  race.roadScroll = (race.roadScroll || 0) - race.playerSpeed * dt * 10;
+  race.bgScroll = (race.bgScroll || 0) - race.playerSpeed * dt * 3;
 
-  if (race.gear < 6 && race.rpm >= 1) {
+  if (race.gear > 0 && race.gear < 6 && race.rpm >= 1) {
     if (!race.overheatLatched) {
       race.overheatCount += 1;
       race.overheatLatched = true;
@@ -3238,8 +4167,9 @@ function updateRace(now) {
 
   drawRace();
 
-  if (race.playerDistance >= race.target || race.rivalDistance >= race.target) {
-    finishRace(race.playerDistance >= race.rivalDistance);
+  const bestOpponentDistance = Math.max(0, ...(race.opponents || []).map((opponent) => opponent.distance));
+  if (race.playerDistance >= race.target || bestOpponentDistance >= race.target) {
+    finishRace(race.playerDistance >= bestOpponentDistance);
     return;
   }
 
@@ -3248,6 +4178,10 @@ function updateRace(now) {
 
 function shift() {
   if (!race?.active || race.finished) return;
+  if (race.gear === 0) {
+    launchDragPlayer();
+    return;
+  }
   if (race.gear >= 6) {
     el.shiftReadout.textContent = "Top";
     return;
@@ -3283,6 +4217,7 @@ function shift() {
     race.topGearBoost = topGearBoostForShift(label);
   }
   race.gear = nextGear;
+  updateGearshiftIndicator(true);
   race.rpm = race.gear === 6 ? 0.74 : Math.max(0.22, 0.34 - race.gear * 0.015);
   el.shiftReadout.textContent = label;
   updateNitroHud();
@@ -3294,37 +4229,35 @@ function updateDragNitroTimers(dt) {
     race.nitroTimer = Math.max(0, race.nitroTimer - dt);
     race.nitroActive = race.nitroTimer > 0;
   }
-  if (race.rivalNitroTimer > 0) {
-    race.rivalNitroTimer = Math.max(0, race.rivalNitroTimer - dt);
-    race.rivalNitroActive = race.rivalNitroTimer > 0;
-  }
-  if (race.rivalNitroDelay > 0) {
-    race.rivalNitroDelay = Math.max(0, race.rivalNitroDelay - dt);
-  }
 }
 
-function updateRivalNitro(dt) {
-  race.rivalShiftTimer -= dt;
-  if (race.rivalShiftTimer <= 0 && race.rivalNitroCharge < 4) {
-    const cleanShiftChance = 0.42 + race.rivalNitroSkill * 0.5;
-    if (Math.random() < cleanShiftChance) {
-      race.rivalNitroCharge = Math.min(4, race.rivalNitroCharge + 1);
-    }
-    race.rivalShiftTimer = Math.max(0.62, 1.22 - race.rivalNitroSkill * 0.42 + Math.random() * 0.22);
+function updateOpponentNitro(opponent, dt) {
+  if (opponent.nitroTimer > 0) {
+    opponent.nitroTimer = Math.max(0, opponent.nitroTimer - dt);
+    opponent.nitroActive = opponent.nitroTimer > 0;
   }
-  if (race.rivalNitroUsed || race.rivalNitroCharge < 4 || race.rivalNitroActive || race.rivalNitroDelay > 0) return;
-  const progress = race.rivalDistance / race.target;
-  const behind = race.rivalDistance < race.playerDistance;
-  const panicUse = behind && progress > 0.36 + (1 - race.rivalNitroSkill) * 0.25;
-  const smartUse = progress > 0.58 - race.rivalNitroSkill * 0.18;
-  const badUse = Math.random() < (0.004 + race.rivalNitroSkill * 0.002);
+  if (opponent.nitroDelay > 0) opponent.nitroDelay = Math.max(0, opponent.nitroDelay - dt);
+  opponent.shiftTimer -= dt;
+  if (opponent.shiftTimer <= 0 && opponent.nitroCharge < 4) {
+    const cleanShiftChance = 0.42 + opponent.nitroSkill * 0.5;
+    if (Math.random() < cleanShiftChance) {
+      opponent.nitroCharge = Math.min(4, opponent.nitroCharge + 1);
+    }
+    opponent.shiftTimer = Math.max(0.62, 1.22 - opponent.nitroSkill * 0.42 + Math.random() * 0.22);
+  }
+  if (opponent.nitroUsed || opponent.nitroCharge < 4 || opponent.nitroActive || opponent.nitroDelay > 0) return;
+  const progress = opponent.distance / race.target;
+  const behind = opponent.distance < race.playerDistance;
+  const panicUse = behind && progress > 0.36 + (1 - opponent.nitroSkill) * 0.25;
+  const smartUse = progress > 0.58 - opponent.nitroSkill * 0.18;
+  const badUse = Math.random() < (0.004 + opponent.nitroSkill * 0.002);
   if (panicUse || smartUse || badUse) {
-    useRivalNitro();
+    useOpponentNitro(opponent);
   }
 }
 
 function useNitro() {
-  if (!race?.active || race.finished || race.nitroCharge < 4 || race.nitroActive) return;
+  if (!race?.active || race.finished || race.gear === 0 || race.nitroCharge < 4 || race.nitroActive) return;
   race.nitroCharge = 0;
   race.nitroActive = true;
   race.nitroTimer = dragNitroDuration;
@@ -3349,13 +4282,13 @@ function showToast(title, message) {
   }, 3200);
 }
 
-function useRivalNitro() {
-  race.rivalNitroCharge = 0;
-  race.rivalNitroActive = true;
-  race.rivalNitroUsed = true;
-  race.rivalNitroTimer = dragNitroDuration;
-  race.rivalNitroDelay = 2.2 + (1 - race.rivalNitroSkill) * 1.2;
-  race.rivalSpeed = Math.min(race.rivalSpeed * dragNitroMultiplier, race.rivalMaxSpeed * dragNitroMultiplier);
+function useOpponentNitro(opponent) {
+  opponent.nitroCharge = 0;
+  opponent.nitroActive = true;
+  opponent.nitroUsed = true;
+  opponent.nitroTimer = dragNitroDuration;
+  opponent.nitroDelay = 2.2 + (1 - opponent.nitroSkill) * 1.2;
+  opponent.speed = Math.min(opponent.speed * dragNitroMultiplier, opponent.maxSpeed * dragNitroMultiplier);
 }
 
 function updateNitroHud() {
@@ -3384,6 +4317,9 @@ function finishRace(playerWon) {
   race.finished = true;
   race.nitroActive = false;
   race.rivalNitroActive = false;
+  (race.opponents || []).forEach((opponent) => {
+    opponent.nitroActive = false;
+  });
   drawRace();
   const finishedRace = race;
   const isGauntlet = Boolean(finishedRace.gauntlet);
@@ -3494,6 +4430,9 @@ function failDragRace(title) {
   race.finished = true;
   race.nitroActive = false;
   race.rivalNitroActive = false;
+  (race.opponents || []).forEach((opponent) => {
+    opponent.nitroActive = false;
+  });
   drawRace();
   const failedRace = race;
   const isGauntlet = Boolean(failedRace.gauntlet);
@@ -3594,6 +4533,7 @@ function clearRaceResultPopups() {
   document.querySelectorAll(".race-result-popup").forEach((node) => node.remove());
   if (el.betaResults) el.betaResults.hidden = true;
   if (el.beta3dResults) el.beta3dResults.hidden = true;
+  window.setTimeout(playQueuedBondScene, 80);
 }
 
 function animateCountUpNumbers(root) {
@@ -4270,7 +5210,7 @@ function renderTutorialSceneOptions() {
 }
 
 function activateGodMode() {
-  if (el.godCode.value.trim() !== "Corey") {
+  if (!godModePassword || el.godCode.value.trim() !== godModePassword) {
     el.godCodeError.textContent = "Incorrect code.";
     el.godCode.focus();
     return;
@@ -4369,18 +5309,69 @@ function carMarkupForEvolution(carId, evolutionIndex, role = "display") {
 }
 
 function drawRace() {
-  const maxTravel = Math.max(80, document.querySelector(".track").clientWidth - 170);
-  const playerProgress = Math.min(1, race.playerDistance / race.target);
-  const rivalProgress = Math.min(1, race.rivalDistance / race.target);
-  el.playerRacer.style.transform = `translateX(${-playerProgress * maxTravel}px)`;
-  el.rivalRacer.style.transform = `translateX(${-rivalProgress * maxTravel}px)`;
+  const trackWidth = Math.max(420, el.dragTrack?.clientWidth || 720);
+  const baseX = Math.round(trackWidth * 0.3);
+  const metersToPx = Math.max(2.4, trackWidth / 120);
+  const playerLaneValue = race.laneTransition
+    ? race.laneTransition.from + (race.laneTransition.to - race.laneTransition.from) * Math.min(1, (performance.now() - race.laneTransition.startTime) / 400)
+    : race.playerLane;
+  const playerX = baseX;
+  const playerY = dragLaneTop(playerLaneValue);
+  const primaryOpponent = race.opponents?.[0];
+  if (el.dragTrack) {
+    el.dragTrack.style.setProperty("--drag-bg-image", `url("${race.backgroundImage || "assets/race/dragbg-academy.png"}")`);
+    el.dragTrack.style.setProperty("--drag-bg-x", `${Math.round(race.bgScroll || 0)}px`);
+    el.dragTrack.style.setProperty("--drag-road-x", `${Math.round(race.roadScroll || 0)}px`);
+    el.dragTrack.classList.toggle("chromatic-vignette", Boolean(race.nitroActive));
+  }
+  el.playerDragLane.style.top = playerY;
+  el.playerRacer.style.transform = `translateX(${playerX}px)`;
+  el.playerRacer.classList.toggle("drafting", race.draftBonus > 1.01);
+  if (primaryOpponent) {
+    const laneValue = renderedLaneValue(primaryOpponent);
+    const x = baseX + (primaryOpponent.distance - race.playerDistance) * metersToPx;
+    el.rivalDragLane.style.top = dragLaneTop(laneValue);
+    el.rivalDragLane.querySelector(".lane-label").textContent = primaryOpponent.name;
+    el.rivalRacer.style.transform = `translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px)`;
+    if (el.rivalRacerImage.getAttribute("src") !== primaryOpponent.image) {
+      setRacerImage(el.rivalRacer, el.rivalRacerImage, primaryOpponent.image, primaryOpponent.name);
+    }
+    el.rivalRacer.classList.toggle("nitro-active", Boolean(primaryOpponent.nitroActive));
+    el.rivalDragLane.hidden = false;
+  } else {
+    el.rivalDragLane.hidden = true;
+  }
+  if (el.dragExtraOpponents) {
+    el.dragExtraOpponents.innerHTML = (race.opponents || []).slice(1).map((opponent) => {
+      const laneValue = renderedLaneValue(opponent);
+      const x = baseX + (opponent.distance - race.playerDistance) * metersToPx;
+      return `
+        <div class="lane drag-lane generated-lane" style="top:${dragLaneTop(laneValue)}">
+          <span class="lane-label">${opponent.name}</span>
+          <div class="car rival-car has-image ${opponent.nitroActive ? "nitro-active" : ""}" style="--car-color:#f25f5c; transform:translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px)">
+            <img class="car-image" src="${opponent.image}" alt="${opponent.name}" onerror="this.closest('.car')?.classList.remove('has-image')" onload="this.closest('.car')?.classList.add('has-image')">
+            <span class="car-glow"></span>
+            <span class="car-body"></span>
+            <span class="wheel front"></span>
+            <span class="wheel rear"></span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
   el.playerRacer.classList.toggle("nitro-active", Boolean(race.nitroActive));
-  el.rivalRacer.classList.toggle("nitro-active", Boolean(race.rivalNitroActive));
   el.mph.textContent = `${Math.round(race.playerSpeed)} MPH`;
-  el.gear.textContent = race.gear;
+  el.gear.textContent = race.gear || "P";
   el.distance.textContent = `${Math.floor(Math.min(race.playerDistance, race.target))} m`;
   el.tachFill.style.width = `${Math.round(race.rpm * 100)}%`;
+  updateGearshiftIndicator(false);
 
+  if (race.gear === 0) {
+    el.shiftButton.classList.remove("pulse");
+    el.shiftReadout.textContent = race.launchPhase === "green" ? "Launch" : "Park";
+    updateNitroHud();
+    return;
+  }
   if (race.gear >= 6) {
     el.shiftButton.classList.remove("pulse");
     el.shiftReadout.textContent = "Top";
@@ -4820,6 +5811,7 @@ function showView(view) {
     storyReplayOpen = false;
     modeFlow.story = state.storyCarChosen ? "next" : "car";
     state.selectedStoryCity = Math.max(0, Math.min(state.selectedStoryCity || 0, highestUnlockedStoryCityIndex()));
+    advanceTunerRankForCityEntry(storyCities[state.selectedStoryCity]?.id);
     state.selectedCampaign = firstPlayableStoryLevelForCity(state.selectedStoryCity)?.campaignIndex ?? state.selectedCampaign;
     saveState();
     render();

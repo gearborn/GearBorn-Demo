@@ -43,6 +43,39 @@ function sanitizeState() {
   state.raceMedals = state.raceMedals && typeof state.raceMedals === "object" ? state.raceMedals : {};
   state.microObjectiveProgress = state.microObjectiveProgress && typeof state.microObjectiveProgress === "object" ? state.microObjectiveProgress : {};
   state.visitedStoryCities = state.visitedStoryCities && typeof state.visitedStoryCities === "object" ? state.visitedStoryCities : {};
+  state.tunerRank = state.tunerRank && typeof state.tunerRank === "object" ? state.tunerRank : {};
+  state.tunerRank.playerRank = Number.isFinite(Number(state.tunerRank.playerRank)) ? Math.max(1, Math.floor(Number(state.tunerRank.playerRank))) : null;
+  state.tunerRank.defeatedBossIds = Array.isArray(state.tunerRank.defeatedBossIds)
+    ? state.tunerRank.defeatedBossIds.filter((id, index, list) => bossChallengeBosses.some((boss) => boss.id === id) && list.indexOf(id) === index)
+    : [];
+  state.tunerRank.bossesFirstSeen = Array.isArray(state.tunerRank.bossesFirstSeen)
+    ? state.tunerRank.bossesFirstSeen.filter((id, index, list) => storyCities.some((city) => city.id === id) && list.indexOf(id) === index)
+    : [];
+  state.tunerRank.rivalRank = Number.isFinite(Number(state.tunerRank.rivalRank)) ? Math.max(1, Math.floor(Number(state.tunerRank.rivalRank))) : null;
+  state.convoy = state.convoy && typeof state.convoy === "object" ? state.convoy : {};
+  state.convoy.available = state.convoy.available && typeof state.convoy.available === "object" ? state.convoy.available : {};
+  state.convoy.completed = state.convoy.completed && typeof state.convoy.completed === "object" ? state.convoy.completed : {};
+  Object.keys(convoyDefinitions || {}).forEach((id) => {
+    state.convoy.available[id] = Boolean(state.convoy.available[id]);
+    state.convoy.completed[id] = Boolean(state.convoy.completed[id]);
+  });
+  state.convoy.inProgress = state.convoy.inProgress && typeof state.convoy.inProgress === "object" ? state.convoy.inProgress : null;
+  state.convoy.loadouts = Array.isArray(state.convoy.loadouts) ? state.convoy.loadouts.slice(0, 3) : [];
+  while (state.convoy.loadouts.length < 3) state.convoy.loadouts.push(null);
+  state.convoy.loadouts = state.convoy.loadouts.map((loadout, index) => {
+    if (!loadout || typeof loadout !== "object") return null;
+    const carIds = Array.isArray(loadout.carIds) ? loadout.carIds.filter((carId) => cars.some((car) => car.id === carId)).slice(0, 3) : [];
+    return { name: String(loadout.name || `Loadout ${index + 1}`).slice(0, 32), carIds };
+  });
+  state.convoy.loadoutsUnlocked = Boolean(state.convoy.loadoutsUnlocked || Object.values(state.convoy.available).some(Boolean));
+  state.bondScenesViewed = state.bondScenesViewed && typeof state.bondScenesViewed === "object" ? state.bondScenesViewed : {};
+  state.favoriteCarIds = Array.isArray(state.favoriteCarIds) ? state.favoriteCarIds.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index) : [];
+  state.recentCarUses = Array.isArray(state.recentCarUses) ? state.recentCarUses
+    .filter((use) => use && cars.some((car) => car.id === use.carId))
+    .map((use) => ({ carId: use.carId, timestamp: Number(use.timestamp) || 0 }))
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 10) : [];
+  state.garageViewMode = state.garageViewMode === "detailed" ? "detailed" : "compact";
   state.winStreak = Math.max(0, Math.floor(Number(state.winStreak) || 0));
   const artVanFormCount = cars.find((car) => car.id === "art-van")?.evolutions.length || 0;
   state.unlockedArtVanForms = Array.isArray(state.unlockedArtVanForms)
@@ -127,6 +160,7 @@ function sanitizeState() {
   if (!distances.some((distance) => distance.meters === state.selectedDistance)) {
     state.selectedDistance = distances[0].meters;
   }
+  state.selectedDragOpponents = Math.max(1, Math.min(3, Number(state.selectedDragOpponents) || 1));
   if (!bossChallengeBosses.some((boss) => boss.id === state.selectedBoss)) state.selectedBoss = bossChallengeBosses[0].id;
   if (!bossChallengeBosses.some((boss) => boss.id === state.selectedBattleBoss)) state.selectedBattleBoss = bossChallengeBosses[0].id;
   state.highestBossIndex = Math.min(state.highestBossIndex || 0, bossChallengeBosses.length - 1);
@@ -255,6 +289,7 @@ function sanitizeState() {
 
 let state = loadState();
 sanitizeState();
+window.setConvoyAvailable = setConvoyAvailable;
 
 // ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────
 document.querySelector("#forge-back-btn")?.addEventListener("click", closeForge);

@@ -23,6 +23,21 @@ const modeFlow = {
   story: "car"
 };
 let battleState = null;
+let expandedGarageCardIds = new Set();
+const carPickerState = {
+  target: "",
+  highlighted: "",
+  search: "",
+  filters: {
+    favorites: false,
+    recent: false,
+    ready: false,
+    types: []
+  },
+  sort: "level-desc"
+};
+let pendingBondSceneQueue = [];
+let activeBondScene = null;
 let storyReplayOpen = false;
 const customTracksKey = "gearborn_custom_tracks";
 const builderGridSize = 12;
@@ -177,6 +192,7 @@ const el = {
   betaCountdown: document.querySelector("#beta-countdown"),
   betaResults: document.querySelector("#beta-results"),
   betaFinalTime: document.querySelector("#beta-final-time"),
+  garageLoadoutsOpen: document.querySelector("#garage-loadouts-open"),
   builderMenu: document.querySelector("#builder-menu"),
   builderEditor: document.querySelector("#builder-editor"),
   builderLoadPanel: document.querySelector("#builder-load-panel"),
@@ -203,6 +219,21 @@ const el = {
   builderModalActions: document.querySelector("#builder-modal-actions"),
   campaignList: document.querySelector("#campaign-list"),
   storyCityMap: document.querySelector("#story-city-map"),
+  tunerRankBadge: document.querySelector("#tuner-rank-badge"),
+  tunerRankOpen: document.querySelector("#tuner-rank-open"),
+  tunerRankList: document.querySelector("#tuner-rank-list"),
+  tunerRankBack: document.querySelector("#tuner-rank-back"),
+  convoyEntryNode: document.querySelector("#convoy-entry-node"),
+  convoyButtons: document.querySelector("#convoy-buttons"),
+  convoyTest: document.querySelector("#convoy-test"),
+  convoyTitle: document.querySelector("#convoy-title"),
+  convoySummary: document.querySelector("#convoy-summary"),
+  convoyStageList: document.querySelector("#convoy-stage-list"),
+  convoyBack: document.querySelector("#convoy-back"),
+  convoyLoadoutsOpen: document.querySelector("#convoy-loadouts-open"),
+  convoyLoadoutsView: document.querySelector("#convoy-loadouts-view"),
+  convoyLoadoutSlots: document.querySelector("#convoy-loadout-slots"),
+  convoyLoadoutsBack: document.querySelector("#convoy-loadouts-back"),
   storyCitySelect: document.querySelector("#story-city-select"),
   changeStoryCar: document.querySelector("#change-story-car"),
   storyCityIcon: document.querySelector("#story-city-icon"),
@@ -238,6 +269,21 @@ const el = {
   vindexPlate: document.querySelector("#vindex-plate"),
   vindexFilterButtons: document.querySelector("#vindex-filter-buttons"),
   vindexProgress: document.querySelector("#vindex-progress"),
+  vindexMemoriesButton: document.querySelector("#vindex-memories-button"),
+  vindexMemoriesPanel: document.querySelector("#vindex-memories-panel"),
+  bondSceneModal: document.querySelector("#bond-scene-modal"),
+  bondScenePortrait: document.querySelector("#bond-scene-portrait"),
+  bondSceneTitle: document.querySelector("#bond-scene-title"),
+  bondSceneText: document.querySelector("#bond-scene-text"),
+  bondSceneContinue: document.querySelector("#bond-scene-continue"),
+  carPickerModal: document.querySelector("#car-picker-modal"),
+  carPickerClose: document.querySelector("#car-picker-close"),
+  carPickerSearch: document.querySelector("#car-picker-search"),
+  carPickerFilters: document.querySelector("#car-picker-filters"),
+  carPickerSort: document.querySelector("#car-picker-sort"),
+  carPickerGrid: document.querySelector("#car-picker-grid"),
+  carPickerSummary: document.querySelector("#car-picker-summary"),
+  carPickerConfirm: document.querySelector("#car-picker-confirm"),
   profileList: document.querySelector("#profile-list"),
   profileArt: document.querySelector("#profile-art"),
   profileCarArt: document.querySelector("#profile-car-art"),
@@ -319,6 +365,14 @@ const el = {
   rivalRacerImage: document.querySelector("#rival-racer-image"),
   raceMessage: document.querySelector("#race-message"),
   shiftButton: document.querySelector("#shift-button"),
+  dragOpponentCount: document.querySelector("#drag-opponent-count"),
+  dragLaneUp: document.querySelector("#drag-lane-up"),
+  dragLaneDown: document.querySelector("#drag-lane-down"),
+  gearshiftIndicator: document.querySelector("#gearshift-indicator"),
+  dragLaunchLights: document.querySelector("#drag-launch-lights"),
+  dragExtraOpponents: document.querySelector("#drag-extra-opponents"),
+  rivalDragLane: document.querySelector("#rival-drag-lane"),
+  playerDragLane: document.querySelector("#player-drag-lane"),
   nitroFill: document.querySelector("#nitro-fill"),
   nitroReadout: document.querySelector("#nitro-readout"),
   nitroButton: document.querySelector("#nitro-button"),
@@ -400,4 +454,3 @@ let embeddedCampaignView = null;
 let pendingBossRaceStart = null;
 let pendingCityUnlock = null;
 let pendingCityWelcome = null;
-

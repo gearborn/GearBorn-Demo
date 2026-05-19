@@ -3564,14 +3564,14 @@ const bosses = [
 const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/story/unlock-hornula1-topdown.png", portrait: "assets/bosses/racer-alpha-helmet.png", unmaskedPortrait: "assets/bosses/racer-alpha.png", headshot: "assets/bosses/headshot-racer-alpha.png" };
 const bossChallengeBosses = bosses.concat(finalBoss);
 const campaignDragStages = [
-  { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/rival-bananachi-race.png" },
-  { rankKey: "D", name: "Beardo", xp: 150, power: 1.05, image: "assets/cars/rival-beardo-race.png" },
-  { rankKey: "D", name: "Boates", xp: 190, power: 1.16, image: "assets/cars/whale-boates-race.png" },
-  { rankKey: "C", name: "Manstrocity", xp: 250, power: 1.3, image: "assets/cars/rival-manstrocity-race.png" },
-  { rankKey: "B", name: "Sponsore", xp: 330, power: 1.5, image: "assets/cars/rival-sponsore-race.png" },
-  { rankKey: "B", name: "Tookerjaw", xp: 410, power: 1.66, image: "assets/cars/pickup-tookerjaw-race.png" },
-  { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/rival-crusadome-race.png" },
-  { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png" }
+  { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/rival-bananachi-race.png", opponents: [{ name: "Bananachi", image: "assets/cars/rival-bananachi-race.png", power: 0.92 }] },
+  { rankKey: "D", name: "Beardo", xp: 150, power: 1.05, image: "assets/cars/rival-beardo-race.png", opponents: [{ name: "Beardo", image: "assets/cars/rival-beardo-race.png", power: 1.05 }] },
+  { rankKey: "D", name: "Boates", xp: 190, power: 1.16, image: "assets/cars/whale-boates-race.png", opponents: [{ name: "Boates", image: "assets/cars/whale-boates-race.png", power: 1.16 }, { name: "Swampagne", image: "assets/cars/florida-gator-swampagne-race.png", power: 1.13 }] },
+  { rankKey: "C", name: "Manstrocity", xp: 250, power: 1.3, image: "assets/cars/rival-manstrocity-race.png", opponents: [{ name: "Manstrocity", image: "assets/cars/rival-manstrocity-race.png", power: 1.3 }, { name: "Orbitide", image: "assets/cars/dolphin-orbitide-race.png", power: 1.24 }] },
+  { rankKey: "B", name: "Sponsore", xp: 330, power: 1.5, image: "assets/cars/rival-sponsore-race.png", opponents: [{ name: "Sponsore", image: "assets/cars/rival-sponsore-race.png", power: 1.5 }, { name: "Bair", image: "assets/cars/mustache-bair-race.png", power: 1.46 }, { name: "Brrap", image: "assets/cars/penguin-brrap-race.png", power: 1.43 }] },
+  { rankKey: "B", name: "Tookerjaw", xp: 410, power: 1.66, image: "assets/cars/pickup-tookerjaw-race.png", opponents: [{ name: "Lopstar", image: "assets/cars/rabbit-lopstar-race.png", power: 1.58 }, { name: "Tookerjaw", image: "assets/cars/pickup-tookerjaw-race.png", power: 1.66 }] },
+  { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/rival-crusadome-race.png", opponents: [{ name: "Crusadome", image: "assets/cars/rival-crusadome-race.png", power: 1.85 }, { name: "Barracobain", image: "assets/cars/fish-barracobain-race.png", power: 1.78 }, { name: "OlChap", image: "assets/cars/butcher-olchap-race.png", power: 1.75 }] },
+  { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png", opponents: [{ name: "Hornula1", image: "assets/cars/rival-hornula1-race.png", power: 2.12 }] }
 ];
 const pinkSlipRacePlan = {
   0: { carId: "pig",                rankKey: "D", xp: 180, power: 0.88, distance: 400 },
@@ -3591,13 +3591,24 @@ const rivalRacePlan = {
 function pinkSlipStageFor(plan) {
   const car = cars.find((item) => item.id === plan.carId);
   const form = car.evolutions[0];
+  const specialOpponents = {
+    "karate-cow": ["Udderlee", "Moosan", "Grandmooster"].map((name, index) => {
+      const evo = car.evolutions[index] || form;
+      return { name, image: imageFor(evo, "race"), power: plan.power + index * 0.08 };
+    }),
+    frog: ["Rivvir", "Croakra", "Kermajesty"].map((name, index) => {
+      const evo = car.evolutions[index] || form;
+      return { name, image: imageFor(evo, "race"), power: plan.power + index * 0.08 };
+    })
+  };
   return {
     ...plan,
     type: "pink-slip",
     name: form.name,
     title: `Pink Slip Race: ${form.name}`,
     image: imageFor(form, "race"),
-    displayImage: imageFor(form, "display")
+    displayImage: imageFor(form, "display"),
+    opponents: specialOpponents[plan.carId] || [{ name: form.name, image: imageFor(form, "race"), power: plan.power }]
   };
 }
 const campaignLevels = bosses.flatMap((boss, index) => {
@@ -4206,3 +4217,91 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   country: "Other",
   bio: profileBios.ashley
 }], otherNpcProfiles);
+
+const tunerRankBossOrder = bosses.slice(0, 7);
+const tunerRankBaseList = [{
+  rank: 1,
+  name: "Pallavi",
+  headshot: "assets/characters/headshot-pallavi.png",
+  isBoss: true,
+  bossId: "pallavi"
+}].concat(tunerRankBossOrder.slice().reverse().map((boss, index) => ({
+  rank: index + 2,
+  name: boss.name,
+  headshot: boss.headshot || boss.unmaskedPortrait || boss.portrait,
+  isBoss: true,
+  bossId: boss.id,
+  cityId: storyCities.find((city) => city.bossIndex === bosses.findIndex((item) => item.id === boss.id))?.id || ""
+})), [{
+  rank: 9,
+  name: "Your Rival",
+  headshot: "assets/characters/headshot-cha-cha.png",
+  isRival: true,
+  rivalId: "dynamic"
+}]).concat(racerProfiles
+  .filter((profile) => profile.id && !tuners.some((tuner) => tuner.id === profile.id) && !bossChallengeBosses.some((boss) => boss.id === profile.id))
+  .filter((profile, index, list) => list.findIndex((item) => item.id === profile.id) === index)
+  .map((profile, index) => ({
+    rank: index + 10,
+    name: profile.name,
+    headshot: profile.headshot || profile.image,
+    profileId: profile.id
+  })));
+
+const convoyDefinitions = {
+  tyree: {
+    id: "tyree",
+    name: "Tyree's Convoy",
+    sponsor: "Dr. Tyree",
+    headshot: "assets/characters/headshot-dr-tyree.png",
+    icon: "assets/medallions/medallion-gauntlet-black.png",
+    stages: [
+      // TODO swap IDs if dedicated form-level convoy cars are split later.
+      { type: "drag", opponentCarId: "sorority-elephant", opponentName: "Tyree's Sororitrunk" },
+      { type: "battle", opponentCarId: "training-car", opponentName: "Tyree's Tutorque" },
+      { type: "h2h", opponentCarId: "metal-snake", opponentName: "Tyree's Snaytan" }
+    ],
+    rewards: {
+      firstWin: { sprox: 5000, parts: ["legendary-engine"], medallions: 1 },
+      replayWin: { sprox: 1500 }
+    }
+  },
+  ashley: {
+    id: "ashley",
+    name: "Ashley's Convoy",
+    sponsor: "Ashley Racem",
+    headshot: "assets/characters/headshot-ashley.png",
+    icon: "assets/medallions/medallion-gauntlet-black.png",
+    stages: [
+      { type: "drag", opponentCarId: "skater-koala", opponentName: "Ashley's Koaster" },
+      { type: "battle", opponentCarId: "tiger-cart", opponentName: "Ashley's Notar-O" },
+      { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Ashley's Astromarino" }
+    ],
+    rewards: {
+      firstWin: { sprox: 5000, parts: ["legendary-handling"], medallions: 1 },
+      replayWin: { sprox: 1500 }
+    }
+  }
+};
+
+const convoyDialogue = {
+  tyree: {
+    intro: "[CONVOY_INTRO_PLACEHOLDER_tyree]",
+    win: "[CONVOY_WIN_PLACEHOLDER_tyree]",
+    loseTyree: "[CONVOY_LOSE_TYREE_PLACEHOLDER]",
+    loseAshley: "[CONVOY_LOSE_ASHLEY_PLACEHOLDER]"
+  },
+  ashley: {
+    intro: "[CONVOY_INTRO_PLACEHOLDER_ashley]",
+    win: "[CONVOY_WIN_PLACEHOLDER_ashley]",
+    loseTyree: "[CONVOY_LOSE_TYREE_PLACEHOLDER]",
+    loseAshley: "[CONVOY_LOSE_ASHLEY_PLACEHOLDER]"
+  }
+};
+
+const bondSceneThresholds = [5, 10, 25, 50];
+const bondScenes = Object.fromEntries(cars.map((car) => [car.id, Object.fromEntries(bondSceneThresholds.map((threshold) => [threshold, {
+  id: `${car.id}-bond-${threshold}`,
+  placeholder: true,
+  lines: []
+}]))]));

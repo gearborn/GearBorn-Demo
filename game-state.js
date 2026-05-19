@@ -370,6 +370,11 @@ const audioCueAssets = {
 };
 
 const medalPriority = { none: 0, bronze: 1, silver: 2, gold: 3 };
+const godModePassword = String(
+  window.GEARBORN_GOD_MODE_CODE
+  || document.querySelector('meta[name="gearborn-god-mode-code"]')?.content
+  || ""
+);
 
 function reduceMotionEnabled() {
   return Boolean(gameFeatureConfig.reduceMotion || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
@@ -500,6 +505,7 @@ const defaultState = {
   selectedCar: cars[0].id,
   selectedRank: "E",
   selectedDistance: 400,
+  selectedDragOpponents: 1,
   highestRankIndex: 0,
   settings: {
     difficulty: "normal",
@@ -550,6 +556,19 @@ const defaultState = {
   highestCampaignIndex: 0,
   selectedStoryCity: 0,
   visitedStoryCities: {},
+  tunerRank: {
+    playerRank: null,
+    defeatedBossIds: [],
+    bossesFirstSeen: [],
+    rivalRank: null
+  },
+  convoy: {
+    available: { tyree: false, ashley: false },
+    completed: { tyree: false, ashley: false },
+    inProgress: null,
+    loadouts: [null, null, null],
+    loadoutsUnlocked: false
+  },
   playerGauntletProgress: {},
   activeGauntlet: null,
   consecutiveLosses: 0,
@@ -559,6 +578,10 @@ const defaultState = {
   microObjectiveProgress: {},
   betaTimeTrials: {},
   bond: {},
+  bondScenesViewed: {},
+  favoriteCarIds: [],
+  recentCarUses: [],
+  garageViewMode: "compact",
   partsInventory: Object.fromEntries(partVariants.map((part) => [part.key, 0])),
   equippedParts: {},
   achievements: {},

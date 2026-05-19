@@ -696,18 +696,18 @@ body:not(.mode-active) .nav {
 .menu-card:hover,
 .menu-utility:hover,
 .solo-card:hover {
-  transform: translateY(-5px) scale(1.025);
+  transform: translateY(-4px) scale(1.015);
   border-color: rgba(255, 200, 87, 0.58);
   box-shadow:
     0 16px 38px rgba(0, 0, 0, 0.42),
     0 32px 80px rgba(0, 0, 0, 0.3),
-    0 0 32px rgba(255, 200, 87, 0.14),
+    0 0 24px rgba(255, 200, 87, 0.11),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .menu-card:hover::before {
   opacity: 1;
-  transform: scale(1.015);
+  transform: scale(1.008);
 }
 
 .menu-card:hover::after {
@@ -2169,15 +2169,15 @@ body:not(.mode-active) .nav {
 }
 
 .story-map-node.medal-frame-gold .story-node-medal-wrap {
-  box-shadow: 0 0 0 3px #ffd65a, 0 0 22px rgba(255, 214, 90, 0.56);
+  box-shadow: 0 0 0 3px #ffd65a, 0 0 18px rgba(255, 214, 90, 0.44);
 }
 
 .story-map-node.medal-frame-silver .story-node-medal-wrap {
-  box-shadow: 0 0 0 3px #d8e1ec, 0 0 20px rgba(216, 225, 236, 0.42);
+  box-shadow: 0 0 0 3px #d8e1ec, 0 0 16px rgba(216, 225, 236, 0.34);
 }
 
 .story-map-node.medal-frame-bronze .story-node-medal-wrap {
-  box-shadow: 0 0 0 3px #cd8c52, 0 0 20px rgba(205, 140, 82, 0.42);
+  box-shadow: 0 0 0 3px #cd8c52, 0 0 16px rgba(205, 140, 82, 0.34);
 }
 
 .story-node-icon {
@@ -3307,9 +3307,9 @@ small {
   left: 18px;
   bottom: 18px;
   z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
-  max-width: min(430px, calc(50% - 54px));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(116px, 1fr));
+  max-width: min(360px, calc(50% - 54px));
   gap: 10px;
 }
 
@@ -3318,17 +3318,19 @@ small {
   align-items: center;
   gap: 8px;
   min-height: 46px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 8px;
   color: #fff;
-  font-weight: 1000;
+  font-size: 0.82rem;
+  font-weight: 900;
   text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .battle-action img {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 
@@ -3340,12 +3342,30 @@ small {
   background: linear-gradient(135deg, #0f4cff, #24c6ff);
 }
 
+.battle-action.dodge {
+  background: linear-gradient(135deg, #ffd15a, #f7a928);
+  color: #231606;
+}
+
+.battle-action.sneak {
+  background: linear-gradient(135deg, #0a7d3b, #6ee7a8);
+  color: #04150b;
+}
+
+.battle-action.rev {
+  background: linear-gradient(135deg, #5b0b12, #d32638);
+}
+
 .battle-action.special {
   background: linear-gradient(135deg, #35115f, #8737ff);
 }
 
 .battle-action:disabled {
   opacity: 0.45;
+}
+
+.battle-action.locked-turn {
+  filter: grayscale(0.35);
 }
 
 .battle-next {
@@ -3832,8 +3852,62 @@ small {
   border-bottom: 1px solid var(--line);
 }
 
+.track.drag-side-camera {
+  height: 390px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #111827;
+}
+
+.drag-bg-layer,
+.drag-road-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.drag-bg-layer {
+  z-index: 0;
+  top: 0;
+  height: 62%;
+  background-image: var(--drag-bg-image, url("assets/race/dragbg-academy.png"));
+  background-repeat: repeat-x;
+  background-position: var(--drag-bg-x, 0px) center;
+  background-size: auto 100%;
+}
+
+.drag-road-layer {
+  z-index: 1;
+  bottom: 0;
+  height: 58%;
+  background-image: url("assets/race/road-strip.png");
+  background-repeat: repeat-x;
+  background-position: var(--drag-road-x, 0px) bottom;
+  background-size: auto 100%;
+}
+
+.drag-side-camera::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at center, transparent 48%, rgba(4, 7, 16, 0.56) 100%),
+    linear-gradient(90deg, rgba(82, 199, 255, 0.12), transparent 18% 82%, rgba(242, 95, 92, 0.13));
+  mix-blend-mode: screen;
+  transition: opacity 160ms ease;
+}
+
+.drag-side-camera.chromatic-vignette::after {
+  opacity: 1;
+}
+
 .finish-line {
   position: absolute;
+  z-index: 2;
   top: 0;
   left: 32px;
   width: 13px;
@@ -3848,10 +3922,23 @@ small {
   height: 50%;
 }
 
+.drag-lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 72px;
+  transition: top 0.38s cubic-bezier(0.2, 0.82, 0.2, 1);
+}
+
+.generated-lane {
+  pointer-events: none;
+}
+
 .lane-label {
   position: absolute;
   right: 16px;
-  top: 18px;
+  top: 6px;
   color: rgba(255, 255, 255, 0.35);
   font-size: 0.7rem;
   font-weight: 900;
@@ -3866,6 +3953,31 @@ small {
   height: 46px;
   transform: translateX(0);
   transition: filter 160ms ease;
+}
+
+.drag-lane .car {
+  right: auto;
+  left: 0;
+  bottom: 6px;
+  will-change: transform;
+}
+
+.car.drafting::before {
+  content: "";
+  position: absolute;
+  right: 82%;
+  top: 18%;
+  width: 110px;
+  height: 48px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(82, 199, 255, 0.28), transparent);
+  filter: blur(2px);
+  animation: draft-lines 360ms ease-in-out infinite alternate;
+}
+
+@keyframes draft-lines {
+  from { transform: translateX(0) scaleX(0.88); opacity: 0.35; }
+  to { transform: translateX(-18px) scaleX(1.08); opacity: 0.8; }
 }
 
 .car-image {
@@ -4156,6 +4268,50 @@ small {
   text-transform: uppercase;
 }
 
+.drag-controls-row {
+  display: grid;
+  grid-template-columns: minmax(86px, 1fr) minmax(86px, 1fr) 54px 54px 74px;
+  gap: 10px;
+  align-items: center;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+}
+
+.drag-controls-row .shift-button,
+.drag-controls-row .nitro-button {
+  width: 100%;
+  margin: 0;
+}
+
+.drag-lane-button {
+  height: 50px;
+  border: 1px solid rgba(82, 199, 255, 0.55);
+  border-radius: 8px;
+  border-color: rgba(82, 199, 255, 0.55);
+  background: linear-gradient(180deg, rgba(82, 199, 255, 0.24), rgba(124, 92, 255, 0.26));
+  color: var(--ink);
+  font-size: 1.5rem;
+  font-weight: 950;
+}
+
+.gearshift-indicator {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  justify-self: center;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.28));
+}
+
+.gearshift-indicator.shifting {
+  animation: gearshift-pop 220ms cubic-bezier(0.2, 0.82, 0.2, 1);
+}
+
+@keyframes gearshift-pop {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-9px) scale(1.04); }
+  100% { transform: translateY(0); }
+}
+
 .shift-button.pulse {
   animation: pulse 620ms ease infinite alternate;
 }
@@ -4224,6 +4380,48 @@ small {
 
 .nitro-button.ready {
   box-shadow: 0 0 24px rgba(82, 199, 255, 0.4);
+}
+
+.launch-lights {
+  position: absolute;
+  z-index: 5;
+  top: 18px;
+  left: 50%;
+  display: flex;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(7, 10, 18, 0.72);
+  transform: translateX(-50%);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+}
+
+.launch-light {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #273142;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.55);
+  opacity: 0.58;
+}
+
+.launch-light.red.active {
+  background: #ff3838;
+  box-shadow: 0 0 24px rgba(255, 56, 56, 0.75);
+  opacity: 1;
+}
+
+.launch-light.yellow.active {
+  background: #ffd15a;
+  box-shadow: 0 0 24px rgba(255, 209, 90, 0.75);
+  opacity: 1;
+}
+
+.launch-light.green.active {
+  background: #6ee7a8;
+  box-shadow: 0 0 24px rgba(110, 231, 168, 0.75);
+  opacity: 1;
 }
 
 @keyframes pulse {
@@ -5036,7 +5234,7 @@ small {
 
 @keyframes selectionPulse {
   0% { transform: scale(0.985); }
-  60% { transform: scale(1.018); }
+  60% { transform: scale(1.01); }
   100% { transform: scale(1); }
 }
 
@@ -8767,9 +8965,9 @@ small {
 }
 
 .forge-menu-card:hover {
-  transform: translateY(-3px) scale(1.015);
+  transform: translateY(-3px) scale(1.01);
   border-color: rgba(255, 140, 30, 0.72);
-  box-shadow: 0 22px 56px rgba(0,0,0,0.44), 0 0 32px rgba(255,100,20,0.22);
+  box-shadow: 0 22px 56px rgba(0,0,0,0.44), 0 0 26px rgba(255,100,20,0.18);
 }
 
 .forge-menu-card .menu-card-icon {
@@ -9378,4 +9576,314 @@ small {
 /* beta-intro is now also a beta-screen */
 .beta-intro.beta-screen {
   /* Keep existing beta-intro styles, just ensure hidden works */
+}
+
+/* ── Tuner Rank / Convoy / Picker Additions ─────────────────────────────── */
+.tuner-rank-city-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tuner-rank-badge {
+  min-width: 54px;
+  min-height: 44px;
+  border: 2px solid rgba(255, 210, 94, 0.8);
+  border-radius: 14px;
+  background: rgba(12, 18, 28, 0.86);
+  color: #ffd76f;
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(255, 194, 73, 0.25);
+}
+
+.tuner-rank-list,
+.convoy-stage-list,
+.convoy-loadout-slots {
+  display: grid;
+  gap: 12px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.tuner-rank-row,
+.convoy-stage-card,
+.convoy-loadout-slot {
+  display: grid;
+  grid-template-columns: 72px 64px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 14px;
+  background: rgba(13, 19, 29, 0.76);
+}
+
+.tuner-rank-row img {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.tuner-rank-row.player {
+  border-color: rgba(255, 210, 94, 0.86);
+  box-shadow: 0 0 24px rgba(255, 210, 94, 0.22);
+}
+
+.tuner-rank-row.rival {
+  border-color: rgba(156, 112, 255, 0.82);
+}
+
+.convoy-entry-node {
+  position: absolute;
+  right: 18px;
+  bottom: 86px;
+  display: grid;
+  gap: 8px;
+  z-index: 4;
+}
+
+.convoy-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.convoy-entry-button {
+  width: 132px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(8, 12, 18, 0.8);
+  color: var(--ink);
+}
+
+.convoy-medallion {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 4px;
+}
+
+.convoy-medallion img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.convoy-medallion-face {
+  padding: 14px;
+  border-radius: 50%;
+}
+
+.native-select-hidden {
+  position: absolute !important;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+.car-picker-open-button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 78px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(12, 19, 31, 0.78);
+  color: var(--ink);
+}
+
+.car-picker-open-thumb,
+.car-picker-card-art {
+  display: block;
+  height: 58px;
+}
+
+.car-picker-open-thumb .display-image,
+.car-picker-card-art .display-image,
+.garage-compact-art .display-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.car-picker-modal {
+  width: min(980px, 94vw);
+  max-height: 88vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(10, 15, 24, 0.96);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+.car-picker-header,
+.car-picker-footer,
+.car-picker-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.car-picker-search,
+.car-picker-sort {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+.car-picker-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.car-picker-filters button {
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink);
+  padding: 8px 10px;
+}
+
+.car-picker-filters button.active {
+  background: rgba(82, 199, 255, 0.25);
+  border-color: rgba(82, 199, 255, 0.7);
+}
+
+.car-picker-grid {
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.car-picker-card {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  color: var(--ink);
+}
+
+.car-picker-card.highlighted,
+.car-picker-card.selected {
+  border-color: rgba(255, 210, 94, 0.84);
+  box-shadow: 0 0 18px rgba(255, 210, 94, 0.18);
+}
+
+.favorite-star {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: rgba(255,255,255,0.32);
+}
+
+.favorite-star.active {
+  color: #ffd76f;
+}
+
+.garage-view-toggle {
+  width: fit-content;
+  margin: 0 0 14px auto;
+}
+
+.garage-grid-compact {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.garage-compact-card {
+  display: grid;
+  gap: 6px;
+  min-height: 230px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(13, 19, 29, 0.72);
+  color: var(--ink);
+  text-align: center;
+}
+
+.garage-compact-card.locked {
+  opacity: 0.62;
+  filter: grayscale(0.8);
+}
+
+.garage-compact-art {
+  height: 122px;
+  display: grid;
+  place-items: center;
+}
+
+.garage-expanded-card {
+  grid-column: 1 / -1;
+}
+
+.bond-scene-card {
+  width: min(1040px, 94vw);
+  min-height: min(620px, 86vh);
+  display: grid;
+  grid-template-columns: minmax(260px, 42%) 1fr;
+  align-items: end;
+  gap: 18px;
+  padding: 28px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(11,17,28,0.96), rgba(29,35,49,0.94));
+}
+
+.bond-scene-portrait {
+  min-height: 420px;
+  display: grid;
+  place-items: end center;
+}
+
+.bond-scene-dialogue {
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+}
+
+.vindex-memories-button {
+  margin-top: 8px;
+  border-radius: 999px;
+}
+
+.vindex-memories-panel {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.vindex-memory-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+@media (max-width: 720px) {
+  .tuner-rank-city-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bond-scene-card {
+    grid-template-columns: 1fr;
+  }
+  .convoy-entry-node {
+    position: static;
+    margin: 10px;
+  }
 }

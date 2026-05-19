@@ -74,6 +74,62 @@ document.addEventListener("click", (event) => {
   changeGarageEvolution(carId, direction);
 });
 
+document.addEventListener("click", (event) => {
+  const pickerButton = event.target.closest("[data-open-car-picker]");
+  if (pickerButton) {
+    openCarPicker(pickerButton.dataset.openCarPicker);
+    return;
+  }
+  const filterButton = event.target.closest("[data-car-picker-filter]");
+  if (filterButton) {
+    const key = filterButton.dataset.carPickerFilter;
+    carPickerState.filters[key] = !carPickerState.filters[key];
+    renderCarPicker();
+    return;
+  }
+  const typeButton = event.target.closest("[data-car-picker-type]");
+  if (typeButton) {
+    const type = typeButton.dataset.carPickerType;
+    carPickerState.filters.types = carPickerState.filters.types.includes(type)
+      ? carPickerState.filters.types.filter((item) => item !== type)
+      : carPickerState.filters.types.concat(type);
+    renderCarPicker();
+    return;
+  }
+  const favorite = event.target.closest("[data-car-picker-favorite]");
+  if (favorite) {
+    event.preventDefault();
+    event.stopPropagation();
+    const carId = favorite.dataset.carPickerFavorite;
+    state.favoriteCarIds = state.favoriteCarIds.includes(carId)
+      ? state.favoriteCarIds.filter((id) => id !== carId)
+      : state.favoriteCarIds.concat(carId);
+    saveState();
+    renderCarPicker();
+    return;
+  }
+  const card = event.target.closest("[data-car-picker-card]");
+  if (card) {
+    carPickerState.highlighted = card.dataset.carPickerCard;
+    if (event.detail >= 2) closeCarPicker(true);
+    else renderCarPicker();
+  }
+});
+
+el.carPickerClose?.addEventListener("click", () => closeCarPicker(false));
+el.carPickerConfirm?.addEventListener("click", () => closeCarPicker(true));
+el.carPickerModal?.addEventListener("click", (event) => {
+  if (event.target === el.carPickerModal) closeCarPicker(false);
+});
+el.carPickerSearch?.addEventListener("input", () => {
+  carPickerState.search = el.carPickerSearch.value || "";
+  renderCarPicker();
+});
+el.carPickerSort?.addEventListener("change", () => {
+  carPickerState.sort = el.carPickerSort.value || "level-desc";
+  renderCarPicker();
+});
+
 document.addEventListener("pointerdown", (event) => {
   const wheelButton = event.target.closest("[data-honk-button]");
   if (wheelButton) {
@@ -152,6 +208,14 @@ el.distanceOptions.addEventListener("click", (event) => {
   render();
 });
 
+el.dragOpponentCount?.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-drag-opponents]");
+  if (!button) return;
+  state.selectedDragOpponents = Math.max(1, Math.min(3, Number(button.dataset.dragOpponents) || 1));
+  saveState();
+  render();
+});
+
 el.opponentList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-rank]");
   if (!button || button.disabled) return;
@@ -164,6 +228,8 @@ el.startRace.addEventListener("click", startRace);
 el.dragMapStart.addEventListener("click", startPendingDragRace);
 el.shiftButton.addEventListener("click", shift);
 el.nitroButton.addEventListener("click", useNitro);
+el.dragLaneUp?.addEventListener("click", () => moveDragLane(-1));
+el.dragLaneDown?.addEventListener("click", () => moveDragLane(1));
 el.startCampaign.addEventListener("click", () => {
   if (tutorialActive()) {
     // Tutorial dialogue controls the flow — Start Level just calls advanceTutorial
@@ -322,6 +388,18 @@ document.addEventListener("click", (event) => {
 });
 
 el.garageGrid.addEventListener("click", (event) => {
+  const expandButton = event.target.closest("[data-expand-garage-card]");
+  if (expandButton) {
+    expandedGarageCardIds.add(expandButton.dataset.expandGarageCard);
+    renderGarage();
+    return;
+  }
+  const collapseButton = event.target.closest("[data-collapse-garage-card]");
+  if (collapseButton) {
+    expandedGarageCardIds.delete(collapseButton.dataset.collapseGarageCard);
+    renderGarage();
+    return;
+  }
   const stepButton = event.target.closest("[data-evolution-step]");
   if (stepButton) {
     const [carId, direction] = stepButton.dataset.evolutionStep.split(":");
@@ -337,6 +415,55 @@ el.garageGrid.addEventListener("click", (event) => {
   if (!button) return;
   showPendingEvolution(button.dataset.evolveCar);
 });
+
+document.querySelector("#garage-view-toggle")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-garage-view]");
+  if (!button) return;
+  state.garageViewMode = button.dataset.garageView === "detailed" ? "detailed" : "compact";
+  saveState();
+  renderGarage();
+});
+
+el.tunerRankBadge?.addEventListener("click", openTunerRankScreen);
+el.tunerRankOpen?.addEventListener("click", openTunerRankScreen);
+el.tunerRankBack?.addEventListener("click", () => showView("story"));
+
+el.convoyButtons?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-convoy-open]");
+  if (button) openConvoy(button.dataset.convoyOpen);
+});
+el.convoyTest?.addEventListener("click", () => {
+  setConvoyAvailable("tyree", true);
+  openConvoy("tyree");
+});
+el.convoyBack?.addEventListener("click", () => showView("story"));
+el.convoyLoadoutsOpen?.addEventListener("click", () => {
+  renderConvoyLoadouts();
+  showView("convoy-loadouts");
+});
+el.garageLoadoutsOpen?.addEventListener("click", () => {
+  renderConvoyLoadouts();
+  showView("convoy-loadouts");
+});
+el.convoyLoadoutsBack?.addEventListener("click", () => showView("convoy"));
+el.convoyLoadoutSlots?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-save-convoy-loadout]");
+  if (button) saveConvoyLoadout(Number(button.dataset.saveConvoyLoadout));
+});
+el.convoyStageList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-convoy-stage]");
+  if (!button) return;
+  showToast("Convoy Stage Placeholder", "Stage launch wiring is ready for mode-specific handoff.");
+});
+
+el.vindexMemoriesButton?.addEventListener("click", toggleVindexMemories);
+el.vindexMemoriesPanel?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex-memory]");
+  if (!button) return;
+  const [lineRoot, threshold] = button.dataset.vindexMemory.split(":");
+  replayBondScene(lineRoot, Number(threshold));
+});
+el.bondSceneContinue?.addEventListener("click", closeBondScene);
 
 el.confirmUpgrade.addEventListener("click", upgradeCarLevel);
 el.closeUpgrade.addEventListener("click", closeUpgradeModal);
@@ -677,6 +804,16 @@ document.addEventListener("keydown", (event) => {
   if (key === state.settings.shiftKey) {
     event.preventDefault();
     shift();
+    return;
+  }
+  if (race?.active && !race.finished && (key === "W" || key === "ARROWUP")) {
+    event.preventDefault();
+    moveDragLane(-1);
+    return;
+  }
+  if (race?.active && !race.finished && (key === "S" || key === "ARROWDOWN")) {
+    event.preventDefault();
+    moveDragLane(1);
     return;
   }
   if (key === state.settings.nitroKey) {

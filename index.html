@@ -173,9 +173,17 @@
                     <h2 id="story-city-title">Indianapolis</h2>
                   </div>
                 </div>
+                <div class="tuner-rank-city-actions">
+                  <button class="tuner-rank-badge" id="tuner-rank-badge" type="button" aria-label="Open Tuner Rank">UR</button>
+                  <button class="ghost tuner-rank-open" id="tuner-rank-open" type="button">Tuner Rank</button>
+                </div>
                 <button class="ghost city-select-button city-transport-button" id="story-city-select" type="button" aria-label="City Select">
                   <img src="assets/cars/hotel-ritzcarloadin-display.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 </button>
+              </div>
+              <div class="convoy-entry-node" id="convoy-entry-node" hidden>
+                <div class="convoy-buttons" id="convoy-buttons"></div>
+                <button class="ghost convoy-test" id="convoy-test" type="button">Test Convoy</button>
               </div>
               <div class="boss-unlock-note" id="boss-unlock-note"></div>
               <div class="story-map-stage" id="story-map-stage"></div>
@@ -271,6 +279,37 @@
           </div>
         </section>
 
+        <section class="view" id="tuner-rank-view" aria-labelledby="tuner-rank-title">
+          <button class="back-link" id="tuner-rank-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Leaderboard</p>
+            <h1 id="tuner-rank-title">Tuner Rank</h1>
+          </div>
+          <div class="tuner-rank-list" id="tuner-rank-list"></div>
+        </section>
+
+        <section class="view" id="convoy-view" aria-labelledby="convoy-title">
+          <button class="back-link" id="convoy-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Convoy</p>
+            <h1 id="convoy-title">Convoy Challenge</h1>
+            <span id="convoy-summary"></span>
+          </div>
+          <div class="modal-actions convoy-top-actions">
+            <button class="ghost" id="convoy-loadouts-open" type="button">Loadouts</button>
+          </div>
+          <div class="convoy-stage-list" id="convoy-stage-list"></div>
+        </section>
+
+        <section class="view" id="convoy-loadouts-view" aria-labelledby="convoy-loadouts-title">
+          <button class="back-link" id="convoy-loadouts-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Convoy</p>
+            <h1 id="convoy-loadouts-title">Loadouts</h1>
+          </div>
+          <div class="convoy-loadout-slots" id="convoy-loadout-slots"></div>
+        </section>
+
         <section class="view" id="battle-view" aria-labelledby="battle-title">
           <button class="back-link" data-mode-back="battle" type="button">Back</button>
           <div class="battle-mode">
@@ -309,11 +348,7 @@
                 <div class="battle-car opponent" id="battle-opponent-car"></div>
                 <div class="battle-move player" id="battle-player-move"></div>
                 <div class="battle-move opponent" id="battle-opponent-move"></div>
-                <div class="battle-actions" id="battle-actions">
-                  <button class="battle-action attack" data-battle-move="attack" type="button"><img src="assets/items/battle-attack.png" alt="">Attack</button>
-                  <button class="battle-action defend" data-battle-move="defend" type="button"><img src="assets/items/battle-defend.png" alt="">Defend</button>
-                  <button class="battle-action special" data-battle-move="special" type="button"><img src="assets/items/battle-special.png" alt="">Special</button>
-                </div>
+                <div class="battle-actions" id="battle-actions"></div>
                 <button class="battle-next" id="battle-next-turn" type="button" hidden>Next Turn</button>
                 <div class="battle-log" id="battle-log">Choose a move.</div>
               </div>
@@ -405,6 +440,8 @@
                 <div class="vindex-plate-wrap" id="vindex-plate"></div>
                 <div class="vindex-copy">
                   <strong id="vindex-status"></strong>
+                  <button class="vindex-memories-button" id="vindex-memories-button" type="button">Memories</button>
+                  <div class="vindex-memories-panel" id="vindex-memories-panel" hidden></div>
                 </div>
               </section>
               <aside class="vindex-filter-panel" aria-label="VINdex filters">
@@ -491,6 +528,14 @@
                   <label>Opponent rank</label>
                   <div class="opponent-list" id="opponent-list"></div>
                 </div>
+                <div class="field">
+                  <label>Opponents</label>
+                  <div class="segmented drag-opponent-count" id="drag-opponent-count" role="group" aria-label="Number of opponents">
+                    <button type="button" data-drag-opponents="1" class="active">1</button>
+                    <button type="button" data-drag-opponents="2">2</button>
+                    <button type="button" data-drag-opponents="3">3</button>
+                  </div>
+                </div>
                 <div class="selection-preview" id="opponent-preview">
                   <div class="selection-preview-art" id="opponent-preview-art"></div>
                   <div>
@@ -544,9 +589,16 @@
                 <span id="nitro-readout">0%</span>
               </div>
 
-              <div class="track" aria-label="Drag race track">
+              <div class="track drag-side-camera" aria-label="Drag race track">
+                <div class="drag-bg-layer"></div>
+                <div class="drag-road-layer"></div>
                 <div class="finish-line"></div>
-                <div class="lane">
+                <div class="launch-lights" id="drag-launch-lights" aria-hidden="true">
+                  <span class="launch-light red" data-launch-light="red"></span>
+                  <span class="launch-light yellow" data-launch-light="yellow"></span>
+                  <span class="launch-light green" data-launch-light="green"></span>
+                </div>
+                <div class="lane drag-lane lane-3" id="player-drag-lane">
                   <span class="lane-label">YOU</span>
                   <div class="car player-car" id="player-racer">
                     <img class="car-image" id="player-racer-image" alt="">
@@ -556,7 +608,7 @@
                     <span class="wheel rear"></span>
                   </div>
                 </div>
-                <div class="lane">
+                <div class="lane drag-lane lane-2" id="rival-drag-lane">
                   <span class="lane-label">RIVAL</span>
                   <div class="car rival-car" id="rival-racer">
                     <img class="car-image" id="rival-racer-image" alt="">
@@ -566,6 +618,7 @@
                     <span class="wheel rear"></span>
                   </div>
                 </div>
+                <div class="drag-extra-opponents" id="drag-extra-opponents"></div>
                 <button class="map-start-button" id="drag-map-start" type="button">Start Race</button>
                 <div class="countdown" id="drag-countdown"></div>
               </div>
@@ -574,8 +627,13 @@
                 Pick an opponent and hit Start Race.
               </div>
 
-              <button class="shift-button" id="shift-button" type="button">Shift</button>
-              <button class="nitro-button" id="nitro-button" type="button" disabled>Nitro</button>
+              <div class="drag-controls-row">
+                <button class="shift-button" id="shift-button" type="button">Shift</button>
+                <button class="nitro-button" id="nitro-button" type="button" disabled>Nitro</button>
+                <button class="drag-lane-button" id="drag-lane-up" type="button" aria-label="Move up one lane">↑</button>
+                <button class="drag-lane-button" id="drag-lane-down" type="button" aria-label="Move down one lane">↓</button>
+                <img class="gearshift-indicator" id="gearshift-indicator" src="assets/race/gearshift-p.png" alt="Gearshift">
+              </div>
             </div>
           </div>
         </section>
@@ -589,6 +647,11 @@
               <h1 id="garage-title">Your GearBorn lineup.</h1>
             </div>
             <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
+            <button class="ghost garage-loadouts-button" id="garage-loadouts-open" type="button" hidden>Loadouts</button>
+            <div class="garage-view-toggle segmented" id="garage-view-toggle" role="group" aria-label="Garage view">
+              <button type="button" data-garage-view="compact">Compact</button>
+              <button type="button" data-garage-view="detailed">Detailed</button>
+            </div>
             <div class="garage-status" id="garage-status" hidden></div>
             <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
               <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
@@ -1119,6 +1182,44 @@
         <small id="builder-modal-subcopy"></small>
         <input id="builder-modal-input" class="builder-modal-input" type="text" maxlength="40" hidden>
         <div class="modal-actions" id="builder-modal-actions"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay bond-scene-modal" id="bond-scene-modal" aria-hidden="true">
+      <div class="bond-scene-card" role="dialog" aria-modal="true" aria-labelledby="bond-scene-title">
+        <div class="bond-scene-portrait" id="bond-scene-portrait"></div>
+        <div class="bond-scene-dialogue">
+          <p class="modal-kicker">Memory</p>
+          <h2 id="bond-scene-title">Bond Scene</h2>
+          <p id="bond-scene-text"></p>
+          <button class="primary" id="bond-scene-continue" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay car-picker-overlay" id="car-picker-modal" aria-hidden="true">
+      <div class="car-picker-modal" role="dialog" aria-modal="true" aria-labelledby="car-picker-title">
+        <div class="car-picker-header">
+          <h2 id="car-picker-title">Choose GearBorn</h2>
+          <button class="modal-close-bubble" id="car-picker-close" type="button" aria-label="Close car picker">×</button>
+        </div>
+        <div class="car-picker-controls">
+          <input class="car-picker-search" id="car-picker-search" type="text" placeholder="Search..." autocomplete="off">
+          <div class="car-picker-filters" id="car-picker-filters"></div>
+          <select class="car-picker-sort" id="car-picker-sort" aria-label="Sort GearBorn">
+            <option value="level-desc">Level (high to low)</option>
+            <option value="level-asc">Level (low to high)</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="recent">Recently Used</option>
+            <option value="number">VINdex Number</option>
+            <option value="bond-desc">Bond (high to low)</option>
+          </select>
+        </div>
+        <div class="car-picker-grid" id="car-picker-grid"></div>
+        <div class="car-picker-footer">
+          <div class="car-picker-selection-summary" id="car-picker-summary">Select a GearBorn.</div>
+          <button class="primary" id="car-picker-confirm" type="button">Confirm</button>
+        </div>
       </div>
     </div>
 
