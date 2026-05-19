@@ -1813,7 +1813,7 @@ function setConvoyAvailable(convoyId, available = true) {
 function renderConvoyEntry() {
   if (!el.convoyEntryNode || !el.convoyButtons) return;
   const availableIds = Object.keys(convoyDefinitions).filter((id) => state.convoy?.available?.[id]);
-  el.convoyEntryNode.hidden = false;
+  el.convoyEntryNode.hidden = !availableIds.length;
   el.convoyButtons.innerHTML = availableIds.map((id) => {
     const convoy = convoyDefinitions[id];
     return `
@@ -2566,6 +2566,12 @@ function handleBattleMove(playerMove) {
     if (unit.shieldTurns > 0) unit.shieldTurns -= 1;
     if (unit.shieldTurns <= 0) unit.shield = 0;
   });
+  if (player.hp <= 0 || opponent.hp <= 0) {
+    battleState.waitingNext = false;
+    el.battleArena.classList.remove("resolving");
+    finishBattle();
+    return;
+  }
   battleState.waitingNext = true;
   el.battleArena.classList.add("resolving");
   const moveSucceeded = (unit, move, revWasLoading) => {
@@ -2591,7 +2597,6 @@ function handleBattleMove(playerMove) {
       : `${player.name} used ${battleMoveLabel(playerAction)}. ${opponent.name} used ${battleMoveLabel(opponentMove)}.`;
   }
   renderBattle();
-  if (player.hp <= 0 || opponent.hp <= 0) finishBattle();
 }
 
 function nextBattleTurn() {
@@ -3311,7 +3316,7 @@ function renderGarage() {
     ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
     : "";
   document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
-  if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = !state.convoy?.loadoutsUnlocked;
+  if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
   const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
   el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
   el.garageGrid.innerHTML = garageCars.map((car) => {
@@ -5323,6 +5328,11 @@ function drawRace() {
     el.dragTrack.style.setProperty("--drag-bg-x", `${Math.round(race.bgScroll || 0)}px`);
     el.dragTrack.style.setProperty("--drag-road-x", `${Math.round(race.roadScroll || 0)}px`);
     el.dragTrack.classList.toggle("chromatic-vignette", Boolean(race.nitroActive));
+    const finishLine = el.dragTrack.querySelector(".finish-line");
+    if (finishLine) {
+      const finishX = baseX + (race.target - race.playerDistance) * metersToPx;
+      finishLine.style.left = `${Math.round(finishX)}px`;
+    }
   }
   el.playerDragLane.style.top = playerY;
   el.playerRacer.style.transform = `translateX(${playerX}px)`;

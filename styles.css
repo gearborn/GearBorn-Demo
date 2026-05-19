@@ -3909,7 +3909,7 @@ small {
   position: absolute;
   z-index: 2;
   top: 0;
-  left: 32px;
+  left: 120%;
   width: 13px;
   height: 100%;
   background:
@@ -9580,9 +9580,13 @@ small {
 
 /* ── Tuner Rank / Convoy / Picker Additions ─────────────────────────────── */
 .tuner-rank-city-actions {
+  position: relative;
+  z-index: 6;
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-start;
+  margin-top: 6px;
 }
 
 .tuner-rank-badge {
@@ -9797,7 +9801,7 @@ small {
 
 .garage-view-toggle {
   width: fit-content;
-  margin: 0 0 14px auto;
+  margin: 0 0 14px 0;
 }
 
 .garage-grid-compact {

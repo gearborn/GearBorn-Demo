@@ -432,20 +432,18 @@ el.convoyButtons?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-convoy-open]");
   if (button) openConvoy(button.dataset.convoyOpen);
 });
-el.convoyTest?.addEventListener("click", () => {
-  setConvoyAvailable("tyree", true);
-  openConvoy("tyree");
-});
 el.convoyBack?.addEventListener("click", () => showView("story"));
 el.convoyLoadoutsOpen?.addEventListener("click", () => {
+  convoyLoadoutsReturnView = "convoy";
   renderConvoyLoadouts();
   showView("convoy-loadouts");
 });
 el.garageLoadoutsOpen?.addEventListener("click", () => {
+  convoyLoadoutsReturnView = "garage";
   renderConvoyLoadouts();
   showView("convoy-loadouts");
 });
-el.convoyLoadoutsBack?.addEventListener("click", () => showView("convoy"));
+el.convoyLoadoutsBack?.addEventListener("click", () => showView(convoyLoadoutsReturnView || "convoy"));
 el.convoyLoadoutSlots?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-save-convoy-loadout]");
   if (button) saveConvoyLoadout(Number(button.dataset.saveConvoyLoadout));

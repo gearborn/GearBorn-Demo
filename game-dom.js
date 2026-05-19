@@ -38,6 +38,7 @@ const carPickerState = {
 };
 let pendingBondSceneQueue = [];
 let activeBondScene = null;
+let convoyLoadoutsReturnView = "convoy";
 let storyReplayOpen = false;
 const customTracksKey = "gearborn_custom_tracks";
 const builderGridSize = 12;
@@ -225,7 +226,6 @@ const el = {
   tunerRankBack: document.querySelector("#tuner-rank-back"),
   convoyEntryNode: document.querySelector("#convoy-entry-node"),
   convoyButtons: document.querySelector("#convoy-buttons"),
-  convoyTest: document.querySelector("#convoy-test"),
   convoyTitle: document.querySelector("#convoy-title"),
   convoySummary: document.querySelector("#convoy-summary"),
   convoyStageList: document.querySelector("#convoy-stage-list"),
