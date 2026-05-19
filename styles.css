@@ -3995,6 +3995,10 @@ small {
   display: block;
 }
 
+.drag-side-camera .drag-lane .car-image {
+  transform: scaleX(-1) scale(var(--display-scale, 1));
+}
+
 .car.has-image .car-body,
 .car.has-image .car-glow,
 .car.has-image .wheel {
@@ -4023,6 +4027,12 @@ small {
   bottom: 8px;
   width: 92px;
   animation-delay: 80ms;
+}
+
+.drag-side-camera .drag-lane .car.nitro-active::before,
+.drag-side-camera .drag-lane .car.nitro-active::after {
+  left: -52px;
+  right: auto;
 }
 
 @keyframes nitro-streak {
