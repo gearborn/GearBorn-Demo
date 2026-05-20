@@ -18,6 +18,19 @@ document.querySelectorAll("[data-steer]").forEach((button) => {
   button.addEventListener("pointercancel", release);
 });
 
+function bindActionButton(node, handler) {
+  if (!node) return;
+  node.addEventListener("click", (event) => {
+    if (node.disabled) return;
+    handler(event);
+  });
+  node.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    if (node.disabled) return;
+    handler(event);
+  }, { passive: false });
+}
+
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.view === "beta") {
@@ -149,9 +162,32 @@ document.addEventListener("click", (event) => {
   const garageHonk = event.target.closest("[data-honk-car]");
   if (garageHonk) {
     event.preventDefault();
-    playGearbornHonk(garageHonk.dataset.honkCar);
+    openHonkModal(garageHonk.dataset.honkCar);
     garageHonk.classList.add("playing");
     window.setTimeout(() => garageHonk.classList.remove("playing"), 180);
+    return;
+  }
+  const raceHonk = event.target.closest("[data-race-honk]");
+  if (raceHonk) {
+    event.preventDefault();
+    openHonkModal(race?.carId || selectedCarIdForMode("drag"));
+    return;
+  }
+  const battleHonk = event.target.closest("[data-battle-honk]");
+  if (battleHonk) {
+    event.preventDefault();
+    openHonkModal(battleState?.carId || selectedCarIdForMode("battle"));
+    return;
+  }
+  const honkEmotion = event.target.closest("[data-honk-emotion]");
+  if (honkEmotion) {
+    event.preventDefault();
+    playHonkEmotion(honkEmotion.dataset.honkLine, honkEmotion.dataset.honkEmotion);
+    return;
+  }
+  if (event.target === el.honkModal || event.target.closest("#honk-modal-close")) {
+    event.preventDefault();
+    closeHonkModal();
     return;
   }
   const vindexHonk = event.target.closest("[data-honk-vindex]");
@@ -226,10 +262,10 @@ el.opponentList.addEventListener("click", (event) => {
 
 el.startRace.addEventListener("click", startRace);
 el.dragMapStart.addEventListener("click", startPendingDragRace);
-el.shiftButton.addEventListener("click", shift);
-el.nitroButton.addEventListener("click", useNitro);
-el.dragLaneUp?.addEventListener("click", () => moveDragLane(-1));
-el.dragLaneDown?.addEventListener("click", () => moveDragLane(1));
+bindActionButton(el.shiftButton, shift);
+bindActionButton(el.nitroButton, useNitro);
+bindActionButton(el.dragLaneUp, () => moveDragLane(-1));
+bindActionButton(el.dragLaneDown, () => moveDragLane(1));
 el.startCampaign.addEventListener("click", () => {
   if (tutorialActive()) {
     // Tutorial dialogue controls the flow — Start Level just calls advanceTutorial
@@ -296,7 +332,14 @@ el.battleActions.addEventListener("click", (event) => {
   if (!button || button.disabled) return;
   handleBattleMove(button.dataset.battleMove);
 });
-el.battleNextTurn.addEventListener("click", nextBattleTurn);
+el.battleActions.addEventListener("touchstart", (event) => {
+  const button = event.target.closest("[data-battle-move]");
+  if (!button || button.disabled) return;
+  event.preventDefault();
+  handleBattleMove(button.dataset.battleMove);
+}, { passive: false });
+bindActionButton(el.battleNextTurn, nextBattleTurn);
+bindActionButton(el.rotationTipDismiss, () => hideBetaRotationTip(true));
 el.continueBoss.addEventListener("click", () => {
   closeBossIntro();
   const startConfig = pendingBossRaceStart || { mode: "boss", options: {} };
@@ -688,6 +731,7 @@ el.difficulty.addEventListener("change", (event) => {
 
 el.volume.addEventListener("input", (event) => {
   state.settings.volume = Number(event.target.value);
+  updateAudioVolumes();
   saveState();
 });
 

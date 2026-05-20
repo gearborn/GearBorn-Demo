@@ -4222,7 +4222,7 @@ const tunerRankBossOrder = bosses.slice(0, 7);
 const tunerRankBaseList = [{
   rank: 1,
   name: "Pallavi",
-  headshot: "assets/characters/headshot-pallavi.png",
+  headshot: "assets/bosses/headshot-pallavi.png",
   isBoss: true,
   bossId: "pallavi"
 }].concat(tunerRankBossOrder.slice().reverse().map((boss, index) => ({

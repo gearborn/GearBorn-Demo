@@ -510,4 +510,121 @@ document.addEventListener("keyup", (event) => {
   }
 });
 
+// ─── HUB MAP BETA FOUNDATION (isolated, disposable prototype) ───────────────
+const hubMapState = {
+  tileSize: 32,
+  width: 24,
+  height: 16,
+  tiles: [],
+  playerX: 12,
+  playerY: 8,
+  moveTween: null,
+  animFrame: 0
+};
+
+function hubMapInitTiles() {
+  hubMapState.tiles = Array.from({ length: hubMapState.height }, (_, y) =>
+    Array.from({ length: hubMapState.width }, (_, x) =>
+      x === 0 || y === 0 || x === hubMapState.width - 1 || y === hubMapState.height - 1 ? 1 : 0
+    )
+  );
+}
+
+function hubMapIsActive() {
+  return document.querySelector("#hub-map-beta-view")?.classList.contains("active");
+}
+
+function hubMapDraw() {
+  if (!el.hubMapBetaCanvas || !hubMapIsActive()) return;
+  const canvas = el.hubMapBetaCanvas;
+  const ctx = canvas.getContext("2d");
+  const { tileSize, width, height } = hubMapState;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#1a2540";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (hubMapState.tiles[y]?.[x] === 1) {
+        ctx.fillStyle = "#3a4560";
+        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+      }
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.strokeRect(x * tileSize + 0.5, y * tileSize + 0.5, tileSize, tileSize);
+    }
+  }
+
+  let drawX = hubMapState.playerX;
+  let drawY = hubMapState.playerY;
+  if (hubMapState.moveTween) {
+    const progress = Math.min(1, (performance.now() - hubMapState.moveTween.startTime) / 200);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    drawX = hubMapState.moveTween.fromX + (hubMapState.moveTween.toX - hubMapState.moveTween.fromX) * eased;
+    drawY = hubMapState.moveTween.fromY + (hubMapState.moveTween.toY - hubMapState.moveTween.fromY) * eased;
+    if (progress >= 1) hubMapState.moveTween = null;
+  }
+  ctx.fillStyle = "#ff4444";
+  ctx.fillRect(drawX * tileSize + 2, drawY * tileSize + 2, 28, 28);
+  if (el.hubMapBetaCoords) el.hubMapBetaCoords.textContent = `${hubMapState.playerX}, ${hubMapState.playerY}`;
+  hubMapState.animFrame = requestAnimationFrame(hubMapDraw);
+}
+
+function hubMapOpen() {
+  hubMapInitTiles();
+  hubMapState.playerX = 12;
+  hubMapState.playerY = 8;
+  hubMapState.moveTween = null;
+  if (hubMapState.animFrame) cancelAnimationFrame(hubMapState.animFrame);
+  showView("hub-map-beta");
+  hubMapDraw();
+}
+
+function hubMapClose() {
+  if (hubMapState.animFrame) cancelAnimationFrame(hubMapState.animFrame);
+  hubMapState.animFrame = 0;
+  betaRaceContext = { source: "prototype" };
+  showView("beta");
+  openBetaPrototypeIntro();
+}
+
+function hubMapTryMove(dx, dy) {
+  if (!hubMapIsActive() || hubMapState.moveTween) return;
+  const nextX = hubMapState.playerX + dx;
+  const nextY = hubMapState.playerY + dy;
+  if (nextX < 0 || nextY < 0 || nextX >= hubMapState.width || nextY >= hubMapState.height) return;
+  if (hubMapState.tiles[nextY]?.[nextX] === 1) return;
+  hubMapState.moveTween = {
+    fromX: hubMapState.playerX,
+    fromY: hubMapState.playerY,
+    toX: nextX,
+    toY: nextY,
+    startTime: performance.now()
+  };
+  hubMapState.playerX = nextX;
+  hubMapState.playerY = nextY;
+  // TODO: optional auto-repeat / hold-to-walk.
+}
+
+el.hubMapBetaStart?.addEventListener("click", hubMapOpen);
+el.hubMapBetaBack?.addEventListener("click", hubMapClose);
+
+document.addEventListener("keydown", (event) => {
+  if (!hubMapIsActive() || event.repeat) return;
+  const key = normalizeKey(event);
+  const moves = {
+    W: [0, -1],
+    ArrowUp: [0, -1],
+    S: [0, 1],
+    ArrowDown: [0, 1],
+    A: [-1, 0],
+    ArrowLeft: [-1, 0],
+    D: [1, 0],
+    ArrowRight: [1, 0]
+  };
+  if (!moves[key]) return;
+  event.preventDefault();
+  hubMapTryMove(moves[key][0], moves[key][1]);
+});
+
+// TODO: NPCs, sprites, map transitions, interactions, and dialogue hooks.
+
 // ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────

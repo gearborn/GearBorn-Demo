@@ -2,11 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
     <title>GearBorn: Engines Evolved Demo</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body class="app-loading">
+    <div class="rotation-tip" id="rotation-tip" hidden>
+      <span>Tip: Rotate your phone for the best experience.</span>
+      <button id="rotation-tip-dismiss" type="button">Got it</button>
+    </div>
     <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
       <div class="loading-card">
         <div class="loading-logo">
@@ -172,8 +176,7 @@
                   <div>
                     <h2 id="story-city-title">Indianapolis</h2>
                     <div class="tuner-rank-city-actions">
-                      <button class="tuner-rank-badge" id="tuner-rank-badge" type="button" aria-label="Open Tuner Rank">UR</button>
-                      <button class="ghost tuner-rank-open" id="tuner-rank-open" type="button">Tuner Rank</button>
+                      <button class="tuner-rank-badge" id="tuner-rank-badge" type="button" aria-label="Open Tuner Rank">Tuner Rank: NR</button>
                     </div>
                   </div>
                 </div>
@@ -348,6 +351,7 @@
                 <div class="battle-move player" id="battle-player-move"></div>
                 <div class="battle-move opponent" id="battle-opponent-move"></div>
                 <div class="battle-actions" id="battle-actions"></div>
+                <button class="battle-honk-button" data-battle-honk type="button">Honk</button>
                 <button class="battle-next" id="battle-next-turn" type="button" hidden>Next Turn</button>
                 <div class="battle-log" id="battle-log">Choose a move.</div>
               </div>
@@ -439,8 +443,6 @@
                 <div class="vindex-plate-wrap" id="vindex-plate"></div>
                 <div class="vindex-copy">
                   <strong id="vindex-status"></strong>
-                  <button class="vindex-memories-button" id="vindex-memories-button" type="button">Memories</button>
-                  <div class="vindex-memories-panel" id="vindex-memories-panel" hidden></div>
                 </div>
               </section>
               <aside class="vindex-filter-panel" aria-label="VINdex filters">
@@ -450,6 +452,8 @@
                   <button type="button" data-vindex-filter="seen" aria-label="Show seen GearBorn"><img src="assets/vindex/filter-seen.png" alt="Seen"></button>
                 </div>
                 <div class="vindex-progress" id="vindex-progress"></div>
+                <button class="vindex-memories-button" id="vindex-memories-button" type="button">Memories</button>
+                <div class="vindex-memories-panel" id="vindex-memories-panel" hidden></div>
               </aside>
             </div>
           </div>
@@ -631,6 +635,7 @@
                 <button class="nitro-button" id="nitro-button" type="button" disabled>Nitro</button>
                 <button class="drag-lane-button" id="drag-lane-up" type="button" aria-label="Move up one lane">↑</button>
                 <button class="drag-lane-button" id="drag-lane-down" type="button" aria-label="Move down one lane">↓</button>
+                <button class="drag-honk-button" data-race-honk type="button">Honk</button>
                 <img class="gearshift-indicator" id="gearshift-indicator" src="assets/race/gearshift-p.png" alt="Gearshift">
               </div>
             </div>
@@ -817,6 +822,10 @@
               <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
                 <strong>Pseudo-3D Baybee Run</strong>
                 <span>Behind-the-car test on a longer prototype track.</span>
+              </button>
+              <button class="beta-option-card" id="hub-map-beta-start" type="button">
+                <strong>Hub Map (Beta)</strong>
+                <span>Walk a tiny tile-map prototype.</span>
               </button>
               <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
@@ -1010,6 +1019,18 @@
               </div>
               <p class="beta-note">WASD or Arrow Keys. Press T to toggle the debug grid.</p>
             </div>
+          </div>
+        </section>
+
+        <section class="view" id="hub-map-beta-view" aria-labelledby="hub-map-beta-title">
+          <button class="back-link" id="hub-map-beta-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Beta Mode</p>
+            <h1 id="hub-map-beta-title">Hub Map (Beta)</h1>
+          </div>
+          <div class="hub-map-beta-shell">
+            <canvas id="hub-map-beta-canvas" width="768" height="512" aria-label="Hub map beta tile canvas"></canvas>
+            <div class="hub-map-beta-debug">Tile: <strong id="hub-map-beta-coords">12, 8</strong></div>
           </div>
         </section>
       </main>
@@ -1325,6 +1346,16 @@
         <div class="modal-actions">
           <button class="success-button" id="forge-unlocked-close" type="button">Continue</button>
         </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="honk-modal" aria-hidden="true">
+      <div class="honk-modal-card" role="dialog" aria-modal="true" aria-labelledby="honk-modal-title">
+        <button class="modal-close-bubble" id="honk-modal-close" type="button" aria-label="Close honk menu">×</button>
+        <p class="modal-kicker">GearBorn Honk</p>
+        <h2 id="honk-modal-title">Choose a Mood</h2>
+        <div class="honk-options" id="honk-options"></div>
+        <p class="honk-subtitle" id="honk-subtitle">[HONK SUBTITLE PLACEHOLDER]</p>
       </div>
     </div>
 

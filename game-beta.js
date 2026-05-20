@@ -397,6 +397,57 @@ function betaResizeCanvas() {
   el.betaMinimap.height = Math.max(1, Math.floor(miniRect.height * ratio));
 }
 
+function betaIsMobilePortrait() {
+  return window.innerWidth < 600 && window.innerHeight > window.innerWidth;
+}
+
+function resizeBetaCanvas() {
+  if (!el.betaCanvas || !el.betaRace || el.betaRace.hidden) return;
+  const stage = el.betaCanvas.closest(".beta-stage");
+  const widthSource = stage?.clientWidth || el.betaRace.clientWidth || window.innerWidth;
+  const portrait = betaIsMobilePortrait();
+  const reservedHeight = portrait ? 232 : 142;
+  const availableWidth = Math.max(320, Math.min(widthSource, window.innerWidth - 16));
+  const availableHeight = Math.max(300, window.innerHeight - reservedHeight - 16);
+  const aspect = 960 / 620;
+  let cssWidth = availableWidth;
+  let cssHeight = cssWidth / aspect;
+  if (cssHeight > availableHeight) {
+    cssHeight = availableHeight;
+    cssWidth = cssHeight * aspect;
+  }
+  el.betaCanvas.style.width = `${Math.round(cssWidth)}px`;
+  el.betaCanvas.style.height = `${Math.round(cssHeight)}px`;
+  betaResizeCanvas();
+}
+
+function showBetaRotationTip() {
+  if (!el.rotationTip || state.dismissedRotationTips || !betaIsMobilePortrait()) return;
+  el.rotationTip.hidden = false;
+  requestAnimationFrame(() => el.rotationTip?.classList.add("active"));
+}
+
+function hideBetaRotationTip(persist = false) {
+  if (persist) {
+    state.dismissedRotationTips = true;
+    saveState();
+  }
+  el.rotationTip?.classList.remove("active");
+  if (el.rotationTip) {
+    window.setTimeout(() => {
+      if (!el.rotationTip?.classList.contains("active")) el.rotationTip.hidden = true;
+    }, 180);
+  }
+}
+
+function updateRotationTipForActiveRace() {
+  resizeBetaCanvas();
+  if (betaState && el.betaRace && !el.betaRace.hidden) {
+    if (betaIsMobilePortrait()) showBetaRotationTip();
+    else hideBetaRotationTip(false);
+  }
+}
+
 function openBetaIntro() {
   if (!el.betaIntro || !el.betaRace) return;
   el.betaRace.hidden = true;
@@ -453,6 +504,7 @@ function stopBetaDemo(showIntro = true) {
   betaState = null;
   Object.keys(betaKeys).forEach((key) => delete betaKeys[key]);
   setBetaLoading(false);
+  hideBetaRotationTip(false);
   if (el.betaCountdown) {
     el.betaCountdown.classList.remove("active");
     el.betaCountdown.textContent = "";
@@ -2663,7 +2715,8 @@ async function startBetaDemo(mode = betaState?.config?.id || "time", options = {
   betaSelectedTrackId = betaTrack.id;
   syncBetaTrackDerived();
   const config = betaModeConfigs[mode] || betaModeConfigs.time;
-  betaResizeCanvas();
+  resizeBetaCanvas();
+  showBetaRotationTip();
   const carId = betaCurrentCarId();
   const car = cars.find((item) => item.id === carId) || cars[0];
   const form = currentEvolution(carId);
@@ -2722,6 +2775,8 @@ async function startBetaDemo(mode = betaState?.config?.id || "time", options = {
   updateBetaControlVisuals();
   showBetaScreen(null); // hide all beta screens
   el.betaRace.hidden = false;
+  resizeBetaCanvas();
+  showBetaRotationTip();
   el.betaResults.hidden = true;
   if (el.betaCountdown) {
     el.betaCountdown.classList.remove("active");
@@ -3034,3 +3089,5 @@ document.querySelectorAll("[data-beta-item-button]").forEach((button) => {
   });
 });
 
+window.addEventListener("resize", updateRotationTipForActiveRace);
+screen.orientation?.addEventListener?.("change", updateRotationTipForActiveRace);

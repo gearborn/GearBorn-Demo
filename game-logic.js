@@ -1,5 +1,120 @@
 // ─── GAME LOGIC ─────────────────────────────────────────────────────────────
 
+const soundLibrary = {
+  // TODO audio assets: add these files when final SFX are approved.
+  "ui-click": "assets/audio/ui-click.mp3",
+  "ui-hover": "assets/audio/ui-hover.mp3",
+  "ui-back": "assets/audio/ui-back.mp3",
+  "engine-loop": "assets/audio/engine-loop.mp3",
+  "engine-shift": "assets/audio/engine-shift.mp3",
+  "engine-nitro": "assets/audio/engine-nitro.mp3",
+  "engine-launch": "assets/audio/engine-launch.mp3",
+  "race-countdown-beep": "assets/audio/countdown-beep.mp3",
+  "race-countdown-go": "assets/audio/countdown-go.mp3",
+  "battle-hit": "assets/audio/battle-hit.mp3",
+  "battle-special": "assets/audio/battle-special.mp3",
+  "battle-dodge": "assets/audio/battle-dodge.mp3",
+  "battle-stun": "assets/audio/battle-stun.mp3",
+  "win-jingle": "assets/audio/win-jingle.mp3",
+  "lose-jingle": "assets/audio/lose-jingle.mp3",
+  "bond-up": "assets/audio/bond-up.mp3",
+  "evolve-cue": "assets/audio/evolve-cue.mp3",
+  "rank-up": "assets/audio/rank-up.mp3"
+};
+
+const musicLibrary = {
+  // TODO music assets: these paths fail silently until files exist.
+  "menu-theme": "assets/audio/music-menu.mp3",
+  "race-theme": "assets/audio/music-race.mp3",
+  "battle-theme": "assets/audio/music-battle.mp3",
+  "garage-theme": "assets/audio/music-garage.mp3",
+  "boss-theme": "assets/audio/music-boss.mp3"
+};
+
+let currentMusic = null;
+let currentMusicKey = null;
+let currentMusicFade = null;
+
+function audioMasterVolume(scale = 1) {
+  return Math.max(0, Math.min(1, ((state?.settings?.volume ?? 45) / 100) * scale));
+}
+
+function playSound(key, options = {}) {
+  const src = soundLibrary[key] || options.src;
+  if (!src || typeof Audio === "undefined") return null;
+  try {
+    const audio = new Audio(src);
+    audio.loop = Boolean(options.loop);
+    audio.volume = audioMasterVolume(options.volume ?? 1);
+    audio.onerror = () => {};
+    audio.play().catch(() => {});
+    return audio;
+  } catch (error) {
+    return null;
+  }
+}
+
+function updateAudioVolumes() {
+  if (currentMusic) currentMusic.volume = audioMasterVolume(0.48);
+}
+
+function playMusic(key, options = {}) {
+  if (currentMusicFade) window.clearInterval(currentMusicFade);
+  if (!key) {
+    if (currentMusic) {
+      try {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
+      } catch (error) {}
+    }
+    currentMusic = null;
+    currentMusicKey = null;
+    return;
+  }
+  if (currentMusicKey === key && currentMusic && !currentMusic.paused) {
+    updateAudioVolumes();
+    return;
+  }
+  const src = musicLibrary[key];
+  if (!src || typeof Audio === "undefined") return;
+  const previous = currentMusic;
+  let next;
+  try {
+    next = new Audio(src);
+    next.loop = true;
+    next.volume = 0;
+    next.onerror = () => {
+      if (currentMusic === next) {
+        currentMusic = null;
+        currentMusicKey = null;
+      }
+    };
+    next.play().catch(() => {});
+  } catch (error) {
+    return;
+  }
+  currentMusic = next;
+  currentMusicKey = key;
+  const targetVolume = audioMasterVolume(options.volume ?? 0.48);
+  const start = performance.now();
+  currentMusicFade = window.setInterval(() => {
+    const progress = Math.min(1, (performance.now() - start) / 200);
+    if (next) next.volume = targetVolume * progress;
+    if (previous) previous.volume = Math.max(0, previous.volume * (1 - progress));
+    if (progress >= 1) {
+      window.clearInterval(currentMusicFade);
+      currentMusicFade = null;
+      if (previous) {
+        try {
+          previous.pause();
+          previous.currentTime = 0;
+        } catch (error) {}
+      }
+      updateAudioVolumes();
+    }
+  }, 24);
+}
+
 function xpForNextLevel(level) {
   if (level >= maxCarLevel) return 0;
   return Math.floor(95 * Math.pow(level, 1.48));
@@ -187,7 +302,7 @@ function playHonkSound(signatureSource) {
   const start = ctx.currentTime;
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(0.16, start + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.16 * audioMasterVolume(1), start + 0.018);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + signature.duration);
   gain.connect(ctx.destination);
   [signature.frequency, signature.secondFrequency].forEach((frequency, index) => {
@@ -206,8 +321,9 @@ function playHonkAudioFile(src) {
   if (!src) return false;
   try {
     const audio = new Audio(src);
-    audio.volume = 0.78;
+    audio.volume = audioMasterVolume(0.78);
     audio.currentTime = 0;
+    audio.onerror = () => {};
     audio.play().catch(() => playHonkSound(src));
     flashHonkControls();
     return true;
@@ -238,6 +354,47 @@ function honkCurrentRaceCar() {
     return true;
   }
   return false;
+}
+
+function getHonkSubtitle(lineRoot, emotion, bondLevel) {
+  return "[HONK SUBTITLE PLACEHOLDER]";
+}
+
+function openHonkModal(carId = selectedCarIdForMode("drag")) {
+  if (!el.honkModal || !el.honkOptions) {
+    playGearbornHonk(carId);
+    return;
+  }
+  const lineRoot = cars.some((car) => car.id === carId) ? carId : selectedCarIdForMode("drag");
+  const bondLevel = bondLevelForLine(lineRoot);
+  const emotions = [
+    { id: "happy", label: "Happy 😊" },
+    { id: "sad", label: "Sad 😢" },
+    { id: "excited", label: "Excited 🎉" },
+    { id: "angry", label: "Angry 😠" }
+  ];
+  el.honkOptions.innerHTML = emotions.map((emotion) => `
+    <button class="honk-emotion-button" type="button" data-honk-emotion="${emotion.id}" data-honk-line="${lineRoot}">
+      ${emotion.label}
+    </button>
+  `).join("");
+  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(lineRoot, "happy", bondLevel);
+  el.honkModal.classList.add("active");
+  el.honkModal.setAttribute("aria-hidden", "false");
+}
+
+function closeHonkModal() {
+  if (!el.honkModal) return;
+  el.honkModal.classList.remove("active");
+  el.honkModal.setAttribute("aria-hidden", "true");
+}
+
+function playHonkEmotion(lineRoot, emotion) {
+  const bondLevel = bondLevelForLine(lineRoot);
+  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(lineRoot, emotion, bondLevel);
+  const src = `assets/audio/honks/honk-${lineRoot}-${emotion}.mp3`;
+  if (!playHonkAudioFile(src)) playGearbornHonk(lineRoot);
+  window.setTimeout(closeHonkModal, 240);
 }
 
 function carStats(carId) {
@@ -406,6 +563,7 @@ function recordRaceUsage(carId) {
   });
   state.bond[carId] = bond;
   if (unlocked.length) {
+    playSound("bond-up");
     const form = currentEvolution(carId);
     unlocked.forEach((milestone) => {
       showToast("Bond Boost Unlocked!", `${form.name} gained ${formatBondBoosts(milestone.boosts)}!`);
@@ -1649,7 +1807,7 @@ function rivalTuner() {
 }
 
 function formatRank(rank) {
-  return rank ? `#${rank}` : "UR";
+  return rank ? `#${rank}` : "NR";
 }
 
 function computeTunerRankList() {
@@ -1738,7 +1896,7 @@ function advanceTunerRankForCityEntry(cityId) {
 
 function renderTunerRankBadge() {
   if (!el.tunerRankBadge) return;
-  el.tunerRankBadge.textContent = formatRank(state.tunerRank?.playerRank || null);
+  el.tunerRankBadge.textContent = `Tuner Rank: ${formatRank(state.tunerRank?.playerRank || null)}`;
 }
 
 function renderTunerRankScreen() {
@@ -1758,6 +1916,7 @@ function openTunerRankScreen() {
 }
 
 function showTunerRankRisePopup(rankChange, onReturn) {
+  playSound("rank-up");
   let modal = document.querySelector("#tuner-rank-rise-modal");
   if (!modal) {
     modal = document.createElement("div");
@@ -2342,6 +2501,7 @@ function battleUnitFromStats(name, image, stats, isPlayer = false, carId = "", t
 function beginBattle(mode = "battle", options = {}) {
   clearRaceResultPopups();
   const boss = options.boss || bossChallengeBosses.find((item) => item.id === state.selectedBattleBoss) || bossChallengeBosses[0];
+  playMusic(mode === "boss" || options.campaignLevelIndex !== null ? "boss-theme" : "battle-theme");
   const carId = options.carId || state.selectedStoryCar;
   const playerForm = currentEvolution(carId);
   const playerProfile = battleProfileForCarId(carId, playerForm.name);
@@ -2394,35 +2554,8 @@ function battleShieldAbsorb(unit, damage) {
   return Math.max(0, damage - absorbed);
 }
 
-function battleSpecialDamage(attacker, defender, logLines) {
-  const strongest = battleStrongestStat(attacker.stats);
-  const attack = battleAttackDamage(attacker);
-  if (strongest === "speed") {
-    logLines.push(`${attacker.name} used SPECIAL: Power Strike.`);
-    return { damage: Math.round(attack * 1.8), bypassDefend: false };
-  }
-  if (strongest === "acceleration") {
-    attacker.dodgeBuffTurns = 3;
-    logLines.push(`${attacker.name} used SPECIAL: Dodge Stance.`);
-    return { damage: 0, bypassDefend: true };
-  }
-  if (strongest === "handling") {
-    logLines.push(`${attacker.name} used SPECIAL: Phantom Strike.`);
-    return { damage: Math.round(attack * 1.4), bypassDefend: false, guaranteedSneak: true };
-  }
-  if (strongest === "torque") {
-    logLines.push(`${attacker.name} used SPECIAL: Crushing Blow.`);
-    return { damage: Math.round(attack * 2), bypassDefend: true };
-  }
-  if (strongest === "body") {
-    attacker.shield = Math.max(attacker.shield || 0, Math.round(attacker.hpMax * 0.25));
-    attacker.shieldTurns = 3;
-    logLines.push(`${attacker.name} used SPECIAL: Iron Shield.`);
-    return { damage: 0, bypassDefend: true };
-  }
-  attacker.sp = Math.min(4, attacker.sp + 2);
-  logLines.push(`${attacker.name} used SPECIAL: Overcharge.`);
-  return { damage: Math.round(attack * 1.5), bypassDefend: false };
+function battleSpecialDamage(attacker) {
+  return Math.max(8, Math.round(battleAttackDamage(attacker) * 1.8));
 }
 
 function battleResolveAttack(attacker, defender, attackMove, defendMove, logLines) {
@@ -2441,9 +2574,7 @@ function battleResolveAttack(attacker, defender, attackMove, defendMove, logLine
     return Math.max(8, Math.round(2.5 * battleAttackDamage(attacker) * mod));
   }
   if (attackMove === "special") {
-    const special = battleSpecialDamage(attacker, defender, logLines);
-    if (!special.damage) return 0;
-    return Math.max(8, special.damage);
+    return battleSpecialDamage(attacker);
   }
   return Math.max(8, Math.round(battleAttackDamage(attacker)));
 }
@@ -2519,7 +2650,8 @@ function handleBattleMove(playerMove) {
   const player = battleState.player;
   const opponent = battleState.opponent;
   const playerWasStunned = player.stunned;
-  if (!playerWasStunned && !(player.moveset || []).includes(playerMove)) return;
+  const forcedRevFire = player.revState === "loading" && playerMove === "rev";
+  if (!playerWasStunned && !forcedRevFire && !(player.moveset || []).includes(playerMove)) return;
   if (!playerWasStunned && playerMove === "special" && player.sp < 4) return;
   const playerAction = playerWasStunned ? "stunned" : player.revState === "loading" ? "rev" : playerMove;
   const opponentMove = chooseOpponentBattleMove();
@@ -2552,6 +2684,12 @@ function handleBattleMove(playerMove) {
   playerDamage = battleApplyDefense(player, opponent, opponentAttackMove, playerAction, playerDamage, logLines);
   playerDamage = battleShieldAbsorb(player, playerDamage);
   opponentDamage = battleShieldAbsorb(opponent, opponentDamage);
+  if (playerAction === "special") logLines.push(`You used SPECIAL, ${opponent.name} took ${opponentDamage} damage.`);
+  if (opponentMove === "special") logLines.push(`${opponent.name} used SPECIAL, you took ${playerDamage} damage.`);
+  if (playerAction === "special" || opponentMove === "special") playSound("battle-special");
+  if (opponentDamage > 0 || playerDamage > 0) playSound("battle-hit");
+  if (logLines.some((line) => line.includes("Successful dodge") || line.includes("Successful sneak"))) playSound("battle-dodge");
+  if (logLines.some((line) => line.includes("is stunned"))) playSound("battle-stun");
 
   player.hp = Math.max(0, player.hp - playerDamage);
   opponent.hp = Math.max(0, opponent.hp - opponentDamage);
@@ -2616,6 +2754,7 @@ function nextBattleTurn() {
 function finishBattle() {
   battleState.finished = true;
   const won = battleState.opponent.hp <= 0 && battleState.player.hp > 0;
+  playSound(won ? "win-jingle" : "lose-jingle");
   const index = bossChallengeBosses.findIndex((boss) => boss.id === battleState.boss.id);
   const isGauntlet = Boolean(battleState.gauntlet);
   const earned = isGauntlet ? 0 : tutorialActive() && !won ? 0 : won ? (battleState.reward ?? battleRewardForBossIndex(index)) : Math.round(35 + Math.max(0, index) * 18);
@@ -2931,6 +3070,7 @@ function renderVindexMemories(entry, discovered) {
   if (!el.vindexMemoriesButton || !el.vindexMemoriesPanel) return;
   const playable = playableEntryMeta(entry);
   el.vindexMemoriesButton.hidden = !discovered || !playable;
+  el.vindexMemoriesButton.setAttribute("aria-expanded", "false");
   el.vindexMemoriesPanel.hidden = true;
   if (!playable) {
     el.vindexMemoriesPanel.innerHTML = "";
@@ -2952,7 +3092,9 @@ function renderVindexMemories(entry, discovered) {
 
 function toggleVindexMemories() {
   if (!el.vindexMemoriesPanel) return;
-  el.vindexMemoriesPanel.hidden = !el.vindexMemoriesPanel.hidden;
+  const isOpening = el.vindexMemoriesPanel.hidden;
+  el.vindexMemoriesPanel.hidden = !isOpening;
+  el.vindexMemoriesButton?.setAttribute("aria-expanded", String(isOpening));
 }
 
 function replayBondScene(lineRoot, threshold) {
@@ -3850,16 +3992,24 @@ function dragOpponentSeed(rank, distance, dragStage, rankIndex) {
   if (dragStage?.opponents?.length) return dragStage.opponents;
   if (dragStage) return [{ name: dragStage.name, image: dragStage.image, power: dragStage.power }];
   const count = Math.max(1, Math.min(3, state.selectedDragOpponents || 1));
-  const startIndex = Math.max(0, rankIndex);
-  return Array.from({ length: count }, (_, offset) => {
-    const fallbackRank = ranks[Math.min(ranks.length - 1, startIndex + offset)] || rank;
-    return {
-      name: fallbackRank.name,
-      image: imageFor(fallbackRank, "race"),
-      power: fallbackRank.power * (1 + offset * 0.05),
-      rankKey: fallbackRank.key
-    };
-  });
+  const seeds = [{
+    name: rank.name,
+    image: imageFor(rank, "race"),
+    power: rank.power,
+    rankKey: rank.key
+  }];
+  const excludedNames = new Set(["hornula1", "rainbowlt"]);
+  const pool = ranks.filter((item) => item.key !== rank.key && !excludedNames.has(slugify(item.name)));
+  while (seeds.length < count && pool.length) {
+    const [picked] = pool.splice(Math.floor(Math.random() * pool.length), 1);
+    seeds.push({
+      name: picked.name,
+      image: imageFor(picked, "race"),
+      power: picked.power * (1 + seeds.length * 0.05),
+      rankKey: picked.key
+    });
+  }
+  return seeds;
 }
 
 function makeDragOpponent(seed, index, rank, distance, dragStage, rankIndex) {
@@ -3902,10 +4052,12 @@ function setLaunchPhase(phase) {
     el.dragCountdown.classList.add("active");
     el.dragCountdown.textContent = "GO";
     playAudioCue("raceStart");
+    playSound("race-countdown-go");
   } else {
     el.dragCountdown.classList.add("active");
     el.dragCountdown.textContent = phase.toUpperCase();
     playAudioCue("raceCountdown");
+    playSound("race-countdown-beep");
   }
 }
 
@@ -3932,6 +4084,7 @@ function launchDragPlayer() {
   el.dragCountdown.classList.remove("active");
   updateGearshiftIndicator(true);
   updateNitroHud();
+  playSound("engine-launch");
   beep(message);
 }
 
@@ -4034,6 +4187,8 @@ function dragVisibleLanes(opponentCount) {
 function startDragRace(campaignLevelIndex = null, dragStage = null) {
   clearRaceResultPopups();
   el.dragMapStart.classList.remove("active");
+  const levelForMusic = campaignLevelIndex !== null && campaignLevelIndex !== undefined ? campaignLevels[campaignLevelIndex] : null;
+  playMusic(levelForMusic?.type === "boss" ? "boss-theme" : "race-theme");
   const car = carStats(state.selectedCar);
   const rank = dragStage
     ? { key: dragStage.rankKey, name: dragStage.name, xpBonus: dragStage.xp / 180, power: dragStage.power, color: "#f25f5c", images: { race: dragStage.image } }
@@ -4223,6 +4378,7 @@ function shift() {
   }
   race.gear = nextGear;
   updateGearshiftIndicator(true);
+  playSound("engine-shift");
   race.rpm = race.gear === 6 ? 0.74 : Math.max(0.22, 0.34 - race.gear * 0.015);
   el.shiftReadout.textContent = label;
   updateNitroHud();
@@ -4268,6 +4424,7 @@ function useNitro() {
   race.nitroTimer = dragNitroDuration;
   race.playerSpeed = Math.min(race.playerSpeed * dragNitroMultiplier, race.playerMaxSpeed * dragNitroMultiplier);
   el.shiftReadout.textContent = "Nitro";
+  playSound("engine-nitro");
   updateNitroHud();
 }
 
@@ -4320,6 +4477,7 @@ function topGearBoostForShift(label) {
 function finishRace(playerWon) {
   race.active = false;
   race.finished = true;
+  playSound(playerWon ? "win-jingle" : "lose-jingle");
   race.nitroActive = false;
   race.rivalNitroActive = false;
   (race.opponents || []).forEach((opponent) => {
@@ -4654,11 +4812,13 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
     if (revealed) return;
     revealed = true;
     playAudioCue("evolutionReveal");
+    playSound("evolve-cue");
     onReveal?.();
     if (featureEnabled("enableEvolutionPolish")) showToast("EVOLUTION_REVEAL_PLACEHOLDER_TITLE", "EVOLUTION_REVEAL_PLACEHOLDER_BODY");
   };
   evolutionAnimationActive = true;
   playAudioCue("evolutionBuild");
+  playSound("evolve-cue");
 
   // Load images into the overlay
   el.evolutionAnimationCurrent.src = currentImage;
@@ -5265,7 +5425,9 @@ function carNameKey(name = "") {
 }
 
 function displayScaleStyle(name, role = "display") {
-  return "";
+  const key = carNameKey(name);
+  const scale = displayImageScaleByName?.[key] || 1;
+  return scale === 1 ? "" : ` style="--display-scale:${scale}"`;
 }
 
 function rankMarkup(rank, role = "display") {
@@ -5817,6 +5979,10 @@ function showView(view) {
     : (view === "beta" && ["story", "tutorial"].includes(betaRaceContext?.source) ? "story" : view);
   document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === activeNavView));
   document.body.classList.toggle("mode-active", view !== "menu");
+  if (view === "menu" || view === "story") playMusic("menu-theme");
+  else if (view === "garage") playMusic("garage-theme");
+  else if (view === "play" || view === "time-trial" || view === "beta" || view === "hub-map-beta") playMusic("race-theme");
+  else if (view === "battle" || view === "boss") playMusic("battle-theme");
   if (view === "story") {
     storyReplayOpen = false;
     modeFlow.story = state.storyCarChosen ? "next" : "car";
@@ -6966,6 +7132,7 @@ function completeCampaignLevel(index) {
   if (completedLevel?.type === "boss") unlockNextTrainingBossFromBoss((completedLevel.final ? finalBoss : bosses[completedLevel.bossIndex])?.id);
   if (!wasCompleted && featureEnabled("enableReputationAnimations") && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type)) {
     playAudioCue("reputationGain");
+    playSound("bond-up");
     showToast("REPUTATION_GAIN_PLACEHOLDER_TITLE", "REPUTATION_GAIN_PLACEHOLDER_BODY");
   }
   if (!wasCompleted && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type) && cityIndex >= 0) {

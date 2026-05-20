@@ -43,15 +43,23 @@ function sanitizeState() {
   state.raceMedals = state.raceMedals && typeof state.raceMedals === "object" ? state.raceMedals : {};
   state.microObjectiveProgress = state.microObjectiveProgress && typeof state.microObjectiveProgress === "object" ? state.microObjectiveProgress : {};
   state.visitedStoryCities = state.visitedStoryCities && typeof state.visitedStoryCities === "object" ? state.visitedStoryCities : {};
+  state.dismissedRotationTips = Boolean(state.dismissedRotationTips);
   state.tunerRank = state.tunerRank && typeof state.tunerRank === "object" ? state.tunerRank : {};
-  state.tunerRank.playerRank = Number.isFinite(Number(state.tunerRank.playerRank)) ? Math.max(1, Math.floor(Number(state.tunerRank.playerRank))) : null;
   state.tunerRank.defeatedBossIds = Array.isArray(state.tunerRank.defeatedBossIds)
     ? state.tunerRank.defeatedBossIds.filter((id, index, list) => bossChallengeBosses.some((boss) => boss.id === id) && list.indexOf(id) === index)
     : [];
+  const sanitizedPlayerRank = Number(state.tunerRank.playerRank);
+  state.tunerRank.playerRank = Number.isFinite(sanitizedPlayerRank) && sanitizedPlayerRank > 0
+    ? Math.floor(sanitizedPlayerRank)
+    : null;
+  if (!state.tunerRank.defeatedBossIds.length) state.tunerRank.playerRank = null;
   state.tunerRank.bossesFirstSeen = Array.isArray(state.tunerRank.bossesFirstSeen)
     ? state.tunerRank.bossesFirstSeen.filter((id, index, list) => storyCities.some((city) => city.id === id) && list.indexOf(id) === index)
     : [];
-  state.tunerRank.rivalRank = Number.isFinite(Number(state.tunerRank.rivalRank)) ? Math.max(1, Math.floor(Number(state.tunerRank.rivalRank))) : null;
+  const sanitizedRivalRank = Number(state.tunerRank.rivalRank);
+  state.tunerRank.rivalRank = Number.isFinite(sanitizedRivalRank) && sanitizedRivalRank > 0 && state.tunerRank.playerRank
+    ? Math.floor(sanitizedRivalRank)
+    : null;
   state.convoy = state.convoy && typeof state.convoy === "object" ? state.convoy : {};
   state.convoy.available = state.convoy.available && typeof state.convoy.available === "object" ? state.convoy.available : {};
   state.convoy.completed = state.convoy.completed && typeof state.convoy.completed === "object" ? state.convoy.completed : {};
@@ -329,6 +337,8 @@ if (beta3dDevEnabled()) document.body.classList.add("beta-dev-enabled");
 document.addEventListener("click", (event) => {
   if (event.target.closest("button, [role='button'], .menu-card, .story-map-node, .vindex-button, .garage-card")) {
     playAudioCue("uiSelect");
+    const isBack = event.target.closest(".back-link, .modal-close-bubble, .ghost");
+    playSound(isBack ? "ui-back" : "ui-click");
   }
 });
 

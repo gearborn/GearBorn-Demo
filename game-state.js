@@ -577,6 +577,7 @@ const defaultState = {
   raceMedals: {},
   microObjectiveProgress: {},
   betaTimeTrials: {},
+  dismissedRotationTips: false,
   bond: {},
   bondScenesViewed: {},
   favoriteCarIds: [],
