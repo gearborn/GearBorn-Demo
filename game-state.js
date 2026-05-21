@@ -370,11 +370,16 @@ const audioCueAssets = {
 };
 
 const medalPriority = { none: 0, bronze: 1, silver: 2, gold: 3 };
-const godModePassword = String(
-  window.GEARBORN_GOD_MODE_CODE
-  || document.querySelector('meta[name="gearborn-god-mode-code"]')?.content
-  || ""
-);
+function getGodModePassword() {
+  const gearbornRuntimeConfig = window.__GEARBORN_CONFIG__ || {};
+  return String(
+    gearbornRuntimeConfig.GOD_MODE_CODE
+    || gearbornRuntimeConfig.GEARBORN_GOD_MODE_CODE
+    || window.GEARBORN_GOD_MODE_CODE
+    || document.querySelector('meta[name="gearborn-god-mode-code"]')?.content
+    || ""
+  ).trim();
+}
 
 function reduceMotionEnabled() {
   return Boolean(gameFeatureConfig.reduceMotion || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);

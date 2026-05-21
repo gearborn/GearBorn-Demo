@@ -467,7 +467,6 @@ document.querySelector("#garage-view-toggle")?.addEventListener("click", (event)
   renderGarage();
 });
 
-el.tunerRankBadge?.addEventListener("click", openTunerRankScreen);
 el.tunerRankOpen?.addEventListener("click", openTunerRankScreen);
 el.tunerRankBack?.addEventListener("click", () => showView("story"));
 

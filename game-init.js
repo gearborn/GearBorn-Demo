@@ -333,6 +333,7 @@ document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
 });
 
 if (beta3dDevEnabled()) document.body.classList.add("beta-dev-enabled");
+verifyMenuAssets();
 
 document.addEventListener("click", (event) => {
   if (event.target.closest("button, [role='button'], .menu-card, .story-map-node, .vindex-button, .garage-card")) {

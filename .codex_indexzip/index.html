@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GearBorn: Engines Evolved Demo</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="app-loading">
+    <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-logo">
+          <img src="assets/logo/gearborn-logo.png" alt="GearBorn Engines Evolved">
+          <div class="loading-logo-text">
+            <strong>GearBorn</strong>
+            <span>Engines Evolved</span>
+          </div>
+        </div>
+          <h1>Fueling Engines…</h1>
+        <div class="fuel-tank" aria-label="Loading progress">
+          <div class="fuel-fill" id="fuel-fill"></div>
+          <span class="fuel-cap" aria-hidden="true"></span>
+        </div>
+        <p class="loading-tip" id="loading-tip">Sprox power upgrades in the Garage.</p>
+      </div>
+    </div>
+    <div class="app">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="main-menu-button" data-view="menu" type="button">Main Menu</button>
+          <button class="brand" data-view="menu" aria-label="Gearborn home">
+            <span class="brand-mark">
+              <img src="assets/logo/gearborn-logo.png" alt="">
+            </span>
+            <span>
+              <strong>GearBorn</strong>
+              <small>Engines Evolved</small>
+            </span>
+          </button>
+          <div class="sprox-wallet" aria-label="Sprox balance">
+            <strong id="sprox-total">0 Sprox</strong>
+            <span class="sprox-coin" aria-hidden="true">●</span>
+          </div>
+          <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">⚙</button>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
+          <button class="nav-button" data-view="solo" type="button">Training Academy</button>
+          <button class="nav-button" data-view="garage" type="button">Garage</button>
+          <button class="nav-button" data-view="vindex" type="button">VINdex</button>
+          <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
+          <button class="nav-button" data-view="achievements" type="button">Achievements</button>
+          <button class="nav-button beta-nav" data-view="beta" type="button">Beta Mode</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="view active" id="menu-view" aria-labelledby="menu-title">
+          <div class="main-menu">
+            <div class="menu-logo" aria-label="GearBorn Engines Evolved">
+              <img id="game-logo" src="assets/logo/gearborn-logo.png" alt="GearBorn Engines Evolved" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+              <div class="menu-title-box" hidden>
+                <div class="logo-placeholder">
+                  <span>GearBorn</span>
+                  <strong>Engines Evolved</strong>
+                </div>
+              </div>
+              <p class="menu-subtitle">Race, Train, Evolve</p>
+            </div>
+            <div class="menu-dashboard" aria-label="Menu choices">
+              <button class="menu-card hero-menu-card" data-view="story" type="button">
+                <strong>Story Mode</strong>
+                <small>Race. Evolve. Prove yourself.</small>
+                <span class="menu-card-cta">Start Story</span>
+              </button>
+              <aside class="next-goal-panel">
+                <span>Next Story Race</span>
+                <strong id="menu-next-race">Indianapolis - Level 2</strong>
+                <small id="menu-next-reward">Reward +50 Sprox</small>
+                <button class="story-primary" data-view="story" type="button">Start Race</button>
+              </aside>
+              <div class="menu-secondary-grid">
+                <button class="menu-card garage-card" data-view="garage" type="button">
+                  <span class="menu-card-icon">G</span>
+                  <strong>Garage</strong>
+                  <small>Upgrade your GearBorn.</small>
+                </button>
+                <button class="menu-card training-card" data-view="solo" type="button">
+                  <span class="menu-card-icon">T</span>
+                  <strong>Training</strong>
+                  <small>Master every race mode.</small>
+                </button>
+              </div>
+              <div class="menu-utility-grid">
+                <button class="menu-utility" data-view="vindex" type="button">
+                  <strong>VINdex</strong>
+                  <small>Discover every GearBorn.</small>
+                </button>
+                <button class="menu-utility" data-view="profiles" type="button">
+                  <strong>Racer Profiles</strong>
+                  <small>Meet the rivals.</small>
+                </button>
+                <button class="menu-utility" data-view="achievements" type="button">
+                  <strong>Achievements</strong>
+                  <small>Unlock rare rewards.</small>
+                </button>
+                <button class="menu-utility" data-view="builder" type="button">
+                  <strong>Builder</strong>
+                  <small>Create your own tracks.</small>
+                </button>
+              </div>
+              <p class="creator-credit">Created by Corey Hanley</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="solo-view" aria-labelledby="solo-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading solo-heading">
+            <p>Training Academy</p>
+            <h1 id="solo-title">Choose a training race.</h1>
+          </div>
+          <div class="solo-grid">
+            <button class="solo-card primary-card" data-view="play" type="button">
+              <span class="solo-card-icon"></span>
+              <strong>Drag Race</strong>
+              <span>Shift through gears and beat class rivals.</span>
+              <em>Start</em>
+            </button>
+            <button class="solo-card primary-card" data-training-2d="time" type="button">
+              <span class="solo-card-icon"></span>
+              <strong>Time Trial</strong>
+              <span>Run a circuit and chase bronze, silver, gold, and Phantaxi.</span>
+              <em>Start</em>
+            </button>
+            <button class="solo-card primary-card" data-training-2d="vs" type="button">
+              <span class="solo-card-icon"></span>
+              <strong>Vs. Race</strong>
+              <span>Choose a 4-car, 6-car, or head-to-head race.</span>
+              <em>Start</em>
+            </button>
+            <button class="solo-card primary-card" data-view="battle" type="button">
+              <span class="solo-card-icon"></span>
+              <strong>Battle Mode</strong>
+              <span>Trade attacks, defend, and use specials in arena battles.</span>
+              <em>Start</em>
+            </button>
+          </div>
+        </section>
+
+        <section class="view" id="story-view" aria-labelledby="story-title">
+          <button class="back-link" data-mode-back="story" type="button">Back</button>
+          <div class="section-heading">
+            <p>Story Mode</p>
+            <h1 id="story-title">Race, train, evolve through the GearBorn world.</h1>
+          </div>
+          <div class="flow-step active" data-flow="story" data-step="car">
+            <div class="flow-card">
+              <h2>Choose Your Car</h2>
+              <div class="car-select-layout">
+                <div class="icon-grid compact-car-grid" id="story-car-grid"></div>
+                <div class="car-select-preview" id="story-car-select-preview"></div>
+              </div>
+              <button class="story-primary flow-next" data-flow-next="story:next" type="button">Continue</button>
+            </div>
+          </div>
+          <div class="campaign-layout flow-step" data-flow="story" data-step="next">
+            <div class="story-city-map" id="story-city-map">
+              <div class="story-city-top">
+                <div class="story-city-heading">
+                  <span class="city-icon" id="story-city-icon">◆</span>
+                  <div>
+                    <h2 id="story-city-title">Indianapolis</h2>
+                  </div>
+                </div>
+                <button class="ghost city-select-button city-transport-button" id="story-city-select" type="button" aria-label="City Select">
+                  <img src="assets/cars/hotel-ritzcarloadin-display.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                </button>
+              </div>
+              <div class="boss-unlock-note" id="boss-unlock-note"></div>
+              <div class="story-map-stage" id="story-map-stage"></div>
+              <div class="story-map-actions">
+                <button class="ghost campaign-change-car" id="change-story-car" type="button">Change Vehicle</button>
+              </div>
+            </div>
+            <div class="story-preview-panel" id="story-preview-panel" aria-hidden="true">
+              <button class="modal-close-bubble" id="close-story-preview" type="button" aria-label="Close level preview">×</button>
+              <div class="story-preview-head">
+                <span class="story-level-icon" id="story-preview-icon">◆</span>
+                <div>
+                  <p id="campaign-type"></p>
+                  <h2 id="campaign-title"></h2>
+                  <span id="campaign-meta"></span>
+                </div>
+              </div>
+              <div class="story-preview-art" id="story-preview-art"></div>
+              <div class="story-preview-leaderboard" id="story-preview-leaderboard"></div>
+              <div class="campaign-rewards" id="campaign-rewards"></div>
+              <div class="story-loadout" id="story-loadout"></div>
+              <button class="story-primary campaign-start" id="start-campaign" type="button">Start Level</button>
+            </div>
+            <div class="story-city-select-panel" id="story-city-select-panel" aria-hidden="true">
+              <button class="modal-close-bubble" id="close-city-select" type="button" aria-label="Close city select">×</button>
+              <p class="modal-kicker">City Select</p>
+              <h2>Choose a city.</h2>
+              <div class="story-city-grid" id="story-city-grid"></div>
+            </div>
+          </div>
+          <div class="campaign-race-mount" id="campaign-race-mount"></div>
+        </section>
+
+        <section class="view" id="boss-view" aria-labelledby="boss-title">
+          <button class="back-link" data-mode-back="boss" type="button">Back</button>
+          <div class="vertical-mode">
+            <div class="setup">
+              <div class="section-heading flow-step active" data-flow="boss" data-step="car">
+                <p>Boss Race</p>
+                <h1 id="boss-title">Choose your car.</h1>
+                <div class="car-select-layout">
+                  <div class="icon-grid compact-car-grid" id="boss-car-grid"></div>
+                  <div class="car-select-preview" id="boss-car-select-preview"></div>
+                </div>
+                <button class="primary flow-next" data-flow-next="boss:match" type="button">Next</button>
+              </div>
+              <div class="flow-step" data-flow="boss" data-step="match">
+                <div class="field">
+                  <label for="story-car">Your car</label>
+                  <select id="story-car"></select>
+                </div>
+                <div class="field">
+                  <label>Boss</label>
+                  <div class="boss-list" id="boss-list"></div>
+                </div>
+                <div class="selection-preview boss-preview" id="boss-preview"></div>
+                <button class="primary" id="start-story" type="button">Start Boss Race</button>
+              </div>
+            </div>
+            <div class="vertical-shell">
+              <div class="vertical-hud">
+                <strong id="story-location">Indianapolis, USA</strong>
+                <span id="story-speed">0 MPH</span>
+                <span id="story-distance">0 / 500 m</span>
+              </div>
+              <div class="vertical-track" id="story-track">
+                <div class="vertical-finish"></div>
+                <div class="top-car user" id="story-player"></div>
+                <div class="top-car boss" id="story-boss"></div>
+                <button class="map-start-button" id="story-map-start" type="button">Start</button>
+                <div class="countdown" id="story-countdown"></div>
+              </div>
+              <div class="race-message" id="story-message">Select a boss and start the race.</div>
+              <div class="touch-controls" aria-label="Story driving controls">
+                <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
+                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                </button>
+                <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="battle-view" aria-labelledby="battle-title">
+          <button class="back-link" data-mode-back="battle" type="button">Back</button>
+          <div class="battle-mode">
+            <div class="setup">
+              <div class="section-heading flow-step active" data-flow="battle" data-step="car">
+                <p>Battle Mode</p>
+                <h1 id="battle-title">Choose your car.</h1>
+                <div class="car-select-layout">
+                  <div class="icon-grid compact-car-grid" id="battle-car-grid"></div>
+                  <div class="car-select-preview" id="battle-car-select-preview"></div>
+                </div>
+                <button class="primary flow-next" data-flow-next="battle:match" type="button">Next</button>
+              </div>
+              <div class="flow-step" data-flow="battle" data-step="match">
+                <div class="field">
+                  <label>Opponent</label>
+                  <div class="boss-list" id="battle-list"></div>
+                </div>
+                <div class="selection-preview boss-preview" id="battle-preview"></div>
+                <button class="primary battle-start-button" id="start-battle" type="button">Start Battle</button>
+              </div>
+            </div>
+            <div class="battle-shell flow-step" data-flow="battle" data-step="race">
+              <div class="battle-arena" id="battle-arena">
+                <div class="battle-status player">
+                  <strong id="battle-player-name"></strong>
+                  <div class="hp-bar"><span id="battle-player-hp-fill"></span><b id="battle-player-hp"></b></div>
+                  <div class="sp-bar"><span id="battle-player-sp-fill"></span><b id="battle-player-sp"></b></div>
+                </div>
+                <div class="battle-status opponent">
+                  <strong id="battle-opponent-name"></strong>
+                  <div class="hp-bar"><span id="battle-opponent-hp-fill"></span><b id="battle-opponent-hp"></b></div>
+                  <div class="sp-bar"><span id="battle-opponent-sp-fill"></span><b id="battle-opponent-sp"></b></div>
+                </div>
+                <div class="battle-car player" id="battle-player-car"></div>
+                <div class="battle-car opponent" id="battle-opponent-car"></div>
+                <div class="battle-move player" id="battle-player-move"></div>
+                <div class="battle-move opponent" id="battle-opponent-move"></div>
+                <div class="battle-actions" id="battle-actions">
+                  <button class="battle-action attack" data-battle-move="attack" type="button"><img src="assets/items/battle-attack.png" alt="">Attack</button>
+                  <button class="battle-action defend" data-battle-move="defend" type="button"><img src="assets/items/battle-defend.png" alt="">Defend</button>
+                  <button class="battle-action special" data-battle-move="special" type="button"><img src="assets/items/battle-special.png" alt="">Special</button>
+                </div>
+                <button class="battle-next" id="battle-next-turn" type="button" hidden>Next Turn</button>
+                <div class="battle-log" id="battle-log">Choose a move.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="time-trial-view" aria-labelledby="time-title">
+          <button class="back-link" data-mode-back="time" type="button">Back</button>
+          <div class="vertical-mode">
+            <div class="setup">
+              <div class="section-heading flow-step active" data-flow="time" data-step="car">
+                <p>Time Trial</p>
+                <h1 id="time-title">Choose your car.</h1>
+                <div class="car-select-layout">
+                  <div class="icon-grid compact-car-grid" id="time-car-grid"></div>
+                  <div class="car-select-preview" id="time-car-select-preview"></div>
+                </div>
+                <button class="primary flow-next" data-flow-next="time:match" type="button">Next</button>
+              </div>
+              <div class="flow-step" data-flow="time" data-step="match">
+                <div class="field">
+                  <label for="time-car">Your car</label>
+                  <select id="time-car"></select>
+                </div>
+                <div class="field">
+                  <label for="time-track">Track</label>
+                  <select id="time-track"></select>
+                </div>
+                <div class="map-grid" id="time-track-grid"></div>
+                <div class="map-preview" id="time-track-preview"></div>
+                <div class="time-targets" id="time-targets"></div>
+                <button class="primary" id="start-time-trial" type="button">Start Time Trial</button>
+              </div>
+            </div>
+            <div class="vertical-shell">
+              <div class="vertical-hud">
+                <strong id="time-location">Indianapolis, USA</strong>
+                <span id="time-clock">0.00 s</span>
+                <span id="time-distance">0 / 1000 m</span>
+              </div>
+              <div class="vertical-track" id="time-trial-track">
+                <div class="vertical-finish"></div>
+                <div class="top-car ghost" id="time-ghost"></div>
+                <div class="top-car user" id="time-player"></div>
+                <button class="map-start-button" id="time-map-start" type="button">Start</button>
+                <div class="countdown" id="time-countdown"></div>
+              </div>
+              <div class="race-message" id="time-message">Pick a track and chase your best run.</div>
+              <div class="touch-controls" aria-label="Time Trial driving controls">
+                <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
+                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
+                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                </button>
+                <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="vindex-view" aria-labelledby="vindex-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <h1 class="sr-only" id="vindex-title">VINdex GearBorn archive</h1>
+          <div class="vindex-shell">
+            <div class="vindex-stage">
+              <aside class="vindex-list-panel" aria-label="GearBorn list">
+                <div class="vindex-list" id="vindex-list"></div>
+              </aside>
+              <section class="vindex-detail" aria-label="Selected GearBorn">
+                <div class="vindex-preview-head">
+                  <p id="vindex-number"></p>
+                  <h2 id="vindex-name"></h2>
+                  <span id="vindex-line"></span>
+                </div>
+                <img class="vindex-class-stamp" id="vindex-class-stamp" alt="" hidden>
+                <img class="vindex-type-stamp" id="vindex-type-stamp" alt="" hidden>
+                <div class="vindex-art" id="vindex-art"></div>
+                <div class="vindex-plate-wrap" id="vindex-plate"></div>
+                <div class="vindex-copy">
+                  <strong id="vindex-status"></strong>
+                </div>
+              </section>
+              <aside class="vindex-filter-panel" aria-label="VINdex filters">
+                <div class="vindex-filter-buttons" id="vindex-filter-buttons">
+                  <button type="button" data-vindex-filter="all" aria-label="Show all GearBorn"><img src="assets/vindex/filter-all.png" alt="All"></button>
+                  <button type="button" data-vindex-filter="owned" aria-label="Show owned GearBorn"><img src="assets/vindex/filter-owned.png" alt="Owned"></button>
+                  <button type="button" data-vindex-filter="seen" aria-label="Show seen GearBorn"><img src="assets/vindex/filter-seen.png" alt="Seen"></button>
+                </div>
+                <div class="vindex-progress" id="vindex-progress"></div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="profiles-view" aria-labelledby="profiles-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading">
+            <p>Racer Profiles</p>
+            <h1 id="profiles-title">Meet the GearBorn racers.</h1>
+          </div>
+          <div class="profile-layout">
+            <div class="profile-list" id="profile-list"></div>
+            <div class="profile-detail">
+              <div class="profile-art" id="profile-art"></div>
+              <div class="profile-copy">
+                <div class="profile-name-row">
+                  <div>
+                    <h2 id="profile-name"></h2>
+                    <p id="profile-meta"></p>
+                  </div>
+                  <div class="profile-car-art" id="profile-car-art"></div>
+                </div>
+                <span id="profile-bio"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="achievements-view" aria-labelledby="achievements-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading">
+            <p>Achievements</p>
+            <h1 id="achievements-title">Track big wins and rare unlocks.</h1>
+          </div>
+          <div class="achievement-layout">
+            <div class="achievement-list" id="achievement-list"></div>
+            <div class="achievement-detail" id="achievement-detail"></div>
+          </div>
+        </section>
+
+        <section class="view" id="play-view" aria-labelledby="play-title">
+          <button class="back-link" data-mode-back="drag" type="button">Back</button>
+          <div class="race-panel">
+            <div class="setup">
+              <div class="section-heading flow-step active" data-flow="drag" data-step="car">
+                <p>Race Setup</p>
+                <h1 id="play-title">Choose your GearBorn.</h1>
+                <div class="car-select-layout">
+                  <div class="icon-grid compact-car-grid" id="drag-car-grid"></div>
+                  <div class="car-select-preview" id="drag-car-select-preview"></div>
+                </div>
+                <button class="primary flow-next" data-flow-next="drag:match" type="button">Next</button>
+              </div>
+
+              <div class="flow-step" data-flow="drag" data-step="match">
+                <div class="field">
+                  <label for="player-car">Your car</label>
+                  <select id="player-car"></select>
+                </div>
+                <div class="selection-preview" id="player-preview">
+                  <div class="selection-preview-art" id="player-preview-art"></div>
+                  <div>
+                    <strong id="player-preview-name"></strong>
+                    <small id="player-preview-meta"></small>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Race distance</label>
+                  <div class="segmented" id="distance-options" role="group" aria-label="Race distance"></div>
+                </div>
+
+                <div class="field">
+                  <label>Opponent rank</label>
+                  <div class="opponent-list" id="opponent-list"></div>
+                </div>
+                <div class="selection-preview" id="opponent-preview">
+                  <div class="selection-preview-art" id="opponent-preview-art"></div>
+                  <div>
+                    <strong id="opponent-preview-name"></strong>
+                    <small id="opponent-preview-meta"></small>
+                  </div>
+                </div>
+
+                <div class="setup-actions">
+                  <button class="primary" id="start-race" type="button">
+                    <span class="button-icon">▶</span>
+                    Continue to Race
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="track-shell">
+              <div class="hud">
+                <div>
+                  <span class="hud-label">Speed</span>
+                  <strong id="mph">0 MPH</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Gear</span>
+                  <strong id="gear">1</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Distance</span>
+                  <strong id="distance">0 m</strong>
+                </div>
+                <div>
+                  <span class="hud-label">Shift</span>
+                  <strong id="shift-readout">Ready</strong>
+                </div>
+              </div>
+
+              <div class="tach">
+                <div class="tach-zone early"></div>
+                <div class="tach-zone good"></div>
+                <div class="tach-zone late"></div>
+                <div class="tach-fill" id="tach-fill"></div>
+                <div class="perfect-band"></div>
+              </div>
+
+              <div class="nitro-panel" aria-label="Nitro boost meter">
+                <img src="assets/items/token-nitrous.png" alt="Nitro">
+                <div class="nitro-bar">
+                  <div class="nitro-fill" id="nitro-fill"></div>
+                </div>
+                <span id="nitro-readout">0%</span>
+              </div>
+
+              <div class="track" aria-label="Drag race track">
+                <div class="finish-line"></div>
+                <div class="lane">
+                  <span class="lane-label">YOU</span>
+                  <div class="car player-car" id="player-racer">
+                    <img class="car-image" id="player-racer-image" alt="">
+                    <span class="car-glow"></span>
+                    <span class="car-body"></span>
+                    <span class="wheel front"></span>
+                    <span class="wheel rear"></span>
+                  </div>
+                </div>
+                <div class="lane">
+                  <span class="lane-label">RIVAL</span>
+                  <div class="car rival-car" id="rival-racer">
+                    <img class="car-image" id="rival-racer-image" alt="">
+                    <span class="car-glow"></span>
+                    <span class="car-body"></span>
+                    <span class="wheel front"></span>
+                    <span class="wheel rear"></span>
+                  </div>
+                </div>
+                <button class="map-start-button" id="drag-map-start" type="button">Start Race</button>
+                <div class="countdown" id="drag-countdown"></div>
+              </div>
+
+              <div class="race-message" id="race-message">
+                Pick an opponent and hit Start Race.
+              </div>
+
+              <button class="shift-button" id="shift-button" type="button">Shift</button>
+              <button class="nitro-button" id="nitro-button" type="button" disabled>Nitro</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="garage-view" aria-labelledby="garage-title">
+          <!-- GARAGE CONTENT (hidden when forge is open) -->
+          <div id="garage-content">
+            <button class="back-link" data-view="menu" type="button">Back</button>
+            <div class="section-heading">
+              <p>Garage</p>
+              <h1 id="garage-title">Your GearBorn lineup.</h1>
+            </div>
+            <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
+            <div class="garage-status" id="garage-status" hidden></div>
+            <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
+              <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
+              <img class="forge-menu-card-vat" src="assets/forge/forge_vat.png" alt="" aria-hidden="true">
+              <span class="menu-card-icon" aria-hidden="true"></span>
+              <strong>The Forge</strong>
+              <small>Unlock GearBorn with your Medallions.</small>
+            </button>
+            <div class="garage-grid" id="garage-grid"></div>
+          </div>
+
+          <!-- FORGE PANEL (shown when forge is open, replaces garage content) -->
+          <div id="forge-panel" hidden>
+            <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
+            <div class="section-heading">
+              <p>The Forge</p>
+              <h1>Unlock your GearBorn.</h1>
+            </div>
+            <div class="forge-layout">
+              <div class="forge-scene">
+                <img class="forge-bg-img" src="assets/forge/forge_bg.png" alt="">
+                <div class="forge-animation-area" id="forge-animation-area"></div>
+                <img class="forge-vat-img" id="forge-vat-img" src="assets/forge/forge_vat.png" alt="The Forge vat">
+              </div>
+              <div class="forge-panel-controls">
+                <div class="forge-selection-display" id="forge-selection-display">
+                  <img id="forge-selected-medallion" class="forge-selected-medallion-img" src="" alt="" hidden>
+                  <p id="forge-selected-name" class="forge-selected-name-text">Select a Medallion to unlock</p>
+                </div>
+                <button class="success-button forge-unlock-btn" id="forge-unlock-btn" type="button" disabled>
+                  Select a Medallion
+                </button>
+                <button class="ghost forge-inventory-btn" id="forge-inventory-btn" type="button">
+                  🧿 Medallion Inventory
+                </button>
+                <div class="forge-inventory-panel" id="forge-inventory-panel" hidden>
+                  <div class="forge-medallion-grid" id="forge-medallion-grid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="view" id="settings-view" aria-labelledby="settings-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="settings-layout">
+            <div class="section-heading">
+              <p>Settings</p>
+              <h1 id="settings-title">Tune the demo feel.</h1>
+            </div>
+            <div class="settings-card">
+              <div class="field">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="normal">Normal</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="volume">Volume</label>
+                <input id="volume" type="range" min="0" max="100" value="45">
+              </div>
+              <div class="field">
+                <label for="shift-key">Shift key</label>
+                <input id="shift-key" type="text" maxlength="12" value="Space" aria-describedby="key-note">
+                <small id="key-note">Click the box, then press the key you want.</small>
+              </div>
+              <div class="field">
+                <label for="nitro-key">Nitro key</label>
+                <input id="nitro-key" type="text" maxlength="12" value="N" aria-describedby="nitro-key-note">
+                <small id="nitro-key-note">Click the box, then press the key you want.</small>
+              </div>
+              <div class="field">
+                <label>Time Trial / Boss Race controls</label>
+                <div class="control-grid">
+                  <div>
+                    <label for="vertical-up-key">Up</label>
+                    <input id="vertical-up-key" type="text" maxlength="12" value="W">
+                  </div>
+                  <div>
+                    <label for="vertical-left-key">Left</label>
+                    <input id="vertical-left-key" type="text" maxlength="12" value="A">
+                  </div>
+                  <div>
+                    <label for="vertical-down-key">Down</label>
+                    <input id="vertical-down-key" type="text" maxlength="12" value="S">
+                  </div>
+                  <div>
+                    <label for="vertical-right-key">Right</label>
+                    <input id="vertical-right-key" type="text" maxlength="12" value="D">
+                  </div>
+                </div>
+                <small>Arrow keys and on-screen arrows still work.</small>
+              </div>
+              <div class="field">
+                <label>Story tuner</label>
+                <div class="tuner-options" id="settings-tuner-options"></div>
+              </div>
+              <div class="danger-zone">
+                <button class="god-button" id="god-mode" type="button">God Mode</button>
+                <button class="tutorial-replay-button" id="replay-tutorial" type="button">Replay Tutorial</button>
+                <button class="builder-delete-button" id="delete-tracks" type="button">Delete Tracks</button>
+                <button class="danger-button" id="reset-progress" type="button">Reset Racing Data</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="builder-view" aria-labelledby="builder-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="builder-shell">
+            <div class="section-heading">
+              <p>Track Builder</p>
+              <h1 id="builder-title">Create your own tracks.</h1>
+            </div>
+            <div class="builder-menu" id="builder-menu">
+              <button class="primary" id="builder-new" type="button">New Track</button>
+              <button class="ghost" id="builder-load" type="button">Load Saved Track</button>
+              <button class="ghost" data-view="menu" type="button">Back</button>
+              <p id="builder-menu-note"></p>
+            </div>
+            <div class="builder-editor" id="builder-editor" hidden>
+              <div class="builder-toolbar">
+                <div>
+                  <strong id="builder-current-name">Untitled Track</strong>
+                  <span id="builder-dirty-state">Unsaved</span>
+                </div>
+                <div class="builder-actions">
+                  <button class="ghost" id="builder-build" type="button">Build</button>
+                  <button class="ghost" id="builder-rotate" type="button">Rotate</button>
+                  <button class="ghost" id="builder-clear" type="button">Clear Grid</button>
+                  <button class="primary" id="builder-save" type="button">Save</button>
+                  <button class="danger-button" id="builder-exit" type="button">Back</button>
+                </div>
+              </div>
+              <div class="builder-workbench">
+                <aside class="tile-palette" id="builder-palette" aria-label="Tile palette"></aside>
+                <div class="builder-grid-wrap">
+                  <div class="builder-grid" id="builder-grid" aria-label="Track editor grid"></div>
+                </div>
+              </div>
+            </div>
+            <div class="builder-load-panel" id="builder-load-panel" hidden>
+              <div class="builder-toolbar">
+                <strong>Saved Tracks</strong>
+                <button class="ghost" id="builder-load-back" type="button">Back</button>
+              </div>
+              <div class="builder-track-list" id="builder-track-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="beta-view" aria-labelledby="beta-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="beta-mode" id="beta-mode">
+            <!-- BETA SCREEN 1: Main menu -->
+            <div class="beta-intro beta-screen" id="beta-intro">
+              <p class="modal-kicker">Training Academy</p>
+              <h1 id="beta-title">Vs. Race</h1>
+              <h2>Choose a race format.</h2>
+              <p>Run full circuit races with the new racing engine.</p>
+              <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
+                <strong>Pseudo-3D Baybee Run</strong>
+                <span>Behind-the-car test on a longer prototype track.</span>
+              </button>
+              <div class="beta-option-grid" id="beta-options">
+                <button class="beta-option-card" data-beta-mode="time" type="button">
+                  <strong>Solo Time Trial</strong>
+                  <span>Race your best time against Phantaxi.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="race4" type="button">
+                  <strong>4-Car Circuit Race</strong>
+                  <span>Place Top 2 against three GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="race6" type="button">
+                  <strong>6-Car Circuit Race</strong>
+                  <span>Place Top 3 against five GearBorn.</span>
+                </button>
+                <button class="beta-option-card" data-beta-mode="duel" type="button">
+                  <strong>Head-to-Head Race</strong>
+                  <span>Beat one rival GearBorn.</span>
+                </button>
+              </div>
+              <span id="beta-car-select-toggle" style="display:none"></span>
+            </div>
+
+            <!-- BETA SCREEN 2: Car Select (full-page, replaces main menu) -->
+            <div class="beta-screen" id="beta-car-select-screen" hidden>
+              <button class="back-link" id="beta-car-select-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Training Academy</p>
+                <h1>Select Your Car</h1>
+              </div>
+              <p class="beta-note">This car will be used for your circuit race.</p>
+              <div class="car-select-layout beta-car-select-panel" id="beta-car-select-panel">
+                <div class="icon-grid compact-car-grid" id="beta-car-grid"></div>
+                <div class="car-select-preview" id="beta-car-select-preview"></div>
+              </div>
+              <div class="modal-actions" style="justify-content:center;margin-top:12px;">
+                <button class="success-button" id="beta-car-select-confirm" type="button">Select Car &amp; Choose Track</button>
+              </div>
+            </div>
+
+            <!-- BETA SCREEN 2B: Race Preview -->
+            <div class="beta-screen" id="beta-preview-screen" hidden>
+              <button class="back-link" id="beta-preview-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Training Academy</p>
+                <h1 id="beta-preview-title">Race Preview</h1>
+              </div>
+              <div class="beta-preview-layout">
+                <div class="beta-leaderboard" id="beta-leaderboard"></div>
+                <div class="beta-preview-side">
+                  <button class="beta-preview-city" id="beta-preview-city" type="button" aria-label="Change city"></button>
+                  <div class="beta-city-menu" id="beta-city-menu" hidden></div>
+                  <canvas id="beta-preview-map" width="420" height="300" aria-label="Circuit race map preview"></canvas>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-preview-start" type="button">Start Race</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BETA SCREEN 3: Track Select (full-page, replaces car select) -->
+            <div class="beta-screen" id="beta-track-select-screen" hidden>
+              <button class="back-link" id="beta-track-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Training Academy</p>
+                <h1 id="beta-track-select-title">Choose a Track</h1>
+              </div>
+              <div class="beta-track-select" id="beta-track-select">
+                <div class="beta-track-list" id="beta-track-list"></div>
+                <div class="beta-track-preview">
+                  <canvas id="beta-track-preview" width="420" height="300" aria-label="Selected circuit track preview"></canvas>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-track-start" type="button">Start Race</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="beta-3d-race" id="beta-3d-race" hidden>
+              <div class="beta-3d-hud">
+                <div class="beta-3d-speed">
+                  <img src="assets/beta3d/ui_speedometer.png" alt="">
+                  <strong id="beta-3d-speed">0 MPH</strong>
+                </div>
+                <div>
+                  <span>Time</span>
+                  <strong id="beta-3d-time">0.00</strong>
+                </div>
+                <div class="beta-3d-progress">
+                  <span>Progress</span>
+                  <div class="beta-3d-progress-frame">
+                    <img src="assets/beta3d/ui_progress_bar.png" alt="">
+                    <div class="beta-3d-progress-fill" id="beta-3d-progress-fill"></div>
+                    <img class="beta-3d-marker" id="beta-3d-marker" src="assets/beta3d/ui_player_marker.png" alt="">
+                  </div>
+                </div>
+                <button class="danger-button" id="beta-3d-exit" type="button">Exit</button>
+              </div>
+              <div class="beta-3d-stage">
+                <canvas id="beta-3d-canvas" width="960" height="620" aria-label="Pseudo-3D racing prototype"></canvas>
+                <div class="beta-results" id="beta-3d-results" hidden>
+                  <h2>Finished!</h2>
+                  <p id="beta-3d-final-time">Final time: 0.00 s</p>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-3d-restart" type="button">Restart</button>
+                    <button class="ghost" id="beta-3d-finish-exit" type="button">Back</button>
+                  </div>
+                </div>
+              </div>
+              <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Pseudo-3D driving controls">
+                <button class="steer-button arrow-control left-control" data-beta3d-control="left" type="button" aria-label="Steer left">←</button>
+                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
+                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                </button>
+                <button class="steer-button arrow-control right-control" data-beta3d-control="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-beta3d-control="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-beta3d-control="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+              </div>
+            </div>
+            <div class="beta-race" id="beta-race" hidden>
+              <div class="beta-hud-exit-row">
+                <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
+                <button class="danger-button" id="beta-exit" type="button">Exit</button>
+                <span id="beta-checkpoint" style="display:none">0 / 4</span>
+                <span id="beta-speed" style="display:none">0 MPH</span>
+              </div>
+              <div class="beta-stage">
+                <canvas id="beta-canvas" width="960" height="620" aria-label="Circuit race"></canvas>
+                <canvas id="beta-minimap" width="180" height="140" aria-label="Circuit mini-map"></canvas>
+                <div class="beta-canvas-hud" id="beta-canvas-hud" aria-label="Race HUD">
+                  <div class="beta-canvas-hud-panel" id="beta-hud-lap-panel">
+                    <span>Lap</span>
+                    <strong id="beta-lap">1 / 2</strong>
+                  </div>
+                  <div class="beta-canvas-hud-panel center" id="beta-hud-time-panel">
+                    <span>Time</span>
+                    <strong id="beta-time">0.00</strong>
+                  </div>
+                  <div class="beta-canvas-hud-panel right" id="beta-hud-pos-panel">
+                    <span>Place</span>
+                    <strong id="beta-position">1st / 1</strong>
+                  </div>
+                </div>
+                <div class="beta-item-slot" id="beta-item-slot">
+                  <span>Item</span>
+                  <div class="beta-item-readout">
+                    <b id="beta-item-icon" class="beta-item-icon-cell">?</b>
+                    <strong id="beta-item-name">Empty</strong>
+                  </div>
+                  <em id="beta-item-prompt">Space / E</em>
+                </div>
+                <div class="beta-loading" id="beta-loading" hidden>
+                  <strong>Loading Track...</strong>
+                  <span>Warming up engines and loading full-quality assets.</span>
+                </div>
+                <div class="countdown beta-countdown" id="beta-countdown"></div>
+                <div class="beta-results" id="beta-results" hidden>
+                  <h2>Finished!</h2>
+                  <p id="beta-final-time">Final time: 0.00 s</p>
+                  <div class="modal-actions">
+                    <button class="success-button" id="beta-restart" type="button">Restart</button>
+                    <button class="ghost" id="beta-finish-exit" type="button">Exit</button>
+                  </div>
+                </div>
+              </div>
+              <div class="touch-controls beta-touch-controls" aria-label="Circuit race driving controls">
+                <button class="steer-button arrow-control left-control" data-beta-control="left" type="button" aria-label="Steer left">←</button>
+                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
+                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                </button>
+                <button class="steer-button arrow-control right-control" data-beta-control="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-beta-control="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-beta-control="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+                <button class="steer-button beta-item-control" data-beta-item-button type="button" aria-label="Use item">Space</button>
+              </div>
+              <p class="beta-note">WASD or Arrow Keys. Press T to toggle the debug grid.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="boss-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="boss-modal-title">
+        <button class="modal-close-bubble" id="close-boss" type="button" aria-label="Close boss scene">×</button>
+        <div class="boss-portrait" id="boss-portrait"></div>
+        <p class="modal-kicker" id="boss-modal-kicker">Boss Race</p>
+        <h2 id="boss-modal-title"></h2>
+        <p id="boss-modal-copy"></p>
+        <div class="modal-actions">
+          <button class="primary" id="continue-boss" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tuner-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="tuner-title">
+        <p class="modal-kicker">Choose Your Tuner</p>
+        <h2 id="tuner-title">Choose Your Tuner</h2>
+        <div class="tuner-options large" id="tuner-options"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="cutscene-modal" aria-hidden="true">
+      <div class="cutscene-modal" role="dialog" aria-modal="true" aria-labelledby="cutscene-title">
+        <button class="modal-close-bubble" id="close-cutscene" type="button" aria-label="Skip story scene">×</button>
+        <p class="modal-kicker" id="cutscene-title">Story Scene</p>
+        <div class="cutscene-stage">
+          <div class="cutscene-character">
+            <div class="cutscene-portrait" id="cutscene-left-art"></div>
+            <div class="dialogue-box" id="cutscene-left-dialogue"></div>
+          </div>
+          <div class="cutscene-character">
+            <div class="cutscene-portrait" id="cutscene-right-art"></div>
+            <div class="dialogue-box" id="cutscene-right-dialogue"></div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost" id="back-cutscene" type="button" hidden>Back</button>
+          <button class="primary" id="continue-cutscene" type="button">Continue</button>
+          <button class="ghost" id="skip-cutscene" type="button">Skip</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tutorial-overlay" id="tutorial-overlay" aria-hidden="true">
+      <div class="tutorial-card" id="tutorial-card">
+        <div class="tutorial-speaker">
+          <div class="tutorial-portrait" id="tutorial-portrait"></div>
+          <div>
+            <p class="modal-kicker" id="tutorial-kicker">Tutorial</p>
+            <h2 id="tutorial-title">Dr. Tyree</h2>
+          </div>
+        </div>
+        <p id="tutorial-copy"></p>
+        <div class="tutorial-choices" id="tutorial-choices" hidden></div>
+        <div class="tutorial-actions">
+          <button class="ghost" id="tutorial-back" type="button">Back</button>
+          <button class="primary" id="tutorial-next" type="button">Next</button>
+        </div>
+        <button class="tutorial-skip" id="tutorial-skip" type="button">Skip Tutorial</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-skip-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-skip-title">
+        <p class="modal-kicker">Tutorial</p>
+        <h2 id="tutorial-skip-title">Skip Tutorial?</h2>
+        <p>Are you sure you want to exit the tutorial? You can continue learning through Story Mode, but this intro will be skipped.</p>
+        <div class="modal-actions">
+          <button class="ghost" id="cancel-tutorial-skip" type="button">Cancel</button>
+          <button class="danger-button" id="confirm-tutorial-skip" type="button">Skip Tutorial</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-replay-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-replay-title">
+        <p class="modal-kicker">Replay Tutorial</p>
+        <h2 id="tutorial-replay-title">Are you sure you want to replay the tutorial?</h2>
+        <div class="modal-actions">
+          <button class="success-button" id="tutorial-replay-yes" type="button">Yes</button>
+          <button class="tutorial-replay-button" id="tutorial-scene-select" type="button">Scene Select</button>
+          <button class="danger-button" id="tutorial-replay-cancel" type="button">Cancel</button>
+        </div>
+        <div class="tutorial-scene-select" id="tutorial-scene-options" hidden></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-first-modal" aria-hidden="true">
+      <div class="confirm-modal tutorial-first-confirm" role="dialog" aria-modal="true" aria-labelledby="tutorial-first-title">
+        <h2 id="tutorial-first-title">It looks like this is your first time playing. Would you like to play the Tutorial?</h2>
+        <p class="tutorial-first-note">This Tutorial can be replayed from the Settings menu at any time</p>
+        <div class="modal-actions">
+          <button class="success-button" id="tutorial-first-yes" type="button">Yes</button>
+          <button class="danger-button" id="tutorial-first-no" type="button">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="city-unlock-modal" aria-hidden="true">
+      <div class="confirm-modal city-unlock-modal" role="dialog" aria-modal="true" aria-labelledby="city-unlock-title">
+        <div class="city-unlock-icon city-icon" id="city-unlock-icon"></div>
+        <h2 id="city-unlock-title"></h2>
+        <button class="success-button" id="city-unlock-close" type="button">Continue</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="pink-slip-warning-modal" aria-hidden="true">
+      <div class="confirm-modal pink-slip-warning-modal" role="dialog" aria-modal="true" aria-labelledby="pink-slip-warning-title">
+        <p class="pink-slip-warning-title" id="pink-slip-warning-title">WARNING</p>
+        <p id="pink-slip-warning-copy"></p>
+        <div class="modal-actions">
+          <button class="success-button" id="confirm-pink-slip-risk" type="button">Yes</button>
+          <button class="danger-button" id="cancel-pink-slip-risk" type="button">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="unmask-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="unmask-title">
+        <div class="boss-portrait" id="unmask-portrait"></div>
+        <p class="modal-kicker">Final Boss Defeated</p>
+        <h2 id="unmask-title">Unmask Racer Alpha</h2>
+        <p id="unmask-copy">Racer Alpha's helmet is ready to come off.</p>
+        <div class="modal-actions">
+          <button class="primary" id="unmask-button" type="button">Unmask</button>
+          <button class="ghost" id="continue-unmask" type="button" hidden>Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="reset-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+        <p class="modal-kicker danger-text">Delete Save Data</p>
+        <h2 id="reset-title">Are you sure you wish to delete your data?</h2>
+        <p>This is permanent.</p>
+        <div class="modal-actions">
+          <button class="danger-button" id="confirm-reset" type="button">Reset Racing Data</button>
+          <button class="ghost" id="cancel-reset" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="god-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="god-title">
+        <p class="modal-kicker">Activate God Mode</p>
+        <h2 id="god-title">Enter the God Mode code.</h2>
+        <p>This will max every car, unlock all levels, evolve Rainbowlt into Hornula1 at Level 10, and grant unlimited Sprox.</p>
+        <div class="field">
+          <label for="god-code">Code</label>
+          <input id="god-code" type="text" autocomplete="off">
+          <small class="code-error" id="god-code-error"></small>
+        </div>
+        <div class="modal-actions">
+          <button class="god-button" id="confirm-god" type="button">Activate God Mode</button>
+          <button class="ghost" id="cancel-god" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="builder-modal" aria-hidden="true">
+      <div class="confirm-modal builder-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="builder-modal-title">
+        <h2 id="builder-modal-title"></h2>
+        <p id="builder-modal-copy"></p>
+        <small id="builder-modal-subcopy"></small>
+        <input id="builder-modal-input" class="builder-modal-input" type="text" maxlength="40" hidden>
+        <div class="modal-actions" id="builder-modal-actions"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="evolution-modal" aria-hidden="true">
+      <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="evolution-title">
+        <div class="evolution-stage" id="evolution-stage"></div>
+        <p class="modal-kicker" id="evolution-kicker">Evolution Ready</p>
+        <h2 id="evolution-title"></h2>
+        <p id="evolution-copy"></p>
+        <div class="modal-actions">
+          <button class="primary" id="evolve-button" type="button">Evolve</button>
+          <button class="ghost" id="close-evolution" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="evolution-animation-overlay" id="evolution-animation" aria-hidden="true">
+      <div class="evolution-animation-bg"></div>
+      <div class="evolution-animation-flash"></div>
+      <div class="evolution-animation-core">
+        <div class="evolution-energy-ring"></div>
+        <div class="evolution-glow"></div>
+        <div class="evolution-vehicle">
+          <img class="evolution-vehicle-current" id="evolution-animation-current" alt="">
+          <img class="evolution-vehicle-next" id="evolution-animation-next" alt="">
+        </div>
+        <div class="evolution-floor-shadow"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="upgrade-modal" aria-hidden="true">
+      <div class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+        <button class="modal-close-bubble" id="close-upgrade" type="button" aria-label="Close upgrade window">×</button>
+        <p class="modal-kicker">Garage Upgrade</p>
+        <div class="upgrade-wallet" aria-label="Sprox balance">
+          <strong id="upgrade-sprox-total">0 Sprox</strong>
+          <span class="sprox-coin" aria-hidden="true">●</span>
+        </div>
+        <h2 id="upgrade-title">Level Up</h2>
+        <div class="upgrade-layout">
+          <div class="upgrade-art" id="upgrade-art"></div>
+          <div class="upgrade-detail">
+            <h3 id="upgrade-car-name"></h3>
+            <p id="upgrade-car-meta"></p>
+            <div id="upgrade-stats"></div>
+            <div class="part-slots" id="upgrade-part-slots" aria-label="Equipped parts"></div>
+          </div>
+        </div>
+        <button class="primary upgrade-level-button" id="confirm-upgrade" type="button">Level Up</button>
+        <p class="upgrade-cost" id="upgrade-cost"></p>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="inventory-modal" aria-hidden="true">
+      <div class="parts-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-title">
+        <button class="modal-close-bubble" id="close-inventory" type="button" aria-label="Close inventory">×</button>
+        <p class="modal-kicker">Garage Inventory</p>
+        <h2 id="inventory-title">GearBorn Parts</h2>
+        <div class="parts-layout">
+          <div class="parts-grid" id="parts-grid"></div>
+          <div class="part-detail" id="part-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="equip-part-modal" aria-hidden="true">
+      <div class="parts-modal equip-modal" role="dialog" aria-modal="true" aria-labelledby="equip-part-title">
+        <button class="modal-close-bubble" id="close-equip-part" type="button" aria-label="Close equip parts">×</button>
+        <p class="modal-kicker">Equip Part</p>
+        <h2 id="equip-part-title">Choose a Part</h2>
+        <div class="parts-layout">
+          <div class="parts-grid" id="equip-parts-grid"></div>
+          <div class="part-detail" id="equip-part-detail"></div>
+        </div>
+        <div class="modal-actions part-equip-actions">
+          <button class="primary" id="confirm-equip-part" type="button" disabled>Equip</button>
+          <button class="danger-button" id="unequip-part" type="button" hidden>Unequip</button>
+          <button class="ghost" id="replace-part" type="button" hidden>Replace</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDALLION EARNED POPUP -->
+    <div class="modal-overlay" id="medallion-earned-popup" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="medallion-earned-name">
+      <div class="forge-popup">
+        <p class="modal-kicker">Pink Slip Won!</p>
+        <img id="medallion-earned-img" class="forge-popup-medallion" src="" alt="">
+        <p id="medallion-earned-name" class="forge-popup-copy"></p>
+        <p class="forge-popup-sub">Head to <span class="forge-orange">THE FORGE</span> to unlock your GearBorn.</p>
+        <div class="modal-actions">
+          <button class="success-button" id="medallion-go-forge" type="button">🔥 Go to The Forge</button>
+          <button class="ghost" id="medallion-later" type="button">Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORGE UNLOCKED POPUP -->
+    <div class="modal-overlay" id="forge-unlocked-popup" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="forge-unlocked-name">
+      <div class="forge-popup">
+        <div class="forge-popup-car-art" id="forge-unlocked-car-art">
+          <img id="forge-unlocked-img" src="" alt="" class="forge-popup-car-img">
+        </div>
+        <p id="forge-unlocked-name" class="forge-popup-copy"></p>
+        <div class="modal-actions">
+          <button class="success-button" id="forge-unlocked-close" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+  <!-- FORGE FULL-SCREEN ANIMATION OVERLAY -->
+  <div class="forge-fullscreen-overlay" id="forge-fullscreen" aria-hidden="true" aria-label="Forge animation">
+    <img class="forge-fs-bg" src="assets/forge/forge_bg.png" alt="">
+    <div class="forge-fs-anim-area" id="forge-fs-anim-area"></div>
+    <!-- Vat renders last so it stays in front of everything emerging from it -->
+    <img class="forge-fs-vat" id="forge-fs-vat" src="assets/forge/forge_vat.png" alt="">
+  </div>
+
+    <script src="game-data.js"></script>
+    <script src="game-state.js"></script>
+    <script src="game-logic.js"></script>
+    <script src="game-dom.js"></script>
+    <script src="game-beta.js"></script>
+    <script src="game-beta3d.js"></script>
+    <script src="game-events.js"></script>
+    <script src="game-init.js"></script>
+
+  </body>
+</html>

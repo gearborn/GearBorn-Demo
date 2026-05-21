@@ -1035,6 +1035,8 @@ function embeddedViewIs(view) {
 function renderMenuGoal() {
   const nextRaceNode = document.querySelector("#menu-next-race");
   const nextRewardNode = document.querySelector("#menu-next-reward");
+  const nextThumbNode = document.querySelector("#menu-next-race-thumb");
+  updateStoryCardCta();
   if (!nextRaceNode || !nextRewardNode) return;
   const cityIndex = Math.max(0, Math.min(state.selectedStoryCity || 0, highestUnlockedStoryCityIndex()));
   const city = storyCities[cityIndex] || storyCities[0];
@@ -1048,6 +1050,56 @@ function renderMenuGoal() {
   if (level?.type === "battle") reward = battleRewardForBossIndex(level.bossIndex);
   if (level?.type === "boss") reward = (level.final ? finalBoss : bosses[level.bossIndex])?.xp || reward;
   nextRewardNode.textContent = `Reward +${reward} Sprox`;
+  updateNextRaceThumbnail(nextThumbNode, city);
+}
+
+function updateStoryCardCta() {
+  const ctaEl = document.querySelector(".hero-menu-card .menu-card-cta");
+  if (!ctaEl) return;
+  const hasProgress = Boolean(
+    state.tutorialComplete ||
+    state.highestCampaignIndex > 0 ||
+    Object.keys(state.completedCampaignLevels || {}).length
+  );
+  ctaEl.textContent = hasProgress ? "Continue Your Journey" : "Begin Your Story";
+}
+
+function updateNextRaceThumbnail(thumbEl, city) {
+  if (!thumbEl) return;
+  const thumbMap = {
+    indianapolis: "assets/menu/next-city-thumb-indianapolis.png",
+    berlin: "assets/menu/next-city-thumb-berlin.png",
+    dubai: "assets/menu/next-city-thumb-dubai.png",
+    rio: "assets/menu/next-city-thumb-rio.png",
+    "los-angeles": "assets/menu/next-city-thumb-los-angeles.png",
+    seoul: "assets/menu/next-city-thumb-seoul.png",
+    "cape-town": "assets/menu/next-city-thumb-cape-town.png",
+    bangalore: "assets/menu/next-city-thumb-bangalore.png",
+    bengaluru: "assets/menu/next-city-thumb-bangalore.png",
+    space: "assets/menu/next-city-thumb-space.png"
+  };
+  const cityId = city?.id || storyCities[state.selectedStoryCity || 0]?.id || "indianapolis";
+  thumbEl.hidden = false;
+  thumbEl.src = thumbMap[cityId] || thumbMap.indianapolis;
+  thumbEl.alt = city?.city || cityId;
+}
+
+function verifyMenuAssets() {
+  const required = [
+    "assets/menu/mainmenu-bg.png",
+    "assets/menu/story-mode-card.png",
+    "assets/menu/next-race-frame.png",
+    "assets/menu/menu-particles.png",
+    "assets/menu/icon-vindex.png",
+    "assets/menu/icon-profiles.png",
+    "assets/menu/icon-achievements.png",
+    "assets/menu/icon-builder.png"
+  ];
+  required.forEach((path) => {
+    const img = new Image();
+    img.onerror = () => console.warn(`Missing menu asset: ${path}`);
+    img.src = path;
+  });
 }
 
 function render() {
@@ -1810,13 +1862,57 @@ function formatRank(rank) {
   return rank ? `#${rank}` : "NR";
 }
 
+function formatRankOrdinal(rank) {
+  if (!rank) return "NR";
+  const suffix = rank % 100 >= 11 && rank % 100 <= 13
+    ? "th"
+    : ({ 1: "st", 2: "nd", 3: "rd" }[rank % 10] || "th");
+  return `${rank}${suffix}`;
+}
+
+function completedBossIdsFromCampaign() {
+  const completed = state.completedCampaignLevels || {};
+  const ids = [];
+  campaignLevels.forEach((level, index) => {
+    if (!completed[index] || level.type !== "boss" || level.final) return;
+    const boss = bosses[level.bossIndex];
+    if (boss?.id && !ids.includes(boss.id)) ids.push(boss.id);
+  });
+  return ids;
+}
+
+function finalBossCompletedFromCampaign() {
+  const completed = state.completedCampaignLevels || {};
+  return campaignLevels.some((level, index) => Boolean(completed[index] && level.type === "boss" && level.final));
+}
+
+function effectiveTunerRankState() {
+  const base = state.tunerRank || {};
+  const defeatedBossIds = [...new Set([...(base.defeatedBossIds || []), ...completedBossIdsFromCampaign()])];
+  let playerRank = base.playerRank || null;
+  if (finalBossCompletedFromCampaign()) {
+    playerRank = 1;
+  } else {
+    defeatedBossIds.forEach((bossId) => {
+      const rank = tunerRankBaseList.find((row) => row.bossId === bossId)?.rank || null;
+      if (rank) playerRank = playerRank ? Math.min(playerRank, rank) : rank;
+    });
+  }
+  return {
+    ...base,
+    playerRank,
+    defeatedBossIds,
+    bossesFirstSeen: base.bossesFirstSeen || []
+  };
+}
+
 function computeTunerRankList() {
-  const rankState = state.tunerRank || {};
+  const rankState = effectiveTunerRankState();
   const rival = rivalTuner();
   const player = selectedTuner();
   const playerRank = rankState.playerRank || null;
   const rivalRank = playerRank ? playerRank + 1 : 9;
-  state.tunerRank.rivalRank = playerRank ? rivalRank : null;
+  if (state.tunerRank) state.tunerRank.rivalRank = playerRank ? rivalRank : null;
   const rows = tunerRankBaseList.map((entry) => ({
     ...entry,
     displayRank: entry.rank,
@@ -1895,8 +1991,13 @@ function advanceTunerRankForCityEntry(cityId) {
 }
 
 function renderTunerRankBadge() {
-  if (!el.tunerRankBadge) return;
-  el.tunerRankBadge.textContent = `Tuner Rank: ${formatRank(state.tunerRank?.playerRank || null)}`;
+  const rank = effectiveTunerRankState().playerRank || null;
+  if (el.tunerRankOpen) {
+    el.tunerRankOpen.textContent = formatRankOrdinal(rank);
+    el.tunerRankOpen.setAttribute("aria-label", `Open Tuner Rank, current rank ${formatRankOrdinal(rank)}`);
+  } else if (el.tunerRankBadge) {
+    el.tunerRankBadge.textContent = `Tuner Rank: ${formatRankOrdinal(rank)}`;
+  }
 }
 
 function renderTunerRankScreen() {
@@ -1904,7 +2005,7 @@ function renderTunerRankScreen() {
   el.tunerRankList.innerHTML = computeTunerRankList().map((row) => `
     <article class="tuner-rank-row ${row.isPlayer ? "player" : ""} ${row.isRival ? "rival" : ""}">
       <strong class="tuner-rank-number">#${row.displayRank}</strong>
-      <img src="${row.headshot || "assets/characters/headshot-mylo.png"}" alt="" loading="lazy" decoding="async">
+      <img src="${row.headshot || "assets/characters/headshots/headshot-mylo.png"}" alt="" loading="lazy" decoding="async">
       <span>${row.name}</span>
     </article>
   `).join("");
@@ -2382,30 +2483,30 @@ function renderBosses() {
 
 function battleCarImageForBoss(boss) {
   const byCar = {
-    Crusadome: "assets/bosses/boss-crusadome-race.png",
-    Baronessex: "assets/bosses/boss-baronessex-race.png",
+    Crusadome: "assets/cars/pope-crusadome-race.png",
+    Baronessex: "assets/cars/german-baronessex-race.png",
     Shamacht: "assets/cars/whale-shamacht-race.png",
-    Inflewenze: "assets/bosses/boss-inflewenze-race.png",
-    Hurrdaboutis: "assets/bosses/boss-hurrdaboutis-race.png",
+    Inflewenze: "assets/cars/peacock-inflewenze-race.png",
+    Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-race.png",
     Matunnie: "assets/cars/rabbit-matunnie-race.png",
-    Kuumbusta: "assets/bosses/boss-kuumbusta-race.png",
+    Kuumbusta: "assets/cars/springbok-kuumbusta-race.png",
     Kermajesty: "assets/cars/frog-kermajesty-race.png",
-    Hornula1: "assets/cars/rival-hornula1-race.png"
+    Hornula1: "assets/cars/unicorn-hornula1-race.png"
   };
   return byCar[boss.car] || boss.carImage || "assets/cars/tutorque-race.png";
 }
 
 function bossCarDisplayImage(boss) {
   const byCar = {
-    Crusadome: "assets/cars/rival-crusadome-display.png",
-    Baronessex: "assets/story/baronessex-display.png",
+    Crusadome: "assets/cars/pope-crusadome-display.png",
+    Baronessex: "assets/cars/german-baronessex-display.png",
     Shamacht: "assets/cars/whale-shamacht-display.png",
-    Inflewenze: "assets/story/inflewenze-display.png",
-    Hurrdaboutis: "assets/story/hurrdaboutis-display.png",
+    Inflewenze: "assets/cars/peacock-inflewenze-display.png",
+    Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-display.png",
     Matunnie: "assets/cars/rabbit-matunnie-display.png",
-    Kuumbusta: "assets/story/kuumbusta-display.png",
+    Kuumbusta: "assets/cars/springbok-kuumbusta-display.png",
     Kermajesty: "assets/cars/frog-kermajesty-display.png",
-    Hornula1: "assets/cars/rival-hornula1-display.png"
+    Hornula1: "assets/cars/unicorn-hornula1-display.png"
   };
   return byCar[boss.car] || "";
 }
@@ -5375,6 +5476,7 @@ function renderTutorialSceneOptions() {
 }
 
 function activateGodMode() {
+  const godModePassword = getGodModePassword();
   if (!godModePassword || el.godCode.value.trim() !== godModePassword) {
     el.godCodeError.textContent = "Incorrect code.";
     el.godCode.focus();
@@ -6519,13 +6621,13 @@ function tutorialSpeakerProfile(speaker) {
   if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
   if (speaker === "mamburn") return { name: "Mamburn", image: "assets/cars/snake-mamburn-display.png" };
   if (speaker === "snaytan") return { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png" };
-  if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshot-ashley.png" };
+  if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshots/headshot-ashley.png" };
   if (speaker === "rival") {
     const rival = rivalCharacter();
     return { ...rival, image: rival.headshot || rival.image };
   }
   if (speaker === "narration") return { name: "Tutorial", image: "" };
-  return { name: "Dr. Tyree", image: "assets/characters/headshot-dr-tyree.png" };
+  return { name: "Dr. Tyree", image: "assets/characters/headshots/headshot-dr-tyree.png" };
 }
 
 function tutorialSpecialLineMarkup(text) {
@@ -6556,37 +6658,87 @@ function tutorialFullBodyForSpeaker(speakerKey) {
   if (speakerKey === "user") return selectedTuner().image;
   if (speakerKey === "rival") return rivalCharacter().image;
   if (speakerKey === "ashley") return "assets/characters/character-ashley.png";
-  if (speakerKey === "tyree") return "assets/characters/character-dr-tyree.png";
+  if (speakerKey === "tyree") return "assets/characters/dr-tyree.png";
   return "";
+}
+
+function tutorialVnSpeakersForScene(scene, line) {
+  const sceneSpeakers = {
+    intro: ["user", "tyree"],
+    "rival-intro": ["user", "rival", "tyree"],
+    mamburn: ["user", "tyree"],
+    "rival-stinger": ["user", "rival"],
+    "h2h-rival-stinger": ["user", "rival"],
+    garage: ["user", "tyree"],
+    upgrade: ["user", "tyree"],
+    evolve: ["user", "tyree"],
+    "tyree-final": ["user", "rival", "tyree"],
+    "empty-garage": ["user"],
+    "ashley-intro": ["user", "ashley"],
+    "the-forge": ["user", "ashley"],
+    "medallion-unlock": ["user", "ashley"],
+    unlocked: ["user", "ashley"]
+  };
+  const speakers = [...(sceneSpeakers[scene.id] || ["user"])];
+  if (["user", "rival", "tyree", "ashley"].includes(line?.speaker) && !speakers.includes(line.speaker)) {
+    speakers.push(line.speaker);
+  }
+  return speakers.filter((speaker) => tutorialFullBodyForSpeaker(speaker));
+}
+
+function updateTutorialVnActive(stage, activeSpeaker) {
+  const characters = [...stage.querySelectorAll(".tutorial-vn-character")];
+  let activeSlot = Math.max(0, characters.findIndex((node) => node.dataset.speaker === activeSpeaker));
+  if (activeSlot < 0) activeSlot = 0;
+  characters.forEach((node, index) => {
+    node.classList.toggle("active", index === activeSlot);
+  });
+  stage.dataset.activeSlot = String(activeSlot);
+  stage.dataset.vnCount = String(characters.length);
 }
 
 function renderTutorialVisualStage(scene, line) {
   const stage = tutorialVisualStage();
   if (!stage) return;
-  stage.innerHTML = "";
   stage.hidden = true;
   if (state.tutorialSplash) {
+    const key = `splash:${state.tutorialSplash}`;
     stage.hidden = false;
     stage.className = "tutorial-visual-stage splash-stage";
-    stage.innerHTML = `<img class="tutorial-splash-image" src="${state.tutorialSplash}" alt="" loading="eager" decoding="async">`;
+    stage.dataset.visualKey = key;
+    stage.dataset.activeSlot = "";
+    stage.dataset.vnCount = "";
+    if (stage.dataset.renderedKey !== key) {
+      stage.innerHTML = `<img class="tutorial-splash-image" src="${state.tutorialSplash}" alt="" loading="eager" decoding="async">`;
+      stage.dataset.renderedKey = key;
+    }
     return;
   }
-  if (scene.mode !== "vnScene") return;
-  const speakers = new Set(["user", "rival"]);
-  if (["tyree-final", "garage", "upgrade", "evolve"].includes(scene.id) || line?.speaker === "tyree") speakers.add("tyree");
-  if (["ashley-intro", "the-forge", "medallion-unlock", "unlocked"].includes(scene.id) || line?.speaker === "ashley") speakers.add("ashley");
-  const art = [...speakers]
+  if (scene.mode !== "vnScene") {
+    stage.dataset.visualKey = "";
+    stage.dataset.activeSlot = "";
+    stage.dataset.vnCount = "";
+    return;
+  }
+  const speakers = tutorialVnSpeakersForScene(scene, line);
+  const key = `vn:${scene.id}:${speakers.join("|")}`;
+  const art = speakers
     .map((speaker, index) => {
       const src = tutorialFullBodyForSpeaker(speaker);
       if (!src) return "";
       const active = line?.speaker === speaker ? " active" : "";
-      return `<img class="tutorial-vn-character slot-${index}${active}" src="${src}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`;
+      return `<img class="tutorial-vn-character slot-${index}${active}" data-speaker="${speaker}" src="${src}" alt="" loading="eager" decoding="async" onerror="this.remove()">`;
     })
     .join("");
   if (!art) return;
   stage.hidden = false;
   stage.className = "tutorial-visual-stage vn-stage";
-  stage.innerHTML = art;
+  stage.dataset.visualKey = key;
+  if (stage.dataset.renderedKey !== key) {
+    stage.innerHTML = art;
+    stage.dataset.renderedKey = key;
+  }
+  updateTutorialVnActive(stage, line?.speaker || speakers[0]);
 }
 
 function setTutorialScene(sceneId) {
@@ -6980,10 +7132,17 @@ function renderTutorial() {
   el.tutorialOverlay.dataset.mode = scene.mode || "dialogueOverlay";
   el.tutorialOverlay.classList.toggle("splashing", Boolean(state.tutorialSplash));
   const sceneBackground = scene.background && !scene.background.startsWith("TODO") ? scene.background : "";
+  const backgroundKey = sceneBackground && ["vnScene", "comicSplash"].includes(scene.mode) ? sceneBackground : "";
   if (sceneBackground && ["vnScene", "comicSplash"].includes(scene.mode)) {
-    el.tutorialOverlay.style.backgroundImage = `linear-gradient(180deg, rgba(5, 8, 14, 0.34), rgba(5, 8, 14, 0.58)), url("${sceneBackground}")`;
+    if (el.tutorialOverlay.dataset.backgroundKey !== backgroundKey) {
+      el.tutorialOverlay.style.backgroundImage = `linear-gradient(180deg, rgba(5, 8, 14, 0.34), rgba(5, 8, 14, 0.58)), url("${sceneBackground}")`;
+      el.tutorialOverlay.dataset.backgroundKey = backgroundKey;
+    }
   } else {
-    el.tutorialOverlay.style.backgroundImage = "";
+    if (el.tutorialOverlay.dataset.backgroundKey) {
+      el.tutorialOverlay.style.backgroundImage = "";
+      el.tutorialOverlay.dataset.backgroundKey = "";
+    }
   }
   const countdownRunning = el.dragCountdown.classList.contains("active")
     || el.storyCountdown.classList.contains("active")
@@ -7013,6 +7172,7 @@ function renderTutorial() {
   if (waitingOnRace) return;
   if (state.tutorialSplash) {
     el.tutorialOverlay.style.backgroundImage = "";
+    el.tutorialOverlay.dataset.backgroundKey = "";
     renderTutorialVisualStage(scene, null);
     el.tutorialKicker.textContent = "";
     el.tutorialTitle.textContent = "";
@@ -7041,11 +7201,15 @@ function renderTutorial() {
     : normalizeTutorialLine(lines[state.tutorialLine]);
   const speaker = tutorialSpeakerProfile(line.speaker);
   renderTutorialVisualStage(scene, line);
+  const visualStage = tutorialVisualStage();
+  const vnSlot = visualStage?.dataset.activeSlot || "";
+  const vnCount = visualStage?.dataset.vnCount || "";
   const specialMarkup = tutorialSpecialLineMarkup(line.text);
+  const isVnScene = scene.mode === "vnScene";
   el.tutorialKicker.textContent = "";
   el.tutorialTitle.textContent = specialMarkup ? "" : speaker.name;
   el.tutorialCopy.innerHTML = specialMarkup || (line.text === "TUTORIAL_CHOICE_PROMPT" ? "Choose a response." : line.text);
-  el.tutorialPortrait.innerHTML = specialMarkup ? "" : characterMarkup(speaker);
+  el.tutorialPortrait.innerHTML = specialMarkup || isVnScene ? "" : characterMarkup(speaker);
   if (el.tutorialChoices) {
     const choices = response ? [] : line.choices || [];
     el.tutorialChoices.hidden = !choices.length;
@@ -7068,6 +7232,8 @@ function renderTutorial() {
   el.tutorialCard.dataset.scene = scene.id;
   el.tutorialCard.dataset.mode = scene.mode || "dialogueOverlay";
   el.tutorialCard.dataset.speaker = line.speaker;
+  el.tutorialCard.dataset.vnSlot = vnSlot;
+  el.tutorialCard.dataset.vnCount = vnCount;
 }
 
 function ensureTunerAndIntro(view) {
@@ -7582,7 +7748,7 @@ function beginVerticalRace(mode, waitForStart = false, options = {}) {
   }
   setTopCar(playerNode, topDownImageForCar(carId), currentEvolution(carId).name, cars.find((car) => car.id === carId).color);
   if (bossNode) setTopCar(bossNode, boss.carImage, boss.car, "#f25f5c");
-  if (ghostNode) setTopCar(ghostNode, "assets/story/phantaxi-topdown.png", "Phantaxi", "#c084fc");
+  if (ghostNode) setTopCar(ghostNode, "assets/cars/taxi-phantaxi-topdown.png", "Phantaxi", "#c084fc");
 
   verticalRace = {
     mode,

@@ -31,21 +31,18 @@
     <div class="app">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="main-menu-button" data-view="menu" type="button">Main Menu</button>
           <button class="brand" data-view="menu" aria-label="Gearborn home">
             <span class="brand-mark">
-              <img src="assets/logo/gearborn-logo.png" alt="">
-            </span>
-            <span>
-              <strong>GearBorn</strong>
-              <small>Engines Evolved</small>
+              <img src="assets/logo/gearborn-logo-horizontal.png" alt="GearBorn">
             </span>
           </button>
           <div class="sprox-wallet" aria-label="Sprox balance">
             <strong id="sprox-total">0 Sprox</strong>
             <span class="sprox-coin" aria-hidden="true">●</span>
           </div>
-          <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">⚙</button>
+          <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">
+            <img src="assets/menu/icon-settings.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="32" height="32">
+          </button>
         </div>
         <nav class="nav" aria-label="Main navigation">
           <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
@@ -61,6 +58,7 @@
       <main>
         <section class="view active" id="menu-view" aria-labelledby="menu-title">
           <div class="main-menu">
+            <div class="menu-particles" aria-hidden="true"></div>
             <div class="menu-logo" aria-label="GearBorn Engines Evolved">
               <img id="game-logo" src="assets/logo/gearborn-logo.png" alt="GearBorn Engines Evolved" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
               <div class="menu-title-box" hidden>
@@ -77,40 +75,48 @@
                 <small>Race. Evolve. Prove yourself.</small>
                 <span class="menu-card-cta">Start Story</span>
               </button>
-              <aside class="next-goal-panel">
-                <span>Next Story Race</span>
-                <strong id="menu-next-race">Indianapolis - Level 2</strong>
-                <small id="menu-next-reward">Reward +50 Sprox</small>
-                <button class="story-primary" data-view="story" type="button">Start Race</button>
+              <aside class="next-goal-panel" data-view="story">
+                <div class="next-race-inner">
+                  <img class="next-race-city-thumb" id="menu-next-race-thumb" src="" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;">
+                </div>
+                <div class="next-race-frame" aria-hidden="true"></div>
+                <div class="next-race-content">
+                  <div class="next-race-text">
+                    <span>Next Story Race</span>
+                    <strong id="menu-next-race">Indianapolis - Level 2</strong>
+                    <small id="menu-next-reward">Reward +50 Sprox</small>
+                  </div>
+                  <button class="story-primary" type="button">Start Race</button>
+                </div>
               </aside>
               <div class="menu-secondary-grid">
                 <button class="menu-card garage-card" data-view="garage" type="button">
-                  <span class="menu-card-icon">G</span>
+                  <img class="menu-card-icon-img" src="assets/menu/icon_garage.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'menu-card-icon',textContent:'G'}));">
                   <strong>Garage</strong>
                   <small>Upgrade your GearBorn.</small>
                 </button>
                 <button class="menu-card training-card" data-view="solo" type="button">
-                  <span class="menu-card-icon">T</span>
+                  <img class="menu-card-icon-img" src="assets/menu/icon_training.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'menu-card-icon',textContent:'T'}));">
                   <strong>Training</strong>
                   <small>Master every race mode.</small>
                 </button>
               </div>
               <div class="menu-utility-grid">
                 <button class="menu-utility" data-view="vindex" type="button">
+                  <img class="menu-utility-icon" src="assets/menu/icon-vindex.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.hidden=true;">
                   <strong>VINdex</strong>
-                  <small>Discover every GearBorn.</small>
                 </button>
                 <button class="menu-utility" data-view="profiles" type="button">
+                  <img class="menu-utility-icon" src="assets/menu/icon-profiles.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.hidden=true;">
                   <strong>Racer Profiles</strong>
-                  <small>Meet the rivals.</small>
                 </button>
                 <button class="menu-utility" data-view="achievements" type="button">
+                  <img class="menu-utility-icon" src="assets/menu/icon-achievements.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.hidden=true;">
                   <strong>Achievements</strong>
-                  <small>Unlock rare rewards.</small>
                 </button>
                 <button class="menu-utility" data-view="builder" type="button">
+                  <img class="menu-utility-icon" src="assets/menu/icon-builder.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.hidden=true;">
                   <strong>Builder</strong>
-                  <small>Create your own tracks.</small>
                 </button>
               </div>
               <p class="creator-credit">Created by Corey Hanley</p>
@@ -176,7 +182,10 @@
                   <div>
                     <h2 id="story-city-title">Indianapolis</h2>
                     <div class="tuner-rank-city-actions">
-                      <button class="tuner-rank-badge" id="tuner-rank-badge" type="button" aria-label="Open Tuner Rank">Tuner Rank: NR</button>
+                      <div class="tuner-rank-badge" id="tuner-rank-badge" aria-label="Tuner Rank">
+                        <span class="tuner-rank-label">Tuner Rank:</span>
+                        <button class="tuner-rank-value" id="tuner-rank-open" type="button" aria-label="Open Tuner Rank">NR</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -262,18 +271,18 @@
               <div class="touch-controls" aria-label="Story driving controls">
                 <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
-                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
-                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
                 </button>
                 <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
                 <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
-                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
                   <span>Brake</span>
                 </button>
                 <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
-                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                   <span>Gas</span>
                 </button>
               </div>
@@ -404,18 +413,18 @@
               <div class="touch-controls" aria-label="Time Trial driving controls">
                 <button class="steer-button arrow-control left-control" data-steer="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
-                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
-                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
                 </button>
                 <button class="steer-button arrow-control right-control" data-steer="right" type="button" aria-label="Steer right">→</button>
                 <button class="steer-button pedal-control brake-control" data-steer="down" type="button" aria-label="Brake">
-                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
                   <span>Brake</span>
                 </button>
                 <button class="steer-button pedal-control gas-control" data-steer="up" type="button" aria-label="Gas">
-                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                   <span>Gas</span>
                 </button>
               </div>
@@ -936,18 +945,18 @@
               <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Pseudo-3D driving controls">
                 <button class="steer-button arrow-control left-control" data-beta3d-control="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
-                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
-                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
                 </button>
                 <button class="steer-button arrow-control right-control" data-beta3d-control="right" type="button" aria-label="Steer right">→</button>
                 <button class="steer-button pedal-control brake-control" data-beta3d-control="down" type="button" aria-label="Brake">
-                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
                   <span>Brake</span>
                 </button>
                 <button class="steer-button pedal-control gas-control" data-beta3d-control="up" type="button" aria-label="Gas">
-                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                   <span>Gas</span>
                 </button>
               </div>
@@ -1001,18 +1010,18 @@
               <div class="touch-controls beta-touch-controls" aria-label="Circuit race driving controls">
                 <button class="steer-button arrow-control left-control" data-beta-control="left" type="button" aria-label="Steer left">←</button>
                 <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
-                  <img class="wheel-neutral" src="assets/training/wheel-neutral.png" alt="">
-                  <img class="wheel-horn" src="assets/training/wheel-horn.png" alt="">
+                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
                 </button>
                 <button class="steer-button arrow-control right-control" data-beta-control="right" type="button" aria-label="Steer right">→</button>
                 <button class="steer-button pedal-control brake-control" data-beta-control="down" type="button" aria-label="Brake">
-                  <img class="pedal-off" src="assets/training/brakepedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/brakepedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
                   <span>Brake</span>
                 </button>
                 <button class="steer-button pedal-control gas-control" data-beta-control="up" type="button" aria-label="Gas">
-                  <img class="pedal-off" src="assets/training/gaspedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/training/gaspedal-on.png" alt="">
+                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                   <span>Gas</span>
                 </button>
                 <button class="steer-button beta-item-control" data-beta-item-button type="button" aria-label="Use item">Space</button>
@@ -1367,6 +1376,7 @@
     <img class="forge-fs-vat" id="forge-fs-vat" src="assets/forge/forge_vat.png" alt="">
   </div>
 
+    <script src="gearborn-config.js"></script>
     <script src="game-data.js"></script>
     <script src="game-state.js"></script>
     <script src="game-logic.js"></script>

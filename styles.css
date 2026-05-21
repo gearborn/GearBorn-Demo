@@ -325,7 +325,8 @@ h3,
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .main-menu-button {
@@ -347,27 +348,29 @@ body.mode-active .main-menu-button {
 
 .brand {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
   border: 0;
   background: transparent;
   color: var(--ink);
   padding: 0;
   text-align: left;
+  min-height: 44px;
 }
 
 .brand-mark {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: clamp(190px, 23vw, 330px);
+  height: 48px;
   overflow: hidden;
   place-items: center;
-  border: 1px solid var(--line);
-  background: #111820;
+  border: 0;
+  background: transparent;
   color: var(--gold);
   font-weight: 900;
-  border-radius: 8px;
-  box-shadow: 0 12px 28px var(--shadow);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .brand-mark img {
@@ -375,12 +378,14 @@ body.mode-active .main-menu-button {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 2px;
+  object-position: center;
+  padding: 0;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.42));
 }
 
 .brand strong,
 .brand small {
-  display: block;
+  display: none;
 }
 
 .brand strong {
@@ -395,6 +400,7 @@ body.mode-active .main-menu-button {
 
 .sprox-wallet {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 9px;
   min-height: 40px;
@@ -504,21 +510,30 @@ body:not(.mode-active) .nav {
 
 .settings-gear-button {
   display: inline-grid;
+  flex: 0 0 auto;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(17, 24, 32, 0.82);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--ink);
   font-size: 1.05rem;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .settings-gear-button:hover {
-  border-color: var(--gold);
-  color: var(--gold);
   transform: translateY(-1px);
+}
+
+.settings-gear-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.38));
 }
 
 .view {
@@ -548,7 +563,7 @@ body:not(.mode-active) .nav {
   border-radius: 24px;
   background:
     url("assets/menu/mainmenu-bg.png");
-  background-position: center;
+  background-position: center top;
   background-size: cover;
   box-shadow: 0 26px 76px var(--shadow);
   isolation: isolate;
@@ -558,7 +573,7 @@ body:not(.mode-active) .nav {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   border-radius: inherit;
   background:
     radial-gradient(circle at 50% 42%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.34) 58%, rgba(0, 0, 0, 0.56) 100%),
@@ -566,10 +581,30 @@ body:not(.mode-active) .nav {
   pointer-events: none;
 }
 
+.menu-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url("assets/menu/menu-particles.png");
+  background-repeat: repeat-x;
+  background-position: 0 center;
+  background-size: auto 100%;
+  mix-blend-mode: screen;
+  opacity: 0.65;
+  animation: menu-particle-drift 60s linear infinite;
+}
+
+@keyframes menu-particle-drift {
+  from { background-position: 0 center; }
+  to { background-position: -1920px center; }
+}
+
 .menu-logo,
 .menu-dashboard {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .menu-logo {
@@ -639,8 +674,14 @@ body:not(.mode-active) .nav {
 
 .menu-dashboard {
   display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  grid-template-areas:
+    "hero next"
+    "secondary secondary"
+    "utility utility"
+    "credit credit";
   gap: clamp(14px, 2vw, 20px);
-  width: min(760px, 100%);
+  width: min(1040px, 100%);
   justify-self: center;
 }
 
@@ -745,15 +786,17 @@ body:not(.mode-active) .nav {
 
 .hero-menu-card {
   --card-bg: url("assets/menu/story-mode-card.png");
-  --card-text-scrim: radial-gradient(ellipse at center, rgba(8, 12, 18, 0.72), rgba(8, 12, 18, 0.24) 34%, transparent 58%);
-  min-height: 190px;
+  --card-text-scrim: linear-gradient(180deg, transparent 0%, transparent 50%, rgba(8, 12, 18, 0) 60%, rgba(8, 12, 18, 0.85) 100%);
+  grid-area: hero;
+  min-height: 240px;
   aspect-ratio: 2 / 1;
   padding: 22px 24px;
   border-color: rgba(110, 231, 168, 0.42);
   background:
-    linear-gradient(135deg, rgba(110, 231, 168, 0.28), transparent 45%),
+    var(--card-text-scrim),
+    var(--card-bg) center / cover no-repeat,
     linear-gradient(160deg, rgba(31, 47, 45, 0.96), rgba(10, 14, 20, 0.92));
-  align-content: center;
+  align-content: end;
   justify-items: center;
   text-align: center;
 }
@@ -839,8 +882,47 @@ body:not(.mode-active) .nav {
   gap: 12px;
 }
 
+.menu-secondary-grid {
+  grid-area: secondary;
+}
+
 .menu-utility-grid {
+  grid-area: utility;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.menu-utility {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(8, 12, 20, 0.42);
+  text-align: center;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.menu-utility:hover {
+  background: rgba(8, 12, 20, 0.55);
+  transform: translateY(-2px);
+}
+
+.menu-utility-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.menu-utility strong {
+  font-size: clamp(0.85rem, 1.6vw, 1rem);
+}
+
+.menu-utility small {
+  font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+  opacity: 0.78;
 }
 
 .menu-card-icon {
@@ -852,6 +934,17 @@ body:not(.mode-active) .nav {
   background: rgba(255, 200, 87, 0.18);
   color: var(--gold);
   font-weight: 1000;
+}
+
+.menu-card-icon-img {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 .achievement-layout {
@@ -1151,11 +1244,12 @@ body:not(.mode-active) .nav {
 }
 
 .next-goal-panel {
+  grid-area: next;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 18px;
-  align-items: center;
-  padding: 18px;
+  grid-template-areas: "content";
+  isolation: isolate;
+  min-height: 180px;
+  padding: 22px 28px;
   border-color: rgba(255, 153, 45, 0.62);
   background:
     linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(255, 200, 87, 0.08) 46%, rgba(0, 0, 0, 0.58)),
@@ -1164,6 +1258,45 @@ body:not(.mode-active) .nav {
     0 12px 34px rgba(0, 0, 0, 0.42),
     0 0 32px rgba(255, 140, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("assets/menu/next-race-frame.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.next-race-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.next-race-city-thumb {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.next-race-city-thumb[hidden],
+.next-race-city-thumb:not([src]) {
+  display: none;
+}
+
+.next-race-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .next-goal-panel::before {
@@ -1180,12 +1313,12 @@ body:not(.mode-active) .nav {
 .next-goal-panel span,
 .next-goal-panel strong,
 .next-goal-panel small {
-  grid-column: 1;
+  grid-column: auto;
 }
 
 .next-goal-panel button {
-  grid-column: 2;
-  grid-row: 1 / span 4;
+  grid-column: 1 / -1;
+  justify-self: stretch;
   min-height: 54px;
   padding-inline: 22px;
   box-shadow: 0 0 26px rgba(110, 231, 168, 0.18);
@@ -1206,6 +1339,7 @@ body:not(.mode-active) .nav {
 }
 
 .creator-credit {
+  grid-area: credit;
   margin: 4px 0 0;
   color: #ffffff;
   font-size: 0.84rem;
@@ -10586,4 +10720,1298 @@ canvas,
   .rotation-tip {
     transform: none;
   }
+}
+
+/* Main menu asset refresh overrides. Kept at the end so older responsive menu
+   rules do not flatten the new hero/next-race hierarchy. */
+.menu-utility[data-view="achievements"] {
+  justify-items: center;
+  text-align: center;
+}
+
+.menu-utility[data-view="achievements"] strong {
+  font-size: clamp(0.85rem, 1.6vw, 1rem);
+}
+
+@media (max-width: 720px) {
+  .menu-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "next"
+      "secondary"
+      "utility"
+      "credit";
+  }
+
+  .menu-utility-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .menu-utility {
+    flex: initial;
+  }
+
+  .next-race-content {
+    grid-template-columns: 1fr;
+  }
+
+  .next-race-city-thumb {
+    max-height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-menu-card {
+    min-height: min(42svh, 300px);
+  }
+
+  .menu-card.hero-menu-card > strong {
+    font-size: clamp(2.35rem, 14vw, 4.1rem);
+  }
+
+  .menu-card-icon-img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .menu-utility-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-particles {
+    animation: none;
+  }
+}
+
+/* Main menu hierarchy: Story Mode is primary, Next Race is a secondary shortcut. */
+.menu-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  grid-template-areas:
+    "hero next"
+    "secondary secondary"
+    "utility utility"
+    "credit credit";
+  gap: clamp(14px, 1.8vw, 22px);
+  align-items: stretch;
+}
+
+.hero-menu-card {
+  --card-bg: url("assets/menu/story-mode-card.png");
+  position: relative;
+  display: grid;
+  grid-area: hero;
+  align-content: end;
+  justify-items: center;
+  gap: 8px;
+  min-height: 280px;
+  aspect-ratio: 2 / 1;
+  padding: 26px 28px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(110, 231, 168, 0.42);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 45%, rgba(8, 12, 18, 0.45) 65%, rgba(8, 12, 18, 0.88) 100%),
+    var(--card-bg) center / cover no-repeat,
+    linear-gradient(160deg, rgba(31, 47, 45, 0.96), rgba(10, 14, 20, 0.92));
+  cursor: pointer;
+  text-align: center;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.hero-menu-card::before,
+.hero-menu-card::after {
+  display: none;
+}
+
+.hero-menu-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(110, 231, 168, 0.22);
+}
+
+.menu-card.hero-menu-card > strong,
+.hero-menu-card > strong {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 200, 87, 0.18);
+}
+
+.hero-menu-card > small {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero-menu-card .menu-card-cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 220px;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 14px 36px;
+  border: 2px solid rgba(255, 222, 138, 0.95);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffd76b 0%, #f6a93b 100%);
+  color: #0c1018;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(246, 169, 59, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hero-menu-card:hover .menu-card-cta {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(246, 169, 59, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.next-goal-panel {
+  position: relative;
+  display: grid;
+  grid-area: next;
+  min-height: 240px;
+  aspect-ratio: 3 / 2;
+  align-items: stretch;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #0c1018;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.next-goal-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.next-race-city-thumb {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+  background: #0c1018;
+}
+
+.next-goal-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.85) 0%, rgba(8, 12, 18, 0.55) 25%, transparent 50%),
+    linear-gradient(180deg, transparent 0%, transparent 60%, rgba(8, 12, 18, 0.65) 100%);
+  pointer-events: none;
+}
+
+.next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("assets/menu/next-race-frame.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.next-race-content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 60%;
+  height: 100%;
+  align-content: space-between;
+  gap: 6px;
+  padding: 28px 22px;
+}
+
+.next-race-text {
+  display: grid;
+  gap: 4px;
+}
+
+.next-goal-panel span {
+  color: rgba(255, 222, 138, 0.92);
+  font-size: clamp(0.65rem, 1vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.next-goal-panel strong {
+  color: #ffffff;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.next-goal-panel small,
+.next-goal-panel small#menu-next-reward {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(0.75rem, 1.1vw, 0.88rem);
+}
+
+.next-goal-panel .story-primary {
+  align-self: end;
+  justify-self: start;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 20px;
+  border: 1.5px solid rgba(110, 231, 168, 0.72);
+  border-radius: 8px;
+  background: rgba(110, 231, 168, 0.16);
+  color: #ffffff;
+  font-size: clamp(0.78rem, 1.1vw, 0.92rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.next-goal-panel .story-primary:hover {
+  background: rgba(110, 231, 168, 0.32);
+  transform: translateY(-1px);
+}
+
+/* Final fit fixes: keep the header brand and story-map transport as image buttons. */
+.brand {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand-mark {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.city-transport-button,
+.ghost.city-transport-button {
+  width: clamp(86px, 9vw, 110px);
+  height: clamp(55px, 5.4vw, 70px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.city-transport-button:hover,
+.ghost.city-transport-button:hover {
+  background: transparent;
+  box-shadow: none;
+}
+
+.city-transport-button img,
+.ghost.city-transport-button img {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 720px) {
+  .menu-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "next"
+      "secondary"
+      "utility"
+      "credit";
+  }
+
+  .hero-menu-card {
+    min-height: min(42svh, 300px);
+  }
+
+  .next-race-content {
+    width: min(72%, 360px);
+    padding: 24px 20px;
+  }
+
+  .topbar-left {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: clamp(170px, 52vw, 260px);
+    height: 44px;
+  }
+
+  .sprox-wallet {
+    padding-inline: 10px;
+  }
+
+  .city-transport-button,
+  .ghost.city-transport-button {
+    width: clamp(78px, 18vw, 96px);
+    height: clamp(50px, 11vw, 62px);
+  }
+}
+
+/* Focused polish overrides for the refreshed main menu, city header, and VN scenes. */
+.main-menu,
+.main-menu button,
+.next-goal-panel,
+.menu-utility {
+  font-family: var(--font-ui);
+}
+
+.next-goal-panel {
+  padding: clamp(18px, 2.1vw, 24px);
+}
+
+.next-race-frame {
+  z-index: 3;
+}
+
+.next-race-content {
+  z-index: 2;
+  grid-template-columns: minmax(118px, 0.95fr) minmax(0, 1.45fr);
+  gap: clamp(12px, 1.4vw, 18px);
+  padding: 0;
+  align-items: center;
+}
+
+.next-race-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  min-width: 0;
+  isolation: isolate;
+}
+
+.next-race-city-thumb {
+  position: absolute;
+  inset: 10.5% 11.5% 12.5%;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(2, 5, 10, 0.58);
+}
+
+.next-race-art .next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-size: 100% 100%;
+}
+
+.next-goal-panel .story-primary {
+  min-height: 42px;
+  justify-self: start;
+  width: min(100%, 220px);
+  padding-inline: 16px;
+  font-size: 0.9rem;
+}
+
+#menu-next-reward,
+.next-goal-panel small#menu-next-reward {
+  color: #ffffff;
+}
+
+.menu-utility-grid {
+  align-items: stretch;
+  gap: clamp(8px, 1.2vw, 12px);
+}
+
+.menu-utility {
+  min-height: 116px;
+  align-content: center;
+  grid-template-rows: auto auto;
+  padding: clamp(10px, 1.25vw, 14px);
+}
+
+.menu-utility-icon {
+  width: clamp(78px, 7.5vw, 106px);
+  height: clamp(78px, 7.5vw, 106px);
+}
+
+.menu-utility[data-view="vindex"] .menu-utility-icon,
+.menu-utility[data-view="profiles"] .menu-utility-icon {
+  width: clamp(92px, 8.6vw, 122px);
+  height: clamp(92px, 8.6vw, 122px);
+}
+
+.menu-utility strong,
+.menu-utility[data-view="achievements"] strong {
+  color: #ffffff;
+  font-size: clamp(0.78rem, 1.25vw, 0.94rem);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.menu-utility small {
+  display: none !important;
+}
+
+.tuner-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+}
+
+.tuner-rank-label {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(0.74rem, 1.2vw, 0.92rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+.tuner-rank-value {
+  display: inline-flex;
+  min-width: 42px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border: 1px solid rgba(255, 200, 87, 0.54);
+  border-radius: 999px;
+  background: rgba(10, 14, 20, 0.72);
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: clamp(0.78rem, 1.2vw, 0.96rem);
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.tuner-rank-value:hover,
+.tuner-rank-value:focus-visible {
+  border-color: rgba(255, 200, 87, 0.9);
+  box-shadow: 0 0 18px rgba(255, 200, 87, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tuner-rank-badge:hover,
+.tuner-rank-badge:focus-visible {
+  color: inherit;
+  text-shadow: none;
+}
+
+.city-transport-button img {
+  width: 96%;
+  height: 96%;
+  padding: 4px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.tutorial-visual-stage.splash-stage {
+  padding-bottom: clamp(118px, 16svh, 168px);
+}
+
+.tutorial-splash-image {
+  max-height: calc(100svh - clamp(132px, 18svh, 188px));
+}
+
+.tutorial-overlay.splashing .tutorial-card {
+  top: auto !important;
+  right: auto;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  width: auto;
+  transform: translateX(-50%);
+}
+
+.tutorial-visual-stage.vn-stage {
+  align-items: flex-end;
+  padding: 9vh 3vw 24vh;
+}
+
+.tutorial-vn-character {
+  max-width: min(24vw, 320px);
+  max-height: 68vh;
+}
+
+.tutorial-card[data-mode="vnScene"] {
+  top: auto;
+  right: auto;
+  bottom: clamp(16px, 3vh, 28px);
+  left: 50%;
+  width: min(460px, calc(100vw - 36px));
+  max-height: 24svh;
+  transform: translateX(-50%);
+}
+
+.tutorial-card[data-mode="vnScene"] .tutorial-portrait {
+  display: none;
+}
+
+.tutorial-card[data-mode="vnScene"][data-vn-count="2"][data-vn-slot="0"] {
+  left: 29%;
+}
+
+.tutorial-card[data-mode="vnScene"][data-vn-count="2"][data-vn-slot="1"] {
+  left: 71%;
+}
+
+.tutorial-card[data-mode="vnScene"][data-vn-count="3"][data-vn-slot="0"] {
+  left: 21%;
+}
+
+.tutorial-card[data-mode="vnScene"][data-vn-count="3"][data-vn-slot="1"] {
+  left: 50%;
+}
+
+.tutorial-card[data-mode="vnScene"][data-vn-count="3"][data-vn-slot="2"] {
+  left: 79%;
+}
+
+.tutorial-card[data-speaker="user"] .tutorial-speaker h2 {
+  color: #6ee7a8;
+}
+
+.tutorial-card[data-speaker="rival"] .tutorial-speaker h2 {
+  color: #ffc857;
+}
+
+.tutorial-card[data-speaker="tyree"] .tutorial-speaker h2 {
+  color: #63c7ff;
+}
+
+.tutorial-card[data-speaker="ashley"] .tutorial-speaker h2 {
+  color: #c084fc;
+}
+
+@media (max-width: 720px) {
+  .next-race-content {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .next-race-art {
+    width: min(100%, 360px);
+    justify-self: center;
+  }
+
+  .next-race-city-thumb {
+    max-height: none;
+  }
+
+  .menu-utility-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-utility {
+    min-height: 106px;
+  }
+
+  .menu-utility-icon {
+    width: clamp(72px, 20vw, 94px);
+    height: clamp(72px, 20vw, 94px);
+  }
+
+  .menu-utility[data-view="vindex"] .menu-utility-icon,
+  .menu-utility[data-view="profiles"] .menu-utility-icon {
+    width: clamp(88px, 24vw, 112px);
+    height: clamp(88px, 24vw, 112px);
+  }
+
+  .city-transport-button,
+  .ghost.city-transport-button {
+    width: clamp(146px, 42vw, 188px);
+    height: clamp(94px, 26vw, 124px);
+  }
+
+  .tutorial-visual-stage.vn-stage {
+    padding: 32svh 2vw 2vh;
+  }
+
+  .tutorial-vn-character {
+    max-width: 34vw;
+    max-height: 56svh;
+  }
+
+  .tutorial-card,
+  .tutorial-card[data-scene] {
+    top: max(10px, env(safe-area-inset-top));
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: calc(100vw - 18px);
+    max-height: 32svh;
+    transform: translateX(-50%);
+    overflow: auto;
+  }
+
+  .tutorial-card[data-mode="vnScene"],
+  .tutorial-card[data-mode="comicSplash"] {
+    top: max(10px, env(safe-area-inset-top));
+    bottom: auto;
+    left: 50% !important;
+    width: calc(100vw - 18px);
+    max-height: 31svh;
+    transform: translateX(-50%);
+  }
+
+  .tutorial-card[data-mode="vnScene"] {
+    overflow: auto;
+  }
+
+  .tutorial-overlay.splashing .tutorial-card {
+    top: auto !important;
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .tutorial-visual-stage.splash-stage {
+    padding: 8px 8px clamp(116px, 17svh, 150px);
+  }
+
+  .tutorial-splash-image {
+    max-height: calc(100svh - clamp(126px, 19svh, 166px));
+  }
+}
+
+/* Final main menu hierarchy pass: Story Mode primary, Next Race secondary. */
+.menu-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  grid-template-areas:
+    "hero next"
+    "secondary secondary"
+    "utility utility"
+    "credit credit";
+  gap: clamp(14px, 1.8vw, 22px);
+  align-items: stretch;
+}
+
+.hero-menu-card {
+  --card-bg: url("assets/menu/story-mode-card.png");
+  position: relative;
+  display: grid;
+  grid-area: hero;
+  align-content: end;
+  justify-items: center;
+  gap: 8px;
+  min-height: 280px;
+  aspect-ratio: 2 / 1;
+  padding: 26px 28px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(110, 231, 168, 0.42);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 45%, rgba(8, 12, 18, 0.45) 65%, rgba(8, 12, 18, 0.88) 100%),
+    var(--card-bg) center / cover no-repeat,
+    linear-gradient(160deg, rgba(31, 47, 45, 0.96), rgba(10, 14, 20, 0.92));
+  cursor: pointer;
+  text-align: center;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.hero-menu-card::before,
+.hero-menu-card::after {
+  display: none;
+}
+
+.hero-menu-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(110, 231, 168, 0.22);
+}
+
+.menu-card.hero-menu-card > strong,
+.hero-menu-card > strong {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 200, 87, 0.18);
+}
+
+.hero-menu-card > small {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero-menu-card .menu-card-cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 220px;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 14px 36px;
+  border: 2px solid rgba(255, 222, 138, 0.95);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffd76b 0%, #f6a93b 100%);
+  color: #0c1018;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(246, 169, 59, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hero-menu-card:hover .menu-card-cta {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(246, 169, 59, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.next-goal-panel {
+  position: relative;
+  display: grid;
+  grid-area: next;
+  min-height: 240px;
+  aspect-ratio: 3 / 2;
+  align-items: stretch;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #0c1018;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.next-goal-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.next-race-city-thumb {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+  background: #0c1018;
+}
+
+.next-goal-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.85) 0%, rgba(8, 12, 18, 0.55) 25%, transparent 50%),
+    linear-gradient(180deg, transparent 0%, transparent 60%, rgba(8, 12, 18, 0.65) 100%);
+  pointer-events: none;
+}
+
+.next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("assets/menu/next-race-frame.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.next-race-content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 60%;
+  height: 100%;
+  align-content: space-between;
+  gap: 6px;
+  padding: 28px 22px;
+}
+
+.next-race-text {
+  display: grid;
+  gap: 4px;
+}
+
+.next-goal-panel span {
+  color: rgba(255, 222, 138, 0.92);
+  font-size: clamp(0.65rem, 1vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.next-goal-panel strong {
+  color: #ffffff;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.next-goal-panel small,
+.next-goal-panel small#menu-next-reward {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(0.75rem, 1.1vw, 0.88rem);
+}
+
+.next-goal-panel .story-primary {
+  align-self: end;
+  justify-self: start;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 20px;
+  border: 1.5px solid rgba(110, 231, 168, 0.72);
+  border-radius: 8px;
+  background: rgba(110, 231, 168, 0.16);
+  color: #ffffff;
+  font-size: clamp(0.78rem, 1.1vw, 0.92rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.next-goal-panel .story-primary:hover {
+  background: rgba(110, 231, 168, 0.32);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .menu-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "next"
+      "secondary"
+      "utility"
+      "credit";
+  }
+
+  .hero-menu-card {
+    min-height: min(42svh, 300px);
+  }
+
+  .next-race-content {
+    width: min(72%, 360px);
+    padding: 24px 20px;
+  }
+}
+
+/* Final header / city transport / next-race fit overrides. Keep these last. */
+.topbar-left {
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.brand {
+  flex: 0 1 auto;
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand-mark {
+  width: clamp(178px, 21.5vw, 312px);
+  height: 42px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.brand-mark img {
+  padding: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.sprox-wallet,
+.settings-gear-button {
+  flex: 0 0 auto;
+}
+
+.city-transport-button,
+.ghost.city-transport-button {
+  width: clamp(86px, 9vw, 110px);
+  height: clamp(55px, 5.4vw, 70px);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.city-transport-button:hover,
+.ghost.city-transport-button:hover {
+  background: transparent;
+  box-shadow: none;
+}
+
+.city-transport-button img,
+.ghost.city-transport-button img {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 720px) {
+  .topbar-left {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: clamp(160px, 49vw, 246px);
+    height: 40px;
+  }
+
+  .sprox-wallet {
+    padding-inline: 10px;
+  }
+
+  .city-transport-button,
+  .ghost.city-transport-button {
+    width: clamp(78px, 18vw, 96px);
+    height: clamp(50px, 11vw, 62px);
+  }
+}
+
+/* Latest menu/header refinements. Keep these below the older menu layers. */
+.brand {
+  min-height: 36px;
+}
+
+.brand-mark {
+  width: clamp(150px, 18vw, 270px);
+  height: 36px;
+}
+
+.settings-gear-button {
+  width: 52px;
+  height: 46px;
+}
+
+.settings-gear-button img {
+  width: 112%;
+  height: 112%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+}
+
+.next-race-city-thumb {
+  position: absolute;
+  top: 11%;
+  right: 7%;
+  bottom: 11%;
+  left: 7%;
+  z-index: 0;
+  width: auto;
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  border-radius: 4px;
+  background: #0c1018;
+}
+
+.next-goal-panel::before {
+  content: "";
+  position: absolute;
+  top: 11%;
+  right: 7%;
+  bottom: 11%;
+  left: 7%;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.88) 0%, rgba(8, 12, 18, 0.55) 28%, transparent 55%),
+    linear-gradient(180deg, transparent 0%, transparent 65%, rgba(8, 12, 18, 0.55) 100%);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("assets/menu/next-race-frame.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.next-race-content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 55%;
+  height: 100%;
+  align-content: space-between;
+  gap: 8px;
+  padding: 12% 8% 12% 12%;
+}
+
+.menu-utility {
+  background: rgba(8, 12, 20, 0.42);
+}
+
+.menu-utility:hover {
+  background: rgba(8, 12, 20, 0.55);
+}
+
+.menu-utility[data-view="vindex"] {
+  background:
+    linear-gradient(180deg, rgba(8, 12, 20, 0.35), rgba(8, 12, 20, 0.55)),
+    url("assets/menu/utility-tile-bg-vindex.png") center / cover no-repeat;
+}
+
+.menu-utility[data-view="profiles"] {
+  background:
+    linear-gradient(180deg, rgba(8, 12, 20, 0.35), rgba(8, 12, 20, 0.55)),
+    url("assets/menu/utility-tile-bg-profiles.png") center / cover no-repeat;
+}
+
+.menu-utility[data-view="achievements"] {
+  background:
+    linear-gradient(180deg, rgba(8, 12, 20, 0.35), rgba(8, 12, 20, 0.55)),
+    url("assets/menu/utility-tile-bg-achievements.png") center / cover no-repeat;
+}
+
+.menu-utility[data-view="builder"] {
+  background:
+    linear-gradient(180deg, rgba(8, 12, 20, 0.35), rgba(8, 12, 20, 0.55)),
+    url("assets/menu/utility-tile-bg-builder.png") center / cover no-repeat;
+}
+
+.menu-utility[data-view="vindex"]:hover,
+.menu-utility[data-view="profiles"]:hover,
+.menu-utility[data-view="achievements"]:hover,
+.menu-utility[data-view="builder"]:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 720px) {
+  .brand-mark {
+    width: clamp(132px, 39vw, 208px);
+    height: 34px;
+  }
+
+  .settings-gear-button {
+    width: 48px;
+    height: 44px;
+  }
+
+  .next-race-content {
+    width: 62%;
+    padding: 12% 8% 12% 12%;
+  }
+}
+
+/* Corrected Next Story Race frame model: frame outside, image/text inside. */
+.next-goal-panel {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  min-height: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  background: #0c1018;
+  padding: 0;
+}
+
+.next-goal-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.next-race-inner {
+  position: absolute;
+  top: 14%;
+  right: 7%;
+  bottom: 14%;
+  left: 7%;
+  overflow: hidden;
+  border-radius: 4px;
+  z-index: 0;
+}
+
+.next-race-city-thumb {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+  background: #0c1018;
+}
+
+.next-goal-panel::before {
+  content: none;
+}
+
+.next-race-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.88) 0%, rgba(8, 12, 18, 0.55) 28%, transparent 55%),
+    linear-gradient(180deg, transparent 0%, transparent 65%, rgba(8, 12, 18, 0.55) 100%);
+  pointer-events: none;
+}
+
+.next-race-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("assets/menu/next-race-frame.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.next-race-content {
+  position: absolute;
+  top: 14%;
+  bottom: 14%;
+  left: 7%;
+  z-index: 3;
+  display: grid;
+  width: 50%;
+  height: auto;
+  align-content: space-between;
+  gap: 8px;
+  padding: 20px 24px;
+}
+
+.next-race-text {
+  display: grid;
+  gap: 4px;
+}
+
+.next-goal-panel span {
+  font-size: clamp(0.7rem, 1.05vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 222, 138, 0.92);
+}
+
+.next-goal-panel strong {
+  font-size: clamp(1.05rem, 1.9vw, 1.5rem);
+  line-height: 1.05;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+}
+
+.next-goal-panel small,
+.next-goal-panel small#menu-next-reward {
+  font-size: clamp(0.78rem, 1.2vw, 0.95rem);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.next-goal-panel .story-primary {
+  align-self: end;
+  justify-self: start;
+  padding: 10px 22px;
+  min-width: 0;
+  font-size: clamp(0.78rem, 1.15vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(110, 231, 168, 0.18);
+  border: 1.5px solid rgba(110, 231, 168, 0.72);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.next-goal-panel .story-primary:hover {
+  background: rgba(110, 231, 168, 0.32);
+  transform: translateY(-1px);
 }

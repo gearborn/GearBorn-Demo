@@ -26,8 +26,8 @@ const ranks = [
     power: 0.9,
     color: "#f4d35e",
     images: {
-      display: "assets/cars/rival-bananachi-display.png",
-      race: "assets/cars/rival-bananachi-race.png"
+      display: "assets/cars/monkey-bananachi-display.png",
+      race: "assets/cars/monkey-bananachi-race.png"
     }
   },
   {
@@ -37,8 +37,8 @@ const ranks = [
     power: 1.08,
     color: "#8d6e63",
     images: {
-      display: "assets/cars/rival-beardo-display.png",
-      race: "assets/cars/rival-beardo-race.png"
+      display: "assets/cars/mustache-beardo-display.png",
+      race: "assets/cars/mustache-beardo-race.png"
     }
   },
   {
@@ -48,8 +48,8 @@ const ranks = [
     power: 1.28,
     color: "#7bdff2",
     images: {
-      display: "assets/cars/rival-manstrocity-display.png",
-      race: "assets/cars/rival-manstrocity-race.png"
+      display: "assets/cars/armadillo-manstrocity-display.png",
+      race: "assets/cars/armadillo-manstrocity-race.png"
     }
   },
   {
@@ -59,8 +59,8 @@ const ranks = [
     power: 1.5,
     color: "#f29f5c",
     images: {
-      display: "assets/cars/rival-sponsore-display.png",
-      race: "assets/cars/rival-sponsore-race.png"
+      display: "assets/cars/sticker-sponsore-display.png",
+      race: "assets/cars/sticker-sponsore-race.png"
     }
   },
   {
@@ -70,8 +70,8 @@ const ranks = [
     power: 1.78,
     color: "#f25f5c",
     images: {
-      display: "assets/cars/rival-crusadome-display.png",
-      race: "assets/cars/rival-crusadome-race.png"
+      display: "assets/cars/pope-crusadome-display.png",
+      race: "assets/cars/pope-crusadome-race.png"
     }
   },
   {
@@ -81,8 +81,8 @@ const ranks = [
     power: 2.12,
     color: "#c084fc",
     images: {
-      display: "assets/cars/rival-hornula1-display.png",
-      race: "assets/cars/rival-hornula1-race.png"
+      display: "assets/cars/unicorn-hornula1-display.png",
+      race: "assets/cars/unicorn-hornula1-race.png"
     }
   }
 ];
@@ -254,8 +254,8 @@ const cars = [
     unlockable: true,
     unlockInstruction: "Evolve all the cars to unlock",
     evolutions: [
-      { name: "Rainbowlt", images: { display: "assets/cars/unlock-rainbowlt-display.png", race: "assets/cars/unlock-rainbowlt-race.png", topdown: "assets/story/unlock-rainbowlt-topdown.png" } },
-      { name: "Hornula1", images: { display: "assets/cars/rival-hornula1-display.png", race: "assets/cars/rival-hornula1-race.png", topdown: "assets/story/unlock-hornula1-topdown.png" } }
+      { name: "Rainbowlt", images: { display: "assets/cars/unicorn-rainbowlt-display.png", race: "assets/cars/unicorn-rainbowlt-race.png", topdown: "assets/cars/unicorn-rainbowlt-topdown.png" } },
+      { name: "Hornula1", images: { display: "assets/cars/unicorn-hornula1-display.png", race: "assets/cars/unicorn-hornula1-race.png", topdown: "assets/cars/unicorn-hornula1-topdown.png" } }
     ]
   }
   ,
@@ -399,7 +399,7 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     unlockable: true,
     evolutions: [
       { name: "Staschel", images: { display: "assets/cars/mustache-staschel-display.png", race: "assets/cars/mustache-staschel-race.png", topdown: "assets/cars/mustache-staschel-topdown.png" } },
-      { name: "Beardo", images: { display: "assets/cars/rival-beardo-display.png", race: "assets/cars/rival-beardo-race.png", topdown: "assets/cars/mustache-beardo-topdown.png" } },
+      { name: "Beardo", images: { display: "assets/cars/mustache-beardo-display.png", race: "assets/cars/mustache-beardo-race.png", topdown: "assets/cars/mustache-beardo-topdown.png" } },
       { name: "Bair", images: { display: "assets/cars/mustache-bair-display.png", race: "assets/cars/mustache-bair-race.png", topdown: "assets/cars/mustache-bair-topdown.png" } }
     ]
   },
@@ -3552,26 +3552,26 @@ const trackItems = {
   ]
 };
 const bosses = [
-  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/story/crusadome-topdown.png", portrait: "assets/bosses/rev-rend.png", headshot: "assets/bosses/headshot-rev-rend.png" },
-  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/story/baronessex-topdown.png", portrait: "assets/bosses/karen.png", headshot: "assets/bosses/headshot-karen.png" },
-  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/bosses/samir.png", headshot: "assets/bosses/headshot-samir.png" },
-  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/story/inflewenze-topdown.png", portrait: "assets/bosses/thais.png", headshot: "assets/bosses/headshot-thais.png" },
-  { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/story/hurrdaboutis-topdown.png", portrait: "assets/bosses/jimmy-chin.png", headshot: "assets/bosses/headshot-jimmy-chin.png" },
-  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/bosses/rip-lee.png", headshot: "assets/bosses/headshot-rip-lee.png" },
-  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/story/kuumbusta-topdown.png", portrait: "assets/bosses/jabu.png", headshot: "assets/bosses/headshot-jabu.png" },
-  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/bosses/pallavi.png", headshot: "assets/bosses/headshot-pallavi.png" }
+  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/cars/pope-crusadome-topdown.png", portrait: "assets/characters/rev-rend.png", headshot: "assets/characters/headshots/headshot-rev-rend.png" },
+  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/cars/german-baronessex-topdown.png", portrait: "assets/characters/karen.png", headshot: "assets/characters/headshots/headshot-karen.png" },
+  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/characters/samir.png", headshot: "assets/characters/headshots/headshot-samir.png" },
+  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
+  { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
+  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
+  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/springbok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
+  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/characters/pallavi.png", headshot: "assets/characters/headshots/headshot-pallavi.png" }
 ];
-const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/story/unlock-hornula1-topdown.png", portrait: "assets/bosses/racer-alpha-helmet.png", unmaskedPortrait: "assets/bosses/racer-alpha.png", headshot: "assets/bosses/headshot-racer-alpha.png" };
+const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/cars/unicorn-hornula1-topdown.png", portrait: "assets/characters/racer-alpha-helmet.png", unmaskedPortrait: "assets/characters/racer-alpha.png", headshot: "assets/characters/headshots/headshot-racer-alpha.png" };
 const bossChallengeBosses = bosses.concat(finalBoss);
 const campaignDragStages = [
-  { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/rival-bananachi-race.png", opponents: [{ name: "Bananachi", image: "assets/cars/rival-bananachi-race.png", power: 0.92 }] },
-  { rankKey: "D", name: "Beardo", xp: 150, power: 1.05, image: "assets/cars/rival-beardo-race.png", opponents: [{ name: "Beardo", image: "assets/cars/rival-beardo-race.png", power: 1.05 }] },
+  { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/monkey-bananachi-race.png", opponents: [{ name: "Bananachi", image: "assets/cars/monkey-bananachi-race.png", power: 0.92 }] },
+  { rankKey: "D", name: "Beardo", xp: 150, power: 1.05, image: "assets/cars/mustache-beardo-race.png", opponents: [{ name: "Beardo", image: "assets/cars/mustache-beardo-race.png", power: 1.05 }] },
   { rankKey: "D", name: "Boates", xp: 190, power: 1.16, image: "assets/cars/whale-boates-race.png", opponents: [{ name: "Boates", image: "assets/cars/whale-boates-race.png", power: 1.16 }, { name: "Swampagne", image: "assets/cars/florida-gator-swampagne-race.png", power: 1.13 }] },
-  { rankKey: "C", name: "Manstrocity", xp: 250, power: 1.3, image: "assets/cars/rival-manstrocity-race.png", opponents: [{ name: "Manstrocity", image: "assets/cars/rival-manstrocity-race.png", power: 1.3 }, { name: "Orbitide", image: "assets/cars/dolphin-orbitide-race.png", power: 1.24 }] },
-  { rankKey: "B", name: "Sponsore", xp: 330, power: 1.5, image: "assets/cars/rival-sponsore-race.png", opponents: [{ name: "Sponsore", image: "assets/cars/rival-sponsore-race.png", power: 1.5 }, { name: "Bair", image: "assets/cars/mustache-bair-race.png", power: 1.46 }, { name: "Brrap", image: "assets/cars/penguin-brrap-race.png", power: 1.43 }] },
+  { rankKey: "C", name: "Manstrocity", xp: 250, power: 1.3, image: "assets/cars/armadillo-manstrocity-race.png", opponents: [{ name: "Manstrocity", image: "assets/cars/armadillo-manstrocity-race.png", power: 1.3 }, { name: "Orbitide", image: "assets/cars/dolphin-orbitide-race.png", power: 1.24 }] },
+  { rankKey: "B", name: "Sponsore", xp: 330, power: 1.5, image: "assets/cars/sticker-sponsore-race.png", opponents: [{ name: "Sponsore", image: "assets/cars/sticker-sponsore-race.png", power: 1.5 }, { name: "Bair", image: "assets/cars/mustache-bair-race.png", power: 1.46 }, { name: "Brrap", image: "assets/cars/penguin-brrap-race.png", power: 1.43 }] },
   { rankKey: "B", name: "Tookerjaw", xp: 410, power: 1.66, image: "assets/cars/pickup-tookerjaw-race.png", opponents: [{ name: "Lopstar", image: "assets/cars/rabbit-lopstar-race.png", power: 1.58 }, { name: "Tookerjaw", image: "assets/cars/pickup-tookerjaw-race.png", power: 1.66 }] },
-  { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/rival-crusadome-race.png", opponents: [{ name: "Crusadome", image: "assets/cars/rival-crusadome-race.png", power: 1.85 }, { name: "Barracobain", image: "assets/cars/fish-barracobain-race.png", power: 1.78 }, { name: "OlChap", image: "assets/cars/butcher-olchap-race.png", power: 1.75 }] },
-  { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/rival-hornula1-race.png", opponents: [{ name: "Hornula1", image: "assets/cars/rival-hornula1-race.png", power: 2.12 }] }
+  { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/pope-crusadome-race.png", opponents: [{ name: "Crusadome", image: "assets/cars/pope-crusadome-race.png", power: 1.85 }, { name: "Barracobain", image: "assets/cars/fish-barracobain-race.png", power: 1.78 }, { name: "OlChap", image: "assets/cars/butcher-olchap-race.png", power: 1.75 }] },
+  { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/unicorn-hornula1-race.png", opponents: [{ name: "Hornula1", image: "assets/cars/unicorn-hornula1-race.png", power: 2.12 }] }
 ];
 const pinkSlipRacePlan = {
   0: { carId: "pig",                rankKey: "D", xp: 180, power: 0.88, distance: 400 },
@@ -3732,9 +3732,9 @@ const timeMedals = [
   { key: "bronze", label: "Bronze", difficulty: "Easy", xp: 150, base: 80 }
 ];
 const vindexEntries = [
-  ["010", "Bananachi", "Monkey Line", "assets/cars/rival-bananachi-display.png"],
-  ["032", "Manstrocity", "Armadillo Dad Line", "assets/cars/rival-manstrocity-display.png"],
-  ["037", "Beardo", "Rides Hair Line", "assets/cars/rival-beardo-display.png"],
+  ["010", "Bananachi", "Monkey Line", "assets/cars/monkey-bananachi-display.png"],
+  ["032", "Manstrocity", "Armadillo Dad Line", "assets/cars/armadillo-manstrocity-display.png"],
+  ["037", "Beardo", "Rides Hair Line", "assets/cars/mustache-beardo-display.png"],
   ["039", "Baybee", "Bee-cycle Line", "assets/cars/bee-baybee-display.png"],
   ["040", "Syndrone", "Bee-cycle Line", "assets/cars/bee-syndrone-display.png"],
   ["041", "Motonarch", "Bee-cycle Line", "assets/cars/bee-motonarch-display.png"],
@@ -3747,7 +3747,7 @@ const vindexEntries = [
   ["066", "Hogson", "Detective Pig Line", "assets/cars/pig-hogson-display.png"],
   ["067", "Snoffle", "Detective Pig Line", "assets/cars/pig-snoffle-display.png"],
   ["068", "Swinecroft", "Detective Pig Line", "assets/cars/pig-swinecroft-display.png"],
-  ["082", "Phantaxi", "Ghost Taxi Line", "assets/story/phantaxi-display.png"],
+  ["082", "Phantaxi", "Ghost Taxi Line", "assets/cars/taxi-phantaxi-display.png"],
   ["088", "Shufflodon", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-shufflodon-display.png"],
   ["089", "Dropatops", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-dropatops-display.png"],
   ["090", "K-Wrex", "Techno Dinosaur Line", "assets/cars/techno-dinosaur-k-wrex-display.png"],
@@ -3784,14 +3784,14 @@ const vindexEntries = [
   ["243", "Cuptrack", "Cake Train Line", "assets/cars/cake-cuptrack-display.png"],
   ["244", "Isittrain", "Cake Train Line", "assets/cars/cake-isittrain-display.png"],
   ["245", "Fonductor", "Cake Train Line", "assets/cars/cake-fonductor-display.png"],
-  ["251", "Inflewenze", "Influencer Line", "assets/story/inflewenze-display.png"],
-  ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/rival-sponsore-display.png"],
-  ["296", "Baronessex", "German Discipline Line", "assets/story/baronessex-display.png"],
-  ["298", "Crusadome", "Crusader Line", "assets/cars/rival-crusadome-display.png"],
-  ["301", "Kuumbusta", "Combustion Line", "assets/story/kuumbusta-display.png"],
-  ["305", "Hurrdaboutis", "Roundabout Line", "assets/story/hurrdaboutis-display.png"],
-  ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unlock-rainbowlt-display.png"],
-  ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/rival-hornula1-display.png"]
+  ["251", "Inflewenze", "Influencer Line", "assets/cars/peacock-inflewenze-display.png"],
+  ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/sticker-sponsore-display.png"],
+  ["296", "Baronessex", "German Discipline Line", "assets/cars/german-baronessex-display.png"],
+  ["298", "Crusadome", "Crusader Line", "assets/cars/pope-crusadome-display.png"],
+  ["301", "Kuumbusta", "Combustion Line", "assets/cars/springbok-kuumbusta-display.png"],
+  ["305", "Hurrdaboutis", "Roundabout Line", "assets/cars/talkshow-hurrdaboutis-display.png"],
+  ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unicorn-rainbowlt-display.png"],
+  ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/unicorn-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
 
 const additionalVindexEntries = [
@@ -4149,8 +4149,8 @@ Object.assign(vindexClassByNumber, {
 });
 
 const tuners = [
-  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
-  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
+  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshots/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
+  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshots/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
 ];
 const profileBios = {
   "rev-rend": "A preacher of speed and salvation, with a collection to match. Rev-rend built his empire on one promise: give him your GearBorn, and he will lead you to greatness. Behind the gospel is a man who has lost sight of what he ever believed in.",
@@ -4178,8 +4178,8 @@ const otherNpcProfiles = [
   { id: "crosby-nash", name: "Crosby Nash", city: "The Open Road" }
 ].map((profile) => ({
   ...profile,
-  image: `assets/characters/headshot-${profile.id.split("-")[0]}.png`,
-  headshot: `assets/characters/headshot-${profile.id.split("-")[0]}.png`,
+  image: `assets/characters/headshots/headshot-${profile.id.split("-")[0]}.png`,
+  headshot: `assets/characters/headshots/headshot-${profile.id.split("-")[0]}.png`,
   character: `assets/characters/character-${profile.id.split("-")[0]}.png`,
   category: "Other",
   car: "Other",
@@ -4197,7 +4197,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
 }))).concat([{
   id: "dr-tyree",
   name: "Dr. Tyree",
-  image: "assets/characters/headshot-dr-tyree.png",
+  image: "assets/characters/headshots/headshot-dr-tyree.png",
   category: "Other",
   car: "Mamburn",
   carImage: "assets/cars/snake-mamburn-display.png",
@@ -4207,8 +4207,8 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
 }, {
   id: "ashley",
   name: "Ashley Racem",
-  image: "assets/characters/headshot-ashley.png",
-  headshot: "assets/characters/headshot-ashley.png",
+  image: "assets/characters/headshots/headshot-ashley.png",
+  headshot: "assets/characters/headshots/headshot-ashley.png",
   character: "assets/characters/character-ashley.png",
   category: "Other",
   car: "Astromarino",
@@ -4222,7 +4222,7 @@ const tunerRankBossOrder = bosses.slice(0, 7);
 const tunerRankBaseList = [{
   rank: 1,
   name: "Pallavi",
-  headshot: "assets/bosses/headshot-pallavi.png",
+  headshot: "assets/characters/headshots/headshot-pallavi.png",
   isBoss: true,
   bossId: "pallavi"
 }].concat(tunerRankBossOrder.slice().reverse().map((boss, index) => ({
@@ -4235,7 +4235,7 @@ const tunerRankBaseList = [{
 })), [{
   rank: 9,
   name: "Your Rival",
-  headshot: "assets/characters/headshot-cha-cha.png",
+  headshot: "assets/characters/headshots/headshot-cha-cha.png",
   isRival: true,
   rivalId: "dynamic"
 }]).concat(racerProfiles
@@ -4253,8 +4253,8 @@ const convoyDefinitions = {
     id: "tyree",
     name: "Tyree's Convoy",
     sponsor: "Dr. Tyree",
-    headshot: "assets/characters/headshot-dr-tyree.png",
-    icon: "assets/medallions/medallion-gauntlet-black.png",
+    headshot: "assets/characters/headshots/headshot-dr-tyree.png",
+    icon: "assets/items/icon-medallion-gauntlet.png",
     stages: [
       // TODO swap IDs if dedicated form-level convoy cars are split later.
       { type: "drag", opponentCarId: "sorority-elephant", opponentName: "Tyree's Sororitrunk" },
@@ -4270,8 +4270,8 @@ const convoyDefinitions = {
     id: "ashley",
     name: "Ashley's Convoy",
     sponsor: "Ashley Racem",
-    headshot: "assets/characters/headshot-ashley.png",
-    icon: "assets/medallions/medallion-gauntlet-black.png",
+    headshot: "assets/characters/headshots/headshot-ashley.png",
+    icon: "assets/items/icon-medallion-gauntlet.png",
     stages: [
       { type: "drag", opponentCarId: "skater-koala", opponentName: "Ashley's Koaster" },
       { type: "battle", opponentCarId: "tiger-cart", opponentName: "Ashley's Notar-O" },

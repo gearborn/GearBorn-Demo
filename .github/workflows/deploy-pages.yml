@@ -1,0 +1,64 @@
+name: Deploy GearBorn Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build static site config
+        env:
+          GEARBORN_GOD_MODE_CODE: ${{ secrets.GEARBORN_GOD_MODE_CODE || vars.GEARBORN_GOD_MODE_CODE }}
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name _site \
+            ! -name .git \
+            ! -name .github \
+            ! -name .codex_indexzip \
+            -exec cp -R {} _site/ \;
+          node <<'NODE'
+          const fs = require("fs");
+          const code = process.env.GEARBORN_GOD_MODE_CODE || "";
+          fs.writeFileSync(
+            "_site/gearborn-config.js",
+            `// Generated during GitHub Pages deployment.\nwindow.__GEARBORN_CONFIG__ = Object.assign({}, window.__GEARBORN_CONFIG__, {\n  GOD_MODE_CODE: ${JSON.stringify(code)}\n});\nwindow.GEARBORN_GOD_MODE_CODE = window.__GEARBORN_CONFIG__.GOD_MODE_CODE || "";\n`
+          );
+          NODE
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
