@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
     <title>GearBorn: Engines Evolved Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body class="app-loading">
@@ -76,17 +79,17 @@
                 <span class="menu-card-cta">Start Story</span>
               </button>
               <aside class="next-goal-panel" data-view="story">
-                <div class="next-race-inner">
+                <div class="next-race-thumb-wrapper">
                   <img class="next-race-city-thumb" id="menu-next-race-thumb" src="" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;">
                 </div>
-                <div class="next-race-frame" aria-hidden="true"></div>
+                <img class="next-race-frame-img" src="assets/menu/next-race-frame.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 <div class="next-race-content">
                   <div class="next-race-text">
                     <span>Next Story Race</span>
                     <strong id="menu-next-race">Indianapolis - Level 2</strong>
                     <small id="menu-next-reward">Reward +50 Sprox</small>
                   </div>
-                  <button class="story-primary" type="button">Start Race</button>
+                  <button class="story-primary" data-view="story" type="button">Start Race</button>
                 </div>
               </aside>
               <div class="menu-secondary-grid">
@@ -128,7 +131,7 @@
           <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading solo-heading">
             <p>Training Academy</p>
-            <h1 id="solo-title">Choose a training race.</h1>
+            <h1 id="solo-title">Train your machine.</h1>
           </div>
           <div class="solo-grid">
             <button class="solo-card primary-card" data-view="play" type="button">
@@ -162,7 +165,7 @@
           <button class="back-link" data-mode-back="story" type="button">Back</button>
           <div class="section-heading">
             <p>Story Mode</p>
-            <h1 id="story-title">Race, train, evolve through the GearBorn world.</h1>
+            <h1 id="story-title">The road is calling.</h1>
           </div>
           <div class="flow-step active" data-flow="story" data-step="car">
             <div class="flow-card">
@@ -234,7 +237,7 @@
             <div class="setup">
               <div class="section-heading flow-step active" data-flow="boss" data-step="car">
                 <p>Boss Race</p>
-                <h1 id="boss-title">Choose your car.</h1>
+                <h1 id="boss-title">Take the boss.</h1>
                 <div class="car-select-layout">
                   <div class="icon-grid compact-car-grid" id="boss-car-grid"></div>
                   <div class="car-select-preview" id="boss-car-select-preview"></div>
@@ -294,7 +297,7 @@
           <button class="back-link" id="tuner-rank-back" type="button">Back</button>
           <div class="section-heading">
             <p>Leaderboard</p>
-            <h1 id="tuner-rank-title">Tuner Rank</h1>
+            <h1 id="tuner-rank-title">Climb the ranks.</h1>
           </div>
           <div class="tuner-rank-list" id="tuner-rank-list"></div>
         </section>
@@ -303,7 +306,7 @@
           <button class="back-link" id="convoy-back" type="button">Back</button>
           <div class="section-heading">
             <p>Convoy</p>
-            <h1 id="convoy-title">Convoy Challenge</h1>
+            <h1 id="convoy-title">Three races. Three GearBorn.</h1>
             <span id="convoy-summary"></span>
           </div>
           <div class="modal-actions convoy-top-actions">
@@ -327,7 +330,7 @@
             <div class="setup">
               <div class="section-heading flow-step active" data-flow="battle" data-step="car">
                 <p>Battle Mode</p>
-                <h1 id="battle-title">Choose your car.</h1>
+                <h1 id="battle-title">Pick your warrior.</h1>
                 <div class="car-select-layout">
                   <div class="icon-grid compact-car-grid" id="battle-car-grid"></div>
                   <div class="car-select-preview" id="battle-car-select-preview"></div>
@@ -374,7 +377,7 @@
             <div class="setup">
               <div class="section-heading flow-step active" data-flow="time" data-step="car">
                 <p>Time Trial</p>
-                <h1 id="time-title">Choose your car.</h1>
+                <h1 id="time-title">Race the clock.</h1>
                 <div class="car-select-layout">
                   <div class="icon-grid compact-car-grid" id="time-car-grid"></div>
                   <div class="car-select-preview" id="time-car-select-preview"></div>
@@ -472,7 +475,7 @@
           <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
             <p>Racer Profiles</p>
-            <h1 id="profiles-title">Meet the GearBorn racers.</h1>
+            <h1 id="profiles-title">Know your rivals.</h1>
           </div>
           <div class="profile-layout">
             <div class="profile-list" id="profile-list"></div>
@@ -496,7 +499,7 @@
           <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
             <p>Achievements</p>
-            <h1 id="achievements-title">Track big wins and rare unlocks.</h1>
+            <h1 id="achievements-title">Wear your wins.</h1>
           </div>
           <div class="achievement-layout">
             <div class="achievement-list" id="achievement-list"></div>
@@ -510,7 +513,7 @@
             <div class="setup">
               <div class="section-heading flow-step active" data-flow="drag" data-step="car">
                 <p>Race Setup</p>
-                <h1 id="play-title">Choose your GearBorn.</h1>
+                <h1 id="play-title">Saddle up.</h1>
                 <div class="car-select-layout">
                   <div class="icon-grid compact-car-grid" id="drag-car-grid"></div>
                   <div class="car-select-preview" id="drag-car-select-preview"></div>
@@ -657,7 +660,7 @@
             <button class="back-link" data-view="menu" type="button">Back</button>
             <div class="section-heading">
               <p>Garage</p>
-              <h1 id="garage-title">Your GearBorn lineup.</h1>
+              <h1 id="garage-title">Meet your machines.</h1>
             </div>
             <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
             <button class="inventory-open-button garage-loadouts-button" id="garage-loadouts-open" type="button">Loadouts</button>
@@ -681,7 +684,7 @@
             <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
             <div class="section-heading">
               <p>The Forge</p>
-              <h1>Unlock your GearBorn.</h1>
+              <h1>Forge what's next.</h1>
             </div>
             <div class="forge-layout">
               <div class="forge-scene">

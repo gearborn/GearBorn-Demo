@@ -7059,6 +7059,10 @@ small {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.beta-canvas-hud-panel[hidden] {
+  display: none !important;
+}
+
 .beta-canvas-hud-panel.center {
   text-align: center;
   justify-items: center;
@@ -7097,8 +7101,8 @@ small {
 
 #beta-speed {
   position: absolute;
-  right: clamp(132px, 19vw, 214px);
-  bottom: clamp(15px, 2.4vw, 28px);
+  right: calc(14px + 180px + 10px);
+  bottom: 14px;
   z-index: 4;
   display: grid !important;
   min-height: 0 !important;
@@ -10617,6 +10621,15 @@ canvas,
     height: 92px;
   }
 
+  #beta-speed {
+    right: calc(8px + 118px + 8px);
+    bottom: 84px;
+    align-content: center;
+    min-height: 38px !important;
+    padding: 7px 10px !important;
+    font-size: 0.86rem;
+  }
+
   .beta-touch-controls {
     position: fixed;
     left: max(8px, env(safe-area-inset-left));
@@ -11881,89 +11894,82 @@ canvas,
   }
 }
 
-/* Corrected Next Story Race frame model: frame outside, image/text inside. */
+/* Border-image Next Story Race frame model. */
 .next-goal-panel {
   position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 2 / 1;
   min-height: 0;
-  border-radius: 18px;
+  cursor: pointer;
+  transition: transform 200ms ease, filter 200ms ease;
+  border: 0;
+  background: #0c1018;
   overflow: hidden;
   isolation: isolate;
-  cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-  background: #0c1018;
   padding: 0;
 }
 
 .next-goal-panel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
-}
-
-.next-race-inner {
-  position: absolute;
-  top: 14%;
-  right: 7%;
-  bottom: 14%;
-  left: 7%;
-  overflow: hidden;
-  border-radius: 4px;
-  z-index: 0;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
 }
 
 .next-race-city-thumb {
   position: absolute;
-  inset: 0;
+  z-index: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  inset: 5%;
+  width: auto;
+  height: auto;
   max-height: none;
   aspect-ratio: auto;
   object-fit: cover;
-  object-position: center;
+  object-position: center top;
   border: 0;
   border-radius: 0;
-  background: #0c1018;
+  background: linear-gradient(180deg, #18243a, #0c1018);
 }
 
 .next-goal-panel::before {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.88) 0%, rgba(8, 12, 18, 0.55) 28%, transparent 55%),
+    linear-gradient(180deg, transparent 0%, transparent 65%, rgba(8, 12, 18, 0.5) 100%);
+  pointer-events: none;
+  border-radius: 0;
+}
+
+.next-race-frame,
+.next-race-inner,
+.next-race-inner::after {
+  display: none;
   content: none;
 }
 
-.next-race-inner::after {
+.next-goal-panel::after {
   content: "";
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(8, 12, 18, 0.88) 0%, rgba(8, 12, 18, 0.55) 28%, transparent 55%),
-    linear-gradient(180deg, transparent 0%, transparent 65%, rgba(8, 12, 18, 0.55) 100%);
-  pointer-events: none;
-}
-
-.next-race-frame {
-  position: absolute;
-  inset: 0;
+  inset: -2%;
   z-index: 2;
-  background-image: url("assets/menu/next-race-frame.png");
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
+  display: block;
+  background: url("assets/menu/next-race-frame.png") center / 100% 100% no-repeat;
   pointer-events: none;
 }
 
 .next-race-content {
   position: absolute;
-  top: 14%;
-  bottom: 14%;
-  left: 7%;
+  inset: 0;
   z-index: 3;
   display: grid;
-  width: 50%;
+  width: 55%;
   height: auto;
   align-content: space-between;
   gap: 8px;
-  padding: 20px 24px;
+  padding: clamp(14px, 2vw, 24px);
 }
 
 .next-race-text {
@@ -11981,7 +11987,7 @@ canvas,
 
 .next-goal-panel strong {
   font-size: clamp(1.05rem, 1.9vw, 1.5rem);
-  line-height: 1.05;
+  line-height: 1.1;
   font-weight: 900;
   color: #ffffff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
@@ -11990,7 +11996,7 @@ canvas,
 .next-goal-panel small,
 .next-goal-panel small#menu-next-reward {
   font-size: clamp(0.78rem, 1.2vw, 0.95rem);
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .next-goal-panel .story-primary {
@@ -12003,7 +12009,7 @@ canvas,
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #ffffff;
-  background: rgba(110, 231, 168, 0.18);
+  background: rgba(110, 231, 168, 0.2);
   border: 1.5px solid rgba(110, 231, 168, 0.72);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -12012,6 +12018,429 @@ canvas,
 }
 
 .next-goal-panel .story-primary:hover {
-  background: rgba(110, 231, 168, 0.32);
+  background: rgba(110, 231, 168, 0.35);
   transform: translateY(-1px);
+}
+
+/* Header balance: logo, Sprox, and settings share one centerline. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  margin-bottom: 24px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.brand-mark img {
+  display: block;
+  width: auto;
+  height: 48px;
+  padding: 0;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.42));
+}
+
+.sprox-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1.5px solid rgba(255, 200, 87, 0.45);
+  border-radius: 999px;
+  background: rgba(8, 12, 20, 0.55);
+  color: #ffffff;
+  flex: 0 0 auto;
+}
+
+.sprox-wallet strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.sprox-wallet .sprox-coin {
+  width: 32px;
+  height: 32px;
+}
+
+.settings-gear-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: filter 150ms ease, transform 150ms ease;
+  flex: 0 0 auto;
+}
+
+.settings-gear-button img {
+  width: 54px;
+  height: 48px;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.42));
+}
+
+.settings-gear-button:hover {
+  background: transparent;
+  filter: brightness(1.1);
+  transform: rotate(15deg);
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    min-height: 64px;
+    gap: 10px;
+  }
+
+  .topbar-left {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .brand,
+  .brand-mark,
+  .brand-mark img,
+  .sprox-wallet,
+  .settings-gear-button {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .brand-mark img {
+    max-width: min(42vw, 180px);
+  }
+
+  .sprox-wallet {
+    padding: 0 10px;
+  }
+
+  .sprox-wallet strong {
+    font-size: 0.9rem;
+  }
+
+  .sprox-wallet .sprox-coin {
+    width: 28px;
+    height: 28px;
+  }
+
+  .settings-gear-button {
+    width: 50px;
+  }
+
+  .settings-gear-button img {
+    width: 50px;
+    height: 44px;
+  }
+
+  .next-race-content {
+    width: 62%;
+  }
+}
+
+/* Master background, screen tints, font refresh, and final Next Story Race card. */
+:root {
+  --font-display: "Bowlby One", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: "Space Grotesk", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 20, 0.55) 0%, rgba(8, 12, 20, 0.85) 100%),
+    url("assets/menu/master-bg.png") center / cover no-repeat fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  line-height: 1.5;
+}
+
+.view.active {
+  position: relative;
+  isolation: isolate;
+}
+
+#garage-view::before,
+#solo-view::before,
+#vindex-view::before,
+#profiles-view::before,
+#achievements-view::before,
+#tuner-rank-view::before,
+#convoy-view::before,
+#settings-view::before,
+#story-view::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+#garage-view::before {
+  background: linear-gradient(180deg, rgba(255, 140, 38, 0.06), rgba(255, 140, 38, 0) 60%);
+}
+
+#solo-view::before {
+  background: linear-gradient(180deg, rgba(82, 199, 255, 0.07), rgba(82, 199, 255, 0) 60%);
+}
+
+#vindex-view::before {
+  background: linear-gradient(180deg, rgba(82, 199, 255, 0.08), rgba(82, 199, 255, 0) 60%);
+}
+
+#profiles-view::before {
+  background: linear-gradient(180deg, rgba(242, 95, 92, 0.06), rgba(242, 95, 92, 0) 60%);
+}
+
+#achievements-view::before {
+  background: linear-gradient(180deg, rgba(255, 200, 87, 0.08), rgba(255, 200, 87, 0) 60%);
+}
+
+#tuner-rank-view::before {
+  background: linear-gradient(180deg, rgba(192, 132, 252, 0.06), rgba(192, 132, 252, 0) 60%);
+}
+
+#convoy-view::before {
+  background: linear-gradient(180deg, rgba(110, 231, 168, 0.06), rgba(110, 231, 168, 0) 60%);
+}
+
+#settings-view::before {
+  background: linear-gradient(180deg, rgba(153, 165, 183, 0.05), rgba(153, 165, 183, 0) 60%);
+}
+
+#story-view::before {
+  background: linear-gradient(180deg, rgba(255, 140, 38, 0.08), rgba(255, 140, 38, 0) 60%);
+}
+
+.section-heading h1 {
+  margin: 0;
+  max-width: 760px;
+  font-size: clamp(1.7rem, 3vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.section-heading p {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.menu-card.hero-menu-card > strong,
+.menu-card.garage-card strong,
+.menu-card.training-card strong,
+.menu-utility strong,
+.solo-card strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.next-goal-panel {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  min-height: 0;
+  background-color: #0c1018;
+  cursor: pointer;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  overflow: visible;
+  isolation: isolate;
+  transition: transform 200ms ease, filter 200ms ease;
+}
+
+.next-goal-panel:hover {
+  transform: translateY(-3px);
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+}
+
+.next-race-thumb-wrapper {
+  position: absolute;
+  top: 8%;
+  left: 7%;
+  right: 7%;
+  bottom: 8%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #0c1018;
+  z-index: 1;
+}
+
+.next-race-city-thumb {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+}
+
+.next-race-thumb-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.85) 0%, rgba(8, 12, 18, 0.55) 28%, transparent 55%),
+    linear-gradient(180deg, transparent 0%, transparent 60%, rgba(8, 12, 18, 0.65) 100%);
+  pointer-events: none;
+}
+
+.next-race-frame-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.next-race-frame,
+.next-race-inner,
+.next-goal-panel::before,
+.next-goal-panel::after {
+  display: none;
+  content: none;
+}
+
+.next-race-content {
+  position: absolute;
+  top: 8%;
+  left: 7%;
+  bottom: 8%;
+  width: 50%;
+  z-index: 3;
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
+  padding: 16px 18px;
+  pointer-events: none;
+}
+
+.next-race-content .story-primary {
+  pointer-events: auto;
+}
+
+.next-race-text {
+  display: grid;
+  gap: 4px;
+}
+
+.next-goal-panel span {
+  font-size: clamp(0.7rem, 1.05vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 222, 138, 0.92);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.next-goal-panel strong {
+  font-size: clamp(1rem, 1.7vw, 1.4rem);
+  line-height: 1.1;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.next-goal-panel small,
+.next-goal-panel small#menu-next-reward {
+  font-size: clamp(0.72rem, 1.1vw, 0.9rem);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.next-goal-panel .story-primary {
+  align-self: end;
+  justify-self: start;
+  padding: 9px 18px;
+  min-width: 0;
+  font-size: clamp(0.74rem, 1.05vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(110, 231, 168, 0.22);
+  border: 1.5px solid rgba(110, 231, 168, 0.72);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.next-goal-panel .story-primary:hover {
+  background: rgba(110, 231, 168, 0.36);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  body {
+    background-attachment: scroll;
+  }
+
+  .next-race-content {
+    width: 58%;
+    padding: 12px 14px;
+  }
 }

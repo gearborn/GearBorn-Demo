@@ -2691,19 +2691,30 @@ function betaAiControls(racer) {
     racer.aiWaypoint = ((racer.aiWaypoint || 0) + 1) % line.length;
     if (racer.aiWaypoint === currentWaypoint) break;
   }
-  const lookAhead = Math.max(1, Math.min(4, 1 + Math.floor(Math.abs(racer.speed || 0) / 120)));
+  const surface = betaSurfaceAt(racer.x, racer.y);
+  const lookAhead = surface === "grass"
+    ? 1
+    : Math.max(1, Math.min(3, 1 + Math.floor(Math.abs(racer.speed || 0) / 150)));
   const nextTarget = line[((racer.aiWaypoint || 0) + lookAhead) % line.length] || line[0];
   const desired = Math.atan2(nextTarget.y - racer.y, nextTarget.x - racer.x);
   const delta = Math.atan2(Math.sin(desired - racer.angle), Math.cos(desired - racer.angle));
-  const aheadX = racer.x + Math.cos(racer.angle) * 86;
-  const aheadY = racer.y + Math.sin(racer.angle) * 86;
-  const aheadWall = betaSurfaceAt(aheadX, aheadY) === "wall";
-  const sharpTurn = Math.abs(delta) > 1.0;
+  const forwardDistance = surface === "grass" ? 48 : 86;
+  const aheadX = racer.x + Math.cos(racer.angle) * forwardDistance;
+  const aheadY = racer.y + Math.sin(racer.angle) * forwardDistance;
+  const aheadSurface = betaSurfaceAt(aheadX, aheadY);
+  const aimingX = racer.x + Math.cos(desired) * forwardDistance;
+  const aimingY = racer.y + Math.sin(desired) * forwardDistance;
+  const aimingSurface = betaSurfaceAt(aimingX, aimingY);
+  const aheadWall = aheadSurface === "wall";
+  const aheadBad = aheadSurface !== "road";
+  const sharpTurn = Math.abs(delta) > 0.78;
+  const needsRecovery = surface !== "road" || aheadBad || aimingSurface !== "road";
+  const steerThreshold = needsRecovery ? 0.025 : 0.065;
   return {
-    up: !aheadWall || Math.abs(racer.speed || 0) < 55,
-    down: (aheadWall && racer.speed > 55) || (sharpTurn && racer.speed > racer.physics.maxSpeed * 0.58),
-    left: delta < -0.065,
-    right: delta > 0.065
+    up: (!aheadWall && (!sharpTurn || Math.abs(racer.speed || 0) < racer.physics.maxSpeed * 0.52)) || Math.abs(racer.speed || 0) < 48,
+    down: (aheadWall && racer.speed > 42) || (aheadBad && racer.speed > 68) || (sharpTurn && racer.speed > racer.physics.maxSpeed * 0.5),
+    left: delta < -steerThreshold,
+    right: delta > steerThreshold
   };
 }
 
@@ -2866,13 +2877,19 @@ function betaDriveRacer(racer, dt, controls = {}) {
       racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
     }
   } else if (racer.ai && nextClass === "grass") {
-    racer.speed *= 0.94;
     const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
     const nearest = betaNearestAiLineIndex(racer, line);
-    const target = line[(nearest + 2) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
+    const target = line[(nearest + 1) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
     const desired = Math.atan2(target.y - racer.y, target.x - racer.x);
-    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 4.2 * dt);
-    racer.aiWaypoint = (nearest + 2) % line.length;
+    if (currentClass === "road") {
+      racer.x = racer.prevX;
+      racer.y = racer.prevY;
+      racer.speed *= 0.72;
+    } else {
+      racer.speed *= 0.86;
+    }
+    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 6.5 * dt);
+    racer.aiWaypoint = (nearest + 1) % line.length;
   }
 }
 
