@@ -1178,6 +1178,7 @@ function renderVerticalSelects() {
 }
 
 function pickerTargetCarId(target) {
+  if (target === "lastgear") return state.lastGearSelectedCar || state.selectedCar;
   if (target === "drag") return state.selectedCar;
   if (target === "time") return state.selectedTimeCar;
   return state.selectedStoryCar;
@@ -1185,7 +1186,8 @@ function pickerTargetCarId(target) {
 
 function setPickerTargetCarId(target, carId) {
   if (!isSelectablePlayerCar(carId)) return;
-  if (target === "drag") state.selectedCar = carId;
+  if (target === "lastgear") state.lastGearSelectedCar = carId;
+  else if (target === "drag") state.selectedCar = carId;
   else if (target === "time") state.selectedTimeCar = carId;
   else state.selectedStoryCar = carId;
   if (target === "story" || target === "campaign") state.storyCarChosen = true;
@@ -1224,6 +1226,8 @@ function openCarPicker(target) {
   carPickerState.search = "";
   carPickerState.filters = { favorites: false, recent: false, ready: false, types: [] };
   carPickerState.sort = "level-desc";
+  const title = document.querySelector("#car-picker-title");
+  if (title) title.textContent = target === "lastgear" ? "Choose your Last Gear racer" : "Choose GearBorn";
   if (el.carPickerSearch) el.carPickerSearch.value = "";
   if (el.carPickerSort) el.carPickerSort.value = "level-desc";
   renderCarPicker();
@@ -1232,9 +1236,11 @@ function openCarPicker(target) {
 }
 
 function closeCarPicker(confirm = false) {
-  if (confirm && carPickerState.highlighted) setPickerTargetCarId(carPickerState.target, carPickerState.highlighted);
+  const target = carPickerState.target;
+  if (confirm && carPickerState.highlighted) setPickerTargetCarId(target, carPickerState.highlighted);
   el.carPickerModal?.classList.remove("active");
   el.carPickerModal?.setAttribute("aria-hidden", "true");
+  if (confirm && target === "lastgear" && typeof startLastGearBeta === "function") startLastGearBeta();
 }
 
 function carPickerTypes() {
