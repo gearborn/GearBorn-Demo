@@ -3344,7 +3344,7 @@ function renderProfiles() {
   el.profileArt.innerHTML = characterMarkup(displayProfile) + racerAlphaProfileToggle(profile);
   el.profileName.textContent = profile.name;
   el.profileMeta.textContent = profile.category === "Other"
-    ? (profile.car && profile.car !== "Other" ? `${profile.car} · ${profile.city}` : "Other")
+    ? (profile.title || (profile.car && profile.car !== "Other" ? `${profile.car} · ${profile.city}` : "Other"))
     : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
   const boss = bossChallengeBosses.find((item) => item.id === profile.id);
   const profileCarImage = boss ? bossCarDisplayImage(boss) : profile.carImage;

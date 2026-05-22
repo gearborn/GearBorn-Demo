@@ -1974,12 +1974,60 @@ const lastGearArena = {
   radius: 900,
   viewWidth: 960,
   viewHeight: 620,
-  zoom: 1
+  zoom: 1,
+  shape: "circle"
 };
 const lastGearCamera = {
   x: 1200,
   y: 1200,
   smoothing: 0.12
+};
+const lastGearSuddenDeath = {
+  startMs: 180000,
+  shrinkDurationMs: 90000,
+  minRadius: 520
+};
+const lastGearAiArchetypes = ["Aggro", "Tank", "Coward", "Trickster", "Speedster", "Opportunist", "Defender"];
+const lastGearAnnouncerDurations = {
+  default: 2600,
+  major: 3600,
+  quick: 1900
+};
+const lastGearAnnouncerPriorities = {
+  matchStart: 3,
+  bigHit: 2,
+  tBone: 3,
+  headOn: 3,
+  firstGearOut: 4,
+  gearOut: 3,
+  lastLife: 4,
+  finalTwo: 5,
+  suddenDeath: 6,
+  winner: 7
+};
+const lastGearAnnouncerLabels = {
+  matchStart: "Match Start",
+  bigHit: "Big Hit",
+  tBone: "T-Bone",
+  headOn: "Head-On",
+  firstGearOut: "First Gear Out",
+  gearOut: "Gear Out",
+  lastLife: "Last Life",
+  finalTwo: "Final Two",
+  suddenDeath: "Sudden Death",
+  winner: "Winner"
+};
+const lastGearAnnouncerLines = {
+  matchStart: ["Eight GearBorn enter. One leaves rolling.", "Welcome to Last Gear!", "This arena's about to get loud!"],
+  bigHit: ["THAT'S gonna leave a dent!", "Massive contact!", "Somebody felt that one!"],
+  tBone: ["SIDE IMPACT!", "Clean T-bone connection!", "That hit came outta nowhere!"],
+  headOn: ["FULL FRONTAL COLLISION!", "Neither driver backed down!", "That's pure GearBorn insanity!"],
+  firstGearOut: ["And our first GearBorn is OUTTA HERE!", "One down - seven remain!", "The arena claims its first victim!"],
+  gearOut: ["Another GearBorn is gone!", "That ride is out of the running!", "The platform shows no mercy!"],
+  lastLife: ["Player's hanging on by one life!", "No room for mistakes now!", "This is where legends survive!"],
+  finalTwo: ["We are DOWN TO TWO!", "One final showdown!", "Everything comes down to this!"],
+  suddenDeath: ["The arena's collapsing!", "Nowhere left to hide!", "Sudden Death has begun!"],
+  winner: ["WHAT. A. FINISH.", "Last Gear champion!", "Only one GearBorn survives!"]
 };
 const lastGearSpecialMoves = {
   default: { name: "Side Shunt", cooldown: 4500, effect: "shunt" },
@@ -1991,6 +2039,36 @@ const lastGearSpecialMoves = {
 
 function lastGearClamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function lastGearLerp(a, b, t) {
+  return a + (b - a) * lastGearClamp(t, 0, 1);
+}
+
+function lastGearLocalNow() {
+  return performance.now() - (lastGearState?.startedAt || performance.now());
+}
+
+function lastGearActiveRadius(now = lastGearLocalNow()) {
+  if (!lastGearState?.suddenDeath) return lastGearArena.radius;
+  const progress = (now - (lastGearState.suddenDeathStartedAt || now)) / lastGearSuddenDeath.shrinkDurationMs;
+  return lastGearLerp(lastGearArena.radius, lastGearSuddenDeath.minRadius, progress);
+}
+
+function lastGearEdgeIntensity(now = lastGearLocalNow()) {
+  if (!lastGearState) return 0;
+  const radius = lastGearActiveRadius(now);
+  let intensity = lastGearState.suddenDeath ? 0.28 : 0;
+  lastGearLiveCars().forEach((car) => {
+    const distance = lastGearDistanceFromCenter(car);
+    const edge = lastGearClamp((distance - radius * 0.7) / (radius * 0.3), 0, 1);
+    intensity = Math.max(intensity, edge * (car.player ? 1 : 0.55));
+  });
+  return lastGearClamp(intensity, 0, 1);
+}
+
+function lastGearPlaySound(key) {
+  if (typeof playSound === "function") playSound(key);
 }
 
 function lastGearLiveCars() {
@@ -2010,7 +2088,7 @@ function lastGearDistanceFromCenter(car) {
 
 function lastGearSafePoint(index = Math.random() * 8) {
   const angle = (Math.PI * 2 * index) / 8 - Math.PI / 2;
-  const radius = lastGearArena.radius * 0.58;
+  const radius = lastGearActiveRadius() * 0.58;
   return {
     x: lastGearArena.cx + Math.cos(angle) * radius,
     y: lastGearArena.cy + Math.sin(angle) * radius,
@@ -2081,6 +2159,7 @@ function lastGearMakeCar(entry, index, total) {
     physics,
     player: Boolean(entry.player),
     ai: !entry.player,
+    archetype: entry.player ? "Player" : lastGearAiArchetypes[(index - 1 + lastGearAiArchetypes.length) % lastGearAiArchetypes.length],
     x: point.x,
     y: point.y,
     prevX: point.x,
@@ -2128,6 +2207,18 @@ function startLastGearBeta() {
     itemBoxes: lastGearInitialItemBoxes(),
     hazards: [],
     projectiles: [],
+    effects: [],
+    ringFlashes: [],
+    shake: 0,
+    hitPauseUntil: 0,
+    suddenDeath: false,
+    suddenDeathStartedAt: 0,
+    firstEliminationCalled: false,
+    finalTwoCalled: false,
+    playerLastLifeCalled: false,
+    announcer: null,
+    announcerLastAt: {},
+    debug: false,
     last: performance.now(),
     raf: null,
     statusRenderAt: 0,
@@ -2139,6 +2230,7 @@ function startLastGearBeta() {
   resizeLastGearBeta();
   updateLastGearTouchVisuals();
   updateLastGearHud(true);
+  lastGearAnnounce("matchStart", { force: true, major: true });
   lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
 }
 
@@ -2147,6 +2239,7 @@ function stopLastGearBeta(showIntro = true) {
   lastGearState = null;
   Object.keys(lastGearKeys).forEach((key) => delete lastGearKeys[key]);
   updateLastGearTouchVisuals();
+  lastGearRenderAnnouncer(0);
   if (el.lastGearBeta) el.lastGearBeta.hidden = true;
   if (showIntro) showBetaScreen("beta-intro");
 }
@@ -2166,7 +2259,7 @@ function lastGearInitialItemBoxes() {
 
 function lastGearSpawnBox(index = 0) {
   const angle = (Math.PI * 2 * (index + Math.random() * 0.35)) / 5;
-  const radius = lastGearArena.radius * (0.24 + Math.random() * 0.46);
+  const radius = lastGearActiveRadius() * (0.24 + Math.random() * 0.46);
   return {
     id: `lg-box-${Date.now()}-${index}-${Math.random()}`,
     x: lastGearArena.cx + Math.cos(angle) * radius,
@@ -2211,21 +2304,142 @@ function lastGearNearestOpponent(car) {
   return best;
 }
 
+function lastGearMostDamagedOpponent(car) {
+  return lastGearLiveCars()
+    .filter((target) => target.id !== car.id && !target.respawnAt)
+    .sort((a, b) => b.damage - a.damage)[0] || null;
+}
+
+function lastGearNearestItemBox(car) {
+  if (!lastGearState) return null;
+  let best = null;
+  let bestDistance = Infinity;
+  lastGearState.itemBoxes.forEach((box) => {
+    if (!box.active) return;
+    const distance = Math.hypot(box.x - car.x, box.y - car.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = box;
+    }
+  });
+  return best;
+}
+
+function lastGearChooseLine(lines = []) {
+  return lines[Math.floor(Math.random() * lines.length)] || "";
+}
+
+function lastGearAnnounce(eventKey, options = {}) {
+  if (!lastGearState) return;
+  const now = lastGearLocalNow();
+  const priority = lastGearAnnouncerPriorities[eventKey] || 1;
+  const currentPriority = lastGearState.announcer?.priority || 0;
+  const lastAt = lastGearState.announcerLastAt[eventKey] || -Infinity;
+  if (!options.force && now - lastAt < (options.cooldown || 2400)) return;
+  if (!options.force && lastGearState.announcer?.until > now && priority < currentPriority) return;
+  const line = options.line || lastGearChooseLine(lastGearAnnouncerLines[eventKey]);
+  lastGearState.announcer = {
+    eventKey,
+    label: options.label || lastGearAnnouncerLabels[eventKey] || "Last Gear",
+    line,
+    priority,
+    major: Boolean(options.major || priority >= 4),
+    until: now + (options.duration || (priority >= 4 ? lastGearAnnouncerDurations.major : lastGearAnnouncerDurations.default))
+  };
+  lastGearState.announcerLastAt[eventKey] = now;
+  if (priority >= 4) lastGearState.shake = Math.max(lastGearState.shake || 0, 5);
+  lastGearRenderAnnouncer(now);
+}
+
+function lastGearRenderAnnouncer(now = lastGearLocalNow()) {
+  if (!el.lastGearAnnouncer) return;
+  const call = lastGearState?.announcer;
+  const active = Boolean(call && call.until > now);
+  el.lastGearAnnouncer.hidden = !active;
+  el.lastGearAnnouncer.classList.toggle("major", Boolean(active && call.major));
+  if (!active) return;
+  if (el.lastGearAnnouncerEvent) el.lastGearAnnouncerEvent.textContent = call.label;
+  if (el.lastGearAnnouncerLine) el.lastGearAnnouncerLine.textContent = call.line;
+}
+
+function lastGearSpawnParticle(kind, x, y, angle, speed, ttl, size, tint = "#ffc857") {
+  if (!lastGearState) return;
+  lastGearState.effects.push({
+    kind,
+    x,
+    y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    angle,
+    ttl,
+    life: ttl,
+    size,
+    tint,
+    spin: (Math.random() - 0.5) * 5
+  });
+}
+
+function lastGearSpawnImpactFx(x, y, nx, ny, impact, type = "hit") {
+  const angle = Math.atan2(ny, nx);
+  const sparkCount = impact > 155 ? 12 : 7;
+  for (let i = 0; i < sparkCount; i += 1) {
+    lastGearSpawnParticle("spark", x, y, angle + (Math.random() - 0.5) * 1.6, 180 + Math.random() * 260, 260 + Math.random() * 220, 18 + Math.random() * 18, type === "tbone" ? "#52c7ff" : "#ffc857");
+  }
+  for (let i = 0; i < 5; i += 1) {
+    lastGearSpawnParticle("smoke", x, y, angle + Math.PI + (Math.random() - 0.5) * 1.1, 40 + Math.random() * 110, 460 + Math.random() * 320, 34 + Math.random() * 26, "#d6d0c4");
+  }
+  if (impact > 170) {
+    for (let i = 0; i < 3; i += 1) {
+      lastGearSpawnParticle("streak", x - nx * 18, y - ny * 18, angle + Math.PI + (Math.random() - 0.5) * 0.24, 70 + Math.random() * 90, 280 + Math.random() * 180, 95 + Math.random() * 35, "#52c7ff");
+    }
+  }
+}
+
+function lastGearTriggerImpactFeedback(impact, x, y, nx, ny, type = "hit") {
+  if (!lastGearState) return;
+  lastGearSpawnImpactFx(x, y, nx, ny, impact, type);
+  if (impact > 128) {
+    lastGearState.hitPauseUntil = Math.max(lastGearState.hitPauseUntil || 0, lastGearLocalNow() + lastGearClamp(impact * 0.42, 38, 118));
+    lastGearState.shake = Math.max(lastGearState.shake || 0, lastGearClamp(impact / 13, 5, 22));
+    lastGearPlaySound(type === "headOn" ? "battle-stun" : "battle-hit");
+  }
+  if (type === "headOn" && impact > 145) lastGearAnnounce("headOn", { major: true, cooldown: 3200 });
+  else if (type === "tbone" && impact > 138) lastGearAnnounce("tBone", { major: true, cooldown: 3000 });
+  else if (impact > 160) lastGearAnnounce("bigHit", { cooldown: 2200 });
+}
+
 function lastGearAiControls(car) {
+  const activeRadius = lastGearActiveRadius();
   const edgeDistance = lastGearDistanceFromCenter(car);
-  const nearEdge = edgeDistance > lastGearArena.radius * 0.76;
-  const target = nearEdge ? { x: lastGearArena.cx, y: lastGearArena.cy } : (lastGearNearestOpponent(car) || { x: lastGearArena.cx, y: lastGearArena.cy });
+  const liveCount = lastGearLiveCars().length;
+  const nearEdge = edgeDistance > activeRadius * (car.archetype === "Defender" ? 0.68 : 0.76);
+  let target = lastGearNearestOpponent(car) || { x: lastGearArena.cx, y: lastGearArena.cy };
+  if (nearEdge) {
+    target = { x: lastGearArena.cx, y: lastGearArena.cy };
+  } else if (car.archetype === "Tank" && edgeDistance > activeRadius * 0.35) {
+    target = { x: lastGearArena.cx, y: lastGearArena.cy };
+  } else if (car.archetype === "Coward" && liveCount > 4) {
+    const threat = lastGearNearestOpponent(car);
+    target = threat ? { x: car.x + (car.x - threat.x), y: car.y + (car.y - threat.y) } : { x: lastGearArena.cx, y: lastGearArena.cy };
+  } else if (car.archetype === "Trickster" && !car.item) {
+    target = lastGearNearestItemBox(car) || target;
+  } else if (car.archetype === "Opportunist") {
+    target = lastGearMostDamagedOpponent(car) || target;
+  }
   const desired = Math.atan2(target.y - car.y, target.x - car.x);
   const delta = betaNormalizeAngle(desired - car.angle);
   const speed = Math.hypot(car.vx, car.vy);
-  if (car.item && !nearEdge && Math.random() < 0.018) lastGearUseItem(car);
-  if (!nearEdge && target.id && Math.hypot(target.x - car.x, target.y - car.y) < 170 && Math.random() < 0.012) lastGearUseSpecial(car);
+  const aggression = (lastGearState?.suddenDeath ? 1.65 : 1) * (liveCount <= 2 ? 1.35 : 1);
+  const itemChance = car.archetype === "Trickster" ? 0.036 : 0.018;
+  const nitroBias = car.archetype === "Speedster" ? 1.45 : car.archetype === "Defender" ? 0.62 : 1;
+  if (car.item && !nearEdge && Math.random() < itemChance * aggression) lastGearUseItem(car);
+  if (!nearEdge && target.id && Math.hypot(target.x - car.x, target.y - car.y) < 190 && Math.random() < 0.011 * aggression) lastGearUseSpecial(car);
   return {
-    up: !nearEdge || speed < car.physics.maxSpeed * 0.62,
-    down: nearEdge && speed > car.physics.maxSpeed * 0.44,
+    up: !nearEdge || speed < car.physics.maxSpeed * (car.archetype === "Coward" ? 0.5 : 0.66),
+    down: nearEdge && speed > car.physics.maxSpeed * 0.4,
     left: delta < -0.08,
     right: delta > 0.08,
-    nitro: !nearEdge && Math.abs(delta) < 0.28 && speed > car.physics.maxSpeed * 0.42 && Math.random() < 0.7
+    nitro: !nearEdge && Math.abs(delta) < 0.28 && speed > car.physics.maxSpeed * 0.38 && Math.random() < 0.62 * nitroBias * aggression
   };
 }
 
@@ -2272,19 +2486,42 @@ function lastGearUpdateCar(car, dt, now) {
   car.prevY = car.y;
   car.x += car.vx * dt;
   car.y += car.vy * dt;
-  if (lastGearDistanceFromCenter(car) > lastGearArena.radius + 42) lastGearLoseLife(car, now);
+  const activeRadius = lastGearActiveRadius(now);
+  const distanceFromCenter = lastGearDistanceFromCenter(car);
+  if (distanceFromCenter > activeRadius - 22 && distanceFromCenter < activeRadius + 42 && Math.random() < 0.18) {
+    const nx = (car.x - lastGearArena.cx) / (distanceFromCenter || 1);
+    const ny = (car.y - lastGearArena.cy) / (distanceFromCenter || 1);
+    lastGearSpawnParticle("spark", car.x - nx * 12, car.y - ny * 12, Math.atan2(ny, nx) + Math.PI + (Math.random() - 0.5), 90 + Math.random() * 130, 240 + Math.random() * 170, 14 + Math.random() * 14, "#ff8c26");
+    if (car.player) lastGearState.shake = Math.max(lastGearState.shake || 0, 2.5);
+  }
+  if (distanceFromCenter > activeRadius + 42) lastGearLoseLife(car, now);
 }
 
 function lastGearLoseLife(car, now) {
   if (car.respawnAt || car.eliminated) return;
+  const distance = lastGearDistanceFromCenter(car) || 1;
+  const nx = (car.x - lastGearArena.cx) / distance;
+  const ny = (car.y - lastGearArena.cy) / distance;
+  lastGearState.ringFlashes.push({ x: car.x, y: car.y, radius: lastGearActiveRadius(now), ttl: 720, life: 720 });
+  lastGearTriggerImpactFeedback(185, car.x, car.y, nx, ny, "ringout");
   car.lives -= 1;
   car.damage = 0;
   car.item = null;
   car.shieldHits = 0;
+  if (car.player && car.lives === 1 && !lastGearState.playerLastLifeCalled) {
+    lastGearState.playerLastLifeCalled = true;
+    lastGearAnnounce("lastLife", { major: true, force: true });
+  }
   if (car.lives <= 0) {
     car.eliminated = true;
     car.vx = 0;
     car.vy = 0;
+    if (!lastGearState.firstEliminationCalled) {
+      lastGearState.firstEliminationCalled = true;
+      lastGearAnnounce("firstGearOut", { major: true, force: true });
+    } else {
+      lastGearAnnounce("gearOut", { cooldown: 1700 });
+    }
     if (car.player) finishLastGearBeta(false);
     return;
   }
@@ -2319,13 +2556,18 @@ function lastGearResolveCollisions(now) {
       const headOn = aForward > 0.45 && bForward > 0.45;
       const aTbone = Math.abs(Math.cos(b.angle) * nx + Math.sin(b.angle) * ny) < 0.34 && aForward > 0.35;
       const bTbone = Math.abs(Math.cos(a.angle) * nx + Math.sin(a.angle) * ny) < 0.34 && bForward > 0.35;
+      const impactX = (a.x + b.x) / 2;
+      const impactY = (a.y + b.y) / 2;
       if (headOn) {
         lastGearApplyHit(a, b, impact * 0.66, -nx, -ny, now);
         lastGearApplyHit(b, a, impact * 0.66, nx, ny, now);
+        lastGearTriggerImpactFeedback(impact, impactX, impactY, nx, ny, "headOn");
       } else if (aForward > bForward) {
         lastGearApplyHit(b, a, impact * (aTbone ? 1.35 : 0.82), nx, ny, now);
+        lastGearTriggerImpactFeedback(impact * (aTbone ? 1.35 : 0.82), impactX, impactY, nx, ny, aTbone ? "tbone" : "hit");
       } else {
         lastGearApplyHit(a, b, impact * (bTbone ? 1.35 : 0.82), -nx, -ny, now);
+        lastGearTriggerImpactFeedback(impact * (bTbone ? 1.35 : 0.82), impactX, impactY, -nx, -ny, bTbone ? "tbone" : "hit");
       }
       const impulse = impact * 0.18;
       a.vx -= nx * impulse / a.physics.mass;
@@ -2455,7 +2697,7 @@ function lastGearUpdateItems(dt, now) {
       if (Math.hypot(car.x - box.x, car.y - box.y) > 42) return;
       car.item = lastGearRandomItem();
       box.active = false;
-      box.respawnAt = now + 4500 + Math.random() * 2500;
+      box.respawnAt = now + (lastGearState.suddenDeath ? 2800 : 4500) + Math.random() * (lastGearState.suddenDeath ? 1400 : 2500);
     });
   });
   lastGearState.hazards = lastGearState.hazards.filter((hazard) => hazard.expiresAt > now);
@@ -2483,6 +2725,34 @@ function lastGearUpdateItems(dt, now) {
   });
 }
 
+function lastGearUpdateEffects(dt) {
+  if (!lastGearState) return;
+  lastGearState.effects = lastGearState.effects.filter((effect) => {
+    effect.life -= dt * 1000;
+    effect.x += effect.vx * dt;
+    effect.y += effect.vy * dt;
+    effect.vx *= Math.pow(0.9, dt * 60);
+    effect.vy *= Math.pow(0.9, dt * 60);
+    effect.angle += effect.spin * dt;
+    return effect.life > 0;
+  });
+  lastGearState.ringFlashes = lastGearState.ringFlashes.filter((flash) => {
+    flash.life -= dt * 1000;
+    return flash.life > 0;
+  });
+  lastGearState.shake = Math.max(0, (lastGearState.shake || 0) - dt * 26);
+}
+
+function lastGearUpdateSuddenDeath(now) {
+  if (!lastGearState || lastGearState.suddenDeath || now < lastGearSuddenDeath.startMs) return;
+  lastGearState.suddenDeath = true;
+  lastGearState.suddenDeathStartedAt = now;
+  lastGearState.ringFlashes.push({ x: lastGearArena.cx, y: lastGearArena.cy, radius: lastGearArena.radius, ttl: 1200, life: 1200 });
+  lastGearState.shake = Math.max(lastGearState.shake || 0, 12);
+  lastGearAnnounce("suddenDeath", { major: true, force: true, duration: 4300 });
+  lastGearPlaySound("battle-special");
+}
+
 function updateLastGearBeta(now) {
   if (!lastGearState || lastGearState.finished) return;
   if (!lastGearState.startedAt) lastGearState.startedAt = now;
@@ -2490,6 +2760,7 @@ function updateLastGearBeta(now) {
     lastGearUpdateCamera();
     drawLastGearFrame();
     drawLastGearCountdown(now);
+    lastGearRenderAnnouncer(now - lastGearState.startedAt);
     updateLastGearHud();
     lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
     return;
@@ -2501,11 +2772,26 @@ function updateLastGearBeta(now) {
   const localNow = now - lastGearState.startedAt;
   const dt = Math.min(0.035, (now - lastGearState.last) / 1000);
   lastGearState.last = now;
+  lastGearUpdateEffects(dt);
+  lastGearUpdateSuddenDeath(localNow);
+  lastGearRenderAnnouncer(localNow);
+  if (lastGearState.hitPauseUntil && localNow < lastGearState.hitPauseUntil) {
+    lastGearUpdateCamera();
+    drawLastGearFrame();
+    updateLastGearHud();
+    lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
+    return;
+  }
+  lastGearState.hitPauseUntil = 0;
   lastGearState.cars.forEach((car) => lastGearUpdateCar(car, dt, localNow));
   lastGearResolveCollisions(localNow);
   lastGearUpdateItems(dt, localNow);
   lastGearUpdateCamera();
   const survivors = lastGearLiveCars();
+  if (survivors.length === 2 && !lastGearState.finalTwoCalled) {
+    lastGearState.finalTwoCalled = true;
+    lastGearAnnounce("finalTwo", { major: true, force: true });
+  }
   if (survivors.length <= 1 && !lastGearState.finished) finishLastGearBeta(survivors[0]?.player);
   drawLastGearFrame();
   if (lastGearState.goUntil && now < lastGearState.goUntil) drawLastGearCountdown(now);
@@ -2517,6 +2803,11 @@ function finishLastGearBeta(playerWon) {
   if (!lastGearState || lastGearState.finished) return;
   lastGearState.finished = true;
   if (lastGearState.raf) cancelAnimationFrame(lastGearState.raf);
+  lastGearAnnounce("winner", { major: true, force: true, line: playerWon ? "WHAT. A. FINISH." : "Only one GearBorn survives!", duration: 5200 });
+  lastGearPlaySound(playerWon ? "win-jingle" : "lose-jingle");
+  setTimeout(() => {
+    if (lastGearState?.finished) lastGearRenderAnnouncer(Infinity);
+  }, 5300);
   if (el.lastGearResultTitle) el.lastGearResultTitle.textContent = playerWon ? "Last Gear Winner!" : "Eliminated";
   if (el.lastGearResultCopy) el.lastGearResultCopy.textContent = playerWon ? "You were the last GearBorn on the platform." : "Another GearBorn survived the arena.";
   if (el.lastGearResults) el.lastGearResults.hidden = false;
@@ -2535,12 +2826,15 @@ function drawLastGearFrame() {
   drawLastGearStadiumBg(ctx, viewW, viewH);
   ctx.save();
   ctx.translate(viewW / 2, viewH / 2);
+  const shake = lastGearState.shake || 0;
+  if (shake > 0.1) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
   ctx.scale(lastGearArena.zoom, lastGearArena.zoom);
   ctx.translate(-lastGearCamera.x, -lastGearCamera.y);
   drawLastGearArena(ctx);
   drawLastGearObjects(ctx);
   lastGearState.cars.forEach((car) => drawLastGearCar(ctx, car));
   ctx.restore();
+  drawLastGearVignette(ctx, viewW, viewH);
 }
 
 function drawLastGearCountdown(now) {
@@ -2579,42 +2873,101 @@ function drawLastGearStadiumBg(ctx, width, height) {
   ctx.fillRect(0, 0, width, height);
 }
 
+function drawLastGearVignette(ctx, width, height) {
+  const intensity = lastGearEdgeIntensity() * 0.35 + (lastGearState?.suddenDeath ? 0.12 : 0);
+  if (intensity <= 0.01) return;
+  ctx.save();
+  ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+  const gradient = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.22, width / 2, height / 2, Math.max(width, height) * 0.72);
+  gradient.addColorStop(0, "rgba(0,0,0,0)");
+  gradient.addColorStop(0.72, `rgba(255, 128, 38, ${intensity * 0.18})`);
+  gradient.addColorStop(1, `rgba(8, 12, 20, ${intensity})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
 function drawLastGearArena(ctx) {
-  const { cx, cy, radius } = lastGearArena;
+  const { cx, cy } = lastGearArena;
+  const now = lastGearLocalNow();
+  const radius = lastGearActiveRadius(now);
   const platformImg = lastGearImages.platform;
   if (platformImg?.complete && platformImg.naturalWidth > 0) {
-    const size = radius * 2.2;
+    const size = lastGearArena.radius * 2.2;
     ctx.drawImage(platformImg, cx - size / 2, cy - size / 2, size, size);
-    return;
-  }
-  const gradient = ctx.createRadialGradient(cx, cy - 30, radius * 0.12, cx, cy, radius);
-  gradient.addColorStop(0, "#38425a");
-  gradient.addColorStop(0.72, "#1b2333");
-  gradient.addColorStop(1, "#090d15");
-  ctx.save();
-  ctx.shadowColor = "rgba(82,199,255,0.58)";
-  ctx.shadowBlur = 28;
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 12;
-  ctx.strokeStyle = "rgba(255,200,87,0.64)";
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "rgba(82,199,255,0.55)";
-  ctx.stroke();
-  ctx.restore();
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  for (let r = 70; r < radius; r += 58) {
+  } else {
+    const gradient = ctx.createRadialGradient(cx, cy - 30, radius * 0.12, cx, cy, radius);
+    gradient.addColorStop(0, "#38425a");
+    gradient.addColorStop(0.72, "#1b2333");
+    gradient.addColorStop(1, "#090d15");
+    ctx.save();
+    ctx.shadowColor = "rgba(82,199,255,0.58)";
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = "rgba(255,200,87,0.64)";
     ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(82,199,255,0.55)";
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    for (let r = 70; r < radius; r += 58) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  drawLastGearWarningRim(ctx, radius, now);
+}
+
+function drawLastGearWarningRim(ctx, radius, now) {
+  const danger = lastGearEdgeIntensity(now);
+  const pulse = 0.65 + Math.sin(performance.now() / (lastGearState?.suddenDeath ? 95 : 180)) * 0.35;
+  const intensity = lastGearClamp(danger * 0.72 + (lastGearState?.suddenDeath ? 0.38 : 0), 0, 1);
+  const rimImg = lastGearImages.warningRim;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.18 + intensity * (0.38 + pulse * 0.22);
+  if (rimImg?.complete && rimImg.naturalWidth > 0) {
+    const size = radius * 2.2;
+    ctx.drawImage(rimImg, lastGearArena.cx - size / 2, lastGearArena.cy - size / 2, size, size);
+  } else {
+    ctx.lineWidth = 12 + intensity * 12;
+    ctx.strokeStyle = `rgba(255, ${Math.round(128 + intensity * 72)}, 38, ${0.45 + intensity * 0.35})`;
+    ctx.beginPath();
+    ctx.arc(lastGearArena.cx, lastGearArena.cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  if (lastGearState?.suddenDeath) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 200, 87, ${0.12 + pulse * 0.12})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(lastGearArena.cx, lastGearArena.cy, radius + Math.sin(performance.now() / 80) * 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
 function drawLastGearObjects(ctx) {
   const now = performance.now() - (lastGearState.startedAt || performance.now());
+  lastGearState.ringFlashes.forEach((flash) => {
+    const progress = 1 - flash.life / flash.ttl;
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = Math.max(0, 1 - progress) * 0.68;
+    ctx.lineWidth = 8 + progress * 18;
+    ctx.strokeStyle = "rgba(255, 200, 87, 0.9)";
+    ctx.beginPath();
+    ctx.arc(lastGearArena.cx, lastGearArena.cy, flash.radius + progress * 34, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  });
   lastGearState.itemBoxes.filter((box) => box.active).forEach((box) => {
     const itemBoxImage = lastGearImages.itemBox?.complete && lastGearImages.itemBox.naturalWidth ? lastGearImages.itemBox : betaTrackImages.itemBox;
     betaDrawImageOrFallback(ctx, itemBoxImage, box.x, box.y, 42, 42, () => {
@@ -2642,6 +2995,49 @@ function drawLastGearObjects(ctx) {
     });
     ctx.restore();
   });
+  lastGearState.effects.forEach((effect) => {
+    const alpha = Math.max(0, effect.life / effect.ttl);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(effect.x, effect.y);
+    ctx.rotate(effect.angle);
+    if (effect.kind === "spark") {
+      const img = lastGearImages.impactSparks;
+      if (img?.complete && img.naturalWidth) {
+        ctx.drawImage(img, -effect.size / 2, -effect.size / 2, effect.size, effect.size);
+      } else {
+        ctx.strokeStyle = effect.tint;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-effect.size * 0.5, 0);
+        ctx.lineTo(effect.size * 0.5, 0);
+        ctx.stroke();
+      }
+    } else if (effect.kind === "smoke") {
+      const img = lastGearImages.smokePuffs;
+      if (img?.complete && img.naturalWidth) {
+        ctx.drawImage(img, -effect.size / 2, -effect.size / 2, effect.size, effect.size);
+      } else {
+        ctx.fillStyle = "rgba(214, 208, 196, 0.48)";
+        ctx.beginPath();
+        ctx.arc(0, 0, effect.size * 0.38, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (effect.kind === "streak") {
+      const img = lastGearImages.speedLines;
+      if (img?.complete && img.naturalWidth) {
+        ctx.drawImage(img, -effect.size * 0.55, -effect.size * 0.18, effect.size, effect.size * 0.36);
+      } else {
+        ctx.strokeStyle = "rgba(82, 199, 255, 0.72)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(-effect.size * 0.55, 0);
+        ctx.lineTo(effect.size * 0.55, 0);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  });
   lastGearState.cars.filter((car) => car.shieldHits > 0 || car.boostUntil > now || car.hitFlashUntil > now).forEach((car) => {
     if (car.shieldHits > 0) {
       ctx.strokeStyle = "rgba(82,199,255,0.9)";
@@ -2662,10 +3058,23 @@ function drawLastGearObjects(ctx) {
 
 function drawLastGearCar(ctx, car) {
   if (car.eliminated || car.respawnAt) return;
+  const now = lastGearLocalNow();
+  const finalTwo = lastGearLiveCars().length <= 2;
+  if (finalTwo) {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.35 + Math.sin(performance.now() / 130) * 0.12;
+    ctx.strokeStyle = car.player ? "rgba(82,199,255,0.85)" : "rgba(255,200,87,0.82)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(car.x, car.y, 54, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
   ctx.save();
   ctx.translate(car.x, car.y);
   ctx.rotate(car.angle + Math.PI / 2);
-  ctx.globalAlpha = car.invulnerableUntil > (performance.now() - (lastGearState.startedAt || performance.now()))
+  ctx.globalAlpha = car.invulnerableUntil > now
     ? 0.55 + Math.sin(performance.now() / 80) * 0.2
     : 1;
   if (car.image?.complete && car.image.naturalWidth) {
@@ -2677,6 +3086,17 @@ function drawLastGearCar(ctx, car) {
     ctx.fillRect(-13, -23, 26, 18);
   }
   ctx.restore();
+  if (lastGearState?.debug && car.ai) {
+    ctx.save();
+    ctx.fillStyle = "rgba(8,12,20,0.74)";
+    ctx.fillRect(car.x - 34, car.y - 62, 68, 16);
+    ctx.fillStyle = "#ffc857";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(car.archetype || "AI", car.x, car.y - 54);
+    ctx.restore();
+  }
 }
 
 function updateLastGearHud(force = false) {
@@ -2843,7 +3263,11 @@ const betaTrackImages = {
 const lastGearImages = {
   platform: betaMakeImage("assets/lastgear/lg-platform.png"),
   arenaBg: betaMakeImage("assets/lastgear/lg-arena-bg.png"),
-  itemBox: betaMakeImage("assets/lastgear/lg-item-box.png")
+  itemBox: betaMakeImage("assets/lastgear/lg-item-box.png"),
+  warningRim: betaMakeImage("assets/lastgear/lg-warning-rim.png"),
+  impactSparks: betaMakeImage("assets/lastgear/lg-impact-sparks.png"),
+  smokePuffs: betaMakeImage("assets/lastgear/lg-smoke-puffs.png"),
+  speedLines: betaMakeImage("assets/lastgear/lg-speed-lines.png")
 };
 
 let betaAiRacingLine = betaTrack.aiLine;
@@ -3855,6 +4279,11 @@ document.addEventListener("keydown", (event) => {
   const key = normalizeKey(event);
   if (lastGearState && !lastGearState.finished) {
     const lastGearMap = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right", Shift: "nitro" };
+    if (key === "T") {
+      event.preventDefault();
+      lastGearState.debug = !lastGearState.debug;
+      return;
+    }
     if (key === "Q" || event.code === "ShiftLeft") {
       event.preventDefault();
       lastGearUseSpecial(lastGearPlayer());

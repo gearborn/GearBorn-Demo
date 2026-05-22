@@ -4216,6 +4216,18 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   city: "Outside the Official Circuit",
   country: "Other",
   bio: profileBios.ashley
+}, {
+  id: "roberto-yucca",
+  name: "Roberto Yucca",
+  title: "The Voice of Velocity",
+  image: "assets/characters/headshots/headshot-roberto-yucca.png",
+  headshot: "assets/characters/headshots/headshot-roberto-yucca.png",
+  character: "assets/characters/roberto-yucca.png",
+  category: "Other",
+  car: "Other",
+  city: "Last Gear Broadcast Booth",
+  country: "Other",
+  bio: "Roberto Yucca never became a professional Tuner, but you'd never know it from the way he calls a race. A former local radio host turned international commentator, Roberto built his reputation on pure personality: booming play-by-plays, impossible energy, and dramatic calls that can make even a qualifying lap sound legendary. Equal parts sports announcer, entertainer, and hype machine, he treats every race like the biggest moment in GearBorn history.\n\nWhile the elite racing world obsesses over rankings, sponsors, and medallions, Roberto cares about the people behind the wheel. He's become known for championing overlooked Tuners, underdog stories, and racers the system never expected to succeed. Beneath the nonstop charisma is someone who genuinely loves the culture surrounding GearBorn - not just the winners. To Roberto, racing is supposed to bring people together. The louder the engines get, the louder he gets too."
 }], otherNpcProfiles);
 
 const tunerRankBossOrder = bosses.slice(0, 7);
