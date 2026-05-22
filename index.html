@@ -839,6 +839,10 @@
                 <strong>Hub Map (Beta)</strong>
                 <span>Walk a tiny tile-map prototype.</span>
               </button>
+              <button class="beta-option-card" id="last-gear-beta-start" type="button">
+                <strong>Last Gear</strong>
+                <span>8 GearBorn enter. One leaves the platform.</span>
+              </button>
               <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
                   <strong>Solo Time Trial</strong>
@@ -1030,6 +1034,62 @@
                 <button class="steer-button beta-item-control" data-beta-item-button type="button" aria-label="Use item">Space</button>
               </div>
               <p class="beta-note">WASD or Arrow Keys. Press T to toggle the debug grid.</p>
+            </div>
+            <div class="last-gear-beta beta-screen" id="last-gear-beta" hidden>
+              <div class="last-gear-topbar">
+                <button class="back-link" id="last-gear-beta-back" type="button">Back</button>
+                <div class="last-gear-nitro">
+                  <span>Nitrous</span>
+                  <div class="last-gear-nitro-track">
+                    <div id="last-gear-nitro-fill"></div>
+                  </div>
+                </div>
+                <div class="last-gear-speed" id="last-gear-speed">0 MPH</div>
+              </div>
+              <div class="last-gear-stage">
+                <canvas id="last-gear-canvas" width="960" height="620" aria-label="Last Gear demolition derby arena"></canvas>
+                <div class="last-gear-item-slot beta-item-slot" id="last-gear-item-slot">
+                  <span>Item</span>
+                  <div class="beta-item-readout">
+                    <b id="last-gear-item-icon" class="beta-item-icon-cell">?</b>
+                    <strong id="last-gear-item-name">Empty</strong>
+                  </div>
+                  <em>Space / E</em>
+                </div>
+                <div class="last-gear-results" id="last-gear-results" hidden>
+                  <h2 id="last-gear-result-title">Last Gear</h2>
+                  <p id="last-gear-result-copy"></p>
+                  <div class="modal-actions">
+                    <button class="success-button" id="last-gear-restart" type="button">Restart</button>
+                    <button class="ghost" id="last-gear-finish-exit" type="button">Back</button>
+                  </div>
+                </div>
+              </div>
+              <div class="last-gear-status-grid" id="last-gear-status-grid" aria-label="Last Gear racer status"></div>
+              <div class="touch-controls beta-touch-controls last-gear-touch-controls" aria-label="Last Gear driving controls">
+                <button class="steer-button arrow-control left-control" data-last-gear-control="left" type="button" aria-label="Steer left">←</button>
+                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
+                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
+                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
+                </button>
+                <button class="steer-button arrow-control right-control" data-last-gear-control="right" type="button" aria-label="Steer right">→</button>
+                <button class="steer-button pedal-control brake-control" data-last-gear-control="down" type="button" aria-label="Brake">
+                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
+                  <span>Brake</span>
+                </button>
+                <button class="steer-button pedal-control gas-control" data-last-gear-control="up" type="button" aria-label="Gas">
+                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
+                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
+                  <span>Gas</span>
+                </button>
+                <button class="steer-button beta-item-control" data-last-gear-item-button type="button" aria-label="Use item">Space</button>
+                <button class="steer-button last-gear-nitro-button" data-last-gear-nitro type="button" aria-label="Nitrous">
+                  <img src="assets/items/token-nitrous.png" alt="">
+                  <span>Nitro</span>
+                </button>
+              </div>
+              <p class="beta-note">Prototype only: WASD to drive, Shift for nitrous, Space/E for items.</p>
             </div>
           </div>
         </section>

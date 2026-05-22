@@ -6068,6 +6068,7 @@ function showView(view) {
   if (view !== "builder" && !builderAllowLeave && viewIsActive("builder") && !requestBuilderExit(view)) return;
   if (view !== "beta") stopBetaDemo(false);
   if (view !== "beta") stopBeta3d(false);
+  if (view !== "beta" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
   // Reset forge panel when navigating to garage, unless tutorial is opening The Forge
   if (view === "garage" && !(tutorialActive() && currentTutorialScene()?.id === "the-forge")) {

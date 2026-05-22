@@ -452,6 +452,7 @@ function openBetaIntro() {
   if (!el.betaIntro || !el.betaRace) return;
   el.betaRace.hidden = true;
   stopBetaDemo(false);
+  stopLastGearBeta(false);
   showBetaScreen("beta-intro");
 }
 
@@ -1250,7 +1251,7 @@ function renderBetaPreview() {
 
 // ── Beta screen navigation: show exactly one beta screen at a time ────────────
 function showBetaScreen(screenId) {
-  ["beta-intro", "beta-car-select-screen", "beta-preview-screen", "beta-track-select-screen"].forEach((id) => {
+  ["beta-intro", "beta-car-select-screen", "beta-preview-screen", "beta-track-select-screen", "last-gear-beta"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.hidden = !screenId || id !== screenId;
   });
@@ -1962,6 +1963,620 @@ function drawBetaMiniMap() {
   dot(betaState.player.x, betaState.player.y, "#52c7ff", 4.4);
 }
 
+// ── Last Gear: isolated Beta Mode arena prototype ───────────────────────────
+let lastGearState = null;
+const lastGearKeys = {};
+const lastGearArena = { width: 960, height: 620, cx: 480, cy: 300, radius: 245 };
+
+function lastGearClamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function lastGearLiveCars() {
+  return lastGearState?.cars.filter((car) => car.lives > 0 && !car.eliminated) || [];
+}
+
+function lastGearDistanceFromCenter(car) {
+  return Math.hypot(car.x - lastGearArena.cx, car.y - lastGearArena.cy);
+}
+
+function lastGearSafePoint(index = Math.random() * 8) {
+  const angle = (Math.PI * 2 * index) / 8 - Math.PI / 2;
+  const radius = lastGearArena.radius * 0.58;
+  return {
+    x: lastGearArena.cx + Math.cos(angle) * radius,
+    y: lastGearArena.cy + Math.sin(angle) * radius,
+    angle: Math.atan2(lastGearArena.cy - (lastGearArena.cy + Math.sin(angle) * radius), lastGearArena.cx - (lastGearArena.cx + Math.cos(angle) * radius))
+  };
+}
+
+function lastGearRatingsFor(carId, player = false) {
+  const level = state.garage?.[carId]?.level || 1;
+  const evolution = state.garage?.[carId]?.evolution || 0;
+  return betaRatingsForCar(carId, level, evolution, player);
+}
+
+function lastGearPhysics(ratings) {
+  return {
+    maxSpeed: 230 + (ratings.speed || 70) * 2.15,
+    acceleration: 210 + (ratings.acceleration || 70) * 3.5,
+    brake: 390 + (ratings.torque || 70) * 1.6,
+    turnRate: 2.25 + (ratings.handling || 70) / 34,
+    mass: 0.84 + (ratings.body || 70) / 145,
+    body: ratings.body || 70,
+    nitroRecharge: 14 + (ratings.torque || 70) * 0.16,
+    nitroTank: 78 + (ratings.powertrain || 70) * 0.72,
+    nitroStrength: 1.12 + (ratings.powertrain || 70) / 390
+  };
+}
+
+function lastGearCarImagePath(carId) {
+  const form = currentEvolution(carId);
+  return imageFor(form, "topdown");
+}
+
+function lastGearBuildRoster() {
+  const playerCarId = selectedCarIdForMode("beta");
+  const playerForm = currentEvolution(playerCarId);
+  const playerTopdown = lastGearCarImagePath(playerCarId) || imageFor(playerForm, "display");
+  const excluded = new Set(["rainbowlt", "hornula1", playerCarId]);
+  const candidates = cars
+    .filter((car) => !excluded.has(car.id))
+    .map((car) => {
+      const evolutionIndex = state.garage?.[car.id]?.evolution || 0;
+      const form = car.evolutions?.[evolutionIndex] || car.evolutions?.[0];
+      const topdown = imageFor(form, "topdown");
+      return topdown ? { car, form, topdown } : null;
+    })
+    .filter(Boolean)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 7);
+  return [{ car: cars.find((car) => car.id === playerCarId) || cars[0], form: playerForm, topdown: playerTopdown, player: true }].concat(candidates);
+}
+
+function lastGearMakeCar(entry, index, total) {
+  const point = lastGearSafePoint(index);
+  const ratings = lastGearRatingsFor(entry.car.id, Boolean(entry.player));
+  const physics = lastGearPhysics(ratings);
+  return {
+    id: entry.player ? "player" : `lg-ai-${index}`,
+    carId: entry.car.id,
+    name: entry.form.name,
+    color: entry.car.color || (entry.player ? "#52c7ff" : "#ff805f"),
+    image: betaMakeImage(entry.topdown),
+    displayImage: imageFor(entry.form, "display") || entry.topdown,
+    ratings,
+    physics,
+    player: Boolean(entry.player),
+    ai: !entry.player,
+    x: point.x,
+    y: point.y,
+    prevX: point.x,
+    prevY: point.y,
+    vx: Math.cos(point.angle) * 4,
+    vy: Math.sin(point.angle) * 4,
+    angle: point.angle,
+    radius: 27,
+    lives: 3,
+    damage: 0,
+    item: null,
+    nitro: physics.nitroTank,
+    nitroHeld: false,
+    invulnerableUntil: 1800,
+    shieldHits: 0,
+    boostUntil: 0,
+    hitFlashUntil: 0,
+    eliminated: false,
+    respawnAt: 0,
+    aiTargetId: null
+  };
+}
+
+function startLastGearBeta() {
+  if (!el.lastGearCanvas) return;
+  stopBetaDemo(false);
+  stopBeta3d(false);
+  showBetaScreen("last-gear-beta");
+  el.betaRace.hidden = true;
+  if (el.lastGearResults) el.lastGearResults.hidden = true;
+  const roster = lastGearBuildRoster();
+  const cars = roster.map((entry, index) => lastGearMakeCar(entry, index, roster.length));
+  lastGearState = {
+    active: true,
+    finished: false,
+    cars,
+    itemBoxes: lastGearInitialItemBoxes(),
+    hazards: [],
+    projectiles: [],
+    last: performance.now(),
+    raf: null,
+    statusRenderAt: 0,
+    itemSpawnAt: 2500
+  };
+  Object.keys(lastGearKeys).forEach((key) => delete lastGearKeys[key]);
+  resizeLastGearBeta();
+  updateLastGearTouchVisuals();
+  updateLastGearHud(true);
+  lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
+}
+
+function stopLastGearBeta(showIntro = true) {
+  if (lastGearState?.raf) cancelAnimationFrame(lastGearState.raf);
+  lastGearState = null;
+  Object.keys(lastGearKeys).forEach((key) => delete lastGearKeys[key]);
+  updateLastGearTouchVisuals();
+  if (el.lastGearBeta) el.lastGearBeta.hidden = true;
+  if (showIntro) showBetaScreen("beta-intro");
+}
+
+function resizeLastGearBeta() {
+  if (!el.lastGearCanvas) return;
+  const ratio = window.devicePixelRatio || 1;
+  const rect = el.lastGearCanvas.getBoundingClientRect();
+  el.lastGearCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+  el.lastGearCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+  drawLastGearFrame();
+}
+
+function lastGearInitialItemBoxes() {
+  return Array.from({ length: 5 }, (_, index) => lastGearSpawnBox(index));
+}
+
+function lastGearSpawnBox(index = 0) {
+  const angle = (Math.PI * 2 * (index + Math.random() * 0.35)) / 5;
+  const radius = lastGearArena.radius * (0.24 + Math.random() * 0.46);
+  return {
+    id: `lg-box-${Date.now()}-${index}-${Math.random()}`,
+    x: lastGearArena.cx + Math.cos(angle) * radius,
+    y: lastGearArena.cy + Math.sin(angle) * radius,
+    active: true,
+    respawnAt: 0
+  };
+}
+
+function lastGearPlayer() {
+  return lastGearState?.cars.find((car) => car.player);
+}
+
+function lastGearInput(direction) {
+  return Boolean(lastGearKeys[direction]);
+}
+
+function lastGearControlsFor(car) {
+  if (car.player) {
+    return {
+      up: lastGearInput("up"),
+      down: lastGearInput("down"),
+      left: lastGearInput("left"),
+      right: lastGearInput("right"),
+      nitro: lastGearInput("nitro")
+    };
+  }
+  return lastGearAiControls(car);
+}
+
+function lastGearNearestOpponent(car) {
+  let best = null;
+  let bestDistance = Infinity;
+  lastGearLiveCars().forEach((target) => {
+    if (target.id === car.id || target.respawnAt) return;
+    const distance = Math.hypot(target.x - car.x, target.y - car.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = target;
+    }
+  });
+  return best;
+}
+
+function lastGearAiControls(car) {
+  const edgeDistance = lastGearDistanceFromCenter(car);
+  const nearEdge = edgeDistance > lastGearArena.radius * 0.76;
+  const target = nearEdge ? { x: lastGearArena.cx, y: lastGearArena.cy } : (lastGearNearestOpponent(car) || { x: lastGearArena.cx, y: lastGearArena.cy });
+  const desired = Math.atan2(target.y - car.y, target.x - car.x);
+  const delta = betaNormalizeAngle(desired - car.angle);
+  const speed = Math.hypot(car.vx, car.vy);
+  if (car.item && !nearEdge && Math.random() < 0.018) lastGearUseItem(car);
+  return {
+    up: !nearEdge || speed < car.physics.maxSpeed * 0.62,
+    down: nearEdge && speed > car.physics.maxSpeed * 0.44,
+    left: delta < -0.08,
+    right: delta > 0.08,
+    nitro: !nearEdge && Math.abs(delta) < 0.28 && speed > car.physics.maxSpeed * 0.42 && Math.random() < 0.7
+  };
+}
+
+function lastGearUpdateCar(car, dt, now) {
+  if (car.eliminated) return;
+  if (car.respawnAt) {
+    if (now >= car.respawnAt) {
+      const point = lastGearSafePoint(Math.random() * 8);
+      Object.assign(car, { x: point.x, y: point.y, vx: 0, vy: 0, angle: point.angle, respawnAt: 0, invulnerableUntil: now + 1800 });
+    }
+    return;
+  }
+  const controls = lastGearControlsFor(car);
+  const speed = Math.hypot(car.vx, car.vy);
+  const turnScale = Math.min(1, Math.max(0.35, speed / 190));
+  if (controls.left) car.angle -= car.physics.turnRate * turnScale * dt;
+  if (controls.right) car.angle += car.physics.turnRate * turnScale * dt;
+  const nitroActive = controls.nitro && car.nitro > 0;
+  const boostActive = car.boostUntil > now;
+  if (nitroActive) {
+    car.nitro = Math.max(0, car.nitro - (42 + car.physics.nitroTank * 0.18) * dt);
+  } else {
+    car.nitro = Math.min(car.physics.nitroTank, car.nitro + car.physics.nitroRecharge * dt);
+  }
+  const accelBoost = nitroActive ? car.physics.nitroStrength : boostActive ? 1.32 : 1;
+  if (controls.up) {
+    car.vx += Math.cos(car.angle) * car.physics.acceleration * accelBoost * dt;
+    car.vy += Math.sin(car.angle) * car.physics.acceleration * accelBoost * dt;
+  }
+  if (controls.down) {
+    car.vx -= Math.cos(car.angle) * car.physics.brake * dt;
+    car.vy -= Math.sin(car.angle) * car.physics.brake * dt;
+  }
+  const maxSpeed = car.physics.maxSpeed * (nitroActive ? 1.18 : boostActive ? 1.25 : 1);
+  const newSpeed = Math.hypot(car.vx, car.vy);
+  if (newSpeed > maxSpeed) {
+    car.vx = (car.vx / newSpeed) * maxSpeed;
+    car.vy = (car.vy / newSpeed) * maxSpeed;
+  }
+  const friction = controls.up || controls.down ? 0.992 : 0.982;
+  car.vx *= Math.pow(friction, dt * 60);
+  car.vy *= Math.pow(friction, dt * 60);
+  car.prevX = car.x;
+  car.prevY = car.y;
+  car.x += car.vx * dt;
+  car.y += car.vy * dt;
+  if (lastGearDistanceFromCenter(car) > lastGearArena.radius + 42) lastGearLoseLife(car, now);
+}
+
+function lastGearLoseLife(car, now) {
+  if (car.respawnAt || car.eliminated) return;
+  car.lives -= 1;
+  car.damage = 0;
+  car.item = null;
+  car.shieldHits = 0;
+  if (car.lives <= 0) {
+    car.eliminated = true;
+    car.vx = 0;
+    car.vy = 0;
+    if (car.player) finishLastGearBeta(false);
+    return;
+  }
+  car.respawnAt = now + 1050;
+}
+
+function lastGearResolveCollisions(now) {
+  const live = lastGearLiveCars().filter((car) => !car.respawnAt);
+  for (let i = 0; i < live.length; i += 1) {
+    for (let j = i + 1; j < live.length; j += 1) {
+      const a = live[i];
+      const b = live[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const minDist = a.radius + b.radius;
+      if (dist >= minDist) continue;
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const overlap = minDist - dist;
+      a.x -= nx * overlap * 0.5;
+      a.y -= ny * overlap * 0.5;
+      b.x += nx * overlap * 0.5;
+      b.y += ny * overlap * 0.5;
+      const relVx = a.vx - b.vx;
+      const relVy = a.vy - b.vy;
+      const closing = Math.max(0, relVx * nx + relVy * ny);
+      const impact = closing + Math.hypot(relVx, relVy) * 0.18;
+      if (impact < 42) continue;
+      const aForward = Math.cos(a.angle) * nx + Math.sin(a.angle) * ny;
+      const bForward = -(Math.cos(b.angle) * nx + Math.sin(b.angle) * ny);
+      const headOn = aForward > 0.45 && bForward > 0.45;
+      const aTbone = Math.abs(Math.cos(b.angle) * nx + Math.sin(b.angle) * ny) < 0.34 && aForward > 0.35;
+      const bTbone = Math.abs(Math.cos(a.angle) * nx + Math.sin(a.angle) * ny) < 0.34 && bForward > 0.35;
+      if (headOn) {
+        lastGearApplyHit(a, b, impact * 0.66, -nx, -ny, now);
+        lastGearApplyHit(b, a, impact * 0.66, nx, ny, now);
+      } else if (aForward > bForward) {
+        lastGearApplyHit(b, a, impact * (aTbone ? 1.35 : 0.82), nx, ny, now);
+      } else {
+        lastGearApplyHit(a, b, impact * (bTbone ? 1.35 : 0.82), -nx, -ny, now);
+      }
+      const impulse = impact * 0.18;
+      a.vx -= nx * impulse / a.physics.mass;
+      a.vy -= ny * impulse / a.physics.mass;
+      b.vx += nx * impulse / b.physics.mass;
+      b.vy += ny * impulse / b.physics.mass;
+    }
+  }
+}
+
+function lastGearApplyHit(receiver, attacker, impact, nx, ny, now) {
+  if (receiver.invulnerableUntil > now) return;
+  if (receiver.shieldHits > 0) {
+    receiver.shieldHits -= 1;
+    receiver.hitFlashUntil = now + 180;
+    return;
+  }
+  const bodyReducer = lastGearClamp(1 - (receiver.physics.body - 70) / 180, 0.48, 1.35);
+  const damage = Math.max(1, impact / 18) * bodyReducer;
+  receiver.damage = Math.min(999, receiver.damage + damage);
+  const knock = (impact * 0.78 + receiver.damage * 2.1) / receiver.physics.mass;
+  receiver.vx += nx * knock;
+  receiver.vy += ny * knock;
+  receiver.hitFlashUntil = now + 220;
+  if (attacker) attacker.hitFlashUntil = now + 120;
+}
+
+function lastGearUseItem(car = lastGearPlayer()) {
+  if (!lastGearState?.active || lastGearState.finished || !car?.item || car.eliminated || car.respawnAt) return false;
+  const now = performance.now() - (lastGearState.startedAt || performance.now());
+  const item = car.item;
+  car.item = null;
+  if (item.id === "shield") {
+    car.shieldHits = 1;
+  } else if (item.id === "teleport") {
+    const point = lastGearSafePoint(Math.random() * 8);
+    Object.assign(car, { x: point.x, y: point.y, vx: 0, vy: 0, angle: point.angle, invulnerableUntil: now + 850 });
+  } else if (item.id === "turbo") {
+    car.boostUntil = now + 1200;
+    car.vx += Math.cos(car.angle) * 170;
+    car.vy += Math.sin(car.angle) * 170;
+  } else if (item.id === "burst") {
+    lastGearState.projectiles.push({
+      id: `lg-emp-${Date.now()}-${Math.random()}`,
+      owner: car.id,
+      x: car.x + Math.cos(car.angle) * 42,
+      y: car.y + Math.sin(car.angle) * 42,
+      vx: Math.cos(car.angle) * 560,
+      vy: Math.sin(car.angle) * 560,
+      expiresAt: now + 1200
+    });
+  } else if (item.id === "oil" || item.id === "tire") {
+    lastGearState.hazards.push({
+      id: `lg-hazard-${Date.now()}-${Math.random()}`,
+      type: item.id,
+      owner: car.id,
+      x: car.x - Math.cos(car.angle) * 48,
+      y: car.y - Math.sin(car.angle) * 48,
+      radius: item.id === "oil" ? 42 : 34,
+      expiresAt: now + 12000
+    });
+  }
+  updateLastGearHud(true);
+  return true;
+}
+
+function lastGearRandomItem() {
+  return betaItemDefinitions[Math.floor(Math.random() * betaItemDefinitions.length)];
+}
+
+function lastGearUpdateItems(dt, now) {
+  lastGearState.itemBoxes.forEach((box) => {
+    if (!box.active && now >= box.respawnAt) box.active = true;
+    if (!box.active) return;
+    lastGearLiveCars().forEach((car) => {
+      if (!box.active || car.respawnAt || car.item) return;
+      if (Math.hypot(car.x - box.x, car.y - box.y) > 42) return;
+      car.item = lastGearRandomItem();
+      box.active = false;
+      box.respawnAt = now + 4500 + Math.random() * 2500;
+    });
+  });
+  lastGearState.hazards = lastGearState.hazards.filter((hazard) => hazard.expiresAt > now);
+  lastGearState.hazards.forEach((hazard) => {
+    lastGearLiveCars().forEach((car) => {
+      if (car.id === hazard.owner || car.respawnAt) return;
+      if (Math.hypot(car.x - hazard.x, car.y - hazard.y) > hazard.radius + car.radius) return;
+      lastGearApplyHit(car, null, hazard.type === "oil" ? 78 : 112, (car.x - hazard.x) / hazard.radius, (car.y - hazard.y) / hazard.radius, now);
+      car.vx *= hazard.type === "oil" ? 0.66 : 0.42;
+      car.vy *= hazard.type === "oil" ? 0.66 : 0.42;
+      hazard.expiresAt = 0;
+    });
+  });
+  lastGearState.projectiles = lastGearState.projectiles.filter((projectile) => projectile.expiresAt > now);
+  lastGearState.projectiles.forEach((projectile) => {
+    projectile.x += projectile.vx * dt;
+    projectile.y += projectile.vy * dt;
+    lastGearLiveCars().forEach((car) => {
+      if (car.id === projectile.owner || car.respawnAt) return;
+      if (Math.hypot(car.x - projectile.x, car.y - projectile.y) > car.radius + 18) return;
+      const mag = Math.hypot(projectile.vx, projectile.vy) || 1;
+      lastGearApplyHit(car, null, 136, projectile.vx / mag, projectile.vy / mag, now);
+      projectile.expiresAt = 0;
+    });
+  });
+}
+
+function updateLastGearBeta(now) {
+  if (!lastGearState || lastGearState.finished) return;
+  if (!lastGearState.startedAt) lastGearState.startedAt = now;
+  const localNow = now - lastGearState.startedAt;
+  const dt = Math.min(0.035, (now - lastGearState.last) / 1000);
+  lastGearState.last = now;
+  lastGearState.cars.forEach((car) => lastGearUpdateCar(car, dt, localNow));
+  lastGearResolveCollisions(localNow);
+  lastGearUpdateItems(dt, localNow);
+  const survivors = lastGearLiveCars();
+  if (survivors.length <= 1 && !lastGearState.finished) finishLastGearBeta(survivors[0]?.player);
+  drawLastGearFrame();
+  updateLastGearHud();
+  lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
+}
+
+function finishLastGearBeta(playerWon) {
+  if (!lastGearState || lastGearState.finished) return;
+  lastGearState.finished = true;
+  if (lastGearState.raf) cancelAnimationFrame(lastGearState.raf);
+  if (el.lastGearResultTitle) el.lastGearResultTitle.textContent = playerWon ? "Last Gear Winner!" : "Eliminated";
+  if (el.lastGearResultCopy) el.lastGearResultCopy.textContent = playerWon ? "You were the last GearBorn on the platform." : "Another GearBorn survived the arena.";
+  if (el.lastGearResults) el.lastGearResults.hidden = false;
+}
+
+function drawLastGearFrame() {
+  if (!el.lastGearCanvas || !lastGearState) return;
+  const canvas = el.lastGearCanvas;
+  const ctx = canvas.getContext("2d");
+  const ratio = window.devicePixelRatio || 1;
+  const cssW = canvas.width / ratio;
+  const cssH = canvas.height / ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  const scale = Math.min(cssW / lastGearArena.width, cssH / lastGearArena.height);
+  const ox = (cssW - lastGearArena.width * scale) / 2;
+  const oy = (cssH - lastGearArena.height * scale) / 2;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+  drawLastGearArena(ctx);
+  drawLastGearObjects(ctx);
+  lastGearState.cars.forEach((car) => drawLastGearCar(ctx, car));
+  ctx.restore();
+}
+
+function drawLastGearArena(ctx) {
+  const { cx, cy, radius } = lastGearArena;
+  const gradient = ctx.createRadialGradient(cx, cy - 30, radius * 0.12, cx, cy, radius);
+  gradient.addColorStop(0, "#38425a");
+  gradient.addColorStop(0.72, "#1b2333");
+  gradient.addColorStop(1, "#090d15");
+  ctx.fillStyle = "#03050a";
+  ctx.fillRect(0, 0, lastGearArena.width, lastGearArena.height);
+  ctx.save();
+  ctx.shadowColor = "rgba(82,199,255,0.58)";
+  ctx.shadowBlur = 28;
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = "rgba(255,200,87,0.64)";
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(82,199,255,0.55)";
+  ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  for (let r = 70; r < radius; r += 58) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawLastGearObjects(ctx) {
+  const now = performance.now() - (lastGearState.startedAt || performance.now());
+  lastGearState.itemBoxes.filter((box) => box.active).forEach((box) => {
+    betaDrawImageOrFallback(ctx, betaTrackImages.itemBox, box.x, box.y, 42, 42, () => {
+      ctx.fillStyle = "#ffc857";
+      ctx.fillRect(box.x - 18, box.y - 18, 36, 36);
+    });
+  });
+  lastGearState.hazards.forEach((hazard) => {
+    const image = hazard.type === "oil" ? betaTrackImages.oilSlick : betaTrackImages.spikeStrip;
+    betaDrawImageOrFallback(ctx, image, hazard.x, hazard.y, hazard.type === "oil" ? 78 : 84, hazard.type === "oil" ? 48 : 28, () => {
+      ctx.fillStyle = hazard.type === "oil" ? "rgba(6,8,12,0.92)" : "#ff3f3f";
+      ctx.beginPath();
+      ctx.arc(hazard.x, hazard.y, hazard.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+  lastGearState.projectiles.forEach((projectile) => {
+    const angle = Math.atan2(projectile.vy, projectile.vx);
+    ctx.save();
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(angle + Math.PI);
+    betaDrawImageOrFallback(ctx, betaTrackImages.empWave, 0, 0, 62, 34, () => {
+      ctx.fillStyle = "#c084fc";
+      ctx.fillRect(-22, -8, 44, 16);
+    });
+    ctx.restore();
+  });
+  lastGearState.cars.filter((car) => car.shieldHits > 0 || car.boostUntil > now || car.hitFlashUntil > now).forEach((car) => {
+    if (car.shieldHits > 0) {
+      ctx.strokeStyle = "rgba(82,199,255,0.9)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(car.x, car.y, 43, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    if (car.hitFlashUntil > now) {
+      ctx.strokeStyle = "rgba(255,128,95,0.9)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(car.x, car.y, 38, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  });
+}
+
+function drawLastGearCar(ctx, car) {
+  if (car.eliminated || car.respawnAt) return;
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle + Math.PI / 2);
+  ctx.globalAlpha = car.invulnerableUntil > (performance.now() - (lastGearState.startedAt || performance.now()))
+    ? 0.55 + Math.sin(performance.now() / 80) * 0.2
+    : 1;
+  if (car.image?.complete && car.image.naturalWidth) {
+    ctx.drawImage(car.image, -36, -44, 72, 88);
+  } else {
+    ctx.fillStyle = car.color;
+    ctx.fillRect(-22, -32, 44, 64);
+    ctx.fillStyle = "#101820";
+    ctx.fillRect(-13, -23, 26, 18);
+  }
+  ctx.restore();
+}
+
+function updateLastGearHud(force = false) {
+  if (!lastGearState) return;
+  const player = lastGearPlayer();
+  if (el.lastGearSpeed && player) el.lastGearSpeed.textContent = `${Math.round(Math.hypot(player.vx, player.vy) / 5.2)} MPH`;
+  if (el.lastGearNitroFill && player) el.lastGearNitroFill.style.width = `${lastGearClamp((player.nitro / player.physics.nitroTank) * 100, 0, 100)}%`;
+  if (el.lastGearItemName && player) el.lastGearItemName.textContent = player.item?.name || "Empty";
+  if (el.lastGearItemIcon && player) {
+    const icon = player.item ? betaItemImages[player.item.id] : null;
+    el.lastGearItemIcon.innerHTML = "";
+    if (icon?.complete && icon.naturalWidth) {
+      const clone = icon.cloneNode();
+      clone.style.cssText = "width:28px;height:28px;object-fit:contain;display:block;";
+      el.lastGearItemIcon.appendChild(clone);
+    } else {
+      el.lastGearItemIcon.textContent = player.item ? player.item.name.slice(0, 2).toUpperCase() : "?";
+    }
+  }
+  const now = performance.now();
+  if (!force && now - (lastGearState.statusRenderAt || 0) < 160) return;
+  lastGearState.statusRenderAt = now;
+  if (el.lastGearStatusGrid) {
+    el.lastGearStatusGrid.innerHTML = lastGearState.cars.map((car) => `
+      <div class="last-gear-status-card ${car.player ? "player" : ""} ${car.eliminated ? "eliminated" : ""}">
+        <div class="last-gear-lives">${Array.from({ length: Math.max(0, car.lives) }, () => `<img src="${car.displayImage}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden';">`).join("")}</div>
+        <strong>${car.name}</strong>
+        <span>${Math.round(car.damage)}%</span>
+      </div>
+    `).join("");
+  }
+}
+
+function updateLastGearTouchVisuals() {
+  document.querySelectorAll(".last-gear-touch-controls").forEach((group) => {
+    const leftActive = Boolean(lastGearKeys.left);
+    const rightActive = Boolean(lastGearKeys.right);
+    group.classList.toggle("steering-left", leftActive && !rightActive);
+    group.classList.toggle("steering-right", rightActive && !leftActive);
+    group.querySelectorAll("[data-last-gear-control]").forEach((button) => {
+      button.classList.toggle("pressed", Boolean(lastGearKeys[button.dataset.lastGearControl]));
+    });
+    group.querySelectorAll("[data-last-gear-nitro]").forEach((button) => {
+      button.classList.toggle("pressed", Boolean(lastGearKeys.nitro));
+    });
+  });
+}
+
 el.betaOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-mode]");
   if (!button) return;
@@ -1994,6 +2609,11 @@ el.betaPreviewCar?.addEventListener("click", () => {
   betaReturningToPreview = true;
   openBetaCarSelect(betaPreviewMode || betaPendingMode);
 });
+
+el.lastGearBetaStart?.addEventListener("click", startLastGearBeta);
+el.lastGearBetaBack?.addEventListener("click", () => stopLastGearBeta(true));
+el.lastGearFinishExit?.addEventListener("click", () => stopLastGearBeta(true));
+el.lastGearRestart?.addEventListener("click", startLastGearBeta);
 
 el.betaPreviewCity?.addEventListener("click", () => {
   if (el.betaCityMenu) el.betaCityMenu.hidden = !el.betaCityMenu.hidden;
@@ -3070,10 +3690,33 @@ function drawBetaMiniMap() {
 document.addEventListener("keydown", (event) => {
   if (!document.querySelector("#beta-view")?.classList.contains("active")) return;
   const key = normalizeKey(event);
+  if (lastGearState && !lastGearState.finished) {
+    const lastGearMap = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right", Shift: "nitro" };
+    if (lastGearMap[key]) {
+      event.preventDefault();
+      lastGearKeys[lastGearMap[key]] = true;
+      updateLastGearTouchVisuals();
+      return;
+    }
+    if (key === "Space" || key === "E") {
+      event.preventDefault();
+      lastGearUseItem(lastGearPlayer());
+      return;
+    }
+  }
   if ((key === "Space" || key === "E") && betaState?.active && !betaState.finished) {
     event.preventDefault();
     flashBetaItemButton();
     betaUseItem(betaState.player);
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  const key = normalizeKey(event);
+  const lastGearMap = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right", Shift: "nitro" };
+  if (lastGearMap[key]) {
+    lastGearKeys[lastGearMap[key]] = false;
+    updateLastGearTouchVisuals();
   }
 });
 
@@ -3106,5 +3749,61 @@ document.querySelectorAll("[data-beta-item-button]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-last-gear-control]").forEach((button) => {
+  const direction = button.dataset.lastGearControl;
+  const press = (event) => {
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    lastGearKeys[direction] = true;
+    updateLastGearTouchVisuals();
+  };
+  const release = (event) => {
+    event.preventDefault();
+    if (button.hasPointerCapture?.(event.pointerId)) button.releasePointerCapture(event.pointerId);
+    lastGearKeys[direction] = false;
+    updateLastGearTouchVisuals();
+  };
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", (event) => {
+    if (button.hasPointerCapture?.(event.pointerId)) return;
+    lastGearKeys[direction] = false;
+    updateLastGearTouchVisuals();
+  });
+});
+
+document.querySelectorAll("[data-last-gear-nitro]").forEach((button) => {
+  const press = (event) => {
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    lastGearKeys.nitro = true;
+    updateLastGearTouchVisuals();
+  };
+  const release = (event) => {
+    event.preventDefault();
+    if (button.hasPointerCapture?.(event.pointerId)) button.releasePointerCapture(event.pointerId);
+    lastGearKeys.nitro = false;
+    updateLastGearTouchVisuals();
+  };
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", (event) => {
+    if (button.hasPointerCapture?.(event.pointerId)) return;
+    lastGearKeys.nitro = false;
+    updateLastGearTouchVisuals();
+  });
+});
+
+document.querySelectorAll("[data-last-gear-item-button]").forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    lastGearUseItem(lastGearPlayer());
+  });
+});
+
 window.addEventListener("resize", updateRotationTipForActiveRace);
+window.addEventListener("resize", resizeLastGearBeta);
 screen.orientation?.addEventListener?.("change", updateRotationTipForActiveRace);
+screen.orientation?.addEventListener?.("change", resizeLastGearBeta);
