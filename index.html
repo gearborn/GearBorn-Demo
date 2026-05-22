@@ -436,10 +436,10 @@
         </section>
 
         <section class="view" id="vindex-view" aria-labelledby="vindex-title">
-          <button class="back-link" data-view="menu" type="button">Back</button>
           <h1 class="sr-only" id="vindex-title">VINdex GearBorn archive</h1>
           <div class="vindex-shell">
             <div class="vindex-stage">
+              <button class="back-link vindex-back-link" data-view="menu" type="button">Back</button>
               <aside class="vindex-list-panel" aria-label="GearBorn list">
                 <div class="vindex-list" id="vindex-list"></div>
               </aside>
@@ -608,10 +608,32 @@
                 <div class="drag-bg-layer"></div>
                 <div class="drag-road-layer"></div>
                 <div class="finish-line"></div>
-                <div class="launch-lights" id="drag-launch-lights" aria-hidden="true">
-                  <span class="launch-light red" data-launch-light="red"></span>
-                  <span class="launch-light yellow" data-launch-light="yellow"></span>
-                  <span class="launch-light green" data-launch-light="green"></span>
+                <div class="launch-lights drag-light-tree" id="drag-launch-lights" aria-hidden="true">
+                  <span class="launch-tree-spine"></span>
+                  <span class="launch-tree-row" data-launch-step="1">
+                    <span class="launch-tree-arm left"></span>
+                    <span class="launch-light red"></span>
+                    <span class="launch-light red"></span>
+                    <span class="launch-tree-arm right"></span>
+                  </span>
+                  <span class="launch-tree-row" data-launch-step="2">
+                    <span class="launch-tree-arm left"></span>
+                    <span class="launch-light red"></span>
+                    <span class="launch-light red"></span>
+                    <span class="launch-tree-arm right"></span>
+                  </span>
+                  <span class="launch-tree-row" data-launch-step="3">
+                    <span class="launch-tree-arm left"></span>
+                    <span class="launch-light yellow"></span>
+                    <span class="launch-light yellow"></span>
+                    <span class="launch-tree-arm right"></span>
+                  </span>
+                  <span class="launch-tree-row" data-launch-step="4">
+                    <span class="launch-tree-arm left"></span>
+                    <span class="launch-light green"></span>
+                    <span class="launch-light green"></span>
+                    <span class="launch-tree-arm right"></span>
+                  </span>
                 </div>
                 <div class="lane drag-lane lane-3" id="player-drag-lane">
                   <span class="lane-label">YOU</span>
@@ -843,6 +865,47 @@
                 <strong>Last Gear</strong>
                 <span>8 GearBorn enter. One leaves the platform.</span>
               </button>
+              <div class="last-gear-setup-panel" id="last-gear-setup-panel" hidden>
+                <div class="last-gear-setup-grid">
+                  <label>Lives
+                    <select id="last-gear-setup-lives">
+                      <option value="1">1</option>
+                      <option value="3" selected>3</option>
+                      <option value="5">5</option>
+                    </select>
+                  </label>
+                  <label>Arena
+                    <select id="last-gear-setup-arena">
+                      <option value="circle" selected>Classic Circle</option>
+                      <option value="square">Square</option>
+                      <option value="donut">Donut</option>
+                      <option value="bridge">Narrow Bridge</option>
+                    </select>
+                  </label>
+                  <label>Sudden Death
+                    <input id="last-gear-setup-sudden" type="number" min="0" step="15" value="180">
+                  </label>
+                  <label>Items
+                    <select id="last-gear-setup-items">
+                      <option value="off">Off</option>
+                      <option value="low">Low</option>
+                      <option value="normal" selected>Normal</option>
+                      <option value="chaos">Chaos</option>
+                    </select>
+                  </label>
+                  <label>AI Difficulty
+                    <select id="last-gear-setup-ai">
+                      <option value="chill">Chill</option>
+                      <option value="normal" selected>Normal</option>
+                      <option value="aggro">Aggro</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="last-gear-setup-actions">
+                  <button class="story-primary" id="last-gear-setup-start" type="button">Choose Racer</button>
+                </div>
+                <p class="last-gear-setup-note">AI lineup uses rotating archetypes: Aggro, Tank, Coward, Trickster, Speedster, Opportunist, Defender.</p>
+              </div>
               <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
                   <strong>Solo Time Trial</strong>
@@ -1068,7 +1131,7 @@
                 </div>
                 <div class="last-gear-results" id="last-gear-results" hidden>
                   <h2 id="last-gear-result-title">Last Gear</h2>
-                  <p id="last-gear-result-copy"></p>
+                  <div id="last-gear-result-copy"></div>
                   <div class="modal-actions">
                     <button class="success-button" id="last-gear-restart" type="button">Restart</button>
                     <button class="ghost" id="last-gear-finish-exit" type="button">Back</button>
@@ -1434,7 +1497,7 @@
       <div class="honk-modal-card" role="dialog" aria-modal="true" aria-labelledby="honk-modal-title">
         <button class="modal-close-bubble" id="honk-modal-close" type="button" aria-label="Close honk menu">×</button>
         <p class="modal-kicker">GearBorn Honk</p>
-        <h2 id="honk-modal-title">Choose a Mood</h2>
+        <h2 id="honk-modal-title">Choose a Honk</h2>
         <div class="honk-options" id="honk-options"></div>
         <p class="honk-subtitle" id="honk-subtitle">[HONK SUBTITLE PLACEHOLDER]</p>
       </div>

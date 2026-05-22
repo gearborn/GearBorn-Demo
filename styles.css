@@ -4551,16 +4551,55 @@ small {
 .launch-lights {
   position: absolute;
   z-index: 5;
-  top: 18px;
+  top: 12px;
   left: 50%;
-  display: flex;
-  gap: 10px;
-  padding: 8px 12px;
+  display: grid;
+  gap: 6px;
+  padding: 12px 13px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(7, 10, 18, 0.72);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(20, 26, 36, 0.84), rgba(6, 9, 16, 0.88)),
+    rgba(7, 10, 18, 0.82);
   transform: translateX(-50%);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+}
+
+.drag-light-tree {
+  width: 118px;
+  isolation: isolate;
+}
+
+.launch-tree-spine {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 50%;
+  z-index: -1;
+  width: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #59606c, #1a202b);
+  transform: translateX(-50%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.65);
+}
+
+.launch-tree-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 28px 28px 1fr;
+  align-items: center;
+  gap: 5px;
+}
+
+.launch-tree-arm {
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f2632, #747b86);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+.launch-tree-arm.right {
+  background: linear-gradient(90deg, #747b86, #1f2632);
 }
 
 .launch-light {
@@ -4572,18 +4611,21 @@ small {
   opacity: 0.58;
 }
 
+.launch-tree-row.active .launch-light.red,
 .launch-light.red.active {
   background: #ff3838;
   box-shadow: 0 0 24px rgba(255, 56, 56, 0.75);
   opacity: 1;
 }
 
+.launch-tree-row.active .launch-light.yellow,
 .launch-light.yellow.active {
   background: #ffd15a;
   box-shadow: 0 0 24px rgba(255, 209, 90, 0.75);
   opacity: 1;
 }
 
+.launch-tree-row.active .launch-light.green,
 .launch-light.green.active {
   background: #6ee7a8;
   box-shadow: 0 0 24px rgba(110, 231, 168, 0.75);
@@ -5171,12 +5213,6 @@ small {
   --vindex-blue: #52c7ff;
 }
 
-#vindex-view > .back-link {
-  position: relative;
-  z-index: 3;
-  margin-bottom: 10px;
-}
-
 .vindex-shell {
   display: grid;
   width: 100%;
@@ -5186,15 +5222,54 @@ small {
 
 .vindex-stage {
   position: relative;
-  width: min(100%, calc((100svh - 132px) * 1.5));
+  width: min(100%, calc((100svh - 92px) * 1.5));
   max-width: 1440px;
-  min-width: min(100%, 700px);
+  min-width: 0;
   aspect-ratio: 3 / 2;
   container-type: inline-size;
   background: url("assets/vindex/vindex-bg.png") center / 100% 100% no-repeat;
   border-radius: 18px;
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
   isolation: isolate;
+}
+
+.vindex-back-link {
+  position: absolute;
+  top: 3.6%;
+  right: 4.6%;
+  z-index: 8;
+  min-height: 0;
+  padding: clamp(5px, 0.72vw, 10px) clamp(9px, 1.1vw, 16px);
+  border-color: rgba(255, 248, 207, 0.42);
+  border-radius: 999px;
+  background: rgba(8, 12, 20, 0.62);
+  color: #fff7dc;
+  font-size: clamp(0.62rem, 0.86vw, 0.86rem);
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+@media (max-width: 720px) {
+  .vindex-shell {
+    overflow-x: auto;
+    justify-items: start;
+  }
+
+  .vindex-stage {
+    width: max(700px, calc(100svh * 1.18));
+    max-width: none;
+  }
+
+  .vindex-back-link {
+    top: 2.8%;
+    right: 3.2%;
+  }
+}
+
+@media (max-width: 480px) {
+  .vindex-stage {
+    width: max(640px, calc(100svh * 1.08));
+  }
 }
 
 .vindex-list-panel,
@@ -9889,13 +9964,40 @@ small {
 
 .car-picker-open-thumb,
 .car-picker-card-art {
-  display: block;
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 86px;
+  overflow: hidden;
+}
+
+.car-picker-open-thumb {
   height: 58px;
+}
+
+.car-picker-card-art .car,
+.car-picker-open-thumb .car {
+  position: relative;
+  inset: auto;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  height: 100%;
+  transform: none !important;
 }
 
 .car-picker-open-thumb .display-image,
 .car-picker-card-art .display-image,
 .garage-compact-art .display-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.car-picker-open-thumb .car-image,
+.car-picker-card-art .car-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -9959,11 +10061,14 @@ small {
   position: relative;
   display: grid;
   gap: 5px;
+  grid-template-rows: 86px auto auto auto;
+  align-items: start;
   padding: 12px;
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.16);
   background: rgba(255,255,255,0.06);
   color: var(--ink);
+  text-align: center;
 }
 
 .car-picker-card.highlighted,
@@ -10139,6 +10244,56 @@ small {
 }
 
 /* Last Gear is an isolated Beta Mode prototype. */
+.last-gear-setup-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 200, 87, 0.24);
+  border-radius: 16px;
+  background: rgba(8, 12, 20, 0.68);
+}
+
+.last-gear-setup-panel[hidden] {
+  display: none !important;
+}
+
+.last-gear-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.last-gear-setup-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--gb-muted);
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.last-gear-setup-grid select,
+.last-gear-setup-grid input {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(12, 19, 31, 0.92);
+  color: var(--gb-ink);
+}
+
+.last-gear-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.last-gear-setup-note {
+  margin: 0;
+  color: var(--gb-muted);
+  font-size: 0.8rem;
+}
+
 .last-gear-beta {
   display: grid;
   gap: 12px;
@@ -10245,6 +10400,10 @@ small {
   filter: drop-shadow(0 0 22px rgba(255, 200, 87, 0.35));
 }
 
+.last-gear-announcer.legendary .last-gear-announcer-portrait {
+  animation: lastGearAnnouncerLegend 420ms var(--ease-pop, cubic-bezier(.2,.8,.2,1)) both;
+}
+
 .last-gear-announcer-portrait {
   position: relative;
   width: clamp(62px, 8vw, 92px);
@@ -10318,6 +10477,12 @@ small {
   to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes lastGearAnnouncerLegend {
+  0% { transform: scale(0.88) rotate(-5deg); }
+  55% { transform: scale(1.12) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
 .last-gear-results {
   position: absolute;
   inset: 0;
@@ -10341,6 +10506,56 @@ small {
   font-family: var(--font-display);
   font-size: clamp(2rem, 5vw, 4rem);
   text-transform: uppercase;
+}
+
+.last-gear-result-card {
+  display: grid;
+  gap: 12px;
+  width: min(620px, 88vw);
+  padding: 16px;
+  border: 1px solid rgba(255, 200, 87, 0.28);
+  border-radius: 18px;
+  background: rgba(8, 12, 20, 0.72);
+}
+
+.last-gear-result-call {
+  margin: 0;
+  color: #fff7dc;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.4vw, 1.8rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.last-gear-result-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.last-gear-result-stats p {
+  margin: 0;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.last-gear-result-stats span {
+  display: block;
+  color: var(--gb-muted);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.last-gear-result-stats strong {
+  display: block;
+  color: var(--gb-gold);
+  font-family: var(--font-ui);
+  font-size: 1rem;
 }
 
 .last-gear-status-grid {
@@ -10485,8 +10700,13 @@ small {
 }
 
 @media (max-width: 720px) {
+  .last-gear-beta {
+    gap: 8px;
+  }
+
   .last-gear-topbar {
     grid-template-columns: 1fr auto;
+    gap: 8px;
   }
 
   .last-gear-topbar .back-link {
@@ -10499,8 +10719,51 @@ small {
     width: auto;
   }
 
+  .last-gear-speed {
+    min-width: 78px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+
+  #last-gear-canvas {
+    min-height: 280px;
+    height: clamp(280px, 46svh, 430px);
+  }
+
+  .last-gear-status-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .last-gear-status-card {
+    padding: 4px 2px;
+    border-radius: 8px;
+  }
+
+  .last-gear-lives {
+    min-height: 13px;
+    gap: 1px;
+  }
+
+  .last-gear-lives img {
+    width: 12px;
+    height: 10px;
+  }
+
+  .last-gear-status-card strong {
+    font-size: 0.48rem;
+  }
+
+  .last-gear-status-card span {
+    font-size: 0.62rem;
+  }
+
   .last-gear-item-slot {
-    width: min(48vw, 180px);
+    top: 8px;
+    left: 8px;
+    width: min(43vw, 156px);
+    transform: scale(0.88);
+    transform-origin: top left;
   }
 
   .last-gear-announcer {
@@ -10522,16 +10785,94 @@ small {
   }
 
   .last-gear-touch-controls {
-    gap: 8px;
+    gap: 5px;
   }
 
   .last-gear-control-row {
-    grid-template-columns: repeat(6, minmax(44px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(6, minmax(38px, 1fr));
+    gap: 4px;
+  }
+
+  .last-gear-control-row .steer-button {
+    min-height: 46px;
+    padding: 6px 3px;
+    font-size: 0.72rem;
+  }
+
+  .last-gear-nitro-button img {
+    width: 24px;
+    height: 24px;
   }
 
   .last-gear-space-button {
-    padding: 14px 10px;
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 500px) {
+  .last-gear-beta {
+    gap: 6px;
+  }
+
+  .last-gear-topbar {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+  }
+
+  .last-gear-topbar .back-link {
+    grid-column: auto;
+  }
+
+  #last-gear-canvas {
+    min-height: 230px;
+    height: 50svh;
+  }
+
+  .last-gear-status-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .last-gear-status-card {
+    padding: 3px 2px;
+  }
+
+  .last-gear-lives {
+    min-height: 12px;
+  }
+
+  .last-gear-lives img {
+    width: 12px;
+    height: 10px;
+  }
+
+  .last-gear-status-card strong {
+    font-size: 0.46rem;
+  }
+
+  .last-gear-status-card span {
+    font-size: 0.58rem;
+  }
+
+  .last-gear-touch-controls {
+    gap: 4px;
+  }
+
+  .last-gear-control-row {
+    gap: 4px;
+  }
+
+  .last-gear-control-row .steer-button {
+    min-height: 42px;
+    padding: 4px 3px;
+  }
+
+  .last-gear-space-button {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
   }
 }
 

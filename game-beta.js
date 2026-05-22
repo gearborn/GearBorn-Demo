@@ -1988,6 +1988,27 @@ const lastGearSuddenDeath = {
   minRadius: 520
 };
 const lastGearAiArchetypes = ["Aggro", "Tank", "Coward", "Trickster", "Speedster", "Opportunist", "Defender"];
+let lastGearSetupConfig = {
+  lives: 3,
+  arena: "circle",
+  suddenDeathSeconds: 180,
+  items: "normal",
+  aiDifficulty: "normal"
+};
+const lastGearItemCadence = {
+  off: { boxes: 0, respawn: 999999, variance: 0 },
+  low: { boxes: 3, respawn: 7000, variance: 3000 },
+  normal: { boxes: 5, respawn: 4500, variance: 2500 },
+  chaos: { boxes: 8, respawn: 2200, variance: 1200 }
+};
+const lastGearImpactTuning = {
+  minor: 96,
+  major: 150,
+  legendary: 220,
+  hitstopMin: 44,
+  hitstopMax: 135,
+  shakeDivisor: 10
+};
 const lastGearAnnouncerDurations = {
   default: 2600,
   major: 3600,
@@ -2003,7 +2024,12 @@ const lastGearAnnouncerPriorities = {
   lastLife: 4,
   finalTwo: 5,
   suddenDeath: 6,
-  winner: 7
+  winner: 7,
+  comeback: 4,
+  edgeSave: 4,
+  crowdChaos: 2,
+  underdog: 3,
+  koStreak: 5
 };
 const lastGearAnnouncerLabels = {
   matchStart: "Match Start",
@@ -2015,20 +2041,31 @@ const lastGearAnnouncerLabels = {
   lastLife: "Last Life",
   finalTwo: "Final Two",
   suddenDeath: "Sudden Death",
-  winner: "Winner"
+  winner: "Winner",
+  comeback: "Comeback",
+  edgeSave: "Edge Save",
+  crowdChaos: "Crowd Chaos",
+  underdog: "Underdog",
+  koStreak: "KO Streak"
 };
 const lastGearAnnouncerLines = {
-  matchStart: ["Eight GearBorn enter. One leaves rolling.", "Welcome to Last Gear!", "This arena's about to get loud!"],
-  bigHit: ["THAT'S gonna leave a dent!", "Massive contact!", "Somebody felt that one!"],
-  tBone: ["SIDE IMPACT!", "Clean T-bone connection!", "That hit came outta nowhere!"],
-  headOn: ["FULL FRONTAL COLLISION!", "Neither driver backed down!", "That's pure GearBorn insanity!"],
-  firstGearOut: ["And our first GearBorn is OUTTA HERE!", "One down - seven remain!", "The arena claims its first victim!"],
-  gearOut: ["Another GearBorn is gone!", "That ride is out of the running!", "The platform shows no mercy!"],
-  lastLife: ["Player's hanging on by one life!", "No room for mistakes now!", "This is where legends survive!"],
-  finalTwo: ["We are DOWN TO TWO!", "One final showdown!", "Everything comes down to this!"],
-  suddenDeath: ["The arena's collapsing!", "Nowhere left to hide!", "Sudden Death has begun!"],
-  winner: ["WHAT. A. FINISH.", "Last Gear champion!", "Only one GearBorn survives!"]
+  matchStart: ["We got ourselves a HOT race tonight, BABY!", "Eight GearBorn enter. One leaves rolling!", "Welcome to LAST GEAR!"],
+  bigHit: ["DIOS MIO! Did you SEE that hit?!", "Somebody felt THAT one!", "That was FAST. VIOLENT. BEAUTIFUL."],
+  tBone: ["SIDE IMPACT!", "That was CLEAN. TOO clean!", "OOOOHHHH they got DESTROYED!"],
+  headOn: ["Neither GearBorn backed down!", "FULL FRONTAL COLLISION!", "That was PURE chaos, baby!"],
+  firstGearOut: ["And our first GearBorn is OUTTA HERE!", "One down - seven remain!", "Off the edge! OFF THE EDGE!"],
+  gearOut: ["GEAR OUT!", "Off the platform and OUTTA HERE!", "The arena claims another victim!"],
+  lastLife: ["No room for mistakes now!", "One life left, baby!", "This just got dangerous!"],
+  finalTwo: ["This is what Last Gear is ALL about, baby.", "One mistake decides EVERYTHING!", "You can FEEL this arena holding its breath!"],
+  suddenDeath: ["The arena is COLLAPSING!", "NOWHERE LEFT TO HIDE!", "This is absolute madness!"],
+  winner: ["THAT'S YOUR CHAMPION!", "Only ONE GearBorn survives!", "WHAT. A. PERFORMANCE."],
+  comeback: ["HOW are they still alive?!", "That GearBorn REFUSES to quit!", "One life left and still fighting!"],
+  edgeSave: ["DIOS MIO! I thought they were GONE!", "They SAVED IT!", "That was impossible!"],
+  crowdChaos: ["YOU HEAR THIS CROWD?!", "This arena is TURNING INTO CHAOS!", "NOBODY'S BACKING DOWN!"],
+  underdog: ["You can't measure courage with stats, baby!", "Everybody counted them out!", "Smaller GearBorn. Bigger heart!"],
+  koStreak: ["They are TAKING OVER this arena!", "Somebody stop this machine!", "That GearBorn came here with a mission!"]
 };
+const lastGearComboCalls = ["OOOOHHHH! DIOS MIO!", "Off the edge! OFF THE EDGE!", "They got clipped THEY GOT CLIPPED!"];
 const lastGearSpecialMoves = {
   default: { name: "Side Shunt", cooldown: 4500, effect: "shunt" },
   baybee: { name: "Pollen Burst", cooldown: 5000, effect: "burst", description: "Releases a stunning pollen cloud in front of the car" },
@@ -2049,19 +2086,68 @@ function lastGearLocalNow() {
   return performance.now() - (lastGearState?.startedAt || performance.now());
 }
 
+function lastGearCurrentSettings() {
+  return lastGearState?.settings || lastGearSetupConfig;
+}
+
 function lastGearActiveRadius(now = lastGearLocalNow()) {
   if (!lastGearState?.suddenDeath) return lastGearArena.radius;
   const progress = (now - (lastGearState.suddenDeathStartedAt || now)) / lastGearSuddenDeath.shrinkDurationMs;
   return lastGearLerp(lastGearArena.radius, lastGearSuddenDeath.minRadius, progress);
 }
 
+function lastGearShapeScale(now = lastGearLocalNow()) {
+  return lastGearActiveRadius(now) / lastGearArena.radius;
+}
+
+function lastGearShape() {
+  return lastGearCurrentSettings().arena || lastGearArena.shape || "circle";
+}
+
+function lastGearShapeBoundary(x, y, now = lastGearLocalNow()) {
+  const shape = lastGearShape();
+  const radius = lastGearActiveRadius(now);
+  const dx = x - lastGearArena.cx;
+  const dy = y - lastGearArena.cy;
+  const dist = Math.hypot(dx, dy) || 1;
+  if (shape === "square") {
+    const half = radius * 0.82;
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    const edge = Math.max(ax, ay) / half;
+    const nx = ax >= ay ? Math.sign(dx || 1) : 0;
+    const ny = ay > ax ? Math.sign(dy || 1) : 0;
+    return { safe: ax <= half && ay <= half, edge, nx, ny, radius };
+  }
+  if (shape === "donut") {
+    const inner = radius * 0.34;
+    const outerEdge = dist / radius;
+    const innerEdge = inner / dist;
+    const unsafeHole = dist < inner;
+    return { safe: dist <= radius && !unsafeHole, edge: Math.max(outerEdge, innerEdge), nx: dx / dist * (unsafeHole ? -1 : 1), ny: dy / dist * (unsafeHole ? -1 : 1), radius, inner };
+  }
+  if (shape === "bridge") {
+    const halfLength = radius * 0.86;
+    const halfWidth = radius * 0.24;
+    const closestX = lastGearClamp(dx, -halfLength, halfLength);
+    const closestDistX = dx - closestX;
+    const capDist = Math.hypot(closestDistX, dy) || 1;
+    const corridorDist = Math.abs(dy);
+    const onStraight = Math.abs(dx) <= halfLength;
+    const edge = onStraight ? corridorDist / halfWidth : capDist / halfWidth;
+    const nx = onStraight ? 0 : closestDistX / capDist;
+    const ny = onStraight ? Math.sign(dy || 1) : dy / capDist;
+    return { safe: edge <= 1, edge, nx, ny, radius, halfLength, halfWidth };
+  }
+  return { safe: dist <= radius, edge: dist / radius, nx: dx / dist, ny: dy / dist, radius };
+}
+
 function lastGearEdgeIntensity(now = lastGearLocalNow()) {
   if (!lastGearState) return 0;
-  const radius = lastGearActiveRadius(now);
   let intensity = lastGearState.suddenDeath ? 0.28 : 0;
   lastGearLiveCars().forEach((car) => {
-    const distance = lastGearDistanceFromCenter(car);
-    const edge = lastGearClamp((distance - radius * 0.7) / (radius * 0.3), 0, 1);
+    const boundary = lastGearShapeBoundary(car.x, car.y, now);
+    const edge = lastGearClamp((boundary.edge - 0.7) / 0.3, 0, 1);
     intensity = Math.max(intensity, edge * (car.player ? 1 : 0.55));
   });
   return lastGearClamp(intensity, 0, 1);
@@ -2088,12 +2174,29 @@ function lastGearDistanceFromCenter(car) {
 
 function lastGearSafePoint(index = Math.random() * 8) {
   const angle = (Math.PI * 2 * index) / 8 - Math.PI / 2;
+  const shape = lastGearShape();
   const radius = lastGearActiveRadius() * 0.58;
-  return {
-    x: lastGearArena.cx + Math.cos(angle) * radius,
-    y: lastGearArena.cy + Math.sin(angle) * radius,
-    angle: Math.atan2(lastGearArena.cy - (lastGearArena.cy + Math.sin(angle) * radius), lastGearArena.cx - (lastGearArena.cx + Math.cos(angle) * radius))
-  };
+  if (shape === "square") {
+    const half = lastGearActiveRadius() * 0.5;
+    const x = lastGearArena.cx + Math.cos(angle) * half;
+    const y = lastGearArena.cy + Math.sin(angle) * half;
+    return { x, y, angle: Math.atan2(lastGearArena.cy - y, lastGearArena.cx - x) };
+  }
+  if (shape === "bridge") {
+    const lane = (index % 2 ? -1 : 1) * lastGearActiveRadius() * 0.11;
+    const x = lastGearArena.cx + Math.cos(angle) * lastGearActiveRadius() * 0.52;
+    const y = lastGearArena.cy + lane;
+    return { x, y, angle: Math.atan2(lastGearArena.cy - y, lastGearArena.cx - x) };
+  }
+  if (shape === "donut") {
+    const donutRadius = lastGearActiveRadius() * 0.62;
+    const x = lastGearArena.cx + Math.cos(angle) * donutRadius;
+    const y = lastGearArena.cy + Math.sin(angle) * donutRadius;
+    return { x, y, angle: Math.atan2(lastGearArena.cy - y, lastGearArena.cx - x) };
+  }
+  const x = lastGearArena.cx + Math.cos(angle) * radius;
+  const y = lastGearArena.cy + Math.sin(angle) * radius;
+  return { x, y, angle: Math.atan2(lastGearArena.cy - y, lastGearArena.cx - x) };
 }
 
 function lastGearRatingsFor(carId, player = false) {
@@ -2190,8 +2293,30 @@ function openLastGearCarSelect() {
   openCarPicker("lastgear");
 }
 
+function readLastGearSetupConfig() {
+  const suddenSeconds = Number(el.lastGearSetupSudden?.value ?? 180);
+  lastGearSetupConfig = {
+    lives: Number(el.lastGearSetupLives?.value || 3),
+    arena: el.lastGearSetupArena?.value || "circle",
+    suddenDeathSeconds: Number.isFinite(suddenSeconds) && suddenSeconds > 0 ? suddenSeconds : 0,
+    items: el.lastGearSetupItems?.value || "normal",
+    aiDifficulty: el.lastGearSetupAi?.value || "normal"
+  };
+  lastGearArena.shape = lastGearSetupConfig.arena;
+  return lastGearSetupConfig;
+}
+
+function toggleLastGearSetupPanel(show = true) {
+  if (!el.lastGearSetupPanel) {
+    openLastGearCarSelect();
+    return;
+  }
+  el.lastGearSetupPanel.hidden = !show;
+}
+
 function startLastGearBeta() {
   if (!el.lastGearCanvas) return;
+  const settings = { ...readLastGearSetupConfig() };
   stopBetaDemo(false);
   stopBeta3d(false);
   showBetaScreen("last-gear-beta");
@@ -2203,6 +2328,7 @@ function startLastGearBeta() {
     active: true,
     finished: false,
     countdownUntil: performance.now() + 3000,
+    settings,
     cars,
     itemBoxes: lastGearInitialItemBoxes(),
     hazards: [],
@@ -2218,12 +2344,25 @@ function startLastGearBeta() {
     playerLastLifeCalled: false,
     announcer: null,
     announcerLastAt: {},
+    announcerLastLine: {},
+    crowdIntensity: 0,
+    stats: {
+      playerKOs: 0,
+      playerRingOuts: 0,
+      biggestHit: 0,
+      damageDealt: 0,
+      itemUses: {},
+      startedAt: performance.now(),
+      finishTime: 0
+    },
     debug: false,
     last: performance.now(),
     raf: null,
     statusRenderAt: 0,
     itemSpawnAt: 2500
   };
+  cars.forEach((car) => { car.lives = settings.lives; });
+  lastGearState.itemBoxes = lastGearInitialItemBoxes();
   lastGearCamera.x = lastGearArena.cx;
   lastGearCamera.y = lastGearArena.cy;
   Object.keys(lastGearKeys).forEach((key) => delete lastGearKeys[key]);
@@ -2254,19 +2393,21 @@ function resizeLastGearBeta() {
 }
 
 function lastGearInitialItemBoxes() {
-  return Array.from({ length: 5 }, (_, index) => lastGearSpawnBox(index));
+  const cadence = lastGearItemCadence[lastGearCurrentSettings().items] || lastGearItemCadence.normal;
+  return Array.from({ length: cadence.boxes }, (_, index) => lastGearSpawnBox(index));
 }
 
 function lastGearSpawnBox(index = 0) {
-  const angle = (Math.PI * 2 * (index + Math.random() * 0.35)) / 5;
-  const radius = lastGearActiveRadius() * (0.24 + Math.random() * 0.46);
-  return {
-    id: `lg-box-${Date.now()}-${index}-${Math.random()}`,
-    x: lastGearArena.cx + Math.cos(angle) * radius,
-    y: lastGearArena.cy + Math.sin(angle) * radius,
-    active: true,
-    respawnAt: 0
-  };
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const angle = (Math.PI * 2 * (index + Math.random() * 0.35 + attempt * 0.17)) / Math.max(5, (lastGearItemCadence[lastGearCurrentSettings().items] || lastGearItemCadence.normal).boxes || 5);
+    const radius = lastGearActiveRadius() * (0.24 + Math.random() * 0.46);
+    const x = lastGearArena.cx + Math.cos(angle) * radius;
+    const y = lastGearArena.cy + Math.sin(angle) * radius;
+    if (!lastGearShapeBoundary(x, y).safe) continue;
+    return { id: `lg-box-${Date.now()}-${index}-${Math.random()}`, x, y, active: true, respawnAt: 0 };
+  }
+  const point = lastGearSafePoint(index);
+  return { id: `lg-box-${Date.now()}-${index}-${Math.random()}`, x: point.x, y: point.y, active: true, respawnAt: 0 };
 }
 
 function lastGearPlayer() {
@@ -2335,18 +2476,26 @@ function lastGearAnnounce(eventKey, options = {}) {
   const priority = lastGearAnnouncerPriorities[eventKey] || 1;
   const currentPriority = lastGearState.announcer?.priority || 0;
   const lastAt = lastGearState.announcerLastAt[eventKey] || -Infinity;
-  if (!options.force && now - lastAt < (options.cooldown || 2400)) return;
+  const randomDelay = 0.85 + Math.random() * 0.35;
+  if (!options.force && now - lastAt < (options.cooldown || 2400) * randomDelay) return;
   if (!options.force && lastGearState.announcer?.until > now && priority < currentPriority) return;
-  const line = options.line || lastGearChooseLine(lastGearAnnouncerLines[eventKey]);
+  let pool = lastGearAnnouncerLines[eventKey] || [];
+  const previousLine = lastGearState.announcerLastLine?.[eventKey];
+  if (pool.length > 1) pool = pool.filter((line) => line !== previousLine);
+  let line = options.line || lastGearChooseLine(pool);
+  if (!options.line && priority >= 5 && Math.random() < 0.22) line = lastGearChooseLine(lastGearComboCalls);
   lastGearState.announcer = {
     eventKey,
     label: options.label || lastGearAnnouncerLabels[eventKey] || "Last Gear",
     line,
     priority,
     major: Boolean(options.major || priority >= 4),
-    until: now + (options.duration || (priority >= 4 ? lastGearAnnouncerDurations.major : lastGearAnnouncerDurations.default))
+    legendary: Boolean(options.legendary || priority >= 5),
+    until: now + (options.duration || (priority >= 4 ? lastGearAnnouncerDurations.major : lastGearAnnouncerDurations.default)) + Math.random() * 260
   };
   lastGearState.announcerLastAt[eventKey] = now;
+  lastGearState.announcerLastLine[eventKey] = line;
+  lastGearState.crowdIntensity = lastGearClamp((lastGearState.crowdIntensity || 0) + priority * 0.08, 0, 1);
   if (priority >= 4) lastGearState.shake = Math.max(lastGearState.shake || 0, 5);
   lastGearRenderAnnouncer(now);
 }
@@ -2357,6 +2506,7 @@ function lastGearRenderAnnouncer(now = lastGearLocalNow()) {
   const active = Boolean(call && call.until > now);
   el.lastGearAnnouncer.hidden = !active;
   el.lastGearAnnouncer.classList.toggle("major", Boolean(active && call.major));
+  el.lastGearAnnouncer.classList.toggle("legendary", Boolean(active && call.legendary));
   if (!active) return;
   if (el.lastGearAnnouncerEvent) el.lastGearAnnouncerEvent.textContent = call.label;
   if (el.lastGearAnnouncerLine) el.lastGearAnnouncerLine.textContent = call.line;
@@ -2381,15 +2531,15 @@ function lastGearSpawnParticle(kind, x, y, angle, speed, ttl, size, tint = "#ffc
 
 function lastGearSpawnImpactFx(x, y, nx, ny, impact, type = "hit") {
   const angle = Math.atan2(ny, nx);
-  const sparkCount = impact > 155 ? 12 : 7;
+  const sparkCount = impact > lastGearImpactTuning.legendary ? 22 : impact > lastGearImpactTuning.major ? 14 : 7;
   for (let i = 0; i < sparkCount; i += 1) {
     lastGearSpawnParticle("spark", x, y, angle + (Math.random() - 0.5) * 1.6, 180 + Math.random() * 260, 260 + Math.random() * 220, 18 + Math.random() * 18, type === "tbone" ? "#52c7ff" : "#ffc857");
   }
-  for (let i = 0; i < 5; i += 1) {
+  for (let i = 0; i < (impact > lastGearImpactTuning.major ? 9 : 5); i += 1) {
     lastGearSpawnParticle("smoke", x, y, angle + Math.PI + (Math.random() - 0.5) * 1.1, 40 + Math.random() * 110, 460 + Math.random() * 320, 34 + Math.random() * 26, "#d6d0c4");
   }
-  if (impact > 170) {
-    for (let i = 0; i < 3; i += 1) {
+  if (impact > lastGearImpactTuning.major) {
+    for (let i = 0; i < (impact > lastGearImpactTuning.legendary ? 6 : 3); i += 1) {
       lastGearSpawnParticle("streak", x - nx * 18, y - ny * 18, angle + Math.PI + (Math.random() - 0.5) * 0.24, 70 + Math.random() * 90, 280 + Math.random() * 180, 95 + Math.random() * 35, "#52c7ff");
     }
   }
@@ -2398,14 +2548,19 @@ function lastGearSpawnImpactFx(x, y, nx, ny, impact, type = "hit") {
 function lastGearTriggerImpactFeedback(impact, x, y, nx, ny, type = "hit") {
   if (!lastGearState) return;
   lastGearSpawnImpactFx(x, y, nx, ny, impact, type);
-  if (impact > 128) {
-    lastGearState.hitPauseUntil = Math.max(lastGearState.hitPauseUntil || 0, lastGearLocalNow() + lastGearClamp(impact * 0.42, 38, 118));
-    lastGearState.shake = Math.max(lastGearState.shake || 0, lastGearClamp(impact / 13, 5, 22));
+  if (impact > lastGearImpactTuning.minor) {
+    lastGearState.shake = Math.max(lastGearState.shake || 0, lastGearClamp(impact / lastGearImpactTuning.shakeDivisor, 5, 30));
     lastGearPlaySound(type === "headOn" ? "battle-stun" : "battle-hit");
+  }
+  if (impact > lastGearImpactTuning.major) {
+    lastGearState.hitPauseUntil = Math.max(lastGearState.hitPauseUntil || 0, lastGearLocalNow() + lastGearClamp(impact * 0.36, lastGearImpactTuning.hitstopMin, lastGearImpactTuning.hitstopMax));
+    const word = type === "headOn" ? "HEAD-ON" : type === "tbone" ? "T-BONE" : impact > lastGearImpactTuning.legendary ? "OOOHHHH!" : "BIG HIT";
+    lastGearState.effects.push({ kind: "impactWord", x, y: y - 82, vx: 0, vy: -28, ttl: 780, life: 780, text: word, size: impact > lastGearImpactTuning.legendary ? 44 : 32, tint: type === "tbone" ? "#52c7ff" : "#ffc857", angle: 0, spin: 0 });
   }
   if (type === "headOn" && impact > 145) lastGearAnnounce("headOn", { major: true, cooldown: 3200 });
   else if (type === "tbone" && impact > 138) lastGearAnnounce("tBone", { major: true, cooldown: 3000 });
   else if (impact > 160) lastGearAnnounce("bigHit", { cooldown: 2200 });
+  if (impact > lastGearImpactTuning.legendary && Math.random() < 0.5) lastGearAnnounce("crowdChaos", { cooldown: 3400 });
 }
 
 function lastGearAiControls(car) {
@@ -2430,16 +2585,18 @@ function lastGearAiControls(car) {
   const delta = betaNormalizeAngle(desired - car.angle);
   const speed = Math.hypot(car.vx, car.vy);
   const aggression = (lastGearState?.suddenDeath ? 1.65 : 1) * (liveCount <= 2 ? 1.35 : 1);
+  const difficultyAggression = lastGearCurrentSettings().aiDifficulty === "aggro" ? 1.45 : lastGearCurrentSettings().aiDifficulty === "chill" ? 0.72 : 1;
   const itemChance = car.archetype === "Trickster" ? 0.036 : 0.018;
-  const nitroBias = car.archetype === "Speedster" ? 1.45 : car.archetype === "Defender" ? 0.62 : 1;
-  if (car.item && !nearEdge && Math.random() < itemChance * aggression) lastGearUseItem(car);
-  if (!nearEdge && target.id && Math.hypot(target.x - car.x, target.y - car.y) < 190 && Math.random() < 0.011 * aggression) lastGearUseSpecial(car);
+  const nitroBias = car.archetype === "Speedster" ? 1.85 : car.archetype === "Aggro" ? 1.35 : car.archetype === "Defender" ? 0.5 : 1;
+  if (car.item && !nearEdge && Math.random() < itemChance * aggression * difficultyAggression) lastGearUseItem(car);
+  if (!nearEdge && target.id && Math.hypot(target.x - car.x, target.y - car.y) < 190 && Math.random() < 0.011 * aggression * difficultyAggression) lastGearUseSpecial(car);
+  const cautious = car.archetype === "Coward" && liveCount > 4 || car.archetype === "Defender";
   return {
-    up: !nearEdge || speed < car.physics.maxSpeed * (car.archetype === "Coward" ? 0.5 : 0.66),
+    up: (!nearEdge || speed < car.physics.maxSpeed * (cautious ? 0.48 : 0.68)) && !(car.archetype === "Tank" && speed > car.physics.maxSpeed * 0.58),
     down: nearEdge && speed > car.physics.maxSpeed * 0.4,
     left: delta < -0.08,
     right: delta > 0.08,
-    nitro: !nearEdge && Math.abs(delta) < 0.28 && speed > car.physics.maxSpeed * 0.38 && Math.random() < 0.62 * nitroBias * aggression
+    nitro: !nearEdge && Math.abs(delta) < 0.28 && speed > car.physics.maxSpeed * 0.38 && Math.random() < 0.62 * nitroBias * aggression * difficultyAggression
   };
 }
 
@@ -2486,15 +2643,17 @@ function lastGearUpdateCar(car, dt, now) {
   car.prevY = car.y;
   car.x += car.vx * dt;
   car.y += car.vy * dt;
-  const activeRadius = lastGearActiveRadius(now);
-  const distanceFromCenter = lastGearDistanceFromCenter(car);
-  if (distanceFromCenter > activeRadius - 22 && distanceFromCenter < activeRadius + 42 && Math.random() < 0.18) {
-    const nx = (car.x - lastGearArena.cx) / (distanceFromCenter || 1);
-    const ny = (car.y - lastGearArena.cy) / (distanceFromCenter || 1);
+  const boundary = lastGearShapeBoundary(car.x, car.y, now);
+  if (boundary.edge > 0.96 && boundary.edge < 1.08 && Math.random() < 0.18) {
+    const nx = boundary.nx || ((car.x - lastGearArena.cx) / (lastGearDistanceFromCenter(car) || 1));
+    const ny = boundary.ny || ((car.y - lastGearArena.cy) / (lastGearDistanceFromCenter(car) || 1));
     lastGearSpawnParticle("spark", car.x - nx * 12, car.y - ny * 12, Math.atan2(ny, nx) + Math.PI + (Math.random() - 0.5), 90 + Math.random() * 130, 240 + Math.random() * 170, 14 + Math.random() * 14, "#ff8c26");
     if (car.player) lastGearState.shake = Math.max(lastGearState.shake || 0, 2.5);
   }
-  if (distanceFromCenter > activeRadius + 42) lastGearLoseLife(car, now);
+  if (car.player && boundary.safe && boundary.edge > 0.92 && Math.hypot(car.vx, car.vy) > 160 && Math.random() < 0.016) {
+    lastGearAnnounce("edgeSave", { major: true, cooldown: 5200 });
+  }
+  if (!boundary.safe && boundary.edge > 1.04) lastGearLoseLife(car, now);
 }
 
 function lastGearLoseLife(car, now) {
@@ -2504,6 +2663,7 @@ function lastGearLoseLife(car, now) {
   const ny = (car.y - lastGearArena.cy) / distance;
   lastGearState.ringFlashes.push({ x: car.x, y: car.y, radius: lastGearActiveRadius(now), ttl: 720, life: 720 });
   lastGearTriggerImpactFeedback(185, car.x, car.y, nx, ny, "ringout");
+  if (car.player) lastGearState.stats.playerRingOuts += 1;
   car.lives -= 1;
   car.damage = 0;
   car.item = null;
@@ -2516,6 +2676,10 @@ function lastGearLoseLife(car, now) {
     car.eliminated = true;
     car.vx = 0;
     car.vy = 0;
+    if (car.lastHitBy === "player" && now - (car.lastHitAt || 0) < 4500) {
+      lastGearState.stats.playerKOs += 1;
+      lastGearAnnounce(lastGearState.stats.playerKOs >= 2 ? "koStreak" : "gearOut", { major: lastGearState.stats.playerKOs >= 2, cooldown: 1200 });
+    }
     if (!lastGearState.firstEliminationCalled) {
       lastGearState.firstEliminationCalled = true;
       lastGearAnnounce("firstGearOut", { major: true, force: true });
@@ -2585,14 +2749,51 @@ function lastGearApplyHit(receiver, attacker, impact, nx, ny, now) {
     receiver.hitFlashUntil = now + 180;
     return;
   }
+  const adjustedImpact = impact * (attacker?.archetype === "Tank" ? 1.14 : attacker?.archetype === "Aggro" ? 1.06 : 1);
   const bodyReducer = lastGearClamp(1 - (receiver.physics.body - 70) / 180, 0.48, 1.35);
-  const damage = Math.max(1, impact / 18) * bodyReducer;
+  const damage = Math.max(1, adjustedImpact / 18) * bodyReducer;
   receiver.damage = Math.min(999, receiver.damage + damage);
-  const knock = (impact * 0.78 + receiver.damage * 2.1) / receiver.physics.mass;
+  receiver.lastHitBy = attacker?.id || null;
+  receiver.lastHitAt = now;
+  if (attacker?.player && lastGearState?.stats) {
+    lastGearState.stats.damageDealt += damage;
+    lastGearState.stats.biggestHit = Math.max(lastGearState.stats.biggestHit, adjustedImpact);
+  }
+  if (receiver.player && receiver.lives <= 1 && receiver.damage > 90) {
+    lastGearAnnounce("comeback", { major: true, cooldown: 5200 });
+  }
+  if (receiver.player && receiver.damage > 150 && Math.random() < 0.08) {
+    lastGearAnnounce("underdog", { cooldown: 7000 });
+  }
+  lastGearSpawnDamagePopup(receiver.x, receiver.y, damage, adjustedImpact);
+  const knock = (adjustedImpact * 0.78 + receiver.damage * 2.1) / receiver.physics.mass;
   receiver.vx += nx * knock;
   receiver.vy += ny * knock;
+  if (adjustedImpact > lastGearImpactTuning.major) {
+    for (let i = 0; i < 3; i += 1) {
+      lastGearSpawnParticle("streak", receiver.x - nx * 18, receiver.y - ny * 18, Math.atan2(ny, nx) + Math.PI + (Math.random() - 0.5) * 0.18, 90 + Math.random() * 90, 260 + Math.random() * 160, 86 + Math.random() * 34, "#52c7ff");
+    }
+  }
   receiver.hitFlashUntil = now + 220;
   if (attacker) attacker.hitFlashUntil = now + 120;
+}
+
+function lastGearSpawnDamagePopup(x, y, damage, impact) {
+  if (!lastGearState) return;
+  lastGearState.effects.push({
+    kind: "text",
+    x,
+    y: y - 42,
+    vx: (Math.random() - 0.5) * 35,
+    vy: -46,
+    ttl: 720,
+    life: 720,
+    text: `+${Math.round(damage)}%`,
+    size: impact > lastGearImpactTuning.major ? 26 : 18,
+    tint: impact > lastGearImpactTuning.major ? "#ffc857" : "#ffffff",
+    angle: 0,
+    spin: 0
+  });
 }
 
 function lastGearUseItem(car = lastGearPlayer()) {
@@ -2600,6 +2801,9 @@ function lastGearUseItem(car = lastGearPlayer()) {
   const now = performance.now() - (lastGearState.startedAt || performance.now());
   const item = car.item;
   car.item = null;
+  if (car.player && lastGearState?.stats) {
+    lastGearState.stats.itemUses[item.id] = (lastGearState.stats.itemUses[item.id] || 0) + 1;
+  }
   if (item.id === "shield") {
     car.shieldHits = 1;
   } else if (item.id === "teleport") {
@@ -2697,7 +2901,9 @@ function lastGearUpdateItems(dt, now) {
       if (Math.hypot(car.x - box.x, car.y - box.y) > 42) return;
       car.item = lastGearRandomItem();
       box.active = false;
-      box.respawnAt = now + (lastGearState.suddenDeath ? 2800 : 4500) + Math.random() * (lastGearState.suddenDeath ? 1400 : 2500);
+      const cadence = lastGearItemCadence[lastGearCurrentSettings().items] || lastGearItemCadence.normal;
+      const speedup = lastGearState.suddenDeath ? 0.62 : 1;
+      box.respawnAt = now + cadence.respawn * speedup + Math.random() * cadence.variance * speedup;
     });
   });
   lastGearState.hazards = lastGearState.hazards.filter((hazard) => hazard.expiresAt > now);
@@ -2744,7 +2950,9 @@ function lastGearUpdateEffects(dt) {
 }
 
 function lastGearUpdateSuddenDeath(now) {
-  if (!lastGearState || lastGearState.suddenDeath || now < lastGearSuddenDeath.startMs) return;
+  const seconds = Number(lastGearCurrentSettings().suddenDeathSeconds || 0);
+  const triggerAt = seconds > 0 ? seconds * 1000 : Infinity;
+  if (!lastGearState || lastGearState.suddenDeath || now < triggerAt) return;
   lastGearState.suddenDeath = true;
   lastGearState.suddenDeathStartedAt = now;
   lastGearState.ringFlashes.push({ x: lastGearArena.cx, y: lastGearArena.cy, radius: lastGearArena.radius, ttl: 1200, life: 1200 });
@@ -2802,15 +3010,43 @@ function updateLastGearBeta(now) {
 function finishLastGearBeta(playerWon) {
   if (!lastGearState || lastGearState.finished) return;
   lastGearState.finished = true;
+  lastGearState.stats.finishTime = performance.now();
   if (lastGearState.raf) cancelAnimationFrame(lastGearState.raf);
-  lastGearAnnounce("winner", { major: true, force: true, line: playerWon ? "WHAT. A. FINISH." : "Only one GearBorn survives!", duration: 5200 });
+  const finalCall = lastGearChooseLine(lastGearAnnouncerLines.winner);
+  lastGearAnnounce("winner", { major: true, force: true, line: finalCall, duration: 5200, legendary: true });
   lastGearPlaySound(playerWon ? "win-jingle" : "lose-jingle");
   setTimeout(() => {
     if (lastGearState?.finished) lastGearRenderAnnouncer(Infinity);
   }, 5300);
   if (el.lastGearResultTitle) el.lastGearResultTitle.textContent = playerWon ? "Last Gear Winner!" : "Eliminated";
-  if (el.lastGearResultCopy) el.lastGearResultCopy.textContent = playerWon ? "You were the last GearBorn on the platform." : "Another GearBorn survived the arena.";
+  if (el.lastGearResultCopy) el.lastGearResultCopy.innerHTML = lastGearResultsMarkup(finalCall);
   if (el.lastGearResults) el.lastGearResults.hidden = false;
+}
+
+function lastGearResultsMarkup(finalCall) {
+  const player = lastGearPlayer();
+  const winner = lastGearLiveCars()[0] || lastGearState.cars.find((car) => !car.eliminated) || player;
+  const eliminatedBeforePlayer = lastGearState.cars.filter((car) => car.eliminated && !car.player).length;
+  const placement = player?.eliminated ? Math.max(2, 8 - eliminatedBeforePlayer) : 1;
+  const stats = lastGearState.stats;
+  const survivalMs = (stats.finishTime || performance.now()) - stats.startedAt;
+  const itemEntry = Object.entries(stats.itemUses || {}).sort((a, b) => b[1] - a[1])[0];
+  const favoriteItem = itemEntry ? (betaItemDefinitions.find((item) => item.id === itemEntry[0])?.name || itemEntry[0]) : "None";
+  return `
+    <div class="last-gear-result-card">
+      <p class="last-gear-result-call">${finalCall}</p>
+      <div class="last-gear-result-stats">
+        <p><span>Placement</span><strong>#${placement}</strong></p>
+        <p><span>Winner</span><strong>${winner?.name || "Unknown"}</strong></p>
+        <p><span>Player KOs</span><strong>${stats.playerKOs}</strong></p>
+        <p><span>Ring-Outs Taken</span><strong>${stats.playerRingOuts}</strong></p>
+        <p><span>Biggest Hit</span><strong>${Math.round(stats.biggestHit)}</strong></p>
+        <p><span>Survival Time</span><strong>${Math.round(survivalMs / 1000)}s</strong></p>
+        <p><span>Damage Dealt</span><strong>${Math.round(stats.damageDealt)}%</strong></p>
+        <p><span>Favorite Item</span><strong>${favoriteItem}</strong></p>
+      </div>
+    </div>
+  `;
 }
 
 function drawLastGearFrame() {
@@ -2891,44 +3127,75 @@ function drawLastGearArena(ctx) {
   const { cx, cy } = lastGearArena;
   const now = lastGearLocalNow();
   const radius = lastGearActiveRadius(now);
-  const platformImg = lastGearImages.platform;
+  const shape = lastGearShape();
+  const platformImg = shape === "circle" && lastGearImages.platform?.complete && lastGearImages.platform.naturalWidth > 0
+    ? lastGearImages.platform
+    : lastGearImages.arenas?.[shape];
   if (platformImg?.complete && platformImg.naturalWidth > 0) {
     const size = lastGearArena.radius * 2.2;
     ctx.drawImage(platformImg, cx - size / 2, cy - size / 2, size, size);
   } else {
-    const gradient = ctx.createRadialGradient(cx, cy - 30, radius * 0.12, cx, cy, radius);
-    gradient.addColorStop(0, "#38425a");
-    gradient.addColorStop(0.72, "#1b2333");
-    gradient.addColorStop(1, "#090d15");
-    ctx.save();
-    ctx.shadowColor = "rgba(82,199,255,0.58)";
-    ctx.shadowBlur = 28;
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
+    drawLastGearProceduralArena(ctx, shape, radius);
+  }
+  drawLastGearWarningRim(ctx, radius, now);
+}
+
+function drawLastGearProceduralArena(ctx, shape, radius) {
+  const { cx, cy } = lastGearArena;
+  // Future Last Gear arena art can replace these procedural paths per shape.
+  ctx.save();
+  ctx.shadowColor = "rgba(82,199,255,0.48)";
+  ctx.shadowBlur = 26;
+  ctx.fillStyle = "rgba(23, 32, 46, 0.96)";
+  ctx.strokeStyle = "rgba(255,200,87,0.68)";
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  if (shape === "square") {
+    const half = radius * 0.82;
+    ctx.roundRect(cx - half, cy - half, half * 2, half * 2, 34);
+  } else if (shape === "donut") {
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = "rgba(255,200,87,0.64)";
-    ctx.stroke();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(82,199,255,0.55)";
-    ctx.stroke();
-    ctx.restore();
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    for (let r = 70; r < radius; r += 58) {
+    ctx.moveTo(cx + radius * 0.34, cy);
+    ctx.arc(cx, cy, radius * 0.34, 0, Math.PI * 2, true);
+  } else if (shape === "bridge") {
+    const halfLength = radius * 0.86;
+    const halfWidth = radius * 0.24;
+    ctx.roundRect(cx - halfLength, cy - halfWidth, halfLength * 2, halfWidth * 2, halfWidth);
+  } else {
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  }
+  ctx.fill("evenodd");
+  ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "rgba(82,199,255,0.58)";
+  ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 3;
+  if (shape === "bridge") {
+    for (let x = cx - radius * 0.7; x <= cx + radius * 0.7; x += 120) {
+      ctx.beginPath();
+      ctx.moveTo(x, cy - radius * 0.2);
+      ctx.lineTo(x, cy + radius * 0.2);
+      ctx.stroke();
+    }
+  } else {
+    for (let r = 90; r < radius; r += 90) {
+      if (shape === "donut" && r < radius * 0.38) continue;
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
-  drawLastGearWarningRim(ctx, radius, now);
+  ctx.restore();
 }
 
 function drawLastGearWarningRim(ctx, radius, now) {
   const danger = lastGearEdgeIntensity(now);
   const pulse = 0.65 + Math.sin(performance.now() / (lastGearState?.suddenDeath ? 95 : 180)) * 0.35;
   const intensity = lastGearClamp(danger * 0.72 + (lastGearState?.suddenDeath ? 0.38 : 0), 0, 1);
-  const rimImg = lastGearImages.warningRim;
+  const rimImg = lastGearImages.warningRims?.[lastGearShape()];
   ctx.save();
   ctx.globalCompositeOperation = "screen";
   ctx.globalAlpha = 0.18 + intensity * (0.38 + pulse * 0.22);
@@ -2939,7 +3206,21 @@ function drawLastGearWarningRim(ctx, radius, now) {
     ctx.lineWidth = 12 + intensity * 12;
     ctx.strokeStyle = `rgba(255, ${Math.round(128 + intensity * 72)}, 38, ${0.45 + intensity * 0.35})`;
     ctx.beginPath();
-    ctx.arc(lastGearArena.cx, lastGearArena.cy, radius, 0, Math.PI * 2);
+    const shape = lastGearShape();
+    if (shape === "square") {
+      const half = radius * 0.82;
+      ctx.roundRect(lastGearArena.cx - half, lastGearArena.cy - half, half * 2, half * 2, 34);
+    } else if (shape === "bridge") {
+      const halfLength = radius * 0.86;
+      const halfWidth = radius * 0.24;
+      ctx.roundRect(lastGearArena.cx - halfLength, lastGearArena.cy - halfWidth, halfLength * 2, halfWidth * 2, halfWidth);
+    } else if (shape === "donut") {
+      ctx.arc(lastGearArena.cx, lastGearArena.cy, radius, 0, Math.PI * 2);
+      ctx.moveTo(lastGearArena.cx + radius * 0.34, lastGearArena.cy);
+      ctx.arc(lastGearArena.cx, lastGearArena.cy, radius * 0.34, 0, Math.PI * 2);
+    } else {
+      ctx.arc(lastGearArena.cx, lastGearArena.cy, radius, 0, Math.PI * 2);
+    }
     ctx.stroke();
   }
   ctx.restore();
@@ -3035,6 +3316,15 @@ function drawLastGearObjects(ctx) {
         ctx.lineTo(effect.size * 0.55, 0);
         ctx.stroke();
       }
+    } else if (effect.kind === "text" || effect.kind === "impactWord") {
+      ctx.font = `900 ${effect.size}px ${effect.kind === "impactWord" ? "'Bowlby One', sans-serif" : "'Space Grotesk', sans-serif"}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = Math.max(3, effect.size * 0.14);
+      ctx.strokeStyle = "rgba(0,0,0,0.78)";
+      ctx.fillStyle = effect.tint;
+      ctx.strokeText(effect.text, 0, 0);
+      ctx.fillText(effect.text, 0, 0);
     }
     ctx.restore();
   });
@@ -3129,13 +3419,22 @@ function updateLastGearHud(force = false) {
   if (!force && now - (lastGearState.statusRenderAt || 0) < 160) return;
   lastGearState.statusRenderAt = now;
   if (el.lastGearStatusGrid) {
-    el.lastGearStatusGrid.innerHTML = lastGearState.cars.map((car) => `
-      <div class="last-gear-status-card ${car.player ? "player" : ""} ${car.eliminated ? "eliminated" : ""}">
-        <div class="last-gear-lives">${Array.from({ length: Math.max(0, car.lives) }, () => `<img src="${car.displayImage}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden';">`).join("")}</div>
-        <strong>${car.name}</strong>
-        <span>${Math.round(car.damage)}%</span>
-      </div>
-    `).join("");
+    const statusSignature = lastGearState.cars.map((car) => `${car.id}:${car.lives}:${car.eliminated ? 1 : 0}`).join("|");
+    if (force || statusSignature !== lastGearState.statusSignature) {
+      lastGearState.statusSignature = statusSignature;
+      el.lastGearStatusGrid.innerHTML = lastGearState.cars.map((car) => `
+        <div class="last-gear-status-card ${car.player ? "player" : ""} ${car.eliminated ? "eliminated" : ""}" data-last-gear-status="${car.id}">
+          <div class="last-gear-lives">${Array.from({ length: Math.max(0, car.lives) }, () => `<img src="${car.displayImage}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden';">`).join("")}</div>
+          <strong>${car.name}</strong>
+          <span data-last-gear-damage>${Math.round(car.damage)}%</span>
+        </div>
+      `).join("");
+    } else {
+      lastGearState.cars.forEach((car) => {
+        const damage = el.lastGearStatusGrid.querySelector(`[data-last-gear-status="${car.id}"] [data-last-gear-damage]`);
+        if (damage) damage.textContent = `${Math.round(car.damage)}%`;
+      });
+    }
   }
 }
 
@@ -3187,7 +3486,11 @@ el.betaPreviewCar?.addEventListener("click", () => {
   openBetaCarSelect(betaPreviewMode || betaPendingMode);
 });
 
-el.lastGearBetaStart?.addEventListener("click", openLastGearCarSelect);
+el.lastGearBetaStart?.addEventListener("click", () => toggleLastGearSetupPanel(true));
+el.lastGearSetupStart?.addEventListener("click", () => {
+  readLastGearSetupConfig();
+  openLastGearCarSelect();
+});
 el.lastGearBetaBack?.addEventListener("click", () => stopLastGearBeta(true));
 el.lastGearFinishExit?.addEventListener("click", () => stopLastGearBeta(true));
 el.lastGearRestart?.addEventListener("click", startLastGearBeta);
@@ -3264,7 +3567,18 @@ const lastGearImages = {
   platform: betaMakeImage("assets/lastgear/lg-platform.png"),
   arenaBg: betaMakeImage("assets/lastgear/lg-arena-bg.png"),
   itemBox: betaMakeImage("assets/lastgear/lg-item-box.png"),
-  warningRim: betaMakeImage("assets/lastgear/lg-warning-rim.png"),
+  arenas: {
+    circle: betaMakeImage("assets/lastgear/lg-arena-circle.png"),
+    square: betaMakeImage("assets/lastgear/lg-arena-square.png"),
+    donut: betaMakeImage("assets/lastgear/lg-arena-donut.png"),
+    bridge: betaMakeImage("assets/lastgear/lg-arena-bridge.png")
+  },
+  warningRims: {
+    circle: betaMakeImage("assets/lastgear/lg-warning-rim-circle.png"),
+    square: betaMakeImage("assets/lastgear/lg-warning-rim-square.png"),
+    donut: betaMakeImage("assets/lastgear/lg-warning-rim-donut.png"),
+    bridge: betaMakeImage("assets/lastgear/lg-warning-rim-bridge.png")
+  },
   impactSparks: betaMakeImage("assets/lastgear/lg-impact-sparks.png"),
   smokePuffs: betaMakeImage("assets/lastgear/lg-smoke-puffs.png"),
   speedLines: betaMakeImage("assets/lastgear/lg-speed-lines.png")

@@ -261,10 +261,10 @@ let honkVisualTimer = null;
 // Per-GearBorn honk overrides. Missing files fall back to the procedural honk.
 // TODO: Fill in starters, Tutorque, bosses, and other forms once approved honks exist.
 const honkSoundOverrides = {
-  honky: "assets/audio/honks/honk-honky.m4a",
-  whiffleton: "assets/audio/honks/honk-whiffleton.m4a",
-  dookingham: "assets/audio/honks/honk-dookingham.m4a",
-  pootin: "assets/audio/honks/honk-pootin.m4a"
+  honky: "assets/audio/honks/honk-honky-angry.m4a",
+  whiffleton: "assets/audio/honks/honk-whiffleton-angry.m4a",
+  dookingham: "assets/audio/honks/honk-dookingham-angry.m4a",
+  pootin: "assets/audio/honks/honk-pootin-angry.m4a"
 };
 
 function hashHonkSignature(value) {
@@ -360,27 +360,37 @@ function getHonkSubtitle(lineRoot, emotion, bondLevel) {
   return "[HONK SUBTITLE PLACEHOLDER]";
 }
 
-function openHonkModal(carId = selectedCarIdForMode("drag")) {
+function honkKeyForCar(carId, evolutionIndex = state.garage?.[carId]?.evolution || 0) {
+  const form = cars.some((car) => car.id === carId) ? evolutionByIndex(carId, evolutionIndex) || currentEvolution(carId) : null;
+  return slugify(form?.name || carId || "gearborn");
+}
+
+function openHonkModalForKey(honkKey, bondLineRoot = selectedCarIdForMode("drag")) {
   if (!el.honkModal || !el.honkOptions) {
-    playGearbornHonk(carId);
+    playHonkEmotion(honkKey, "angry");
     return;
   }
-  const lineRoot = cars.some((car) => car.id === carId) ? carId : selectedCarIdForMode("drag");
-  const bondLevel = bondLevelForLine(lineRoot);
+  const bondLevel = bondLevelForLine(bondLineRoot);
   const emotions = [
-    { id: "happy", label: "Happy 😊" },
-    { id: "sad", label: "Sad 😢" },
-    { id: "excited", label: "Excited 🎉" },
-    { id: "angry", label: "Angry 😠" }
+    { id: "happy", label: "Happy" },
+    { id: "angry", label: "Angry" }
   ];
   el.honkOptions.innerHTML = emotions.map((emotion) => `
-    <button class="honk-emotion-button" type="button" data-honk-emotion="${emotion.id}" data-honk-line="${lineRoot}">
+    <button class="honk-emotion-button" type="button" data-honk-emotion="${emotion.id}" data-honk-line="${honkKey}" data-honk-bond-line="${bondLineRoot}">
       ${emotion.label}
     </button>
   `).join("");
-  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(lineRoot, "happy", bondLevel);
+  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(bondLineRoot, "happy", bondLevel);
   el.honkModal.classList.add("active");
   el.honkModal.setAttribute("aria-hidden", "false");
+}
+
+function openHonkModal(carId = selectedCarIdForMode("drag"), evolutionIndex = state.garage?.[carId]?.evolution || 0) {
+  if (!cars.some((car) => car.id === carId)) {
+    openHonkModalForKey(slugify(carId || "gearborn"), selectedCarIdForMode("drag"));
+    return;
+  }
+  openHonkModalForKey(honkKeyForCar(carId, evolutionIndex), evolutionLineRootForCar(carId));
 }
 
 function closeHonkModal() {
@@ -389,11 +399,14 @@ function closeHonkModal() {
   el.honkModal.setAttribute("aria-hidden", "true");
 }
 
-function playHonkEmotion(lineRoot, emotion) {
-  const bondLevel = bondLevelForLine(lineRoot);
-  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(lineRoot, emotion, bondLevel);
-  const src = `assets/audio/honks/honk-${lineRoot}-${emotion}.mp3`;
-  if (!playHonkAudioFile(src)) playGearbornHonk(lineRoot);
+function playHonkEmotion(honkKey, emotion, bondLineRoot = honkKey) {
+  const bondLevel = bondLevelForLine(bondLineRoot);
+  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(bondLineRoot, emotion, bondLevel);
+  if (emotion === "angry" && honkSoundOverrides[honkKey] && playHonkAudioFile(honkSoundOverrides[honkKey])) {
+    window.setTimeout(closeHonkModal, 240);
+    return;
+  }
+  playHonkSound(`${honkKey}:${emotion}`);
   window.setTimeout(closeHonkModal, 240);
 }
 
@@ -3222,10 +3235,10 @@ function playVindexEntryHonk(entryNumber) {
   if (!entry || !isVindexDiscovered(entry)) return;
   const playable = playableEntryMeta(entry);
   if (playable) {
-    playGearbornHonk(playable.car.id, playable.index);
+    openHonkModal(playable.car.id, playable.index);
     return;
   }
-  playHonkSound(`vindex:${entry.name}`);
+  openHonkModalForKey(slugify(entry.name || `vindex-${entryNumber}`), selectedCarIdForMode("drag"));
 }
 
 const oneOffEvolutionMeta = {
@@ -4148,21 +4161,21 @@ function makeDragOpponent(seed, index, rank, distance, dragStage, rankIndex) {
   };
 }
 
-function setLaunchPhase(phase) {
+function setLaunchPhase(phase, step = 1) {
   if (!race?.active || race.finished || race.launchPhase === "launched") return;
   race.launchPhase = phase;
   race.launchPhaseStartTime = performance.now();
-  el.dragLaunchLights?.querySelectorAll(".launch-light").forEach((light) => {
-    light.classList.toggle("active", light.dataset.launchLight === phase);
+  race.launchStep = step;
+  el.dragLaunchLights?.querySelectorAll(".launch-tree-row").forEach((row) => {
+    row.classList.toggle("active", row.dataset.launchStep === String(step));
   });
+  el.dragLaunchLights?.querySelectorAll(".launch-light").forEach((light) => light.classList.remove("active"));
+  el.dragCountdown.classList.remove("active");
+  el.dragCountdown.textContent = "";
   if (phase === "green") {
-    el.dragCountdown.classList.add("active");
-    el.dragCountdown.textContent = "GO";
     playAudioCue("raceStart");
     playSound("race-countdown-go");
   } else {
-    el.dragCountdown.classList.add("active");
-    el.dragCountdown.textContent = phase.toUpperCase();
     playAudioCue("raceCountdown");
     playSound("race-countdown-beep");
   }
@@ -4187,7 +4200,7 @@ function launchDragPlayer() {
   race.gear = 1;
   race.rpm = 0.2;
   el.shiftReadout.textContent = message;
-  el.dragLaunchLights?.querySelectorAll(".launch-light").forEach((light) => light.classList.remove("active"));
+  el.dragLaunchLights?.querySelectorAll(".launch-light, .launch-tree-row").forEach((light) => light.classList.remove("active"));
   el.dragCountdown.classList.remove("active");
   updateGearshiftIndicator(true);
   updateNitroHud();
@@ -4334,6 +4347,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     gauntlet: state.activeGauntlet?.mode === "drag" ? { ...state.activeGauntlet } : null,
     launchPhase: "red",
     launchPhaseStartTime: performance.now(),
+    launchStep: 1,
     launchBonus: 1,
     launchBonusUntil: 0,
     playerLane: 3,
@@ -4356,9 +4370,10 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   el.raceMessage.textContent = `Launch on green, then press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
   updateNitroHud();
   updateGearshiftIndicator(false);
-  setLaunchPhase("red");
-  setTimeout(() => setLaunchPhase("yellow"), 1000);
-  setTimeout(() => setLaunchPhase("green"), 2000);
+  setLaunchPhase("red", 1);
+  setTimeout(() => setLaunchPhase("red", 2), 1000);
+  setTimeout(() => setLaunchPhase("yellow", 3), 2000);
+  setTimeout(() => setLaunchPhase("green", 4), 3000);
   requestAnimationFrame(updateRace);
 }
 

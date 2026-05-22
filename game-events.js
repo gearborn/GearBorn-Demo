@@ -170,19 +170,19 @@ document.addEventListener("click", (event) => {
   const raceHonk = event.target.closest("[data-race-honk]");
   if (raceHonk) {
     event.preventDefault();
-    openHonkModal(race?.carId || selectedCarIdForMode("drag"));
+    playGearbornHonk(race?.carId || selectedCarIdForMode("drag"));
     return;
   }
   const battleHonk = event.target.closest("[data-battle-honk]");
   if (battleHonk) {
     event.preventDefault();
-    openHonkModal(battleState?.carId || selectedCarIdForMode("battle"));
+    playGearbornHonk(battleState?.carId || selectedCarIdForMode("battle"));
     return;
   }
   const honkEmotion = event.target.closest("[data-honk-emotion]");
   if (honkEmotion) {
     event.preventDefault();
-    playHonkEmotion(honkEmotion.dataset.honkLine, honkEmotion.dataset.honkEmotion);
+    playHonkEmotion(honkEmotion.dataset.honkLine, honkEmotion.dataset.honkEmotion, honkEmotion.dataset.honkBondLine || honkEmotion.dataset.honkLine);
     return;
   }
   if (event.target === el.honkModal || event.target.closest("#honk-modal-close")) {
