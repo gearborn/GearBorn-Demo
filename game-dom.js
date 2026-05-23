@@ -178,6 +178,7 @@ const el = {
   lastGearBetaStart: document.querySelector("#last-gear-beta-start"),
   lastGearSetupPanel: document.querySelector("#last-gear-setup-panel"),
   lastGearSetupLives: document.querySelector("#last-gear-setup-lives"),
+  lastGearSetupOpponents: document.querySelector("#last-gear-setup-opponents"),
   lastGearSetupArena: document.querySelector("#last-gear-setup-arena"),
   lastGearSetupSudden: document.querySelector("#last-gear-setup-sudden"),
   lastGearSetupItems: document.querySelector("#last-gear-setup-items"),

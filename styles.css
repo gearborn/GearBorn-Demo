@@ -10379,14 +10379,20 @@ small {
 
 .last-gear-announcer {
   position: absolute;
-  top: clamp(14px, 3vw, 32px);
+  top: clamp(10px, 2.2vw, 24px);
   left: 50%;
   z-index: 7;
   display: grid;
-  grid-template-columns: auto minmax(180px, 420px);
+  grid-template-columns: clamp(42px, 5vw, 64px) minmax(150px, 330px);
   align-items: center;
-  gap: 12px;
-  max-width: min(680px, 82vw);
+  gap: 8px;
+  max-width: min(500px, 76vw);
+  min-height: clamp(64px, 8vw, 92px);
+  padding: clamp(8px, 1.2vw, 12px) clamp(14px, 2vw, 22px) clamp(8px, 1.2vw, 12px) clamp(10px, 1.5vw, 16px);
+  background:
+    url("assets/lastgear/lg-announcer-frame.png") center / 100% 100% no-repeat,
+    linear-gradient(135deg, rgba(8, 12, 20, 0.88), rgba(20, 28, 42, 0.68));
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.34));
   pointer-events: none;
   transform: translateX(-50%);
   animation: lastGearAnnouncerIn 220ms var(--ease-pop, cubic-bezier(.2,.8,.2,1)) both;
@@ -10397,7 +10403,7 @@ small {
 }
 
 .last-gear-announcer.major {
-  filter: drop-shadow(0 0 22px rgba(255, 200, 87, 0.35));
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.34)) drop-shadow(0 0 16px rgba(255, 200, 87, 0.28));
 }
 
 .last-gear-announcer.legendary .last-gear-announcer-portrait {
@@ -10406,38 +10412,36 @@ small {
 
 .last-gear-announcer-portrait {
   position: relative;
-  width: clamp(62px, 8vw, 92px);
+  width: 100%;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   animation: lastGearAnnouncerPortrait 520ms var(--ease-pop, cubic-bezier(.2,.8,.2,1)) both;
 }
 
-.last-gear-announcer-frame,
+.last-gear-announcer-frame {
+  display: none;
+}
+
 .last-gear-announcer-headshot {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
   object-fit: contain;
 }
 
 .last-gear-announcer-headshot {
-  inset: 10%;
-  width: 80%;
-  height: 80%;
   border-radius: 50%;
 }
 
 .last-gear-announcer-copy {
   min-width: 0;
-  padding: 12px 16px;
-  border: 1px solid rgba(255, 200, 87, 0.45);
-  border-radius: 14px;
-  background:
-    linear-gradient(135deg, rgba(8, 12, 20, 0.9), rgba(20, 28, 42, 0.72)),
-    rgba(8, 12, 20, 0.88);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: lastGearAnnouncerCopy 260ms var(--ease-pop, cubic-bezier(.2,.8,.2,1)) both;
 }
 
@@ -10445,9 +10449,9 @@ small {
   display: block;
   color: var(--gb-blue);
   font-family: var(--font-ui);
-  font-size: clamp(0.64rem, 1vw, 0.78rem);
+  font-size: clamp(0.52rem, 0.75vw, 0.64rem);
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -10455,9 +10459,9 @@ small {
   display: block;
   color: #fff7dc;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 2.4vw, 1.75rem);
+  font-size: clamp(0.76rem, 1.45vw, 1.08rem);
   font-weight: 400;
-  line-height: 1.02;
+  line-height: 1;
   text-transform: uppercase;
   text-shadow: 0 3px 10px rgba(0, 0, 0, 0.72);
 }
@@ -10768,20 +10772,27 @@ small {
 
   .last-gear-announcer {
     top: 10px;
-    grid-template-columns: auto minmax(0, 1fr);
-    max-width: 92vw;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 6px;
+    max-width: 86vw;
+    min-height: 58px;
+    padding: 7px 13px 7px 9px;
   }
 
   .last-gear-announcer-portrait {
-    width: 56px;
+    width: 100%;
   }
 
   .last-gear-announcer-copy {
-    padding: 9px 11px;
+    padding: 2px 3px;
+  }
+
+  .last-gear-announcer-copy span {
+    font-size: 0.48rem;
   }
 
   .last-gear-announcer-copy strong {
-    font-size: clamp(0.86rem, 4vw, 1.15rem);
+    font-size: clamp(0.68rem, 3vw, 0.9rem);
   }
 
   .last-gear-touch-controls {
