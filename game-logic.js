@@ -2111,7 +2111,7 @@ function renderStoryFactionBadge() {
   el.storyFactionBadge.hidden = false;
   el.storyFactionBadge.dataset.faction = faction;
   el.storyFactionBadgeImg.src = faction === "spindell"
-    ? "assets/items/icon-badge-spindell.png"
+    ? "assets/items/item-badge-spindell.png"
     : "assets/items/icon-badge-keyfree.png";
   el.storyFactionBadgeImg.alt = `${activeFactionLabel()} faction`;
 }
@@ -5351,49 +5351,84 @@ async function runForgeAnimation(carId) {
       fsVat.src = "assets/spindell/spindell-sync-port.png";
       fsVat.alt = "Spindell sync port";
     }
+
+    const lineRoot = (typeof evolutionLineRootForCar === "function" ? evolutionLineRootForCar(carId) : null) || carId;
+    const firstForm = evolutionByIndex(carId, 0);
+    const firstFormSlug = (firstForm?.name || lineRoot).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const pixelCarSrc = `assets/spindell/pixel/pixel-${firstFormSlug}.png`;
+    const pixelLineFallback = `assets/spindell/pixel/pixel-${lineRoot}.png`;
+    const pixelCarFallback = "assets/spindell/pixel/pixel-car.png";
+    const carDisplaySrc = imageFor(firstForm, "display") || "";
+
     area.innerHTML = `
+      <img class="spindell-sync-layer spindell-sync-idle-tube" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
       <img class="spindell-sync-layer spindell-sync-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
-      <img class="spindell-sync-layer spindell-sync-key" src="assets/items/gearborn-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
-      <img class="spindell-sync-layer spindell-sync-tube-anim" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
       <img class="spindell-sync-layer spindell-sync-arm" src="assets/spindell/spindell-magnetic-arm.png" alt="" onerror="this.classList.add('asset-missing')">
+      <img class="spindell-sync-layer spindell-sync-tube-anim" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
+      <div class="spindell-sync-layer spindell-sync-tube-car-wrap" aria-hidden="true">
+        <img class="spindell-sync-car" src="${carDisplaySrc}" alt="" onerror="this.classList.add('asset-missing')">
+      </div>
+      <img class="spindell-sync-layer spindell-sync-key" src="assets/items/gearborn-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
       <div class="spindell-sync-layer spindell-sync-flash-layer"></div>
       <div class="spindell-sync-layer spindell-key-display">
         <img class="vinsync-complete-screen" src="assets/spindell/vinsync-complete-screen.png" alt="" onerror="this.classList.add('asset-missing')">
-        <img class="vinsync-pixel-car" src="assets/spindell/pixel/pixel-car.png" alt="" onerror="this.hidden=true">
+        <img class="vinsync-pixel-car" src="${pixelCarSrc}" onerror="if(this.dataset.fallback==='line'){this.dataset.fallback='generic';this.src='${pixelCarFallback}'}else if(this.dataset.fallback==='generic'){this.hidden=true}else{this.dataset.fallback='line';this.src='${pixelLineFallback}'}" alt="">
       </div>
     `;
     const getSync = (cls) => area.querySelector("." + cls);
+    const idleTubeEl = getSync("spindell-sync-idle-tube");
     const medallionEl = getSync("spindell-sync-medallion");
-    const keyEl = getSync("spindell-sync-key");
-    const tubeEl = getSync("spindell-sync-tube-anim");
     const armEl = getSync("spindell-sync-arm");
+    const tubeEl = getSync("spindell-sync-tube-anim");
+    const carWrapEl = getSync("spindell-sync-tube-car-wrap");
+    const keyEl = getSync("spindell-sync-key");
     const flashEl = getSync("spindell-sync-flash-layer");
     const displayEl = getSync("spindell-key-display");
-    await step(180);
-    add(medallionEl, "spindell-sync-active");
-    await step(520);
-    add(medallionEl, "spindell-sync-port-power");
+
     await step(420);
-    add(keyEl, "spindell-sync-key-active");
-    await step(520);
+
+    add(medallionEl, "spindell-sync-active");
+    await step(620);
+
+    add(medallionEl, "spindell-sync-into-slot");
     add(fsVat, "spindell-sync-port-power");
     await step(620);
+
+    await step(280);
+
     add(armEl, "spindell-sync-arm-descend");
-    await step(620);
+    await step(700);
+
     add(armEl, "spindell-sync-arm-clamp");
-    add(tubeEl, "spindell-sync-arm-clamp");
-    await step(420);
-    add(tubeEl, "spindell-sync-tube-lift");
+    add(idleTubeEl, "spindell-sync-arm-clamp");
+    await step(280);
+
+    add(idleTubeEl, "spindell-sync-tube-lift");
     add(armEl, "spindell-sync-tube-lift");
-    await step(860);
-    add(flashEl, "spindell-sync-flash");
-    await step(360);
-    remove(tubeEl, "spindell-sync-tube-lift");
+    await step(820);
+
+    await step(280);
+
+    add(tubeEl, "spindell-sync-new-tube-above");
+    add(carWrapEl, "spindell-sync-new-tube-above");
+    void tubeEl.offsetWidth;
     remove(armEl, "spindell-sync-tube-lift");
+    remove(armEl, "spindell-sync-arm-descend");
+    add(armEl, "spindell-sync-arm-redescend");
     add(tubeEl, "spindell-sync-new-tube-descend");
-    await step(760);
+    add(carWrapEl, "spindell-sync-new-tube-descend");
+    await step(820);
+
+    add(flashEl, "spindell-sync-flash");
+    remove(armEl, "spindell-sync-arm-redescend");
+    add(armEl, "spindell-sync-arm-retract");
+    await step(620);
+
+    add(keyEl, "spindell-sync-key-active");
+    await step(720);
+
     add(displayEl, "spindell-sync-complete");
-    await step(1500);
+    await step(1600);
   };
 
   try {
