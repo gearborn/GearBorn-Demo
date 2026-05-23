@@ -1264,7 +1264,7 @@ body:not(.mode-active) .nav {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-image: url("assets/menu/next-race-frame.png");
+  background-image: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -5217,13 +5217,12 @@ small {
   display: grid;
   width: 100%;
   place-items: center;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .vindex-stage {
   position: relative;
-  width: min(100%, calc((100svh - 92px) * 1.5));
-  max-width: 1440px;
+  width: min(100%, 1440px, calc((100svh - 92px) * 1.5));
   min-width: 0;
   aspect-ratio: 3 / 2;
   container-type: inline-size;
@@ -5251,13 +5250,13 @@ small {
 
 @media (max-width: 720px) {
   .vindex-shell {
-    overflow-x: auto;
-    justify-items: start;
+    overflow: hidden;
+    justify-items: center;
   }
 
   .vindex-stage {
-    width: max(700px, calc(100svh * 1.18));
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
   }
 
   .vindex-back-link {
@@ -5268,7 +5267,7 @@ small {
 
 @media (max-width: 480px) {
   .vindex-stage {
-    width: max(640px, calc(100svh * 1.08));
+    width: 100%;
   }
 }
 
@@ -5280,16 +5279,18 @@ small {
 }
 
 .vindex-list-panel {
-  left: 5.2%;
+  left: 4.8%;
   top: 16.4%;
-  width: 21.7%;
+  width: 23%;
   height: 70.8%;
-  padding: clamp(4px, 0.55vw, 9px);
+  padding: clamp(3px, 0.48vw, 8px);
+  overflow: hidden;
 }
 
 .vindex-stage .vindex-list {
   display: grid;
   gap: clamp(2px, 0.26vw, 4px);
+  height: 100%;
   max-height: 100%;
   overflow: auto;
   overflow-x: hidden;
@@ -5300,8 +5301,8 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(16px, 2cqw, 28px) minmax(0, 1fr);
-  gap: clamp(2px, 0.34cqw, 6px);
+  grid-template-columns: clamp(14px, 1.75cqw, 24px) minmax(0, 1fr);
+  gap: clamp(1px, 0.24cqw, 4px);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -5339,7 +5340,7 @@ small {
 .vindex-stage .vindex-button strong {
   min-width: 0;
   overflow: hidden;
-  text-overflow: unset;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -5725,7 +5726,7 @@ small {
 }
 
 .vindex-stage .vindex-button {
-  grid-template-columns: clamp(16px, 2cqw, 28px) minmax(0, 1fr);
+  grid-template-columns: clamp(14px, 1.75cqw, 24px) minmax(0, 1fr);
   min-height: clamp(19px, 2.2vw, 30px);
   padding: clamp(2px, 0.3vw, 4px) clamp(3px, 0.42vw, 6px);
   overflow: hidden;
@@ -5735,7 +5736,7 @@ small {
 .vindex-stage .vindex-button strong {
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: clip;
+  text-overflow: ellipsis;
   line-height: 1;
 }
 
@@ -9920,6 +9921,285 @@ small {
   color: var(--ink);
 }
 
+.convoy-entry-button small {
+  display: block;
+  margin-top: 3px;
+  color: var(--gb-muted);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.story-faction-badge {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 4;
+  width: clamp(58px, 7vw, 82px);
+  height: clamp(58px, 7vw, 82px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+}
+
+.story-faction-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.story-faction-badge:focus-visible {
+  outline: 3px solid rgba(255, 200, 87, 0.85);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.spindell-labs-card {
+  position: relative;
+  border-color: rgba(82, 199, 255, 0.42);
+  overflow: hidden;
+}
+
+.spindell-labs-card .forge-menu-card-bg {
+  filter: saturate(1.12) brightness(0.9);
+}
+
+.spindell-labs-card .forge-menu-card-vat {
+  width: min(62%, 300px);
+  bottom: -4%;
+  z-index: 2;
+}
+
+.spindell-labs-card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 23%;
+  width: min(44%, 210px);
+  aspect-ratio: 1 / 1.15;
+  transform: translateX(-50%);
+  background: url("assets/spindell/spindell-sync-tube.png") center / contain no-repeat;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.spindell-labs-view .section-heading p {
+  color: var(--gb-blue);
+}
+
+.spindell-labs-view .forge-scene {
+  background:
+    linear-gradient(180deg, rgba(8, 12, 18, 0.12), rgba(8, 12, 18, 0.28)),
+    url("assets/spindell/spindell-bg.png") center / cover no-repeat;
+}
+
+.spindell-labs-view .forge-bg-img {
+  display: none;
+}
+
+.spindell-labs-view .forge-vat-img {
+  width: min(520px, 86%);
+  bottom: -2%;
+}
+
+.spindell-idle-sync-tube {
+  position: absolute;
+  left: 50%;
+  bottom: 31%;
+  width: min(280px, 42%);
+  transform: translateX(-50%);
+  z-index: 11;
+  pointer-events: none;
+  filter: drop-shadow(0 0 18px rgba(82, 199, 255, 0.32));
+}
+
+.spindell-sync-layer {
+  position: absolute;
+  pointer-events: none;
+}
+
+.spindell-sync-medallion {
+  left: 27%;
+  top: 24%;
+  width: clamp(70px, 9vw, 112px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  z-index: 15;
+}
+
+.spindell-sync-medallion.spindell-sync-active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  transition: opacity 0.32s ease, transform 0.36s var(--ease-pop);
+}
+
+.spindell-sync-medallion.spindell-sync-port-power {
+  left: 42%;
+  top: 72%;
+  opacity: 0.25;
+  transform: translate(-50%, -50%) scale(0.45);
+  transition: left 0.5s ease, top 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
+}
+
+.spindell-sync-key {
+  right: 22%;
+  top: 26%;
+  width: clamp(72px, 10vw, 128px);
+  opacity: 0;
+  transform: translate(50%, -50%) scale(0.72) rotate(-10deg);
+  z-index: 15;
+}
+
+.spindell-sync-key.spindell-sync-key-active {
+  opacity: 1;
+  right: 36%;
+  top: 70%;
+  transform: translate(50%, -50%) scale(0.72) rotate(2deg);
+  transition: right 0.52s ease, top 0.52s ease, opacity 0.25s ease, transform 0.52s ease;
+}
+
+.spindell-sync-tube-anim {
+  left: 50%;
+  bottom: 27%;
+  width: clamp(190px, 26vw, 360px);
+  transform: translateX(-50%);
+  z-index: 18;
+  filter: drop-shadow(0 0 16px rgba(82, 199, 255, 0.22));
+}
+
+.spindell-sync-arm {
+  left: 50%;
+  top: -40%;
+  width: clamp(170px, 23vw, 320px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  z-index: 22;
+}
+
+.spindell-sync-arm.spindell-sync-arm-descend {
+  top: 31%;
+  opacity: 1;
+  transition: top 0.62s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+}
+
+.spindell-sync-arm.spindell-sync-arm-clamp,
+.spindell-sync-tube-anim.spindell-sync-arm-clamp {
+  filter: drop-shadow(0 0 22px rgba(82, 199, 255, 0.7));
+}
+
+.spindell-sync-arm.spindell-sync-tube-lift {
+  top: -35%;
+  transition: top 0.82s cubic-bezier(0.44, 0, 1, 0.56);
+}
+
+.spindell-sync-tube-anim.spindell-sync-tube-lift {
+  bottom: 118%;
+  transition: bottom 0.82s cubic-bezier(0.44, 0, 1, 0.56);
+}
+
+.spindell-sync-tube-anim.spindell-sync-new-tube-descend {
+  bottom: 27%;
+  transition: bottom 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spindell-sync-port-power {
+  filter: drop-shadow(0 0 24px rgba(82, 199, 255, 0.72));
+}
+
+.spindell-sync-flash-layer {
+  inset: 0;
+  z-index: 24;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(82, 199, 255, 0.78), rgba(82, 199, 255, 0.18) 34%, transparent 66%);
+}
+
+.spindell-sync-flash-layer.spindell-sync-flash {
+  animation: spindellSyncFlash 0.5s ease-out both;
+}
+
+.spindell-key-display {
+  right: 9%;
+  top: 18%;
+  width: clamp(180px, 25vw, 380px);
+  opacity: 0;
+  transform: translateY(12px);
+  z-index: 26;
+}
+
+.spindell-key-display.spindell-sync-complete {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.38s ease, transform 0.38s ease;
+}
+
+.vinsync-complete-screen,
+.vinsync-pixel-car {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.vinsync-pixel-car {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 36%;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+}
+
+@keyframes spindellSyncFlash {
+  0% { opacity: 0; transform: scale(0.7); }
+  36% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+
+.forge-unlock-animation {
+  --unlock-glow: rgba(255, 200, 87, 0.45);
+}
+
+.spindell-key-sync-animation {
+  --unlock-glow: rgba(82, 199, 255, 0.45);
+}
+
+/* Keep city-map overlays in separate lanes: reputation top-left, convoy bottom-right,
+   faction badge far bottom-right, and race nodes in the clear center. */
+.story-city-map .boss-unlock-note {
+  top: 112px;
+  left: 18px;
+  width: min(330px, calc(100% - 220px));
+  z-index: 3;
+  pointer-events: none;
+}
+
+.story-city-map .story-map-stage {
+  inset: 214px 18px 138px;
+}
+
+.story-city-map .convoy-entry-node {
+  right: 112px;
+  bottom: 18px;
+  z-index: 4;
+  max-width: min(180px, 34vw);
+}
+
+.story-city-map .convoy-buttons {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.story-city-map .convoy-entry-button {
+  width: clamp(108px, 12vw, 132px);
+}
+
+.story-city-map .story-faction-badge {
+  right: 18px;
+  bottom: 18px;
+}
+
 .convoy-medallion {
   position: relative;
   display: block;
@@ -10992,9 +11272,46 @@ small {
   .bond-scene-card {
     grid-template-columns: 1fr;
   }
-  .convoy-entry-node {
-    position: static;
-    margin: 10px;
+  .story-city-map .boss-unlock-note {
+    top: 118px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+  .story-city-map .reputation-meter {
+    grid-template-columns: 1fr 44px;
+    padding: 8px;
+  }
+  .story-city-map .rep-boss {
+    width: 44px;
+    height: 44px;
+  }
+  .story-city-map .story-map-stage {
+    inset: 214px 8px 112px;
+  }
+  .story-city-map .convoy-entry-node {
+    position: absolute;
+    right: 74px;
+    bottom: 14px;
+    margin: 0;
+    max-width: 108px;
+  }
+  .story-city-map .convoy-entry-button {
+    width: 108px;
+    padding: 6px;
+  }
+  .story-city-map .convoy-medallion {
+    width: 48px;
+    height: 48px;
+  }
+  .story-city-map .convoy-entry-button small {
+    font-size: 0.56rem;
+  }
+  .story-city-map .story-faction-badge {
+    right: 12px;
+    bottom: 14px;
+    width: 50px;
+    height: 50px;
   }
 }
 
@@ -11708,7 +12025,7 @@ canvas,
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-image: url("assets/menu/next-race-frame.png");
+  background-image: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -12340,7 +12657,7 @@ canvas,
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-image: url("assets/menu/next-race-frame.png");
+  background-image: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -12578,7 +12895,7 @@ canvas,
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-image: url("assets/menu/next-race-frame.png");
+  background-image: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -12713,7 +13030,7 @@ canvas,
   inset: -2%;
   z-index: 2;
   display: block;
-  background: url("assets/menu/next-race-frame.png") center / 100% 100% no-repeat;
+  background: none;
   pointer-events: none;
 }
 
@@ -13070,12 +13387,9 @@ body {
 
 .next-race-thumb-wrapper {
   position: absolute;
-  top: 8%;
-  left: 7%;
-  right: 7%;
-  bottom: 8%;
+  inset: 0;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 16px;
   background: #0c1018;
   z-index: 1;
 }
@@ -13088,7 +13402,7 @@ body {
   max-height: none;
   aspect-ratio: auto;
   object-fit: cover;
-  object-position: center;
+  object-position: center top;
   border: 0;
   border-radius: 0;
 }
@@ -13104,13 +13418,7 @@ body {
 }
 
 .next-race-frame-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  z-index: 2;
-  pointer-events: none;
+  display: none;
 }
 
 .next-race-frame,
@@ -13123,15 +13431,15 @@ body {
 
 .next-race-content {
   position: absolute;
-  top: 8%;
-  left: 7%;
-  bottom: 8%;
-  width: 50%;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 56%;
   z-index: 3;
   display: grid;
   align-content: space-between;
   gap: 8px;
-  padding: 16px 18px;
+  padding: clamp(16px, 2vw, 24px);
   pointer-events: none;
 }
 

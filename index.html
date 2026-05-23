@@ -82,7 +82,6 @@
                 <div class="next-race-thumb-wrapper">
                   <img class="next-race-city-thumb" id="menu-next-race-thumb" src="" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;">
                 </div>
-                <img class="next-race-frame-img" src="assets/menu/next-race-frame.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 <div class="next-race-content">
                   <div class="next-race-text">
                     <span>Next Story Race</span>
@@ -199,6 +198,9 @@
               <div class="convoy-entry-node" id="convoy-entry-node" hidden>
                 <div class="convoy-buttons" id="convoy-buttons"></div>
               </div>
+              <button class="story-faction-badge" id="story-faction-badge" type="button" aria-label="Faction hub">
+                <img id="story-faction-badge-img" src="assets/items/icon-badge-keyfree.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+              </button>
               <div class="boss-unlock-note" id="boss-unlock-note"></div>
               <div class="story-map-stage" id="story-map-stage"></div>
               <div class="story-map-actions">
@@ -695,8 +697,8 @@
               <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
               <img class="forge-menu-card-vat" src="assets/forge/forge_vat.png" alt="" aria-hidden="true">
               <span class="menu-card-icon" aria-hidden="true"></span>
-              <strong>The Forge</strong>
-              <small>Unlock GearBorn with your Medallions.</small>
+              <strong id="forge-card-title">The Forge</strong>
+              <small id="forge-card-subtitle">Unlock GearBorn with your Medallions.</small>
             </button>
             <div class="garage-grid" id="garage-grid"></div>
           </div>
@@ -705,8 +707,9 @@
           <div id="forge-panel" hidden>
             <button class="back-link" id="forge-back-btn" type="button">Back to Garage</button>
             <div class="section-heading">
-              <p>The Forge</p>
-              <h1>Forge what's next.</h1>
+              <p id="forge-kicker">The Forge</p>
+              <h1 id="forge-title">Forge what's next.</h1>
+              <small id="forge-subtitle">Unlock medallions through the old fire.</small>
             </div>
             <div class="forge-layout">
               <div class="forge-scene">

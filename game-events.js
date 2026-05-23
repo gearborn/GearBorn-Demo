@@ -469,6 +469,7 @@ document.querySelector("#garage-view-toggle")?.addEventListener("click", (event)
 
 el.tunerRankOpen?.addEventListener("click", openTunerRankScreen);
 el.tunerRankBack?.addEventListener("click", () => showView("story"));
+el.storyFactionBadge?.addEventListener("click", openFactionHubPlaceholder);
 
 el.convoyButtons?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-convoy-open]");
@@ -493,7 +494,29 @@ el.convoyLoadoutSlots?.addEventListener("click", (event) => {
 el.convoyStageList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-convoy-stage]");
   if (!button) return;
-  showToast("Convoy Stage Placeholder", "Stage launch wiring is ready for mode-specific handoff.");
+  const loadout = activeConvoyLoadout();
+  if (!loadout) {
+    showToast("Convoy Loadout", "Convoy loadouts require three different GearBorn.");
+    return;
+  }
+  const slot = Number(button.dataset.convoyStage);
+  const carId = loadout.carIds?.[slot];
+  if (!carId || !isSelectablePlayerCar(carId)) {
+    showToast("Convoy Loadout", "Choose a valid GearBorn for this convoy stage.");
+    return;
+  }
+  const convoyId = state.convoy?.inProgress?.convoyId;
+  state.convoy.inProgress.stageProgress = state.convoy.inProgress.stageProgress || {};
+  state.convoy.inProgress.stageProgress[slot] = "won";
+  if (slot >= 2) {
+    completeConvoy(convoyId);
+    showView("story");
+    return;
+  }
+  state.convoy.inProgress.currentStage = slot + 1;
+  saveState();
+  showToast("Convoy Stage Placeholder", `Stage ${slot + 1} cleared with ${currentEvolution(carId).name}.`);
+  renderConvoy();
 });
 
 el.vindexMemoriesButton?.addEventListener("click", toggleVindexMemories);

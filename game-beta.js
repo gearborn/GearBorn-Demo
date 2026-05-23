@@ -2002,6 +2002,35 @@ const lastGearItemCadence = {
   normal: { boxes: 5, respawn: 4500, variance: 2500 },
   chaos: { boxes: 8, respawn: 2200, variance: 1200 }
 };
+const lastGearItemTuning = {
+  bubbleDuration: 5000,
+  bubbleImpulse: 1.35,
+  bubbleKnockbackTaken: 0.22,
+  teleportInvulnerable: 2000,
+  oilDuration: 2000,
+  oilTraction: 0.55,
+  spikeDamage: 20,
+  spikeNitroDisable: 3200,
+  spikeHandling: 2400,
+  grappleRange: 430,
+  grappleLatchDuration: 2300,
+  grappleDamage: 18,
+  grappleForce: 560,
+  empRange: 270,
+  empDamage: 13,
+  empForce: 330,
+  antiMagnetDuration: 2800,
+  antiMagnetRange: 300,
+  antiMagnetForce: 520,
+  anchorDuration: 4600,
+  anchorSpeedMultiplier: 0.76,
+  anchorKnockbackTaken: 0.25,
+  reverseDuration: 2800,
+  overhaulDuration: 5000,
+  overhaulScale: 1.5,
+  overhaulDamageTaken: 0.75,
+  overhaulDamageDealt: 1.25
+};
 const lastGearImpactTuning = {
   minor: 96,
   major: 150,
@@ -2283,6 +2312,16 @@ function lastGearMakeCar(entry, index, total) {
     specialLineId: evolutionLineRootForCar(entry.car.id),
     invulnerableUntil: 1800,
     shieldHits: 0,
+    bubbleUntil: 0,
+    bubbleFlashUntil: 0,
+    anchorUntil: 0,
+    antiMagnetUntil: 0,
+    overhaulUntil: 0,
+    reverseUntil: 0,
+    oilSlideUntil: 0,
+    nitroPuncturedUntil: 0,
+    handlingWeakUntil: 0,
+    grapple: null,
     boostUntil: 0,
     hitFlashUntil: 0,
     eliminated: false,
@@ -2423,16 +2462,29 @@ function lastGearInput(direction) {
 }
 
 function lastGearControlsFor(car) {
+  const now = lastGearLocalNow();
+  let controls;
   if (car.player) {
-    return {
+    controls = {
       up: lastGearInput("up"),
       down: lastGearInput("down"),
       left: lastGearInput("left"),
       right: lastGearInput("right"),
       nitro: lastGearInput("nitro")
     };
+  } else {
+    controls = lastGearAiControls(car);
   }
-  return lastGearAiControls(car);
+  if (car.reverseUntil > now) {
+    controls = {
+      up: controls.down,
+      down: controls.up || Math.random() < 0.02,
+      left: controls.right || Math.random() < 0.08,
+      right: controls.left || Math.random() < 0.08,
+      nitro: false
+    };
+  }
+  return controls;
 }
 
 function lastGearNearestOpponent(car) {
@@ -2596,7 +2648,19 @@ function lastGearAiControls(car) {
   const difficultyAggression = lastGearCurrentSettings().aiDifficulty === "aggro" ? 1.45 : lastGearCurrentSettings().aiDifficulty === "chill" ? 0.72 : 1;
   const itemChance = car.archetype === "Trickster" ? 0.036 : 0.018;
   const nitroBias = car.archetype === "Speedster" ? 1.85 : car.archetype === "Aggro" ? 1.35 : car.archetype === "Defender" ? 0.5 : 1;
-  if (car.item && !nearEdge && Math.random() < itemChance * aggression * difficultyAggression) lastGearUseItem(car);
+  if (car.item) {
+    const surrounded = lastGearLiveCars().some((target) => target.id !== car.id && Math.hypot(target.x - car.x, target.y - car.y) < 160);
+    const targetNearEdge = target?.id && lastGearShapeBoundary(target.x, target.y).edge > 0.78;
+    const shouldUse =
+      (car.item.id === "teleport" && nearEdge) ||
+      ((car.item.id === "shield" || car.item.id === "anchor") && (nearEdge || surrounded)) ||
+      (car.item.id === "overhaul" && surrounded) ||
+      (car.item.id === "antiMagnet" && surrounded) ||
+      (car.item.id === "grapple" && targetNearEdge) ||
+      (car.item.id === "reverse" && Math.random() < 0.006 * (lastGearCurrentSettings().items === "chaos" ? 2 : 1)) ||
+      (!nearEdge && Math.random() < itemChance * aggression * difficultyAggression);
+    if (shouldUse) lastGearUseItem(car);
+  }
   if (!nearEdge && target.id && Math.hypot(target.x - car.x, target.y - car.y) < 190 && Math.random() < 0.011 * aggression * difficultyAggression) lastGearUseSpecial(car);
   const cautious = car.archetype === "Coward" && liveCount > 4 || car.archetype === "Defender";
   return {
@@ -2619,17 +2683,23 @@ function lastGearUpdateCar(car, dt, now) {
   }
   const controls = lastGearControlsFor(car);
   const speed = Math.hypot(car.vx, car.vy);
-  const turnScale = Math.min(1, Math.max(0.35, speed / 190));
+  const oilSliding = car.oilSlideUntil > now;
+  const handlingWeak = car.handlingWeakUntil > now;
+  const anchored = car.anchorUntil > now;
+  const overhauled = car.overhaulUntil > now;
+  const turnPenalty = oilSliding ? 0.38 : handlingWeak ? 0.68 : overhauled ? 0.84 : 1;
+  const turnScale = Math.min(1, Math.max(0.35, speed / 190)) * turnPenalty;
   if (controls.left) car.angle -= car.physics.turnRate * turnScale * dt;
   if (controls.right) car.angle += car.physics.turnRate * turnScale * dt;
-  const nitroActive = controls.nitro && car.nitro > 0;
+  const nitroDisabled = car.nitroPuncturedUntil > now;
+  const nitroActive = controls.nitro && car.nitro > 0 && !nitroDisabled;
   const boostActive = car.boostUntil > now;
   if (nitroActive) {
     car.nitro = Math.max(0, car.nitro - (42 + car.physics.nitroTank * 0.18) * dt);
-  } else {
+  } else if (!nitroDisabled) {
     car.nitro = Math.min(car.physics.nitroTank, car.nitro + car.physics.nitroRecharge * dt);
   }
-  const accelBoost = nitroActive ? car.physics.nitroStrength : boostActive ? 1.32 : 1;
+  const accelBoost = (nitroActive ? car.physics.nitroStrength : boostActive ? 1.32 : 1) * (anchored ? 0.56 : overhauled ? 0.86 : 1);
   if (controls.up) {
     car.vx += Math.cos(car.angle) * car.physics.acceleration * accelBoost * dt;
     car.vy += Math.sin(car.angle) * car.physics.acceleration * accelBoost * dt;
@@ -2638,13 +2708,13 @@ function lastGearUpdateCar(car, dt, now) {
     car.vx -= Math.cos(car.angle) * car.physics.brake * dt;
     car.vy -= Math.sin(car.angle) * car.physics.brake * dt;
   }
-  const maxSpeed = car.physics.maxSpeed * (nitroActive ? 1.18 : boostActive ? 1.25 : 1);
+  const maxSpeed = car.physics.maxSpeed * (nitroActive ? 1.18 : boostActive ? 1.25 : 1) * (anchored ? lastGearItemTuning.anchorSpeedMultiplier : overhauled ? 0.92 : 1);
   const newSpeed = Math.hypot(car.vx, car.vy);
   if (newSpeed > maxSpeed) {
     car.vx = (car.vx / newSpeed) * maxSpeed;
     car.vy = (car.vy / newSpeed) * maxSpeed;
   }
-  const friction = controls.up || controls.down ? 0.992 : 0.982;
+  const friction = oilSliding ? 0.996 : controls.up || controls.down ? 0.992 : 0.982;
   car.vx *= Math.pow(friction, dt * 60);
   car.vy *= Math.pow(friction, dt * 60);
   car.prevX = car.x;
@@ -2676,6 +2746,15 @@ function lastGearLoseLife(car, now) {
   car.damage = 0;
   car.item = null;
   car.shieldHits = 0;
+  car.bubbleUntil = 0;
+  car.anchorUntil = 0;
+  car.antiMagnetUntil = 0;
+  car.overhaulUntil = 0;
+  car.reverseUntil = 0;
+  car.oilSlideUntil = 0;
+  car.nitroPuncturedUntil = 0;
+  car.handlingWeakUntil = 0;
+  car.grapple = null;
   if (car.player && car.lives === 1 && !lastGearState.playerLastLifeCalled) {
     lastGearState.playerLastLifeCalled = true;
     lastGearAnnounce("lastLife", { major: true, force: true });
@@ -2742,24 +2821,37 @@ function lastGearResolveCollisions(now) {
         lastGearTriggerImpactFeedback(impact * (bTbone ? 1.35 : 0.82), impactX, impactY, -nx, -ny, bTbone ? "tbone" : "hit", { userInvolved: b.player });
       }
       const impulse = impact * 0.18;
-      a.vx -= nx * impulse / a.physics.mass;
-      a.vy -= ny * impulse / a.physics.mass;
-      b.vx += nx * impulse / b.physics.mass;
-      b.vy += ny * impulse / b.physics.mass;
+      const aMass = a.physics.mass * (a.anchorUntil > now ? 2.4 : 1) * (a.overhaulUntil > now ? 1.55 : 1);
+      const bMass = b.physics.mass * (b.anchorUntil > now ? 2.4 : 1) * (b.overhaulUntil > now ? 1.55 : 1);
+      const aPush = impulse * (a.bubbleUntil > now ? lastGearItemTuning.bubbleImpulse : 1);
+      const bPush = impulse * (b.bubbleUntil > now ? lastGearItemTuning.bubbleImpulse : 1);
+      a.vx -= nx * bPush / aMass;
+      a.vy -= ny * bPush / aMass;
+      b.vx += nx * aPush / bMass;
+      b.vy += ny * aPush / bMass;
     }
   }
 }
 
 function lastGearApplyHit(receiver, attacker, impact, nx, ny, now) {
   if (receiver.invulnerableUntil > now) return;
-  if (receiver.shieldHits > 0) {
-    receiver.shieldHits -= 1;
+  if (receiver.shieldHits > 0 || receiver.bubbleUntil > now) {
+    if (receiver.shieldHits > 0) receiver.shieldHits -= 1;
+    receiver.bubbleFlashUntil = now + 240;
     receiver.hitFlashUntil = now + 180;
+    receiver.vx += nx * impact * 0.08 * lastGearItemTuning.bubbleKnockbackTaken;
+    receiver.vy += ny * impact * 0.08 * lastGearItemTuning.bubbleKnockbackTaken;
+    if (attacker) {
+      attacker.vx -= nx * impact * 0.18;
+      attacker.vy -= ny * impact * 0.18;
+    }
     return;
   }
-  const adjustedImpact = impact * (attacker?.archetype === "Tank" ? 1.14 : attacker?.archetype === "Aggro" ? 1.06 : 1);
+  const attackerBonus = attacker?.overhaulUntil > now ? lastGearItemTuning.overhaulDamageDealt : 1;
+  const adjustedImpact = impact * attackerBonus * (attacker?.archetype === "Tank" ? 1.14 : attacker?.archetype === "Aggro" ? 1.06 : 1);
+  const defensiveMultiplier = receiver.anchorUntil > now ? 0.62 : receiver.overhaulUntil > now ? lastGearItemTuning.overhaulDamageTaken : 1;
   const bodyReducer = lastGearClamp(1 - (receiver.physics.body - 70) / 180, 0.48, 1.35);
-  const damage = Math.max(1, adjustedImpact / 18) * bodyReducer;
+  const damage = Math.max(1, adjustedImpact / 18) * bodyReducer * defensiveMultiplier;
   receiver.damage = Math.min(999, receiver.damage + damage);
   receiver.lastHitBy = attacker?.id || null;
   receiver.lastHitAt = now;
@@ -2774,7 +2866,8 @@ function lastGearApplyHit(receiver, attacker, impact, nx, ny, now) {
   if (receiver.player && receiver.damage > 150 && Math.random() < 0.08) {
     lastGearAnnounce("underdog", { cooldown: 7000 });
   }
-  const knock = (adjustedImpact * 0.78 + receiver.damage * 2.1) / receiver.physics.mass;
+  const knockReducer = receiver.anchorUntil > now ? lastGearItemTuning.anchorKnockbackTaken : receiver.overhaulUntil > now ? 0.7 : 1;
+  const knock = ((adjustedImpact * 0.78 + receiver.damage * 2.1) / receiver.physics.mass) * knockReducer;
   receiver.vx += nx * knock;
   receiver.vy += ny * knock;
   if (attacker?.player && adjustedImpact > lastGearImpactTuning.major) {
@@ -2808,29 +2901,42 @@ function lastGearUseItem(car = lastGearPlayer()) {
   if (!lastGearState?.active || lastGearState.finished || !car?.item || car.eliminated || car.respawnAt) return false;
   const now = performance.now() - (lastGearState.startedAt || performance.now());
   const item = car.item;
+  if (item.id === "grapple" && car.grapple?.state === "latched") {
+    const target = lastGearState.cars.find((entry) => entry.id === car.grapple.targetId && !entry.eliminated);
+    if (target) {
+      const dx = car.x - target.x;
+      const dy = car.y - target.y;
+      const mag = Math.hypot(dx, dy) || 1;
+      if (target.bubbleUntil > now) {
+        target.bubbleFlashUntil = now + 260;
+      } else {
+        lastGearApplyHit(target, car, lastGearItemTuning.grappleDamage * 18, dx / mag, dy / mag, now);
+        target.vx += (dx / mag) * lastGearItemTuning.grappleForce;
+        target.vy += (dy / mag) * lastGearItemTuning.grappleForce;
+      }
+      lastGearTriggerImpactFeedback(150, target.x, target.y, dx / mag, dy / mag, "hit", { userInvolved: car.player });
+    }
+    car.grapple = null;
+    car.item = null;
+    updateLastGearHud(true);
+    return true;
+  }
   car.item = null;
   if (car.player && lastGearState?.stats) {
     lastGearState.stats.itemUses[item.id] = (lastGearState.stats.itemUses[item.id] || 0) + 1;
   }
   if (item.id === "shield") {
     car.shieldHits = 1;
+    car.bubbleUntil = now + lastGearItemTuning.bubbleDuration;
   } else if (item.id === "teleport") {
-    const point = lastGearSafePoint(Math.random() * 8);
-    Object.assign(car, { x: point.x, y: point.y, vx: 0, vy: 0, angle: point.angle, invulnerableUntil: now + 850 });
+    const point = lastGearFindSafeTeleportPoint(car);
+    Object.assign(car, { x: point.x, y: point.y, vx: 0, vy: 0, angle: point.angle, invulnerableUntil: now + lastGearItemTuning.teleportInvulnerable });
   } else if (item.id === "turbo") {
     car.boostUntil = now + 1200;
     car.vx += Math.cos(car.angle) * 170;
     car.vy += Math.sin(car.angle) * 170;
   } else if (item.id === "burst") {
-    lastGearState.projectiles.push({
-      id: `lg-emp-${Date.now()}-${Math.random()}`,
-      owner: car.id,
-      x: car.x + Math.cos(car.angle) * 42,
-      y: car.y + Math.sin(car.angle) * 42,
-      vx: Math.cos(car.angle) * 560,
-      vy: Math.sin(car.angle) * 560,
-      expiresAt: now + 1200
-    });
+    lastGearState.projectiles.push({ id: `lg-emp-${Date.now()}-${Math.random()}`, type: "empPulse", owner: car.id, x: car.x, y: car.y, radius: 0, maxRadius: lastGearItemTuning.empRange, expiresAt: now + 520 });
   } else if (item.id === "oil" || item.id === "tire") {
     lastGearState.hazards.push({
       id: `lg-hazard-${Date.now()}-${Math.random()}`,
@@ -2841,9 +2947,47 @@ function lastGearUseItem(car = lastGearPlayer()) {
       radius: item.id === "oil" ? 42 : 34,
       expiresAt: now + 12000
     });
+  } else if (item.id === "grapple") {
+    const target = lastGearNearestValidGrappleTarget(car);
+    if (target) {
+      car.grapple = { state: "latched", targetId: target.id, expiresAt: now + lastGearItemTuning.grappleLatchDuration };
+      car.item = item;
+      lastGearState.effects.push({ kind: "grappleLatch", x: target.x, y: target.y, vx: 0, vy: 0, ttl: 420, life: 420, size: 64, tint: "#52c7ff", angle: 0, spin: 0 });
+    } else {
+      car.grapple = { state: "miss", x: car.x + Math.cos(car.angle) * 130, y: car.y + Math.sin(car.angle) * 130, expiresAt: now + 500 };
+    }
+  } else if (item.id === "antiMagnet") {
+    car.antiMagnetUntil = now + lastGearItemTuning.antiMagnetDuration;
+  } else if (item.id === "anchor") {
+    car.anchorUntil = now + lastGearItemTuning.anchorDuration;
+  } else if (item.id === "reverse") {
+    lastGearLiveCars().forEach((target) => {
+      if (target.id !== car.id && target.bubbleUntil <= now) target.reverseUntil = now + lastGearItemTuning.reverseDuration;
+    });
+  } else if (item.id === "overhaul") {
+    car.overhaulUntil = now + lastGearItemTuning.overhaulDuration;
   }
   updateLastGearHud(true);
   return true;
+}
+
+function lastGearFindSafeTeleportPoint(car) {
+  for (let attempt = 0; attempt < 36; attempt += 1) {
+    const point = lastGearSafePoint(Math.random() * 8);
+    if (!lastGearShapeBoundary(point.x, point.y).safe) continue;
+    const overlapsCar = lastGearLiveCars().some((target) => target.id !== car.id && Math.hypot(target.x - point.x, target.y - point.y) < 110);
+    const overlapsHazard = lastGearState.hazards.some((hazard) => Math.hypot(hazard.x - point.x, hazard.y - point.y) < hazard.radius + 80);
+    if (!overlapsCar && !overlapsHazard) return point;
+  }
+  return lastGearSafePoint(Math.random() * 8);
+}
+
+function lastGearNearestValidGrappleTarget(car) {
+  return lastGearLiveCars()
+    .filter((target) => target.id !== car.id && !target.respawnAt)
+    .map((target) => ({ target, distance: Math.hypot(target.x - car.x, target.y - car.y) }))
+    .filter((entry) => entry.distance <= lastGearItemTuning.grappleRange)
+    .sort((a, b) => a.distance - b.distance)[0]?.target || null;
 }
 
 function lastGearUseSpecial(car = lastGearPlayer()) {
@@ -2897,7 +3041,14 @@ function lastGearUseSpecial(car = lastGearPlayer()) {
 }
 
 function lastGearRandomItem() {
-  return betaItemDefinitions[Math.floor(Math.random() * betaItemDefinitions.length)];
+  const setting = lastGearCurrentSettings().items || "normal";
+  if (setting === "off") return null;
+  const weighted = [];
+  lastGearItemDefinitions.forEach((item) => {
+    const weight = item.weights?.[setting] ?? item.weights?.normal ?? 1;
+    for (let i = 0; i < weight; i += 1) weighted.push(item);
+  });
+  return weighted[Math.floor(Math.random() * weighted.length)] || lastGearItemDefinitions[0];
 }
 
 function lastGearUpdateItems(dt, now) {
@@ -2908,6 +3059,7 @@ function lastGearUpdateItems(dt, now) {
       if (!box.active || car.respawnAt || car.item) return;
       if (Math.hypot(car.x - box.x, car.y - box.y) > 42) return;
       car.item = lastGearRandomItem();
+      if (!car.item) return;
       box.active = false;
       const cadence = lastGearItemCadence[lastGearCurrentSettings().items] || lastGearItemCadence.normal;
       const speedup = lastGearState.suddenDeath ? 0.62 : 1;
@@ -2919,14 +3071,40 @@ function lastGearUpdateItems(dt, now) {
     lastGearLiveCars().forEach((car) => {
       if (car.id === hazard.owner || car.respawnAt) return;
       if (Math.hypot(car.x - hazard.x, car.y - hazard.y) > hazard.radius + car.radius) return;
-      lastGearApplyHit(car, null, hazard.type === "oil" ? 78 : 112, (car.x - hazard.x) / hazard.radius, (car.y - hazard.y) / hazard.radius, now);
-      car.vx *= hazard.type === "oil" ? 0.66 : 0.42;
-      car.vy *= hazard.type === "oil" ? 0.66 : 0.42;
+      if (car.bubbleUntil > now) {
+        car.bubbleFlashUntil = now + 220;
+      } else if (hazard.type === "oil") {
+        car.oilSlideUntil = now + lastGearItemTuning.oilDuration;
+        car.vx *= 0.94;
+        car.vy *= 0.94;
+      } else {
+        car.damage = Math.min(999, car.damage + lastGearItemTuning.spikeDamage);
+        car.nitro = Math.max(0, car.nitro - car.physics.nitroTank * 0.35);
+        car.nitroPuncturedUntil = now + lastGearItemTuning.spikeNitroDisable;
+        car.handlingWeakUntil = now + lastGearItemTuning.spikeHandling;
+        lastGearApplyHit(car, null, 68, (car.x - hazard.x) / hazard.radius, (car.y - hazard.y) / hazard.radius, now);
+      }
       hazard.expiresAt = 0;
     });
   });
   lastGearState.projectiles = lastGearState.projectiles.filter((projectile) => projectile.expiresAt > now);
   lastGearState.projectiles.forEach((projectile) => {
+    if (projectile.type === "empPulse") {
+      projectile.radius = lastGearLerp(projectile.radius || 0, projectile.maxRadius, 0.24);
+      lastGearLiveCars().forEach((car) => {
+        if (car.id === projectile.owner || car.respawnAt || car.bubbleUntil > now) return;
+        const distance = Math.hypot(car.x - projectile.x, car.y - projectile.y);
+        if (distance > projectile.radius || car.empHitAt === projectile.id) return;
+        const dx = (car.x - projectile.x) / (distance || 1);
+        const dy = (car.y - projectile.y) / (distance || 1);
+        car.empHitAt = projectile.id;
+        lastGearApplyHit(car, lastGearState.cars.find((entry) => entry.id === projectile.owner), lastGearItemTuning.empDamage * 18, dx, dy, now);
+        car.vx += dx * lastGearItemTuning.empForce;
+        car.vy += dy * lastGearItemTuning.empForce;
+        car.nitro = Math.max(0, car.nitro - car.physics.nitroTank * 0.22);
+      });
+      return;
+    }
     projectile.x += projectile.vx * dt;
     projectile.y += projectile.vy * dt;
     lastGearLiveCars().forEach((car) => {
@@ -2935,6 +3113,20 @@ function lastGearUpdateItems(dt, now) {
       const mag = Math.hypot(projectile.vx, projectile.vy) || 1;
       lastGearApplyHit(car, null, 136, projectile.vx / mag, projectile.vy / mag, now);
       projectile.expiresAt = 0;
+    });
+  });
+  lastGearLiveCars().forEach((car) => {
+    if (car.grapple?.expiresAt && car.grapple.expiresAt <= now) car.grapple = null;
+    if (car.antiMagnetUntil <= now) return;
+    lastGearLiveCars().forEach((target) => {
+      if (target.id === car.id || target.respawnAt || target.bubbleUntil > now) return;
+      const dx = target.x - car.x;
+      const dy = target.y - car.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      if (distance > lastGearItemTuning.antiMagnetRange) return;
+      const strength = (1 - distance / lastGearItemTuning.antiMagnetRange) * lastGearItemTuning.antiMagnetForce * dt;
+      target.vx += (dx / distance) * strength;
+      target.vy += (dy / distance) * strength;
     });
   });
 }
@@ -3229,6 +3421,22 @@ function drawLastGearObjects(ctx) {
     });
   });
   lastGearState.projectiles.forEach((projectile) => {
+    if (projectile.type === "empPulse") {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.15, 1 - (projectile.radius || 0) / (projectile.maxRadius || 1));
+      const img = lastGearImages.empRing;
+      if (img?.complete && img.naturalWidth) {
+        ctx.drawImage(img, projectile.x - projectile.radius, projectile.y - projectile.radius, projectile.radius * 2, projectile.radius * 2);
+      } else {
+        ctx.strokeStyle = "rgba(192, 132, 252, 0.72)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(projectile.x, projectile.y, projectile.radius || 1, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
     const angle = Math.atan2(projectile.vy, projectile.vx);
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
@@ -3291,13 +3499,68 @@ function drawLastGearObjects(ctx) {
     }
     ctx.restore();
   });
-  lastGearState.cars.filter((car) => car.shieldHits > 0 || car.boostUntil > now || car.hitFlashUntil > now).forEach((car) => {
-    if (car.shieldHits > 0) {
-      ctx.strokeStyle = "rgba(82,199,255,0.9)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(car.x, car.y, 43, 0, Math.PI * 2);
-      ctx.stroke();
+  lastGearState.cars.filter((car) => car.shieldHits > 0 || car.bubbleUntil > now || car.boostUntil > now || car.hitFlashUntil > now || car.anchorUntil > now || car.antiMagnetUntil > now || car.overhaulUntil > now || car.reverseUntil > now || car.grapple).forEach((car) => {
+    if (car.grapple?.state === "latched") {
+      const target = lastGearState.cars.find((entry) => entry.id === car.grapple.targetId);
+      if (target) {
+        ctx.strokeStyle = "rgba(82,199,255,0.82)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(car.x, car.y);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+        betaDrawImageOrFallback(ctx, lastGearImages.grappleLatch, target.x, target.y, 52, 52, () => {});
+      }
+    }
+    if (car.shieldHits > 0 || car.bubbleUntil > now) {
+      const pulse = 1 + Math.sin(now / 130) * 0.05;
+      const img = betaTrackImages.bubbaBubble;
+      if (img?.complete && img.naturalWidth) {
+        ctx.globalAlpha = car.bubbleFlashUntil > now ? 0.95 : 0.72;
+        ctx.drawImage(img, car.x - 49 * pulse, car.y - 49 * pulse, 98 * pulse, 98 * pulse);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.strokeStyle = car.bubbleFlashUntil > now ? "rgba(255,255,255,0.95)" : "rgba(82,199,255,0.9)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(car.x, car.y, 43 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    if (car.anchorUntil > now) {
+      betaDrawImageOrFallback(ctx, lastGearImages.anchorActive, car.x, car.y, 86, 86, () => {
+        ctx.strokeStyle = "rgba(255,200,87,0.75)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(car.x, car.y, 48, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+    if (car.antiMagnetUntil > now) {
+      betaDrawImageOrFallback(ctx, lastGearImages.antiMagnetField, car.x, car.y, 220, 220, () => {
+        ctx.strokeStyle = "rgba(82,199,255,0.46)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(car.x, car.y, lastGearItemTuning.antiMagnetRange * 0.62, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+    if (car.overhaulUntil > now) {
+      betaDrawImageOrFallback(ctx, lastGearImages.overhaulActive, car.x, car.y, 112, 112, () => {
+        ctx.strokeStyle = "rgba(255,128,95,0.76)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(car.x, car.y, 58, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+    if (car.reverseUntil > now) {
+      betaDrawImageOrFallback(ctx, lastGearImages.reverseStatus, car.x, car.y - 54, 48, 48, () => {
+        ctx.fillStyle = "#c084fc";
+        ctx.font = "800 18px 'Space Grotesk', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("REV", car.x, car.y - 54);
+      });
     }
     if (car.hitFlashUntil > now) {
       ctx.strokeStyle = "rgba(255,128,95,0.9)";
@@ -3327,6 +3590,7 @@ function drawLastGearCar(ctx, car) {
   ctx.save();
   ctx.translate(car.x, car.y);
   ctx.rotate(car.angle + Math.PI / 2);
+  if (car.overhaulUntil > now) ctx.scale(lastGearItemTuning.overhaulScale, lastGearItemTuning.overhaulScale);
   ctx.globalAlpha = car.invulnerableUntil > now
     ? 0.55 + Math.sin(performance.now() / 80) * 0.2
     : 1;
@@ -3357,9 +3621,19 @@ function updateLastGearHud(force = false) {
   const player = lastGearPlayer();
   if (el.lastGearSpeed && player) el.lastGearSpeed.textContent = `${Math.round(Math.hypot(player.vx, player.vy) / 5.2)} MPH`;
   if (el.lastGearNitroFill && player) el.lastGearNitroFill.style.width = `${lastGearClamp((player.nitro / player.physics.nitroTank) * 100, 0, 100)}%`;
-  if (el.lastGearItemName && player) el.lastGearItemName.textContent = player.item?.name || "Empty";
+  if (el.lastGearItemName && player) {
+    const statuses = [];
+    const now = lastGearLocalNow();
+    if (player.bubbleUntil > now) statuses.push("Bubble");
+    if (player.anchorUntil > now) statuses.push("Anchor");
+    if (player.overhaulUntil > now) statuses.push("Overhaul");
+    if (player.antiMagnetUntil > now) statuses.push("Anti-Magnet");
+    if (player.nitroPuncturedUntil > now) statuses.push("Nitro punctured");
+    const itemName = player.grapple?.state === "latched" ? "Grapple: YANK" : player.item?.name || "Empty";
+    el.lastGearItemName.textContent = statuses.length ? `${itemName} · ${statuses.join(" · ")}` : itemName;
+  }
   if (el.lastGearItemIcon && player) {
-    const icon = player.item ? betaItemImages[player.item.id] : null;
+    const icon = player.item ? (lastGearItemImages[player.item.id] || betaItemImages[player.item.id]) : null;
     el.lastGearItemIcon.innerHTML = "";
     if (icon?.complete && icon.naturalWidth) {
       const clone = icon.cloneNode();
@@ -3510,6 +3784,25 @@ betaItemDefinitions.forEach((def) => {
   betaItemImages[def.id] = betaMakeImage(def.icon);
 });
 
+const lastGearItemDefinitions = [
+  { id: "shield", name: "Big Bubba", icon: "assets/items/item-big-bubba.png", weights: { low: 2, normal: 3, chaos: 4 } },
+  { id: "teleport", name: "Teleport", icon: "assets/items/item-teleport.png", weights: { low: 2, normal: 2, chaos: 3 } },
+  { id: "oil", name: "Oil Slick", icon: "assets/items/oil_slick.png", weights: { low: 3, normal: 3, chaos: 4 } },
+  { id: "tire", name: "Spike Strip", icon: "assets/items/item-spike-strip.png", weights: { low: 2, normal: 3, chaos: 4 } },
+  { id: "burst", name: "EMP Pulse", icon: "assets/items/item-emp-pulse.png", weights: { low: 1, normal: 3, chaos: 5 } },
+  { id: "turbo", name: "Insano-Mode", icon: "assets/items/item-insano-mode.png", weights: { low: 2, normal: 3, chaos: 4 } },
+  { id: "grapple", name: "Grappling Hook", icon: "assets/lastgear/lg-item-grapple.png", weights: { low: 1, normal: 2, chaos: 4 } },
+  { id: "antiMagnet", name: "Anti-Magnet", icon: "assets/lastgear/lg-item-antimagnet.png", weights: { low: 1, normal: 2, chaos: 4 } },
+  { id: "anchor", name: "Anchor", icon: "assets/lastgear/lg-item-anchor.png", weights: { low: 1, normal: 2, chaos: 3 } },
+  { id: "reverse", name: "Reverse", icon: "assets/lastgear/lg-item-reverse.png", weights: { low: 0, normal: 1, chaos: 2 } },
+  { id: "overhaul", name: "Overhaul", icon: "assets/lastgear/lg-item-overhaul.png", weights: { low: 0, normal: 1, chaos: 3 } }
+];
+
+const lastGearItemImages = {};
+lastGearItemDefinitions.forEach((def) => {
+  lastGearItemImages[def.id] = betaMakeImage(def.icon);
+});
+
 const betaTrackImages = {
   itemBox:           betaMakeImage("assets/tracks/item_box.png"),
   boostPad:          betaMakeImage("assets/tracks/boost_pad.png"),
@@ -3538,7 +3831,14 @@ const lastGearImages = {
   },
   impactSparks: betaMakeImage("assets/lastgear/lg-impact-sparks.png"),
   smokePuffs: betaMakeImage("assets/lastgear/lg-smoke-puffs.png"),
-  speedLines: betaMakeImage("assets/lastgear/lg-speed-lines.png")
+  speedLines: betaMakeImage("assets/lastgear/lg-speed-lines.png"),
+  grappleTether: betaMakeImage("assets/lastgear/lg-grapple-tether.png"),
+  grappleLatch: betaMakeImage("assets/lastgear/lg-grapple-latch.png"),
+  empRing: betaMakeImage("assets/lastgear/lg-emp-ring.png"),
+  antiMagnetField: betaMakeImage("assets/lastgear/lg-antimagnet-field.png"),
+  anchorActive: betaMakeImage("assets/lastgear/lg-anchor-active.png"),
+  reverseStatus: betaMakeImage("assets/lastgear/lg-reverse-status.png"),
+  overhaulActive: betaMakeImage("assets/lastgear/lg-overhaul-active.png")
 };
 
 let betaAiRacingLine = betaTrack.aiLine;

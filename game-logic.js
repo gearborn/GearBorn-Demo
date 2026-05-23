@@ -1101,7 +1101,6 @@ function verifyMenuAssets() {
   const required = [
     "assets/menu/mainmenu-bg.png",
     "assets/menu/story-mode-card.png",
-    "assets/menu/next-race-frame.png",
     "assets/menu/menu-particles.png",
     "assets/menu/icon-vindex.png",
     "assets/menu/icon-profiles.png",
@@ -1339,15 +1338,31 @@ function highestUnlockedStoryCityIndex() {
 }
 
 function cityCoreLevelsCompleted(city) {
-  return city.levels.filter((level) => !["boss", "pink-slip"].includes(level.type)).filter((level) => storyLevelCompleted(level.campaignIndex)).length;
+  const levelRep = city.levels
+    .filter((level) => !["boss", "pink-slip"].includes(level.type))
+    .filter((level) => storyLevelCompleted(level.campaignIndex))
+    .reduce((total, level) => total + storyLevelReputationValue(level), 0);
+  const convoyRep = activeConvoysForCity(city.id)
+    .filter((convoy) => state.convoy?.completed?.[convoy.id])
+    .reduce((total) => total + 2, 0);
+  return levelRep + convoyRep;
 }
 
 function cityCoreLevelsTotal(city) {
-  return city.levels.filter((level) => !["boss", "pink-slip"].includes(level.type)).length;
+  const levelRep = city.levels
+    .filter((level) => !["boss", "pink-slip"].includes(level.type))
+    .reduce((total, level) => total + storyLevelReputationValue(level), 0);
+  const convoyRep = activeConvoysForCity(city.id).length * 2;
+  return levelRep + convoyRep;
 }
 
 function cityBossRequirement(city) {
   return Math.max(1, cityCoreLevelsTotal(city) - 1);
+}
+
+function storyLevelReputationValue(level) {
+  if (!level || ["boss", "pink-slip"].includes(level.type)) return 0;
+  return 1;
 }
 
 function cityReputationPercent(city) {
@@ -1489,6 +1504,7 @@ function renderCampaign() {
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
   const cityUnlocked = storyCityUnlocked(state.selectedStoryCity);
   renderTunerRankBadge();
+  renderStoryFactionBadge();
   el.storyCityIcon.innerHTML = city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : "";
   el.storyCityTitle.textContent = `${city.city}, ${city.country}`.toUpperCase();
   el.storyCityMap.style.backgroundImage = `linear-gradient(135deg, rgba(17, 24, 32, 0.42), rgba(26, 31, 39, 0.58)), url("${city.track.cityMap || city.track.map}")`;
@@ -2089,19 +2105,58 @@ function setConvoyAvailable(convoyId, available = true) {
   renderConvoyEntry();
 }
 
+function renderStoryFactionBadge() {
+  if (!el.storyFactionBadge || !el.storyFactionBadgeImg) return;
+  const faction = activeFactionId();
+  el.storyFactionBadge.hidden = false;
+  el.storyFactionBadge.dataset.faction = faction;
+  el.storyFactionBadgeImg.src = faction === "spindell"
+    ? "assets/items/icon-badge-spindell.png"
+    : "assets/items/icon-badge-keyfree.png";
+  el.storyFactionBadgeImg.alt = `${activeFactionLabel()} faction`;
+}
+
+function openFactionHubPlaceholder() {
+  const message = activeFactionId() === "spindell" ? "Spindell Hub coming soon." : "KeyFree Hub coming soon.";
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay active faction-hub-placeholder";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.innerHTML = `
+    <div class="modal-card">
+      <button class="modal-close" type="button" aria-label="Close faction hub">×</button>
+      <p class="modal-kicker">${activeFactionLabel()}</p>
+      <h2>${activeFactionLabel()} Hub</h2>
+      <p>${message}</p>
+      <button class="primary" type="button">Continue</button>
+    </div>
+  `;
+  const close = () => modal.remove();
+  modal.querySelector(".modal-close")?.addEventListener("click", close);
+  modal.querySelector(".primary")?.addEventListener("click", close);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) close();
+  });
+  document.body.appendChild(modal);
+}
+
 function renderConvoyEntry() {
   if (!el.convoyEntryNode || !el.convoyButtons) return;
-  const availableIds = Object.keys(convoyDefinitions).filter((id) => state.convoy?.available?.[id]);
-  el.convoyEntryNode.hidden = !availableIds.length;
-  el.convoyButtons.innerHTML = availableIds.map((id) => {
-    const convoy = convoyDefinitions[id];
+  const city = storyCities[state.selectedStoryCity] || storyCities[0];
+  const cityConvoys = storyCityUnlocked(state.selectedStoryCity) ? activeConvoysForCity(city.id) : [];
+  const legacyAvailable = Object.values(convoyDefinitions || {}).filter((convoy) => !convoy.cityId && state.convoy?.available?.[convoy.id]);
+  const availableConvoys = cityConvoys.concat(legacyAvailable);
+  el.convoyEntryNode.hidden = !availableConvoys.length;
+  el.convoyButtons.innerHTML = availableConvoys.map((convoy) => {
+    const completed = state.convoy?.completed?.[convoy.id];
     return `
-      <button class="convoy-entry-button" type="button" data-convoy-open="${id}">
+      <button class="convoy-entry-button ${completed ? "completed" : ""}" type="button" data-convoy-open="${convoy.id}">
         <span class="convoy-medallion">
           <img class="convoy-medallion-base" src="${convoy.icon}" alt="" loading="lazy" decoding="async">
           <img class="convoy-medallion-face" src="${convoy.headshot}" alt="" loading="lazy" decoding="async">
         </span>
         <strong>${convoy.name}</strong>
+        <small>Convoy · +2 Rep${completed ? " · Complete" : ""}</small>
       </button>
     `;
   }).join("");
@@ -2111,23 +2166,59 @@ function openConvoy(convoyId) {
   if (!convoyDefinitions[convoyId]) return;
   state.convoy.inProgress = state.convoy.inProgress || { convoyId, currentStage: 0, stageProgress: {} };
   state.convoy.inProgress.convoyId = convoyId;
+  const preScene = convoyStoryScriptFor(convoyId, "pre")[0]?.text;
+  if (preScene) showToast("Convoy Story Placeholder", preScene);
   renderConvoy();
   showView("convoy");
+}
+
+function validConvoyLoadout(loadout) {
+  const carIds = Array.isArray(loadout?.carIds) ? loadout.carIds.filter(Boolean) : [];
+  return carIds.length === 3 && new Set(carIds).size === 3 && carIds.every((carId) => isSelectablePlayerCar(carId));
+}
+
+function activeConvoyLoadout() {
+  return (state.convoy?.loadouts || []).find(validConvoyLoadout) || null;
+}
+
+function completeConvoy(convoyId) {
+  const convoy = convoyDefinitions[convoyId];
+  if (!convoy) return false;
+  const firstClear = !state.convoy?.completed?.[convoyId];
+  state.convoy = state.convoy || {};
+  state.convoy.completed = state.convoy.completed || {};
+  state.convoy.completed[convoyId] = true;
+  state.convoy.inProgress = null;
+  const reward = firstClear ? convoy.rewards?.firstWin || {} : convoy.rewards?.replayWin || {};
+  if (reward.sprox) addSprox(reward.sprox);
+  state.convoyMedallions = state.convoyMedallions || [];
+  const medallionIds = convoy.rewards?.firstWin?.medallionIds || [];
+  const newlyEarnedMedallions = medallionIds.filter((medallionId) => !state.convoyMedallions.includes(medallionId));
+  newlyEarnedMedallions.forEach((medallionId) => state.convoyMedallions.push(medallionId));
+  const postScene = convoyStoryScriptFor(convoyId, "post")[0]?.text;
+  const medallionCopy = newlyEarnedMedallions.length
+    ? ` Medallion earned: ${newlyEarnedMedallions.join(", ")}.`
+    : " Medallion already earned.";
+  showToast(firstClear ? "Convoy Complete" : "Convoy Replay Complete", postScene || `${convoy.name} complete.${medallionCopy}`);
+  saveState();
+  renderCampaign();
+  return true;
 }
 
 function renderConvoy() {
   if (!el.convoyTitle || !el.convoyStageList) return;
   const convoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || "tyree";
   const convoy = convoyDefinitions[convoyId] || convoyDefinitions.tyree;
+  const loadout = activeConvoyLoadout();
   el.convoyTitle.textContent = convoy.name;
-  el.convoySummary.textContent = `${convoy.sponsor} · 3 stages · no car reuse`;
+  el.convoySummary.textContent = `${convoy.sponsor} · 3 stages · no car reuse${loadout ? ` · ${loadout.name}` : " · Choose a valid loadout"}`;
   const progress = state.convoy?.inProgress?.stageProgress || {};
   el.convoyStageList.innerHTML = convoy.stages.map((stage, index) => `
     <article class="convoy-stage-card ${progress[index] || ""}">
       <span>Stage ${index + 1}</span>
       <strong>${stage.type === "h2h" ? "Head-to-Head" : stage.type.toUpperCase()}</strong>
-      <p>${stage.opponentName}</p>
-      <button class="primary" type="button" data-convoy-stage="${index}" ${index > 0 && progress[index - 1] !== "won" ? "disabled" : ""}>${progress[index] === "lost" ? "Retry Stage" : "Start Stage"}</button>
+      <p>${stage.opponentName}${loadout?.carIds?.[index] ? ` · Your slot: ${currentEvolution(loadout.carIds[index]).name}` : ""}</p>
+      <button class="primary" type="button" data-convoy-stage="${index}" ${!loadout || index > 0 && progress[index - 1] !== "won" ? "disabled" : ""}>${progress[index] === "lost" ? "Retry Stage" : "Start Stage"}</button>
     </article>
   `).join("");
 }
@@ -2154,6 +2245,10 @@ function renderConvoyLoadouts() {
 function saveConvoyLoadout(index) {
   const nameInput = document.querySelector(`[data-convoy-loadout-name="${index}"]`);
   const carIds = [0, 1, 2].map((slot) => document.querySelector(`[data-convoy-loadout-car="${index}:${slot}"]`)?.value).filter(Boolean);
+  if (carIds.length !== 3 || new Set(carIds).size !== 3) {
+    showToast("Convoy Loadout", "Convoy loadouts require three different GearBorn.");
+    return;
+  }
   state.convoy.loadouts[index] = { name: nameInput?.value?.trim() || `Loadout ${index + 1}`, carIds };
   saveState();
   renderConvoyLoadouts();
@@ -2386,7 +2481,7 @@ function renderCampaignRewards(level, locked) {
           <strong>${result.bestTime.toFixed(2)} s</strong>
         </div>`
       : "";
-    el.campaignRewards.innerHTML = timeMedals.map((medal) => `
+    el.campaignRewards.innerHTML = storyReputationRewardMarkup(level) + timeMedals.map((medal) => `
       <div class="reward-row compact">
         <span class="medal-text ${medal.key}">${medal.label}</span>
         <strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} Sprox</strong>
@@ -2395,7 +2490,7 @@ function renderCampaignRewards(level, locked) {
     return;
   }
   if (level.type === "circuit") {
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
+    el.campaignRewards.innerHTML = `${storyReputationRewardMarkup(level)}<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "drag" || level.type === "pink-slip") {
@@ -2405,20 +2500,27 @@ function renderCampaignRewards(level, locked) {
     const riskRow = isPinkSlipRiskActive(level)
       ? `<div class="reward-row compact pink-risk-row"><span>Risk</span><strong>Lose: Level 1 reset and equipped parts taken.</strong></div>`
       : "";
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} Sprox</strong></div>${riskRow}${safeReplay}${possiblePartRewardMarkup()}`;
+    el.campaignRewards.innerHTML = `${storyReputationRewardMarkup(level)}<div class="reward-row"><span>Win Reward</span><strong>${level.drag.xp} Sprox</strong></div>${riskRow}${safeReplay}${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "battle") {
     const reward = battleRewardForBossIndex(level.bossIndex);
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${reward} Sprox</strong></div>${possiblePartRewardMarkup()}`;
+    el.campaignRewards.innerHTML = `${storyReputationRewardMarkup(level)}<div class="reward-row"><span>Win Reward</span><strong>${reward} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   if (level.type === "rival") {
-    el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
+    el.campaignRewards.innerHTML = `${storyReputationRewardMarkup(level)}<div class="reward-row"><span>Win Reward</span><strong>${level.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
     return;
   }
   const boss = level.final ? finalBoss : bosses[level.bossIndex];
   el.campaignRewards.innerHTML = `<div class="reward-row"><span>Win Reward</span><strong>${boss.xp} Sprox</strong></div>${possiblePartRewardMarkup()}`;
+}
+
+function storyReputationRewardMarkup(level) {
+  const rep = storyLevelReputationValue(level);
+  if (!rep) return "";
+  const label = level.type === "rival" ? "Rival Race" : "Normal Race";
+  return `<div class="reward-row compact"><span>${label}</span><strong>+${rep} Rep</strong></div>`;
 }
 
 function possiblePartRewardMarkup() {
@@ -2508,7 +2610,7 @@ function battleCarImageForBoss(boss) {
     Inflewenze: "assets/cars/peacock-inflewenze-race.png",
     Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-race.png",
     Matunnie: "assets/cars/rabbit-matunnie-race.png",
-    Kuumbusta: "assets/cars/springbok-kuumbusta-race.png",
+    Kuumbusta: "assets/cars/bok-kuumbusta-race.png",
     Kermajesty: "assets/cars/frog-kermajesty-race.png",
     Hornula1: "assets/cars/unicorn-hornula1-race.png"
   };
@@ -2523,7 +2625,7 @@ function bossCarDisplayImage(boss) {
     Inflewenze: "assets/cars/peacock-inflewenze-display.png",
     Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-display.png",
     Matunnie: "assets/cars/rabbit-matunnie-display.png",
-    Kuumbusta: "assets/cars/springbok-kuumbusta-display.png",
+    Kuumbusta: "assets/cars/bok-kuumbusta-display.png",
     Kermajesty: "assets/cars/frog-kermajesty-display.png",
     Hornula1: "assets/cars/unicorn-hornula1-display.png"
   };
@@ -3579,6 +3681,7 @@ function renderGarage() {
     : "";
   document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
   if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
+  renderUnlockHubCard();
   const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
   el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
   el.garageGrid.innerHTML = garageCars.map((car) => {
@@ -3586,6 +3689,22 @@ function renderGarage() {
     if (expandedGarageCardIds.has(car.id) && isCarUnlocked(car.id)) return garageDetailedCardMarkup(car, "garage-expanded-card");
     return garageCompactCardMarkup(car);
   }).join("");
+}
+
+function renderUnlockHubCard() {
+  const spindell = activeUnlockHub() === "spindellLabs";
+  const card = document.querySelector("#forge-card-btn");
+  const bg = card?.querySelector(".forge-menu-card-bg");
+  const vat = card?.querySelector(".forge-menu-card-vat");
+  if (el.forgeCardTitle) el.forgeCardTitle.textContent = spindell ? "Spindell Labs" : "The Forge";
+  if (el.forgeCardSubtitle) {
+    el.forgeCardSubtitle.textContent = spindell
+      ? "Calibrate keys. Sync medallions. Unlock GearBorn."
+      : "Unlock GearBorn with your Medallions.";
+  }
+  if (bg) bg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
+  if (vat) vat.src = spindell ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
+  card?.classList.toggle("spindell-labs-card", spindell);
 }
 
 function renderTutorialGarage() {
@@ -5095,6 +5214,12 @@ const forgeMedallionMap = {
   "space-dolphin":      "assets/medallions/medallion-orbitide.png",
   "butcher-hog":        "assets/medallions/medallion-sauspin.png",
   "tiger-cart":         "assets/medallions/medallion-puttercat.png",
+  "gb-growler":         "assets/medallions/medallion-cruzdog.png",
+  "armadaddio":         "assets/medallions/medallion-manscape.png",
+  "electro-beetle":     "assets/medallions/medallion-bertie.png",
+  "flavor-coast":       "assets/medallions/medallion-carmieri.png",
+  "future-bok":         "assets/medallions/medallion-sprynza.png",
+  "wrestler-roo":       "assets/medallions/medallion-rumbleroo.png",
   "silly-goose":        "assets/medallions/medallion-honky.png",
   "construction-blok":  "assets/medallions/medallion-blokparty.png",
   "skater-koala":       "assets/medallions/medallion-koaster.png",
@@ -5114,11 +5239,36 @@ function openForge() {
   showView("garage");
   forgeSelectedCarId = null;
   forgeAnimating = false;
+  const spindell = activeUnlockHub() === "spindellLabs";
+  if (el.forgePanel) {
+    el.forgePanel.classList.toggle("spindell-labs-view", spindell);
+    el.forgePanel.classList.toggle("forge-unlock-view", !spindell);
+  }
+  if (el.forgeKicker) el.forgeKicker.textContent = spindell ? "Spindell Labs" : "The Forge";
+  if (el.forgeTitle) el.forgeTitle.textContent = spindell ? "Spindell Labs" : "Forge what's next.";
+  if (el.forgeSubtitle) {
+    el.forgeSubtitle.textContent = spindell
+      ? "Unlock medallions through precision key calibration. Guide: Orion Vincent."
+      : "Forge Unlock. The Forge answers. Guide: Auntie.";
+  }
+  const sceneBg = document.querySelector(".forge-bg-img");
+  const fullBg = document.querySelector(".forge-fs-bg");
+  if (sceneBg) sceneBg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
+  if (fullBg) fullBg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
+  if (el.forgeVatImg) {
+    el.forgeVatImg.src = spindell ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
+    el.forgeVatImg.alt = spindell ? "Spindell sync port" : "The Forge vat";
+  }
   if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
-  if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = "Select a Medallion"; }
-  if (el.forgeAnimationArea) { el.forgeAnimationArea.innerHTML = ""; el.forgeAnimationArea.classList.remove("animating"); }
+  if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = spindell ? "Select a Key" : "Select a Medallion"; }
+  if (el.forgeAnimationArea) {
+    el.forgeAnimationArea.innerHTML = spindell
+      ? `<img class="spindell-idle-sync-tube" src="assets/spindell/spindell-sync-tube.png" alt="" aria-hidden="true" onerror="this.hidden=true;">`
+      : "";
+    el.forgeAnimationArea.classList.remove("animating");
+  }
   if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
-  if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+  if (el.forgeSelectedName) el.forgeSelectedName.textContent = spindell ? "Select a key medallion to sync" : "Select a Medallion to unlock";
   // Show forge panel inside garage-view, hide garage content
   if (el.garageContent) el.garageContent.hidden = true;
   if (el.forgePanel) el.forgePanel.hidden = false;
@@ -5167,7 +5317,7 @@ function selectForgeMedallion(carId) {
     el.forgeSelectedMedallion.removeAttribute("hidden");
   }
   el.forgeUnlockBtn.disabled = false;
-  el.forgeUnlockBtn.textContent = `Unlock ${form?.name || carId}`;
+  el.forgeUnlockBtn.textContent = activeUnlockHub() === "spindellLabs" ? `Sync ${form?.name || carId}` : `Unlock ${form?.name || carId}`;
 }
 
 async function runForgeAnimation(carId) {
@@ -5175,6 +5325,7 @@ async function runForgeAnimation(carId) {
   if (!forgeSelectedCarId || forgeSelectedCarId !== carId) return;
   if (!(state.medallionsOwned || []).includes(carId)) return;
   if (isCarUnlocked(carId)) return;
+  const animationType = unlockAnimationType();
   forgeAnimating = true;
   if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = true;
 
@@ -5193,14 +5344,70 @@ async function runForgeAnimation(carId) {
   const step = (ms) => new Promise((r) => setTimeout(r, Math.max(80, Math.round(ms * speed))));
   const add = (node, className) => node?.classList.add(className);
   const remove = (node, className) => node?.classList.remove(className);
+  const runSpindellKeySyncSequence = async () => {
+    const fsBg = document.querySelector(".forge-fs-bg");
+    if (fsBg) fsBg.src = "assets/spindell/spindell-bg.png";
+    if (fsVat) {
+      fsVat.src = "assets/spindell/spindell-sync-port.png";
+      fsVat.alt = "Spindell sync port";
+    }
+    area.innerHTML = `
+      <img class="spindell-sync-layer spindell-sync-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+      <img class="spindell-sync-layer spindell-sync-key" src="assets/items/gearborn-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
+      <img class="spindell-sync-layer spindell-sync-tube-anim" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
+      <img class="spindell-sync-layer spindell-sync-arm" src="assets/spindell/spindell-magnetic-arm.png" alt="" onerror="this.classList.add('asset-missing')">
+      <div class="spindell-sync-layer spindell-sync-flash-layer"></div>
+      <div class="spindell-sync-layer spindell-key-display">
+        <img class="vinsync-complete-screen" src="assets/spindell/vinsync-complete-screen.png" alt="" onerror="this.classList.add('asset-missing')">
+        <img class="vinsync-pixel-car" src="assets/spindell/pixel/pixel-car.png" alt="" onerror="this.hidden=true">
+      </div>
+    `;
+    const getSync = (cls) => area.querySelector("." + cls);
+    const medallionEl = getSync("spindell-sync-medallion");
+    const keyEl = getSync("spindell-sync-key");
+    const tubeEl = getSync("spindell-sync-tube-anim");
+    const armEl = getSync("spindell-sync-arm");
+    const flashEl = getSync("spindell-sync-flash-layer");
+    const displayEl = getSync("spindell-key-display");
+    await step(180);
+    add(medallionEl, "spindell-sync-active");
+    await step(520);
+    add(medallionEl, "spindell-sync-port-power");
+    await step(420);
+    add(keyEl, "spindell-sync-key-active");
+    await step(520);
+    add(fsVat, "spindell-sync-port-power");
+    await step(620);
+    add(armEl, "spindell-sync-arm-descend");
+    await step(620);
+    add(armEl, "spindell-sync-arm-clamp");
+    add(tubeEl, "spindell-sync-arm-clamp");
+    await step(420);
+    add(tubeEl, "spindell-sync-tube-lift");
+    add(armEl, "spindell-sync-tube-lift");
+    await step(860);
+    add(flashEl, "spindell-sync-flash");
+    await step(360);
+    remove(tubeEl, "spindell-sync-tube-lift");
+    remove(armEl, "spindell-sync-tube-lift");
+    add(tubeEl, "spindell-sync-new-tube-descend");
+    await step(760);
+    add(displayEl, "spindell-sync-complete");
+    await step(1500);
+  };
 
   try {
     area.innerHTML = "";
     overlay.classList.add("active");
+    overlay.classList.toggle("spindell-key-sync-animation", animationType === "spindellKeySync");
+    overlay.classList.toggle("forge-unlock-animation", animationType === "forgeUnlock");
     overlay.setAttribute("aria-hidden", "false");
     playAudioCue("evolutionBuild");
 
-    area.innerHTML = `
+    if (animationType === "spindellKeySync") {
+      await runSpindellKeySyncSequence();
+    } else {
+      area.innerHTML = `
       <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
       <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="" onerror="this.classList.add('asset-missing')">
       <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform_stage.png" alt="" onerror="this.classList.add('asset-missing')">
@@ -5246,6 +5453,7 @@ async function runForgeAnimation(carId) {
     playAudioCue("evolutionReveal");
     add(carEl, "step-reveal");
     await step(2800);
+    }
 
     if (!(state.medallionsOwned || []).includes(carId) || isCarUnlocked(carId)) return;
     unlockGearbornLine(carId);
@@ -5261,7 +5469,10 @@ async function runForgeAnimation(carId) {
     console.warn("Forge animation failed", error);
   } finally {
     remove(fsVat, "forge-shake");
+    remove(fsVat, "spindell-sync-port-power");
+    if (fsVat) fsVat.src = activeUnlockHub() === "spindellLabs" ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
     overlay.classList.remove("active");
+    overlay.classList.remove("spindell-key-sync-animation", "forge-unlock-animation");
     overlay.setAttribute("aria-hidden", "true");
     area.innerHTML = "";
     forgeAnimating = false;
@@ -5292,7 +5503,7 @@ function showForgeUnlockedPopup(carId) {
 
   // Set unlock text
   popup.querySelector("#forge-unlocked-name").textContent =
-    `${form?.name || carId} has been unlocked. It is now available in your Garage.`;
+    `${form?.name || carId} has been unlocked. ${activeUnlockHub() === "spindellLabs" ? "Key Sync complete." : "The Forge answers."}`;
 
   // Remove hidden attr FIRST so display:flex from .active can work
   popup.removeAttribute("hidden");
@@ -6168,6 +6379,50 @@ function rivalCharacter() {
 
 function selectedTuner() {
   return tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
+}
+
+function activeFactionId() {
+  return selectedTuner().id === "cha-cha" ? "spindell" : "keyfree";
+}
+
+function activeFactionLabel() {
+  return activeFactionId() === "spindell" ? "Spindell" : "KeyFree";
+}
+
+function activeFactionMentor() {
+  return selectedTuner().id === "cha-cha"
+    ? { id: "dr-tyree", name: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" }
+    : { id: "ashley", name: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" };
+}
+
+function rivalMentor() {
+  return selectedTuner().id === "cha-cha"
+    ? { id: "ashley", name: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" }
+    : { id: "dr-tyree", name: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" };
+}
+
+function activeUnlockHub() {
+  return activeFactionId() === "spindell" ? "spindellLabs" : "forge";
+}
+
+function unlockAnimationType() {
+  return activeUnlockHub() === "spindellLabs" ? "spindellKeySync" : "forgeUnlock";
+}
+
+function rivalRaceScriptFor(cityId, phase = "pre") {
+  const tunerKey = selectedTuner().id === "cha-cha" ? "cha-cha" : "mylo";
+  return rivalRaceScripts?.[tunerKey]?.[cityId]?.[phase] || [];
+}
+
+function convoyStoryScriptFor(convoyId, phase = "pre") {
+  return convoyStoryScripts?.[convoyId]?.[phase] || [];
+}
+
+function activeConvoysForCity(cityId) {
+  return Object.values(convoyDefinitions || {}).filter((convoy) => (
+    convoy.cityId === cityId
+    && (!convoy.playerTunerId || convoy.playerTunerId === selectedTuner().id)
+  ));
 }
 
 function selectedTunerShortName() {
@@ -7533,12 +7788,12 @@ function startTutorialHeadToHeadRace(options = {}) {
 
 function openRivalDialogue(level, phase, onContinue) {
   const rival = rivalTuner();
-  const pre = rival.id === "cha-cha"
-    ? "Cha Cha pulls up beside you. ‘Let’s see if you can keep up.’"
-    : "Mylo grins from the starting line. ‘Guess we’re doing this.’";
-  const post = rival.id === "cha-cha"
-    ? "Cha Cha folds her arms, trying not to look impressed. ‘Don’t get used to it.’"
-    : "Mylo laughs, breathless. ‘Okay… that was actually awesome.’";
+  const cityId = level?.track?.id || storyCities.find((city) => city.bossIndex === level?.bossIndex)?.id || "indianapolis";
+  const scripted = rivalRaceScriptFor(cityId, phase);
+  const fallback = phase === "post"
+    ? "[Rival Race Placeholder: Post]"
+    : "[Rival Race Placeholder: Pre]";
+  const line = scripted[0]?.text || fallback;
   const modal = document.createElement("div");
   modal.className = "rival-dialog";
   modal.innerHTML = `
@@ -7546,7 +7801,7 @@ function openRivalDialogue(level, phase, onContinue) {
       <button class="modal-close" type="button" aria-label="Close rival scene">×</button>
       <div class="selection-preview-art">${characterMarkup({ name: rival.name, image: rival.headshot || rival.image })}</div>
       <h2>${rival.name}</h2>
-      <p>${phase === "post" ? post : pre}</p>
+      <p>${line}</p>
       <button class="primary" type="button">Continue</button>
     </div>
   `;

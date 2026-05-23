@@ -596,6 +596,7 @@ const defaultState = {
   unlockedArtVanForms: [],
   unlockedLines: [...defaultUnlockedLines],
   medallionsOwned: [],
+  convoyMedallions: [],
   timeTrials: {},
   storyTimeTrials: {},
   garage: Object.fromEntries(cars.map((car) => [car.id, { level: 1, xp: 0, evolution: 0, pendingEvolution: null }]))

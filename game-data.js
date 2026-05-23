@@ -344,6 +344,78 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     ]
   },
   {
+    id: "gb-growler",
+    family: "GB Growler",
+    color: "#b55a3c",
+    trait: "Guard dog juggernaut",
+    unlockable: true,
+    evolutions: [
+      { name: "Cruzdog", images: { display: "assets/cars/gb-growler-cruzdog-display.png", race: "assets/cars/gb-growler-cruzdog-race.png", topdown: "assets/cars/gb-growler-cruzdog-topdown.png" } },
+      { name: "Bullwark", images: { display: "assets/cars/gb-growler-bullwark-display.png", race: "assets/cars/gb-growler-bullwark-race.png", topdown: "assets/cars/gb-growler-bullwark-topdown.png" } },
+      { name: "Forterra", images: { display: "assets/cars/gb-growler-forterra-display.png", race: "assets/cars/gb-growler-forterra-race.png", topdown: "assets/cars/gb-growler-forterra-topdown.png" } }
+    ]
+  },
+  {
+    id: "armadaddio",
+    family: "Armadaddio",
+    color: "#7bdff2",
+    trait: "Shellshock rambler",
+    unlockable: true,
+    evolutions: [
+      { name: "Manscape", images: { display: "assets/cars/armadillo-manscape-display.png", race: "assets/cars/armadillo-manscape-race.png", topdown: "assets/cars/armadillo-manscape-topdown.png" } },
+      { name: "Masplore", images: { display: "assets/cars/armadillo-masplore-display.png", race: "assets/cars/armadillo-masplore-race.png", topdown: "assets/cars/armadillo-masplore-topdown.png" } },
+      { name: "Manstrocity", images: { display: "assets/cars/armadillo-manstrocity-display.png", race: "assets/cars/armadillo-manstrocity-race.png", topdown: "assets/cars/armadillo-manstrocity-topdown.png" } }
+    ]
+  },
+  {
+    id: "electro-beetle",
+    family: "Electro-Beetle",
+    color: "#52c7ff",
+    trait: "Static skitter",
+    unlockable: true,
+    evolutions: [
+      { name: "Bertie", images: { display: "assets/cars/electro-beetle-bertie-display.png", race: "assets/cars/electro-beetle-bertie-race.png", topdown: "assets/cars/electro-beetle-bertie-topdown.png" } },
+      { name: "Voltscarab", images: { display: "assets/cars/electro-beetle-voltscarab-display.png", race: "assets/cars/electro-beetle-voltscarab-race.png", topdown: "assets/cars/electro-beetle-voltscarab-topdown.png" } },
+      { name: "Beetronox", images: { display: "assets/cars/electro-beetle-beetronox-display.png", race: "assets/cars/electro-beetle-beetronox-race.png", topdown: "assets/cars/electro-beetle-beetronox-topdown.png" } }
+    ]
+  },
+  {
+    id: "flavor-coast",
+    family: "Flavor Coast",
+    color: "#ff8c26",
+    trait: "Flavortown rocket",
+    unlockable: true,
+    evolutions: [
+      { name: "Carmieri", images: { display: "assets/cars/flavor-coast-carmieri-display.png", race: "assets/cars/flavor-coast-carmieri-race.png", topdown: "assets/cars/flavor-coast-carmieri-topdown.png" } },
+      { name: "TripleDiesel", images: { display: "assets/cars/flavor-coast-triplediesel-display.png", race: "assets/cars/flavor-coast-triplediesel-race.png", topdown: "assets/cars/flavor-coast-triplediesel-topdown.png" } },
+      { name: "Flavortow", images: { display: "assets/cars/flavor-coast-flavortow-display.png", race: "assets/cars/flavor-coast-flavortow-race.png", topdown: "assets/cars/flavor-coast-flavortow-topdown.png" } }
+    ]
+  },
+  {
+    id: "future-bok",
+    family: "Future Bok",
+    color: "#6ee7a8",
+    trait: "Leaprunner",
+    unlockable: true,
+    evolutions: [
+      { name: "Sprynza", images: { display: "assets/cars/bok-sprynza-display.png", race: "assets/cars/bok-sprynza-race.png", topdown: "assets/cars/bok-sprynza-topdown.png" } },
+      { name: "Bokwylde", images: { display: "assets/cars/bok-bokwylde-display.png", race: "assets/cars/bok-bokwylde-race.png", topdown: "assets/cars/bok-bokwylde-topdown.png" } },
+      { name: "Kuumbusta", images: { display: "assets/cars/bok-kuumbusta-display.png", race: "assets/cars/bok-kuumbusta-race.png", topdown: "assets/cars/bok-kuumbusta-topdown.png" } }
+    ]
+  },
+  {
+    id: "wrestler-roo",
+    family: "Wrestler Roo",
+    color: "#c084fc",
+    trait: "Ringbreaker hopper",
+    unlockable: true,
+    evolutions: [
+      { name: "Rumbleroo", images: { display: "assets/cars/wrestler-roo-rumbleroo-display.png", race: "assets/cars/wrestler-roo-rumbleroo-race.png", topdown: "assets/cars/wrestler-roo-rumbleroo-topdown.png" } },
+      { name: "StrayGunn", images: { display: "assets/cars/wrestler-roo-straygunn-display.png", race: "assets/cars/wrestler-roo-straygunn-race.png", topdown: "assets/cars/wrestler-roo-straygunn-topdown.png" } },
+      { name: "Kangold", images: { display: "assets/cars/wrestler-roo-kangold-display.png", race: "assets/cars/wrestler-roo-kangold-race.png", topdown: "assets/cars/wrestler-roo-kangold-topdown.png" } }
+    ]
+  },
+  {
     id: "tiger-cart",
     family: "Tiger Cart",
     color: "#facc15",
@@ -419,12 +491,13 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
 
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
 const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
-const gauntletUnlockOrder = ["muscle-man", "chill-penguin", "space-dolphin", "butcher-hog", "tiger-cart", "silly-goose", "construction-blok", "skater-koala", "royal-flush", "rides-hair"];
+const gauntletUnlockOrder = ["muscle-man", "chill-penguin", "space-dolphin", "butcher-hog", "electro-beetle", "silly-goose", "construction-blok", "skater-koala", "royal-flush", "rides-hair"];
+const convoyUnlockOrder = ["armadaddio", "tiger-cart", "wrestler-roo", "flavor-coast", "gb-growler", "future-bok"];
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const rivalStarterCarIds = defaultUnlockedLines;
 const achievementUnlockOrder = ["art-van", "cake-train"];
-const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, ["waste-management", "rainbowlt", "metal-snake", "training-car"]);
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, ["waste-management", "rainbowlt", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -518,7 +591,7 @@ const tutorialSceneSelectOptions = [
   { label: "VINdex",      scene: "vindex" },
   { label: "The Forge",   scene: "the-forge" }
 ];
-const gearbornKeyImage = "assets/items/item-gearbornkey.png";
+const gearbornKeyImage = "assets/items/gearborn-key.png";
 const partTypes = [
   { id: "rocketFuel", name: "Rocket Fuel", attr: "speed", label: "SPD", image: "assets/items/parts-rocket-fuel.png" },
   { id: "warpStarter", name: "Warp Starter", attr: "acceleration", label: "ACC", image: "assets/items/parts-warp-starter.png" },
@@ -3458,6 +3531,66 @@ const gearbornStatProfiles = {
     "playstyle": "Feral Fairway",
     "type": "Grip"
   },
+  "gb-growler": {
+    "speed": 72,
+    "acceleration": 70,
+    "handling": 66,
+    "torque": 82,
+    "body": 86,
+    "powertrain": 78,
+    "playstyle": "Guard Dog Juggernaut",
+    "type": "Endurance"
+  },
+  "armadaddio": {
+    "speed": 68,
+    "acceleration": 70,
+    "handling": 64,
+    "torque": 80,
+    "body": 87,
+    "powertrain": 74,
+    "playstyle": "Shellshock Rambler",
+    "type": "Endurance"
+  },
+  "electro-beetle": {
+    "speed": 76,
+    "acceleration": 82,
+    "handling": 84,
+    "torque": 72,
+    "body": 62,
+    "powertrain": 87,
+    "playstyle": "Static Skitter",
+    "type": "Tech"
+  },
+  "flavor-coast": {
+    "speed": 87,
+    "acceleration": 84,
+    "handling": 74,
+    "torque": 80,
+    "body": 68,
+    "powertrain": 86,
+    "playstyle": "Flavortown Rocket",
+    "type": "Power"
+  },
+  "future-bok": {
+    "speed": 86,
+    "acceleration": 87,
+    "handling": 85,
+    "torque": 76,
+    "body": 64,
+    "powertrain": 82,
+    "playstyle": "Solar Leaprunner",
+    "type": "Agility"
+  },
+  "wrestler-roo": {
+    "speed": 78,
+    "acceleration": 84,
+    "handling": 76,
+    "torque": 82,
+    "body": 80,
+    "powertrain": 87,
+    "playstyle": "Ringbreaker Hopper",
+    "type": "Power"
+  },
   "silly-goose": {
     "speed": 72,
     "acceleration": 78,
@@ -3558,7 +3691,7 @@ const bosses = [
   { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
   { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
   { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
-  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/springbok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
+  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/bok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
   { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/characters/pallavi.png", headshot: "assets/characters/headshots/headshot-pallavi.png" }
 ];
 const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/cars/unicorn-hornula1-topdown.png", portrait: "assets/characters/racer-alpha-helmet.png", unmaskedPortrait: "assets/characters/racer-alpha.png", headshot: "assets/characters/headshots/headshot-racer-alpha.png" };
@@ -3584,9 +3717,10 @@ const pinkSlipRacePlan = {
   7: { carId: "frog",               rankKey: "S", xp: 820, power: 1.08, distance: 1600 }
 };
 const rivalRacePlan = {
-  1: { id: "berlin-rival", mechanic: "drag", xp: 300, power: 1.2, distance: 800 },
+  0: { id: "indianapolis-rival", mechanic: "circuitDuel", xp: 240, power: 1.08, distance: 500 },
+  2: { id: "dubai-rival", mechanic: "circuitDuel", xp: 430, power: 1.32, distance: 500 },
   4: { id: "los-angeles-rival", mechanic: "circuitDuel", xp: 640, power: 1.56, distance: 500 },
-  7: { id: "bangalore-rival", mechanic: "battle", xp: 1040, power: 1.92 }
+  6: { id: "cape-town-rival", mechanic: "circuitDuel", xp: 900, power: 1.8, distance: 500 }
 };
 function pinkSlipStageFor(plan) {
   const car = cars.find((item) => item.id === plan.carId);
@@ -3690,7 +3824,7 @@ const gauntletCityLineMap = {
   "los-angeles": "muscle-man",
   seoul: "chill-penguin",
   "cape-town": "space-dolphin",
-  bangalore: "tiger-cart"
+  bangalore: "electro-beetle"
 };
 
 function medallionGauntletConfigForLine(gearBornLineId) {
@@ -3733,7 +3867,7 @@ const timeMedals = [
 ];
 const vindexEntries = [
   ["010", "Bananachi", "Monkey Line", "assets/cars/monkey-bananachi-display.png"],
-  ["032", "Manstrocity", "Armadillo Dad Line", "assets/cars/armadillo-manstrocity-display.png"],
+  ["032", "Manstrocity", "Armadaddio Line", "assets/cars/armadillo-manstrocity-display.png"],
   ["037", "Beardo", "Rides Hair Line", "assets/cars/mustache-beardo-display.png"],
   ["039", "Baybee", "Bee-cycle Line", "assets/cars/bee-baybee-display.png"],
   ["040", "Syndrone", "Bee-cycle Line", "assets/cars/bee-syndrone-display.png"],
@@ -3788,13 +3922,109 @@ const vindexEntries = [
   ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/sticker-sponsore-display.png"],
   ["296", "Baronessex", "German Discipline Line", "assets/cars/german-baronessex-display.png"],
   ["298", "Crusadome", "Crusader Line", "assets/cars/pope-crusadome-display.png"],
-  ["301", "Kuumbusta", "Combustion Line", "assets/cars/springbok-kuumbusta-display.png"],
+  ["301", "Kuumbusta", "Future Bok Line", "assets/cars/bok-kuumbusta-display.png"],
   ["305", "Hurrdaboutis", "Roundabout Line", "assets/cars/talkshow-hurrdaboutis-display.png"],
   ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unicorn-rainbowlt-display.png"],
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/unicorn-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
 
 const additionalVindexEntries = [
+  [
+    "004",
+    "Cruzdog",
+    "GB Growler Line",
+    "assets/cars/gb-growler-cruzdog-display.png"
+  ],
+  [
+    "005",
+    "Bullwark",
+    "GB Growler Line",
+    "assets/cars/gb-growler-bullwark-display.png"
+  ],
+  [
+    "006",
+    "Forterra",
+    "GB Growler Line",
+    "assets/cars/gb-growler-forterra-display.png"
+  ],
+  [
+    "019",
+    "Bertie",
+    "Electro-Beetle Line",
+    "assets/cars/electro-beetle-bertie-display.png"
+  ],
+  [
+    "020",
+    "Voltscarab",
+    "Electro-Beetle Line",
+    "assets/cars/electro-beetle-voltscarab-display.png"
+  ],
+  [
+    "021",
+    "Beetronox",
+    "Electro-Beetle Line",
+    "assets/cars/electro-beetle-beetronox-display.png"
+  ],
+  [
+    "030",
+    "Manscape",
+    "Armadaddio Line",
+    "assets/cars/armadillo-manscape-display.png"
+  ],
+  [
+    "031",
+    "Masplore",
+    "Armadaddio Line",
+    "assets/cars/armadillo-masplore-display.png"
+  ],
+  [
+    "195",
+    "Rumbleroo",
+    "Wrestler Roo Line",
+    "assets/cars/wrestler-roo-rumbleroo-display.png"
+  ],
+  [
+    "196",
+    "StrayGunn",
+    "Wrestler Roo Line",
+    "assets/cars/wrestler-roo-straygunn-display.png"
+  ],
+  [
+    "197",
+    "Kangold",
+    "Wrestler Roo Line",
+    "assets/cars/wrestler-roo-kangold-display.png"
+  ],
+  [
+    "240",
+    "Carmieri",
+    "Flavor Coast Line",
+    "assets/cars/flavor-coast-carmieri-display.png"
+  ],
+  [
+    "241",
+    "TripleDiesel",
+    "Flavor Coast Line",
+    "assets/cars/flavor-coast-triplediesel-display.png"
+  ],
+  [
+    "242",
+    "Flavortow",
+    "Flavor Coast Line",
+    "assets/cars/flavor-coast-flavortow-display.png"
+  ],
+  [
+    "299",
+    "Sprynza",
+    "Future Bok Line",
+    "assets/cars/bok-sprynza-display.png"
+  ],
+  [
+    "300",
+    "Bokwylde",
+    "Future Bok Line",
+    "assets/cars/bok-bokwylde-display.png"
+  ],
   [
     "036",
     "Staschel",
@@ -4056,6 +4286,14 @@ const vindexClassByNumber = {
   "327": "S"
 };
 Object.assign(vindexClassByNumber, {
+  "004": "E",
+  "005": "D",
+  "006": "C",
+  "019": "E",
+  "020": "D",
+  "021": "C",
+  "030": "E",
+  "031": "D",
   "010": "E",
   "032": "C",
   "037": "D",
@@ -4107,6 +4345,9 @@ Object.assign(vindexClassByNumber, {
   "162": "B",
   "163": "B",
   "164": "B",
+  "195": "D",
+  "196": "C",
+  "197": "B",
   "198": "D",
   "199": "C",
   "200": "B",
@@ -4117,6 +4358,9 @@ Object.assign(vindexClassByNumber, {
   "237": "D",
   "238": "C",
   "239": "B",
+  "240": "C",
+  "241": "B",
+  "242": "A",
   "231": "C",
   "232": "B",
   "233": "A",
@@ -4139,6 +4383,8 @@ Object.assign(vindexClassByNumber, {
   "287": "B",
   "296": "A",
   "298": "A",
+  "299": "C",
+  "300": "B",
   "301": "A",
   "305": "A",
   "326": "S",
@@ -4164,6 +4410,10 @@ const profileBios = {
   "racer-alpha": "No name. No past. Just speed. Racer Alpha is a myth made real, hidden behind a mirrored helmet that reveals nothing. No one knows where he came from. If you beat him, you earn the right to find out.",
   "dr-tyree": "A brilliant mind with a disappointing lap time. Dr. Tyree was once the Academy's top student - on paper. His understanding of GearBorn mechanics is unmatched, his theories cited across the world, and his doctorate... frequently mentioned. But on the track? Let's just say the data didn't translate. Now the Academy's lead instructor, Tyree treats GearBorn with absolute seriousness - borderline reverence. To him, this is about more than just rubber and road. He believes mastery comes from understanding - not instinct.",
   ashley: "Ashley Racem was never supposed to make it past the gates. No racing family. No sponsors. No polished Academy pedigree. Just raw instinct and a habit of connecting with GearBorn in ways nobody could quite explain.\n\nOnce considered a rising talent, Ashley's future at the Academy ended after she stole a prototype GearBorn key and wrecked the original Tutorque during an unauthorized run. Ask Ashley, and she'll tell you the system failed her long before the crash ever happened.\n\nNow she races outside the official circuit, helping overlooked Tuners find paths the Academy never would've offered them. To Ashley, compatibility matters more than credentials — and the road doesn't care where you came from.",
+  "orion-vincent": "Orion Vincent is the kind of genius who makes everyone else in the room feel slightly underqualified just by existing. A prodigy mechanic and systems architect raised within Spindell Labs, Orion designed the VINdex while most Tuners his age were still failing Academy evaluations. To him, GearBorn are more than machines: they're endlessly fascinating puzzles waiting to be understood, optimized, cataloged, and perfected. If a GearBorn evolves unexpectedly, Orion wants the telemetry. If a Tuner forms a strange bond, he wants the data. His obsession with understanding GearBorn borders on reverence, even if he'd never admit it out loud.\n\nBut Orion's spotless Academy future cracked the day Ashley Racem stole and jailbroke the VINdex, spreading its data across the underground KeyFree scene. He still treats it like a personal betrayal. To Orion, Ashley didn't just steal technology, she undermined the structure protecting GearBorn from chaos. Now one of Spindell Labs' brightest young minds, Orion helps Tuners unlock medallions through precision key synchronization and advanced calibration systems. He believes there's a right way to connect with GearBorn. Unfortunately for him, the road keeps producing evidence that instinct might matter just as much as science.",
+  auntie: "Nobody seems entirely sure where Auntie came from, how old she is, or why so many legendary Tuners owe her favors. Deep within the hidden corners of The Forge, Auntie has become something between a mechanic, a spiritual guide, and a public nuisance. Loud, shameless, and constantly making Mylo uncomfortable in ways that somehow stay weirdly lovable, Auntie treats every conversation like an opportunity to stir trouble. One minute she's explaining ancient GearBorn bonding rituals with frightening sincerity, the next she's loudly asking if Mylo's single yet.\n\nBehind the chaos, though, is one of the deepest living experts on GearBorn connection anywhere in the world. While the Academy studies GearBorn through systems and control, Auntie understands them through instinct, emotion, and lived experience. She believes GearBorn choose people long before people realize it themselves. To Auntie, the Academy's obsession with medallions and rankings misses the point entirely. The road is about trust between a Tuner and their GearBorn. And whether Mylo likes it or not, Auntie sees something in him worth protecting... even if she enjoys embarrassing him every step of the way.",
+  "mack-spindell": "Mack Spindell built his legend the loud way. A former heavyweight off-road champion with a personality too big for any garage to contain, Mack became one of the most beloved Tuners of his era through sheer force of charisma. Fans adored him. GearBorn seemed drawn to him naturally. Sponsors turned him into a national icon. Even now, years removed from his prime, Mack still fills every room with booming laughter, stories from the circuit, and the feeling that racing is supposed to be fun. Which is exactly what makes life so difficult for Cha Cha. Standing beside someone that larger-than-life can make anyone feel invisible.\n\nTo the public, Mack is the perfect racing father: supportive, legendary, impossible not to love. But beneath the warmth is someone who struggles to recognize how overwhelming his shadow has become. He sees Cha Cha as capable, strong, and destined for greatness, yet rarely notices how desperately she wants to be seen as her own person rather than Mack Spindell's daughter. Unlike Sloane's precision and pressure, Mack's burden comes from admiration. He loves loudly, assumes everyone else feels the same, and doesn't realize that sometimes encouragement can weigh just as heavily as expectation.",
+  "sloane-spindell": "Where Mack races with instinct and spectacle, Sloane Spindell built her reputation through absolute control. One of the most feared street circuit Tuners of her generation, Sloane became legendary not for dramatic victories, but for how inevitable they felt. Calm under pressure and impossibly difficult to read, she approached racing like a grandmaster solving problems three turns before anyone else realized they existed. To many Tuners, Sloane represents the ideal Academy driver: disciplined, analytical, and ruthlessly efficient. To Cha Cha, she represents something far more complicated: a reflection she can never quite escape.\n\nUnlike Mack's overwhelming warmth, Sloane's pressure comes through expectation. She sees Cha Cha's talent clearly and pushes her accordingly, often without realizing how suffocating that perfection can feel. In many ways, mother and daughter are painfully alike: competitive, guarded, stubborn, and terrified of vulnerability. Sloane believes she's preparing Cha Cha for the realities of elite racing, where hesitation gets punished and weakness gets exploited. But beneath her icy composure is someone who genuinely wants her daughter to succeed, even if she no longer remembers how to separate love from pressure.",
   "lynx-incarso": "Nobody really knows where Lynx Incarso came from. What they do know is that if she's behind you on the starting grid, you should probably update your insurance. Loud, fearless, and completely unpredictable, Lynx races with the kind of reckless aggression that makes other Tuners question their own survival instincts. Some racers insist the chaos is calculated, that she's using intimidation to force mistakes. The terrifying part? It probably isn't. Lynx genuinely seems to enjoy the danger. To her, racing isn't about perfect lines or clean technique. It's about pressure, panic, and seeing who breaks first.",
   "portia-crosh": "The voice behind hit GearBorn podcast Good Tunes, Portia Crosh built her reputation covering the world's top Tuners before deciding she was tired of talking about greatness from the sidelines. Smart, sharp, and relentlessly ambitious, Portia approaches racing like she approaches journalism - by learning exactly where the pressure points are and pushing them. Critics say she's too polished for the track. Portia keeps beating them anyway. Somehow she always knows the story before everyone else, including the parts people wish she didn't.",
   "marlyn-adelaide": "Off the track, Marlyn Adelaide is a walking disaster. He spills drinks, trips over air, complains constantly, and somehow gets lost in places he's already been. Behind the wheel? Different person entirely. Marlyn drives with razor-sharp precision and impossible reflexes, treating every race like a moving puzzle only he can solve. He's picky, dramatic, and exhausting to be around for long periods of time - but even his rivals admit the guy's a genius once the engines start.",
@@ -4228,6 +4478,58 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   city: "Last Gear Broadcast Booth",
   country: "Other",
   bio: "Roberto Yucca never became a professional Tuner, but you'd never know it from the way he calls a race. A former local radio host turned international commentator, Roberto built his reputation on pure personality: booming play-by-plays, impossible energy, and dramatic calls that can make even a qualifying lap sound legendary. Equal parts sports announcer, entertainer, and hype machine, he treats every race like the biggest moment in GearBorn history.\n\nWhile the elite racing world obsesses over rankings, sponsors, and medallions, Roberto cares about the people behind the wheel. He's become known for championing overlooked Tuners, underdog stories, and racers the system never expected to succeed. Beneath the nonstop charisma is someone who genuinely loves the culture surrounding GearBorn - not just the winners. To Roberto, racing is supposed to bring people together. The louder the engines get, the louder he gets too."
+}, {
+  id: "orion-vincent",
+  name: "Orion Vincent",
+  title: "Spindell Labs Mechanic",
+  image: "assets/characters/headshots/headshot-orion-vincent.png",
+  headshot: "assets/characters/headshots/headshot-orion-vincent.png",
+  character: "assets/characters/orion-vincent.png",
+  category: "Other",
+  car: "Other",
+  city: "Spindell Labs",
+  country: "Other",
+  faction: "spindell",
+  bio: profileBios["orion-vincent"]
+}, {
+  id: "auntie",
+  name: "Auntie",
+  title: "Forge Matriarch",
+  image: "assets/characters/headshots/headshot-auntie.png",
+  headshot: "assets/characters/headshots/headshot-auntie.png",
+  character: "assets/characters/auntie.png",
+  category: "Other",
+  car: "Other",
+  city: "The Forge",
+  country: "Other",
+  faction: "keyfree",
+  bio: profileBios.auntie
+}, {
+  id: "mack-spindell",
+  name: "Mack Spindell",
+  title: "Legendary Tuner",
+  image: "assets/characters/headshots/headshot-mack-spindell.png",
+  headshot: "assets/characters/headshots/headshot-mack-spindell.png",
+  character: "assets/characters/mack-spindell.png",
+  category: "Other",
+  car: "Other",
+  city: "Spindell Legacy Circuit",
+  country: "Other",
+  faction: "spindell",
+  bio: profileBios["mack-spindell"]
+}, {
+  id: "sloane-spindell",
+  name: "Sloane Spindell",
+  title: "Legendary Tuner",
+  image: "assets/characters/headshots/headshot-sloane-spindell.png",
+  headshot: "assets/characters/headshots/headshot-sloane-spindell.png",
+  character: "assets/characters/sloane-spindell.png",
+  category: "Other",
+  car: "Other",
+  city: "Spindell Legacy Circuit",
+  country: "Other",
+  faction: "spindell",
+  bio: profileBios["sloane-spindell"]
 }], otherNpcProfiles);
 
 const tunerRankBossOrder = bosses.slice(0, 7);
@@ -4260,19 +4562,72 @@ const tunerRankBaseList = [{
     profileId: profile.id
   })));
 
-const convoyDefinitions = {
+const convoyFactionIcons = {
+  keyfree: "assets/items/icon-convoy-keyfree.png",
+  spindell: "assets/items/icon-convoy-spindell.png"
+};
+const convoyParticipantProfiles = {
+  tyree: { sponsor: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" },
+  ashley: { sponsor: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" },
+  mack: { sponsor: "Mack Spindell", headshot: "assets/characters/headshots/headshot-mack-spindell.png" },
+  sloane: { sponsor: "Sloane Spindell", headshot: "assets/characters/headshots/headshot-sloane-spindell.png" },
+  eli: { sponsor: "Eli Kaufman", headshot: "assets/characters/headshots/headshot-eli.png" },
+  crosby: { sponsor: "Crosby Nash", headshot: "assets/characters/headshots/headshot-crosby.png" }
+};
+const convoyParticipantStages = {
+  tyree: [
+    { type: "drag", opponentCarId: "sorority-elephant", opponentName: "Tyree's Sororitrunk" },
+    { type: "battle", opponentCarId: "training-car", opponentName: "Tyree's Tutorque" },
+    { type: "h2h", opponentCarId: "metal-snake", opponentName: "Tyree's Snaytan" }
+  ],
+  ashley: [
+    { type: "drag", opponentCarId: "skater-koala", opponentName: "Ashley's Koaster" },
+    { type: "battle", opponentCarId: "tiger-cart", opponentName: "Ashley's Notar-O" },
+    { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Ashley's Astromarino" }
+  ],
+  mack: [
+    { type: "drag", opponentCarId: "pickup", opponentName: "Mack's Murrka" },
+    { type: "battle", opponentCarId: "construction-blok", opponentName: "Mack's Structable" },
+    { type: "h2h", opponentCarId: "frog", opponentName: "Mack's Kermajesty" }
+  ],
+  sloane: [
+    { type: "drag", opponentCarId: "bee", opponentName: "Sloane's Baybee" },
+    { type: "battle", opponentCarId: "space-dolphin", opponentName: "Sloane's Orbitide" },
+    { type: "h2h", opponentCarId: "frog", opponentName: "Sloane's Kermajesty" }
+  ],
+  eli: [
+    { type: "drag", opponentCarId: "butcher-hog", opponentName: "Eli's Chopcicle" },
+    { type: "battle", opponentCarId: "skater-koala", opponentName: "Eli's Koaster" },
+    { type: "h2h", opponentCarId: "pickup", opponentName: "Eli's Tookerjaw" }
+  ],
+  crosby: [
+    { type: "drag", opponentCarId: "chill-penguin", opponentName: "Crosby's Brrap" },
+    { type: "battle", opponentCarId: "karate-cow", opponentName: "Crosby's Udderlee" },
+    { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Crosby's Astromarino" }
+  ]
+};
+const convoyBranchPlan = [
+  { id: "mylo-berlin-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "berlin", participantId: "ashley", medallionId: "wrestler-roo" },
+  { id: "mylo-rio-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "rio", participantId: "tyree", medallionId: "gb-growler" },
+  { id: "mylo-seoul-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "seoul", participantId: "ashley", medallionId: "flavor-coast" },
+  { id: "mylo-bengaluru-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "bangalore", participantId: "tyree", medallionId: "future-bok" },
+  { id: "mylo-dubai-mack", factionId: "keyfree", playerTunerId: "mylo", cityId: "dubai", participantId: "mack", medallionId: "armadaddio" },
+  { id: "mylo-cape-town-eli", factionId: "keyfree", playerTunerId: "mylo", cityId: "cape-town", participantId: "eli", medallionId: "tiger-cart" },
+  { id: "chacha-berlin-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "berlin", participantId: "tyree", medallionId: "gb-growler" },
+  { id: "chacha-rio-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "rio", participantId: "ashley", medallionId: "wrestler-roo" },
+  { id: "chacha-seoul-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "seoul", participantId: "tyree", medallionId: "future-bok" },
+  { id: "chacha-bengaluru-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "bangalore", participantId: "ashley", medallionId: "flavor-coast" },
+  { id: "chacha-dubai-sloane", factionId: "spindell", playerTunerId: "cha-cha", cityId: "dubai", participantId: "sloane", medallionId: "armadaddio" },
+  { id: "chacha-cape-town-crosby", factionId: "spindell", playerTunerId: "cha-cha", cityId: "cape-town", participantId: "crosby", medallionId: "tiger-cart" }
+];
+const legacyConvoyDefinitions = {
   tyree: {
     id: "tyree",
     name: "Tyree's Convoy",
     sponsor: "Dr. Tyree",
     headshot: "assets/characters/headshots/headshot-dr-tyree.png",
     icon: "assets/items/icon-medallion-gauntlet.png",
-    stages: [
-      // TODO swap IDs if dedicated form-level convoy cars are split later.
-      { type: "drag", opponentCarId: "sorority-elephant", opponentName: "Tyree's Sororitrunk" },
-      { type: "battle", opponentCarId: "training-car", opponentName: "Tyree's Tutorque" },
-      { type: "h2h", opponentCarId: "metal-snake", opponentName: "Tyree's Snaytan" }
-    ],
+    stages: convoyParticipantStages.tyree,
     rewards: {
       firstWin: { sprox: 5000, parts: ["legendary-engine"], medallions: 1 },
       replayWin: { sprox: 1500 }
@@ -4284,17 +4639,34 @@ const convoyDefinitions = {
     sponsor: "Ashley Racem",
     headshot: "assets/characters/headshots/headshot-ashley.png",
     icon: "assets/items/icon-medallion-gauntlet.png",
-    stages: [
-      { type: "drag", opponentCarId: "skater-koala", opponentName: "Ashley's Koaster" },
-      { type: "battle", opponentCarId: "tiger-cart", opponentName: "Ashley's Notar-O" },
-      { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Ashley's Astromarino" }
-    ],
+    stages: convoyParticipantStages.ashley,
     rewards: {
       firstWin: { sprox: 5000, parts: ["legendary-handling"], medallions: 1 },
       replayWin: { sprox: 1500 }
     }
   }
 };
+const convoyDefinitions = convoyBranchPlan.reduce((definitions, plan) => {
+  const participant = convoyParticipantProfiles[plan.participantId] || convoyParticipantProfiles.tyree;
+  definitions[plan.id] = {
+    id: plan.id,
+    name: `${participant.sponsor}'s Convoy`,
+    sponsor: participant.sponsor,
+    cityId: plan.cityId,
+    factionId: plan.factionId,
+    playerTunerId: plan.playerTunerId,
+    participantId: plan.participantId,
+    headshot: participant.headshot,
+    icon: convoyFactionIcons[plan.factionId],
+    medallionId: plan.medallionId,
+    stages: convoyParticipantStages[plan.participantId] || convoyParticipantStages.tyree,
+    rewards: {
+      firstWin: { sprox: 3000, parts: ["placeholder-convoy-part"], medallions: 1, medallionIds: [plan.medallionId] },
+      replayWin: { sprox: 1000 }
+    }
+  };
+  return definitions;
+}, { ...legacyConvoyDefinitions });
 
 const convoyDialogue = {
   tyree: {
@@ -4310,6 +4682,27 @@ const convoyDialogue = {
     loseAshley: "[CONVOY_LOSE_ASHLEY_PLACEHOLDER]"
   }
 };
+
+const rivalRaceScriptCities = ["indianapolis", "dubai", "los-angeles", "cape-town"];
+const rivalRaceScripts = {
+  mylo: Object.fromEntries(rivalRaceScriptCities.map((cityId) => [cityId, {
+    pre: [{ speaker: "rival", text: `[Rival Race Placeholder: Mylo POV - ${cityId} - Pre]` }],
+    post: [{ speaker: "rival", text: `[Rival Race Placeholder: Mylo POV - ${cityId} - Post]` }]
+  }])),
+  "cha-cha": Object.fromEntries(rivalRaceScriptCities.map((cityId) => [cityId, {
+    pre: [{ speaker: "rival", text: `[Rival Race Placeholder: Cha Cha POV - ${cityId} - Pre]` }],
+    post: [{ speaker: "rival", text: `[Rival Race Placeholder: Cha Cha POV - ${cityId} - Post]` }]
+  }]))
+};
+
+const convoyStoryScripts = Object.fromEntries(convoyBranchPlan.map((plan) => {
+  const label = plan.playerTunerId === "mylo" ? "Mylo" : "Cha Cha";
+  const participant = convoyParticipantProfiles[plan.participantId]?.sponsor || plan.participantId;
+  return [plan.id, {
+    pre: [{ speaker: "mentor", text: `[Convoy Placeholder: ${label} / ${plan.cityId} / ${participant} / Pre]` }],
+    post: [{ speaker: "mentor", text: `[Convoy Placeholder: ${label} / ${plan.cityId} / ${participant} / Post]` }]
+  }];
+}));
 
 const bondSceneThresholds = [5, 10, 25, 50];
 const bondScenes = Object.fromEntries(cars.map((car) => [car.id, Object.fromEntries(bondSceneThresholds.map((threshold) => [threshold, {

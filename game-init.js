@@ -67,7 +67,9 @@ function sanitizeState() {
     state.convoy.available[id] = Boolean(state.convoy.available[id]);
     state.convoy.completed[id] = Boolean(state.convoy.completed[id]);
   });
-  state.convoy.inProgress = state.convoy.inProgress && typeof state.convoy.inProgress === "object" ? state.convoy.inProgress : null;
+  state.convoy.inProgress = state.convoy.inProgress && typeof state.convoy.inProgress === "object" && convoyDefinitions[state.convoy.inProgress.convoyId]
+    ? state.convoy.inProgress
+    : null;
   state.convoy.loadouts = Array.isArray(state.convoy.loadouts) ? state.convoy.loadouts.slice(0, 3) : [];
   while (state.convoy.loadouts.length < 3) state.convoy.loadouts.push(null);
   state.convoy.loadouts = state.convoy.loadouts.map((loadout, index) => {
@@ -76,6 +78,9 @@ function sanitizeState() {
     return { name: String(loadout.name || `Loadout ${index + 1}`).slice(0, 32), carIds };
   });
   state.convoy.loadoutsUnlocked = Boolean(state.convoy.loadoutsUnlocked || Object.values(state.convoy.available).some(Boolean));
+  state.convoyMedallions = Array.isArray(state.convoyMedallions)
+    ? state.convoyMedallions.filter((id, index, list) => typeof id === "string" && list.indexOf(id) === index)
+    : [];
   state.bondScenesViewed = state.bondScenesViewed && typeof state.bondScenesViewed === "object" ? state.bondScenesViewed : {};
   state.favoriteCarIds = Array.isArray(state.favoriteCarIds) ? state.favoriteCarIds.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index) : [];
   state.recentCarUses = Array.isArray(state.recentCarUses) ? state.recentCarUses
