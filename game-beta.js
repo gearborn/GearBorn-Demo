@@ -1739,6 +1739,8 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
   let earned = won ? story2dReward(level) : Math.floor(story2dReward(level) * 0.16);
   if (earned) addSprox(earned);
   recordRaceUsage(carId);
+  if (level.type === "rival") recordTunerStat(won ? "headToHeadWon" : "headToHeadLost");
+  else if (level.type === "trial") recordTunerStat("timeTrialsCompleted");
   recordStoryRaceOutcome(won, true);
   let penaltyLine = "";
   if (riskyPinkSlipLoss) {
@@ -3210,6 +3212,8 @@ function updateLastGearBeta(now) {
 function finishLastGearBeta(playerWon) {
   if (!lastGearState || lastGearState.finished) return;
   lastGearState.finished = true;
+  recordTunerStat(playerWon ? "lastGearMatchesWon" : "lastGearMatchesLost");
+  recordTunerPlaySession();
   lastGearState.stats.finishTime = performance.now();
   if (lastGearState.raf) cancelAnimationFrame(lastGearState.raf);
   const finalCall = lastGearChooseLine(lastGearAnnouncerLines.winner);

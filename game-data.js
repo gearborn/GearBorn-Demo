@@ -248,7 +248,7 @@ const cars = [
   },
   {
     id: "rainbowlt",
-    family: "Secret",
+    family: "Unicorn Supercar",
     color: "#c084fc",
     trait: "Unlocked by mastering every starter line",
     unlockable: true,
@@ -350,9 +350,9 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     trait: "Guard dog juggernaut",
     unlockable: true,
     evolutions: [
-      { name: "Cruzdog", images: { display: "assets/cars/gb-growler-cruzdog-display.png", race: "assets/cars/gb-growler-cruzdog-race.png", topdown: "assets/cars/gb-growler-cruzdog-topdown.png" } },
-      { name: "Bullwark", images: { display: "assets/cars/gb-growler-bullwark-display.png", race: "assets/cars/gb-growler-bullwark-race.png", topdown: "assets/cars/gb-growler-bullwark-topdown.png" } },
-      { name: "Forterra", images: { display: "assets/cars/gb-growler-forterra-display.png", race: "assets/cars/gb-growler-forterra-race.png", topdown: "assets/cars/gb-growler-forterra-topdown.png" } }
+      { name: "Cruzdog", images: { display: "assets/cars/pt-cruzdog-race.png", race: "assets/cars/pt-cruzdog-race.png", topdown: "assets/cars/pt-cruzdog-topdown.png" } },
+      { name: "Bullwark", images: { display: "assets/cars/pt-bullwark-display.png", race: "assets/cars/pt-bullwark-race.png", topdown: "assets/cars/pt-bullwark-topdown.png" } },
+      { name: "Forterra", images: { display: "assets/cars/pt-forterra-display.png", race: "assets/cars/pt-forterra-display.png", topdown: "assets/cars/pt-forterra-topdown.png" } }
     ]
   },
   {
@@ -363,8 +363,8 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     unlockable: true,
     evolutions: [
       { name: "Manscape", images: { display: "assets/cars/armadillo-manscape-display.png", race: "assets/cars/armadillo-manscape-race.png", topdown: "assets/cars/armadillo-manscape-topdown.png" } },
-      { name: "Masplore", images: { display: "assets/cars/armadillo-masplore-display.png", race: "assets/cars/armadillo-masplore-race.png", topdown: "assets/cars/armadillo-masplore-topdown.png" } },
-      { name: "Manstrocity", images: { display: "assets/cars/armadillo-manstrocity-display.png", race: "assets/cars/armadillo-manstrocity-race.png", topdown: "assets/cars/armadillo-manstrocity-topdown.png" } }
+      { name: "Mansplore", images: { display: "assets/cars/armadillo-mansplore-display.png", race: "assets/cars/armadillo-mansplore-race.png", topdown: "assets/cars/armadillo-mansplore-topdown.png" } },
+      { name: "Manstrocity", images: { display: "assets/cars/armadillo-manstrocity-display.png", race: "assets/cars/armadillo-manstrocity-race.png", topdown: "assets/cars/armadillo-manstrocity-race.png" } }
     ]
   },
   {
@@ -374,9 +374,9 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     trait: "Static skitter",
     unlockable: true,
     evolutions: [
-      { name: "Bertie", images: { display: "assets/cars/electro-beetle-bertie-display.png", race: "assets/cars/electro-beetle-bertie-race.png", topdown: "assets/cars/electro-beetle-bertie-topdown.png" } },
-      { name: "Voltscarab", images: { display: "assets/cars/electro-beetle-voltscarab-display.png", race: "assets/cars/electro-beetle-voltscarab-race.png", topdown: "assets/cars/electro-beetle-voltscarab-topdown.png" } },
-      { name: "Beetronox", images: { display: "assets/cars/electro-beetle-beetronox-display.png", race: "assets/cars/electro-beetle-beetronox-race.png", topdown: "assets/cars/electro-beetle-beetronox-topdown.png" } }
+      { name: "Bertie", images: { display: "assets/cars/beetle-bertie-display.png", race: "assets/cars/beetle-bertie-race.png", topdown: "assets/cars/beetle-bertie-topdown.png" } },
+      { name: "Voltscarab", images: { display: "assets/cars/beetle-voltscarab-display.png", race: "assets/cars/beetle-voltscarab-race.png", topdown: "assets/cars/beetle-voltscarab-topdown.png" } },
+      { name: "Beetronox", images: { display: "assets/cars/beetle-beetronox-display.png", race: "assets/cars/beetle-beetronox-race.png", topdown: "assets/cars/beetle-beetronox-topdown.png" } }
     ]
   },
   {
@@ -386,9 +386,9 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     trait: "Flavortown rocket",
     unlockable: true,
     evolutions: [
-      { name: "Carmieri", images: { display: "assets/cars/flavor-coast-carmieri-display.png", race: "assets/cars/flavor-coast-carmieri-race.png", topdown: "assets/cars/flavor-coast-carmieri-topdown.png" } },
-      { name: "TripleDiesel", images: { display: "assets/cars/flavor-coast-triplediesel-display.png", race: "assets/cars/flavor-coast-triplediesel-race.png", topdown: "assets/cars/flavor-coast-triplediesel-topdown.png" } },
-      { name: "Flavortow", images: { display: "assets/cars/flavor-coast-flavortow-display.png", race: "assets/cars/flavor-coast-flavortow-race.png", topdown: "assets/cars/flavor-coast-flavortow-topdown.png" } }
+      { name: "Carmieri", images: { display: "assets/cars/flavor-carmieri-display.png", race: "assets/cars/flavor-carmieri-race.png", topdown: "assets/cars/flavor-carmieri-topdown.png" } },
+      { name: "TripleDiesel", images: { display: "assets/cars/flavor-triplediesel-display.png", race: "assets/cars/flavor-triplediesel-race.png", topdown: "assets/cars/flavor-triplediesel-topdown.png" } },
+      { name: "Flavortow", images: { display: "assets/cars/flavor-flavortow-display.png", race: "assets/cars/flavor-flavortow-race.png", topdown: "assets/cars/flavor-flavortow-topdown.png" } }
     ]
   },
   {
@@ -399,7 +399,7 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     unlockable: true,
     evolutions: [
       { name: "Sprynza", images: { display: "assets/cars/bok-sprynza-display.png", race: "assets/cars/bok-sprynza-race.png", topdown: "assets/cars/bok-sprynza-topdown.png" } },
-      { name: "Bokwylde", images: { display: "assets/cars/bok-bokwylde-display.png", race: "assets/cars/bok-bokwylde-race.png", topdown: "assets/cars/bok-bokwylde-topdown.png" } },
+      { name: "Bokwylde", images: { display: "assets/cars/bok-bokwylde-display.png", race: "assets/cars/bok-bokwylde-race.png", topdown: "assets/cars/bok-bokwydle-topdown.png" } },
       { name: "Kuumbusta", images: { display: "assets/cars/bok-kuumbusta-display.png", race: "assets/cars/bok-kuumbusta-race.png", topdown: "assets/cars/bok-kuumbusta-topdown.png" } }
     ]
   },
@@ -410,9 +410,9 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     trait: "Ringbreaker hopper",
     unlockable: true,
     evolutions: [
-      { name: "Rumbleroo", images: { display: "assets/cars/wrestler-roo-rumbleroo-display.png", race: "assets/cars/wrestler-roo-rumbleroo-race.png", topdown: "assets/cars/wrestler-roo-rumbleroo-topdown.png" } },
-      { name: "StrayGunn", images: { display: "assets/cars/wrestler-roo-straygunn-display.png", race: "assets/cars/wrestler-roo-straygunn-race.png", topdown: "assets/cars/wrestler-roo-straygunn-topdown.png" } },
-      { name: "Kangold", images: { display: "assets/cars/wrestler-roo-kangold-display.png", race: "assets/cars/wrestler-roo-kangold-race.png", topdown: "assets/cars/wrestler-roo-kangold-topdown.png" } }
+      { name: "Rumbleroo", images: { display: "assets/cars/roo-rumbleroo-display.png", race: "assets/cars/roo-rumbleroo-race.png", topdown: "assets/cars/roo-rumbleroo-topdown.png" } },
+      { name: "StrayGunn", images: { display: "assets/cars/roo-straygunn-display.png", race: "assets/cars/roo-straygunn-race.png", topdown: "assets/cars/roo-straygunn-topdown.png" } },
+      { name: "Kangold", images: { display: "assets/cars/roo-kangold-display.png", race: "assets/cars/roo-kangold-race.png", topdown: "assets/cars/roo-kangold-topdown.png" } }
     ]
   },
   {
@@ -489,6 +489,21 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
   }
 );
 
+cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
+  {
+    id: "narwhal-luxury",
+    family: "Narwhal Luxury",
+    color: "#8fb3ff",
+    trait: "Unlocked by reaching Bond 25 with every non-secret GearBorn line",
+    unlockable: true,
+    unlockInstruction: "Reach Bond 25 with every non-secret GearBorn line to unlock the Narwraith Medallion",
+    evolutions: [
+      { name: "Narwraith", images: { display: "assets/cars/narwhal-narwraith-display.png", race: "assets/cars/narwhal-narwraith-race.png", topdown: "assets/cars/narwhal-narwraith-topdown.png" } },
+      { name: "Rollantis", images: { display: "assets/cars/narwhal-rollantis-display.png", race: "assets/cars/narwhal-rollantis-race.png", topdown: "assets/cars/narwhal-rollantis-topdown.png" } }
+    ]
+  }
+);
+
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
 const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
 const gauntletUnlockOrder = ["muscle-man", "chill-penguin", "space-dolphin", "butcher-hog", "electro-beetle", "silly-goose", "construction-blok", "skater-koala", "royal-flush", "rides-hair"];
@@ -497,7 +512,7 @@ const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const rivalStarterCarIds = defaultUnlockedLines;
 const achievementUnlockOrder = ["art-van", "cake-train"];
-const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, ["waste-management", "rainbowlt", "metal-snake", "training-car"]);
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, ["waste-management", "rainbowlt", "narwhal-luxury", "metal-snake", "training-car"]);
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -641,7 +656,8 @@ const achievementDefs = [
   { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
   { id: "vindex75", name: "VINdex Archivist", requirement: "Encounter 75% of the VINdex", reward: "3 Level 2 parts", type: "vindex", percent: 75 },
   { id: "vindex100", name: "VINdex Master", requirement: "Encounter 100% of the VINdex", reward: "Unlock Vanbrandt", type: "vindex", percent: 100 },
-  { id: "garbageMedallion", name: "Garbage Day", requirement: "Lose 5 races or battles in a row", reward: "Garbage Medallion", type: "garbageMedallion", secret: true }
+  { id: "garbageMedallion", name: "Garbage Day", requirement: "Lose 5 races or battles in a row", reward: "Garbage Medallion", type: "garbageMedallion", secret: true },
+  { id: "narwraithMedallion", name: "Deep Bond", requirement: "Reach Bond 25 with every non-secret GearBorn line", reward: "Narwraith Medallion", type: "narwhalBond", secret: true }
 ];
 
 // ─── TUTORIAL DIALOGUE ──────────────────────────────────────────────────────
@@ -3325,6 +3341,8 @@ const displayImageScaleByName = {
   baronessex: 1.22,
   crusadome: 1.18,
   kuumbusta: 1.22,
+  narwraith: 1.22,
+  rollantis: 1.22,
   hurrdaboutis: 1.22,
   rainbowlt: 1.24,
   hornula1: 1.18,
@@ -3641,6 +3659,16 @@ const gearbornStatProfiles = {
     "playstyle": "Noxious Blaster",
     "type": "Tech"
   },
+  "narwhal-luxury": {
+    "speed": 87,
+    "acceleration": 87,
+    "handling": 87,
+    "torque": 87,
+    "body": 87,
+    "powertrain": 87,
+    "playstyle": "Perfect Ascention",
+    "type": "Neutral"
+  },
   "rainbowlt": {
     "speed": 87,
     "acceleration": 87,
@@ -3924,6 +3952,8 @@ const vindexEntries = [
   ["298", "Crusadome", "Crusader Line", "assets/cars/pope-crusadome-display.png"],
   ["301", "Kuumbusta", "Future Bok Line", "assets/cars/bok-kuumbusta-display.png"],
   ["305", "Hurrdaboutis", "Roundabout Line", "assets/cars/talkshow-hurrdaboutis-display.png"],
+  ["324", "Narwraith", "Narwhal Luxury Line", "assets/cars/narwhal-narwraith-display.png"],
+  ["325", "Rollantis", "Narwhal Luxury Line", "assets/cars/narwhal-rollantis-display.png"],
   ["326", "Rainbowlt", "Unicorn Supercar Line", "assets/cars/unicorn-rainbowlt-display.png"],
   ["327", "Hornula1", "Unicorn Supercar Line", "assets/cars/unicorn-hornula1-display.png"]
 ].map(([number, name, line, image]) => ({ number, name, line, image }));
@@ -3933,37 +3963,37 @@ const additionalVindexEntries = [
     "004",
     "Cruzdog",
     "GB Growler Line",
-    "assets/cars/gb-growler-cruzdog-display.png"
+    "assets/cars/pt-cruzdog-race.png"
   ],
   [
     "005",
     "Bullwark",
     "GB Growler Line",
-    "assets/cars/gb-growler-bullwark-display.png"
+    "assets/cars/pt-bullwark-display.png"
   ],
   [
     "006",
     "Forterra",
     "GB Growler Line",
-    "assets/cars/gb-growler-forterra-display.png"
+    "assets/cars/pt-forterra-display.png"
   ],
   [
     "019",
     "Bertie",
     "Electro-Beetle Line",
-    "assets/cars/electro-beetle-bertie-display.png"
+    "assets/cars/beetle-bertie-display.png"
   ],
   [
     "020",
     "Voltscarab",
     "Electro-Beetle Line",
-    "assets/cars/electro-beetle-voltscarab-display.png"
+    "assets/cars/beetle-voltscarab-display.png"
   ],
   [
     "021",
     "Beetronox",
     "Electro-Beetle Line",
-    "assets/cars/electro-beetle-beetronox-display.png"
+    "assets/cars/beetle-beetronox-display.png"
   ],
   [
     "030",
@@ -3973,45 +4003,45 @@ const additionalVindexEntries = [
   ],
   [
     "031",
-    "Masplore",
+    "Mansplore",
     "Armadaddio Line",
-    "assets/cars/armadillo-masplore-display.png"
+    "assets/cars/armadillo-mansplore-display.png"
   ],
   [
     "195",
     "Rumbleroo",
     "Wrestler Roo Line",
-    "assets/cars/wrestler-roo-rumbleroo-display.png"
+    "assets/cars/roo-rumbleroo-display.png"
   ],
   [
     "196",
     "StrayGunn",
     "Wrestler Roo Line",
-    "assets/cars/wrestler-roo-straygunn-display.png"
+    "assets/cars/roo-straygunn-display.png"
   ],
   [
     "197",
     "Kangold",
     "Wrestler Roo Line",
-    "assets/cars/wrestler-roo-kangold-display.png"
+    "assets/cars/roo-kangold-display.png"
   ],
   [
     "240",
     "Carmieri",
     "Flavor Coast Line",
-    "assets/cars/flavor-coast-carmieri-display.png"
+    "assets/cars/flavor-carmieri-display.png"
   ],
   [
     "241",
     "TripleDiesel",
     "Flavor Coast Line",
-    "assets/cars/flavor-coast-triplediesel-display.png"
+    "assets/cars/flavor-triplediesel-display.png"
   ],
   [
     "242",
     "Flavortow",
     "Flavor Coast Line",
-    "assets/cars/flavor-coast-flavortow-display.png"
+    "assets/cars/flavor-flavortow-display.png"
   ],
   [
     "299",

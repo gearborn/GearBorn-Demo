@@ -20,6 +20,7 @@ function mergeState(base, saved) {
     raceMedals: { ...base.raceMedals, ...saved.raceMedals },
     microObjectiveProgress: { ...base.microObjectiveProgress, ...saved.microObjectiveProgress },
     visitedStoryCities: { ...base.visitedStoryCities, ...saved.visitedStoryCities },
+    tunerStats: { ...base.tunerStats, ...saved.tunerStats },
     bond: { ...base.bond, ...saved.bond },
     partsInventory: { ...base.partsInventory, ...saved.partsInventory },
     equippedParts: { ...base.equippedParts, ...saved.equippedParts },
@@ -45,6 +46,19 @@ function sanitizeState() {
   state.visitedStoryCities = state.visitedStoryCities && typeof state.visitedStoryCities === "object" ? state.visitedStoryCities : {};
   state.dismissedRotationTips = Boolean(state.dismissedRotationTips);
   state.tunerRank = state.tunerRank && typeof state.tunerRank === "object" ? state.tunerRank : {};
+  state.tunerStats = state.tunerStats && typeof state.tunerStats === "object" ? state.tunerStats : {};
+  Object.entries(defaultState.tunerStats).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      state.tunerStats[key] = Array.isArray(state.tunerStats[key])
+        ? state.tunerStats[key].filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index)
+        : [];
+    } else if (value === null) {
+      const stamp = Number(state.tunerStats[key]);
+      state.tunerStats[key] = Number.isFinite(stamp) && stamp > 0 ? stamp : null;
+    } else {
+      state.tunerStats[key] = Math.max(0, Math.floor(Number(state.tunerStats[key]) || 0));
+    }
+  });
   state.tunerRank.defeatedBossIds = Array.isArray(state.tunerRank.defeatedBossIds)
     ? state.tunerRank.defeatedBossIds.filter((id, index, list) => bossChallengeBosses.some((boss) => boss.id === id) && list.indexOf(id) === index)
     : [];
@@ -70,6 +84,21 @@ function sanitizeState() {
   state.convoy.inProgress = state.convoy.inProgress && typeof state.convoy.inProgress === "object" && convoyDefinitions[state.convoy.inProgress.convoyId]
     ? state.convoy.inProgress
     : null;
+  if (state.convoy.inProgress) {
+    state.convoy.inProgress.stageProgress = state.convoy.inProgress.stageProgress && typeof state.convoy.inProgress.stageProgress === "object"
+      ? state.convoy.inProgress.stageProgress
+      : {};
+    state.convoy.inProgress.stageSelections = Array.isArray(state.convoy.inProgress.stageSelections)
+      ? state.convoy.inProgress.stageSelections.filter((carId) => !carId || cars.some((car) => car.id === carId)).slice(0, 3)
+      : [null, null, null];
+    while (state.convoy.inProgress.stageSelections.length < 3) state.convoy.inProgress.stageSelections.push(null);
+    const seenStageCars = new Set();
+    state.convoy.inProgress.stageSelections = state.convoy.inProgress.stageSelections.map((carId) => {
+      if (!carId || seenStageCars.has(carId)) return null;
+      seenStageCars.add(carId);
+      return carId;
+    });
+  }
   state.convoy.loadouts = Array.isArray(state.convoy.loadouts) ? state.convoy.loadouts.slice(0, 3) : [];
   while (state.convoy.loadouts.length < 3) state.convoy.loadouts.push(null);
   state.convoy.loadouts = state.convoy.loadouts.map((loadout, index) => {
@@ -80,6 +109,9 @@ function sanitizeState() {
   state.convoy.loadoutsUnlocked = Boolean(state.convoy.loadoutsUnlocked || Object.values(state.convoy.available).some(Boolean));
   state.convoyMedallions = Array.isArray(state.convoyMedallions)
     ? state.convoyMedallions.filter((id, index, list) => typeof id === "string" && list.indexOf(id) === index)
+    : [];
+  state.medallionsOwned = Array.isArray(state.medallionsOwned)
+    ? state.medallionsOwned.filter((id, index, list) => cars.some((car) => car.id === id) && list.indexOf(id) === index)
     : [];
   state.bondScenesViewed = state.bondScenesViewed && typeof state.bondScenesViewed === "object" ? state.bondScenesViewed : {};
   state.favoriteCarIds = Array.isArray(state.favoriteCarIds) ? state.favoriteCarIds.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index) : [];
@@ -156,6 +188,12 @@ function sanitizeState() {
   if (allPlayableFinalFormsUnlocked() && !state.unlockedLines.includes("rainbowlt")) {
     state.unlockedLines.push("rainbowlt");
     state.unlockedCars.rainbowlt = true;
+  }
+  if (typeof allBond25LinesComplete === "function" && allBond25LinesComplete()) {
+    state.medallionsOwned = Array.isArray(state.medallionsOwned) ? state.medallionsOwned : [];
+    if (!state.medallionsOwned.includes("narwhal-luxury") && !state.unlockedLines.includes("narwhal-luxury")) {
+      state.medallionsOwned.push("narwhal-luxury");
+    }
   }
   if (!cars.some((car) => car.id === state.selectedCar)) {
     state.selectedCar = cars[0].id;

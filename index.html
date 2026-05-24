@@ -46,6 +46,9 @@
           <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">
             <img src="assets/menu/icon-settings.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="32" height="32">
           </button>
+          <button class="tuner-headshot-button" id="open-tuner-page" type="button" aria-label="Tuner profile" hidden>
+            <img id="tuner-headshot-image" src="" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          </button>
         </div>
         <nav class="nav" aria-label="Main navigation">
           <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
@@ -84,8 +87,9 @@
                 </div>
                 <div class="next-race-content">
                   <div class="next-race-text">
-                    <span>Next Story Race</span>
-                    <strong id="menu-next-race">Indianapolis - Level 2</strong>
+                    <span class="next-race-kicker">Next Story Race</span>
+                    <strong id="menu-next-race">Indianapolis</strong>
+                    <small id="menu-next-level">Level 2</small>
                     <small id="menu-next-reward">Reward +50 Sprox</small>
                   </div>
                   <button class="story-primary" data-view="story" type="button">Start Race</button>
@@ -304,26 +308,39 @@
           <div class="tuner-rank-list" id="tuner-rank-list"></div>
         </section>
 
-        <section class="view" id="convoy-view" aria-labelledby="convoy-title">
+        <section class="view convoy-view-redux" id="convoy-view" aria-labelledby="convoy-title">
           <button class="back-link" id="convoy-back" type="button">Back</button>
-          <div class="section-heading">
-            <p>Convoy</p>
-            <h1 id="convoy-title">Three races. Three GearBorn.</h1>
-            <span id="convoy-summary"></span>
-          </div>
-          <div class="modal-actions convoy-top-actions">
-            <button class="ghost" id="convoy-loadouts-open" type="button">Loadouts</button>
+
+          <header class="convoy-hero">
+            <div class="convoy-hero-titles">
+              <span class="convoy-kicker">Convoy</span>
+              <h1 id="convoy-title" class="convoy-hero-h1">Convoy</h1>
+              <div class="convoy-sponsor-row">
+                <span class="convoy-sponsor-name" id="convoy-sponsor-name">—</span>
+              </div>
+            </div>
+            <div class="convoy-hero-portrait">
+              <img id="convoy-sponsor-headshot" src="" alt="" loading="lazy" decoding="async">
+            </div>
+          </header>
+
+          <div class="convoy-top-actions">
+            <button class="convoy-loadouts-button" id="convoy-loadouts-open" type="button">
+              <span class="convoy-loadouts-button-icon" aria-hidden="true">★</span>
+              <span>Loadouts</span>
+            </button>
           </div>
           <div class="convoy-stage-list" id="convoy-stage-list"></div>
         </section>
 
-        <section class="view" id="convoy-loadouts-view" aria-labelledby="convoy-loadouts-title">
+        <section class="view convoy-loadouts-view-redux" id="convoy-loadouts-view" aria-labelledby="convoy-loadouts-title">
           <button class="back-link" id="convoy-loadouts-back" type="button">Back</button>
           <div class="section-heading">
             <p>Convoy</p>
-            <h1 id="convoy-loadouts-title">Loadouts</h1>
+            <h1 id="convoy-loadouts-title" class="convoy-hero-h1">Loadouts</h1>
+            <span class="convoy-loadouts-helper" id="convoy-loadouts-helper"></span>
           </div>
-          <div class="convoy-loadout-slots" id="convoy-loadout-slots"></div>
+          <div class="convoy-loadout-slots-v2" id="convoy-loadout-slots"></div>
         </section>
 
         <section class="view" id="battle-view" aria-labelledby="battle-title">
@@ -1189,6 +1206,44 @@
           <div class="hub-map-beta-shell">
             <canvas id="hub-map-beta-canvas" width="768" height="512" aria-label="Hub map beta tile canvas"></canvas>
             <div class="hub-map-beta-debug">Tile: <strong id="hub-map-beta-coords">12, 8</strong></div>
+          </div>
+        </section>
+
+        <section id="tuner-page-view" class="view tuner-page-view">
+          <div class="tuner-page-shell">
+            <button class="tuner-page-back" id="tuner-page-back" type="button">← Back</button>
+            <header class="tuner-page-header">
+              <div class="tuner-page-portrait-frame">
+                <img id="tuner-page-portrait" src="" alt="" loading="lazy" decoding="async">
+              </div>
+              <div class="tuner-page-identity">
+                <span class="tuner-page-kicker">Tuner Profile</span>
+                <h1 id="tuner-page-name">-</h1>
+                <p id="tuner-page-bio">-</p>
+                <div class="tuner-page-rank-row">
+                  <span class="tuner-page-rank-label">Tuner Rank</span>
+                  <span class="tuner-page-rank-badge" id="tuner-page-rank-badge">UR</span>
+                </div>
+              </div>
+            </header>
+            <section class="tuner-page-favorite">
+              <span class="tuner-page-section-kicker">Favorite GearBorn</span>
+              <div class="tuner-page-favorite-display" id="tuner-page-favorite-display">
+                <div class="tuner-page-favorite-frame">
+                  <img id="tuner-page-favorite-image" src="" alt="" loading="lazy" decoding="async">
+                </div>
+                <div class="tuner-page-favorite-meta">
+                  <strong id="tuner-page-favorite-name">-</strong>
+                  <small id="tuner-page-favorite-line">-</small>
+                  <span id="tuner-page-favorite-uses">-</span>
+                </div>
+              </div>
+            </section>
+            <section class="tuner-page-stat-grid" id="tuner-page-stat-grid"></section>
+            <section class="tuner-page-milestones">
+              <span class="tuner-page-section-kicker">Milestones</span>
+              <ul class="tuner-page-milestones-list" id="tuner-page-milestones-list"></ul>
+            </section>
           </div>
         </section>
       </main>

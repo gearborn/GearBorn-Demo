@@ -567,6 +567,28 @@ const defaultState = {
     bossesFirstSeen: [],
     rivalRank: null
   },
+  tunerStats: {
+    storyRacesWon: 0,
+    storyRacesLost: 0,
+    battlesWon: 0,
+    battlesLost: 0,
+    dragRacesWon: 0,
+    dragRacesLost: 0,
+    timeTrialsCompleted: 0,
+    headToHeadWon: 0,
+    headToHeadLost: 0,
+    lastGearMatchesWon: 0,
+    lastGearMatchesLost: 0,
+    evolutionsPerformed: 0,
+    bondBoostsUnlocked: 0,
+    totalSproxEarned: 0,
+    bossesDefeated: 0,
+    convoyStagesWon: 0,
+    perfectRaces: 0,
+    carsUsedAtLeastOnce: [],
+    firstPlayedAt: null,
+    lastPlayedAt: null
+  },
   convoy: {
     available: { tyree: false, ashley: false },
     completed: { tyree: false, ashley: false },

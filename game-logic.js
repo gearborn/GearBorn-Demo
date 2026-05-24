@@ -34,6 +34,17 @@ const musicLibrary = {
 let currentMusic = null;
 let currentMusicKey = null;
 let currentMusicFade = null;
+let lastViewBeforeTunerPage = "menu";
+
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
 
 function audioMasterVolume(scale = 1) {
   return Math.max(0, Math.min(1, ((state?.settings?.volume ?? 45) / 100) * scale));
@@ -137,7 +148,31 @@ function addSprox(amount) {
   if (!state.unlimitedSprox) {
     state.sprox = Math.max(0, Math.floor((state.sprox || 0) + amount));
   }
+  recordTunerStat("totalSproxEarned", Math.max(0, Math.floor(amount || 0)));
   return Math.max(0, Math.floor(amount));
+}
+
+function recordTunerStat(key, increment = 1) {
+  if (!key) return;
+  state.tunerStats = state.tunerStats || {};
+  state.tunerStats[key] = Math.max(0, Math.floor(Number(state.tunerStats[key]) || 0)) + increment;
+}
+
+function recordTunerCarUsed(carId) {
+  if (!carId || !cars.some((car) => car.id === carId)) return;
+  state.tunerStats = state.tunerStats || {};
+  state.tunerStats.carsUsedAtLeastOnce = Array.isArray(state.tunerStats.carsUsedAtLeastOnce)
+    ? state.tunerStats.carsUsedAtLeastOnce
+    : [];
+  if (!state.tunerStats.carsUsedAtLeastOnce.includes(carId)) {
+    state.tunerStats.carsUsedAtLeastOnce.push(carId);
+  }
+}
+
+function recordTunerPlaySession() {
+  state.tunerStats = state.tunerStats || {};
+  if (!state.tunerStats.firstPlayedAt) state.tunerStats.firstPlayedAt = Date.now();
+  state.tunerStats.lastPlayedAt = Date.now();
 }
 
 function rollStoryPartReward() {
@@ -197,14 +232,27 @@ function isCarUnlocked(carId) {
 
 function orderedCarList(list) {
   return [...list].sort((a, b) => {
+    const aStarterIndex = defaultUnlockedLines.indexOf(a.id);
+    const bStarterIndex = defaultUnlockedLines.indexOf(b.id);
+    if (aStarterIndex >= 0 || bStarterIndex >= 0) {
+      return (aStarterIndex >= 0 ? aStarterIndex : 999) - (bStarterIndex >= 0 ? bStarterIndex : 999);
+    }
+    const numberForLine = (car) => {
+      const firstFormName = car.evolutions?.[0]?.name || "";
+      const entry = vindexEntries.find((item) => item.name === firstFormName);
+      return entry ? Number(entry.number) : 9999;
+    };
+    const aNumber = numberForLine(a);
+    const bNumber = numberForLine(b);
+    if (aNumber !== bNumber) return aNumber - bNumber;
     const aIndex = garageLineOrder.indexOf(a.id);
     const bIndex = garageLineOrder.indexOf(b.id);
-    return (aIndex >= 0 ? aIndex : 999) - (bIndex >= 0 ? bIndex : 999);
+    return (aIndex >= 0 ? aIndex : 9999) - (bIndex >= 0 ? bIndex : 9999);
   });
 }
 
 function allPlayableFinalFormsUnlocked() {
-  const ids = cars.filter((car) => !car.tutorialOnly && car.id !== "rainbowlt").map((car) => car.id);
+  const ids = cars.filter((car) => !car.tutorialOnly && !["rainbowlt", "narwhal-luxury"].includes(car.id)).map((car) => car.id);
   return ids.every((carId) => {
     const car = cars.find((item) => item.id === carId);
     const progress = state.garage?.[carId];
@@ -212,6 +260,21 @@ function allPlayableFinalFormsUnlocked() {
     if (carId === "art-van") return (state.unlockedArtVanForms || []).some((index) => index > 0);
     return unlockedEvolutionIndex(carId) >= car.evolutions.length - 1;
   });
+}
+
+function allBond25LinesComplete() {
+  const requiredIds = cars
+    .filter((car) => !car.tutorialOnly && !["rainbowlt", "narwhal-luxury"].includes(car.id))
+    .map((car) => car.id);
+  return requiredIds.length > 0 && requiredIds.every((carId) => bondLevelForLine(carId) >= 25);
+}
+
+function hasMedallionForLine(carId) {
+  return Boolean(
+    state.medallionsOwned?.includes(carId) ||
+    state.convoyMedallions?.includes(carId) ||
+    state.unlockedLines?.includes(carId)
+  );
 }
 
 function garageGodModeActive() {
@@ -231,6 +294,16 @@ function unlockSecretCars() {
     state.unlockedCars.rainbowlt = true;
     state.garage.rainbowlt = state.garage.rainbowlt || { level: 1, xp: 0, evolution: 0, pendingEvolution: null };
     return "rainbowlt";
+  }
+  return null;
+}
+
+function unlockSecretMedallions() {
+  state.medallionsOwned = Array.isArray(state.medallionsOwned) ? state.medallionsOwned : [];
+  if (!hasMedallionForLine("narwhal-luxury") && allBond25LinesComplete()) {
+    state.medallionsOwned.push("narwhal-luxury");
+    showToast("Secret Medallion Unlocked", "Narwraith Medallion earned. Use it to unlock the Narwhal Luxury line.");
+    return "narwhal-luxury";
   }
   return null;
 }
@@ -560,6 +633,8 @@ function nextBondMilestone(carId) {
 
 function recordRaceUsage(carId) {
   if (!carId || !cars.some((car) => car.id === carId)) return [];
+  recordTunerPlaySession();
+  recordTunerCarUsed(carId);
   recordCarUsage(carId);
   state.bond = state.bond || {};
   const bond = state.bond[carId] || { races: 0, milestones: [] };
@@ -579,10 +654,12 @@ function recordRaceUsage(carId) {
     playSound("bond-up");
     const form = currentEvolution(carId);
     unlocked.forEach((milestone) => {
+      recordTunerStat("bondBoostsUnlocked");
       showToast("Bond Boost Unlocked!", `${form.name} gained ${formatBondBoosts(milestone.boosts)}!`);
     });
   }
   checkBondMilestones(carId);
+  unlockSecretMedallions();
   return unlocked;
 }
 
@@ -661,6 +738,10 @@ function closeBondScene() {
 }
 
 function recordStoryRaceOutcome(won, isStoryRace) {
+  recordTunerPlaySession();
+  if (isStoryRace) {
+    recordTunerStat(won ? "storyRacesWon" : "storyRacesLost");
+  }
   state.consecutiveLosses = won ? 0 : Math.max(0, Math.floor(Number(state.consecutiveLosses) || 0)) + 1;
   if (!won) maybeUnlockGarbageMedallion();
   if (!isStoryRace) {
@@ -737,7 +818,180 @@ function achievementProgress(achievement) {
     const complete = Boolean(state.garbageMedallionAwarded || hasMedallion("waste-management"));
     return { current: complete ? 1 : 0, total: 1, percent: complete ? 100 : 0, complete, label: complete ? "Unlocked" : "Secret" };
   }
+  if (achievement.type === "narwhalBond") {
+    const required = cars.filter((car) => !car.tutorialOnly && !["rainbowlt", "narwhal-luxury"].includes(car.id));
+    const current = required.filter((car) => bondLevelForLine(car.id) >= 25).length;
+    const total = required.length;
+    const complete = hasMedallionForLine("narwhal-luxury") || (total > 0 && current >= total);
+    return { current, total, percent: total ? Math.floor((current / total) * 100) : 0, complete, label: complete ? "Unlocked" : `${current}/${total} lines` };
+  }
   return { current: 0, total: 1, percent: 0, complete: false, label: "0%" };
+}
+
+function tunerStatTotalRaces() {
+  const s = state.tunerStats || {};
+  return (s.storyRacesWon || 0) + (s.storyRacesLost || 0)
+    + (s.dragRacesWon || 0) + (s.dragRacesLost || 0)
+    + (s.battlesWon || 0) + (s.battlesLost || 0)
+    + (s.headToHeadWon || 0) + (s.headToHeadLost || 0)
+    + (s.lastGearMatchesWon || 0) + (s.lastGearMatchesLost || 0);
+}
+
+function tunerStatTotalWins() {
+  const s = state.tunerStats || {};
+  return (s.storyRacesWon || 0) + (s.dragRacesWon || 0) + (s.battlesWon || 0)
+    + (s.headToHeadWon || 0) + (s.lastGearMatchesWon || 0);
+}
+
+function tunerStatWinRate() {
+  const total = tunerStatTotalRaces();
+  return total ? Math.round((tunerStatTotalWins() / total) * 100) : 0;
+}
+
+function tunerStatFavoriteCar() {
+  const uses = state.recentCarUses || [];
+  if (!uses.length) return state.selectedCar || cars[0].id;
+  const counts = {};
+  uses.forEach(({ carId }) => { counts[carId] = (counts[carId] || 0) + 1; });
+  return Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || uses[0].carId;
+}
+
+function tunerStatCollectionProgress() {
+  const total = cars.filter((car) => !car.tutorialOnly).length;
+  const unlocked = (state.unlockedLines || []).filter((carId) => cars.some((car) => car.id === carId && !car.tutorialOnly)).length;
+  return { unlocked, total, percent: total ? Math.round((unlocked / total) * 100) : 0 };
+}
+
+function tunerStatVindexProgress() {
+  return vindexCompletionStats();
+}
+
+function tunerStatBondMilestonesHit() {
+  return Object.values(state.bond || {}).reduce((total, entry) => {
+    return total + (Array.isArray(entry?.milestones) ? entry.milestones.length : 0);
+  }, 0);
+}
+
+function tunerStatMaxLevelCars() {
+  return Object.values(state.garage || {}).filter((entry) => entry && entry.level >= maxCarLevel).length;
+}
+
+function tunerStatTunerRankBadge() {
+  const rank = state.tunerRank?.playerRank;
+  return rank == null ? "UR" : `#${rank}`;
+}
+
+function tunerStatDaysActive() {
+  const first = state.tunerStats?.firstPlayedAt;
+  const last = state.tunerStats?.lastPlayedAt;
+  if (!first || !last) return 0;
+  return Math.max(1, Math.ceil((last - first) / (1000 * 60 * 60 * 24)));
+}
+
+function tunerStatCard(label, value, sub = "") {
+  return `<div class="tuner-stat-card">
+    <span class="tuner-stat-card-label">${escapeHtml(label)}</span>
+    <strong class="tuner-stat-card-value">${escapeHtml(String(value))}</strong>
+    ${sub ? `<span class="tuner-stat-card-sub">${escapeHtml(sub)}</span>` : ""}
+  </div>`;
+}
+
+function collectTunerMilestones() {
+  const milestones = [];
+  const stats = state.tunerStats || {};
+  const tuner = selectedTuner();
+  if (state.tunerChosen) milestones.push({ label: "Became a Tuner as", value: tuner.name });
+  if (state.tunerRank?.playerRank) milestones.push({ label: "Highest Tuner Rank reached", value: tunerStatTunerRankBadge() });
+  if ((stats.bossesDefeated || 0) > 0) milestones.push({ label: "Bosses defeated", value: String(stats.bossesDefeated) });
+  if ((stats.evolutionsPerformed || 0) > 0) milestones.push({ label: "Evolutions performed", value: String(stats.evolutionsPerformed) });
+  if ((state.winStreak || 0) > 0) milestones.push({ label: "Current win streak", value: String(state.winStreak) });
+  const collection = tunerStatCollectionProgress();
+  if (collection.percent === 100) milestones.push({ label: "Collection", value: "Complete - every GearBorn unlocked" });
+  return milestones;
+}
+
+function updateTunerHeadshot() {
+  const button = document.getElementById("open-tuner-page");
+  const image = document.getElementById("tuner-headshot-image");
+  if (button) button.hidden = !state.tunerChosen;
+  if (!image || !state.tunerChosen) return;
+  const tuner = selectedTuner();
+  image.src = tuner.headshot || tuner.image || "";
+  image.alt = tuner.name || "";
+}
+
+function openTunerPage() {
+  const currentView = document.querySelector(".view.active")?.id?.replace(/-view$/, "") || "menu";
+  if (currentView !== "tuner-page") lastViewBeforeTunerPage = currentView;
+  showView("tuner-page");
+  renderTunerPage();
+}
+
+function closeTunerPage() {
+  showView(lastViewBeforeTunerPage || "menu");
+}
+
+function renderTunerPage() {
+  const tuner = selectedTuner();
+  const portraitEl = document.getElementById("tuner-page-portrait");
+  if (portraitEl) {
+    portraitEl.src = tuner.image || tuner.headshot || "";
+    portraitEl.alt = tuner.name || "";
+  }
+  const nameEl = document.getElementById("tuner-page-name");
+  if (nameEl) nameEl.textContent = tuner.name || "-";
+  const bioEl = document.getElementById("tuner-page-bio");
+  if (bioEl) bioEl.textContent = tuner.bio || "";
+  const rankBadgeEl = document.getElementById("tuner-page-rank-badge");
+  if (rankBadgeEl) rankBadgeEl.textContent = tunerStatTunerRankBadge();
+
+  const favCarId = tunerStatFavoriteCar();
+  const favCar = cars.find((car) => car.id === favCarId) || cars[0];
+  const favForm = currentEvolution(favCar.id);
+  const favImg = document.getElementById("tuner-page-favorite-image");
+  if (favImg && favForm) {
+    favImg.src = imageFor(favForm, "display") || "";
+    favImg.alt = favForm.name || "";
+  }
+  const favName = document.getElementById("tuner-page-favorite-name");
+  if (favName) favName.textContent = favForm?.name || "-";
+  const favLine = document.getElementById("tuner-page-favorite-line");
+  if (favLine) favLine.textContent = favCar.family || "";
+  const favUses = document.getElementById("tuner-page-favorite-uses");
+  const useCount = (state.recentCarUses || []).filter((use) => use.carId === favCar.id).length;
+  if (favUses) favUses.textContent = useCount > 0 ? `Used ${useCount} recent race${useCount === 1 ? "" : "s"}` : "First race coming up!";
+
+  const statGrid = document.getElementById("tuner-page-stat-grid");
+  if (statGrid) {
+    const stats = state.tunerStats || {};
+    const collection = tunerStatCollectionProgress();
+    const vindex = tunerStatVindexProgress();
+    statGrid.innerHTML = `
+      ${tunerStatCard("Races Run", tunerStatTotalRaces())}
+      ${tunerStatCard("Total Wins", tunerStatTotalWins())}
+      ${tunerStatCard("Win Rate", `${tunerStatWinRate()}%`)}
+      ${tunerStatCard("Bosses Defeated", stats.bossesDefeated || 0)}
+      ${tunerStatCard("Evolutions Performed", stats.evolutionsPerformed || 0)}
+      ${tunerStatCard("Bond Milestones", tunerStatBondMilestonesHit())}
+      ${tunerStatCard("Cars Maxed", tunerStatMaxLevelCars())}
+      ${tunerStatCard("Collection", `${collection.percent}%`, `${collection.unlocked}/${collection.total}`)}
+      ${tunerStatCard("VINdex", `${vindex.percent}%`, `${vindex.encountered}/${vindex.total}`)}
+      ${tunerStatCard("Sprox Earned", (stats.totalSproxEarned || 0).toLocaleString())}
+      ${tunerStatCard("Convoy Stages Won", stats.convoyStagesWon || 0)}
+      ${tunerStatCard("Days as Tuner", tunerStatDaysActive())}
+    `;
+  }
+
+  const milestonesList = document.getElementById("tuner-page-milestones-list");
+  if (milestonesList) {
+    const milestones = collectTunerMilestones();
+    milestonesList.innerHTML = milestones.length
+      ? milestones.map((m) => `<li class="tuner-milestone">
+          <span class="tuner-milestone-label">${escapeHtml(m.label)}</span>
+          <span class="tuner-milestone-value">${escapeHtml(m.value)}</span>
+        </li>`).join("")
+      : `<li class="tuner-milestone tuner-milestone-empty">Run your first race to start unlocking milestones.</li>`;
+  }
 }
 
 function unlockCarLine(carId) {
@@ -1047,6 +1301,7 @@ function embeddedViewIs(view) {
 
 function renderMenuGoal() {
   const nextRaceNode = document.querySelector("#menu-next-race");
+  const nextLevelNode = document.querySelector("#menu-next-level");
   const nextRewardNode = document.querySelector("#menu-next-reward");
   const nextThumbNode = document.querySelector("#menu-next-race-thumb");
   updateStoryCardCta();
@@ -1055,7 +1310,8 @@ function renderMenuGoal() {
   const city = storyCities[cityIndex] || storyCities[0];
   const level = firstPlayableStoryLevelForCity(cityIndex) || campaignLevels[0];
   const cityName = city?.city || "Indianapolis";
-  nextRaceNode.textContent = `${cityName} - ${level?.title || "Next Level"}`;
+  nextRaceNode.textContent = cityName;
+  if (nextLevelNode) nextLevelNode.textContent = level?.title || "Next Level";
   let reward = 50;
   if (level?.type === "drag" || level?.type === "pink-slip") reward = level.drag.xp;
   if (level?.type === "trial") reward = timeMedals[timeMedals.length - 1].xp;
@@ -1123,6 +1379,7 @@ function render() {
   const needsStory = activeView === "story-view";
   const needsCarSelect = needsDrag || needsTime || needsBoss || needsBattle || needsStory || tutorialActive();
   renderSproxWallet();
+  updateTunerHeadshot();
   if (activeView === "menu-view") renderMenuGoal();
   renderTutorial();
   renderFlowScreens();
@@ -1153,6 +1410,7 @@ function render() {
   if (viewIsActive("convoy-loadouts")) renderConvoyLoadouts();
   if (viewIsActive("settings")) renderSettings();
   if (viewIsActive("builder")) renderBuilder();
+  if (viewIsActive("tuner-page")) renderTunerPage();
   paintCars();
 }
 
@@ -1232,14 +1490,20 @@ function ensureCarPickerButton(select, target) {
   `;
 }
 
-function openCarPicker(target) {
+function openCarPicker(targetOrOptions) {
+  const options = typeof targetOrOptions === "object" && targetOrOptions
+    ? targetOrOptions
+    : { target: targetOrOptions };
+  const target = options.target || "custom";
   carPickerState.target = target;
-  carPickerState.highlighted = pickerTargetCarId(target);
+  carPickerState.customFilter = typeof options.filter === "function" ? options.filter : null;
+  carPickerState.onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
   carPickerState.search = "";
   carPickerState.filters = { favorites: false, recent: false, ready: false, types: [] };
   carPickerState.sort = "level-desc";
+  carPickerState.highlighted = options.selectedCarId || pickerTargetCarId(target) || filteredPickerCars()[0]?.id || "";
   const title = document.querySelector("#car-picker-title");
-  if (title) title.textContent = target === "lastgear" ? "Choose your Last Gear racer" : "Choose GearBorn";
+  if (title) title.textContent = options.title || (target === "lastgear" ? "Choose your Last Gear racer" : "Choose GearBorn");
   if (el.carPickerSearch) el.carPickerSearch.value = "";
   if (el.carPickerSort) el.carPickerSort.value = "level-desc";
   renderCarPicker();
@@ -1249,9 +1513,16 @@ function openCarPicker(target) {
 
 function closeCarPicker(confirm = false) {
   const target = carPickerState.target;
-  if (confirm && carPickerState.highlighted) setPickerTargetCarId(target, carPickerState.highlighted);
+  const highlighted = carPickerState.highlighted;
+  const customConfirm = carPickerState.onConfirm;
+  if (confirm && highlighted) {
+    if (customConfirm) customConfirm(highlighted);
+    else setPickerTargetCarId(target, highlighted);
+  }
   el.carPickerModal?.classList.remove("active");
   el.carPickerModal?.setAttribute("aria-hidden", "true");
+  carPickerState.customFilter = null;
+  carPickerState.onConfirm = null;
   if (confirm && target === "lastgear" && typeof startLastGearBeta === "function") startLastGearBeta();
 }
 
@@ -1271,6 +1542,7 @@ function filteredPickerCars() {
     if (carPickerState.filters.recent && !recentIds.includes(car.id)) return false;
     if (carPickerState.filters.ready && !progress.pendingEvolution) return false;
     if (carPickerState.filters.types.length && !carPickerState.filters.types.includes(type)) return false;
+    if (carPickerState.customFilter && !carPickerState.customFilter(car.id)) return false;
     return true;
   });
   const recentlyUsedIndex = (carId) => recentIds.indexOf(carId) < 0 ? 999 : recentIds.indexOf(carId);
@@ -2005,6 +2277,7 @@ function advanceTunerRankForBossWin(bossId) {
   if (!bossId) return null;
   state.tunerRank = state.tunerRank || { playerRank: null, defeatedBossIds: [], bossesFirstSeen: [], rivalRank: null };
   if (state.tunerRank.defeatedBossIds.includes(bossId)) return null;
+  recordTunerStat("bossesDefeated");
   const oldRank = state.tunerRank.playerRank || null;
   const bossRank = currentTunerRankForBoss(bossId) || 8;
   state.tunerRank.playerRank = oldRank ? Math.min(oldRank, bossRank) : bossRank;
@@ -2164,8 +2437,12 @@ function renderConvoyEntry() {
 
 function openConvoy(convoyId) {
   if (!convoyDefinitions[convoyId]) return;
-  state.convoy.inProgress = state.convoy.inProgress || { convoyId, currentStage: 0, stageProgress: {} };
+  state.convoy.inProgress = state.convoy.inProgress || { convoyId, currentStage: 0, stageProgress: {}, stageSelections: [null, null, null] };
   state.convoy.inProgress.convoyId = convoyId;
+  if (!Array.isArray(state.convoy.inProgress.stageSelections)) {
+    state.convoy.inProgress.stageSelections = [null, null, null];
+  }
+  while (state.convoy.inProgress.stageSelections.length < 3) state.convoy.inProgress.stageSelections.push(null);
   const preScene = convoyStoryScriptFor(convoyId, "pre")[0]?.text;
   if (preScene) showToast("Convoy Story Placeholder", preScene);
   renderConvoy();
@@ -2209,49 +2486,211 @@ function renderConvoy() {
   if (!el.convoyTitle || !el.convoyStageList) return;
   const convoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || "tyree";
   const convoy = convoyDefinitions[convoyId] || convoyDefinitions.tyree;
-  const loadout = activeConvoyLoadout();
-  el.convoyTitle.textContent = convoy.name;
-  el.convoySummary.textContent = `${convoy.sponsor} · 3 stages · no car reuse${loadout ? ` · ${loadout.name}` : " · Choose a valid loadout"}`;
+  el.convoyTitle.textContent = "Convoy";
+  const sponsorNameEl = document.getElementById("convoy-sponsor-name");
+  if (sponsorNameEl) sponsorNameEl.textContent = convoy.sponsor || "";
+  const sponsorHeadshotEl = document.getElementById("convoy-sponsor-headshot");
+  if (sponsorHeadshotEl) {
+    sponsorHeadshotEl.src = convoy.headshot || "";
+    sponsorHeadshotEl.alt = convoy.sponsor || "";
+  }
   const progress = state.convoy?.inProgress?.stageProgress || {};
-  el.convoyStageList.innerHTML = convoy.stages.map((stage, index) => `
-    <article class="convoy-stage-card ${progress[index] || ""}">
-      <span>Stage ${index + 1}</span>
-      <strong>${stage.type === "h2h" ? "Head-to-Head" : stage.type.toUpperCase()}</strong>
-      <p>${stage.opponentName}${loadout?.carIds?.[index] ? ` · Your slot: ${currentEvolution(loadout.carIds[index]).name}` : ""}</p>
-      <button class="primary" type="button" data-convoy-stage="${index}" ${!loadout || index > 0 && progress[index - 1] !== "won" ? "disabled" : ""}>${progress[index] === "lost" ? "Retry Stage" : "Start Stage"}</button>
-    </article>
-  `).join("");
+  const stageSelections = state.convoy?.inProgress?.stageSelections || [null, null, null];
+  el.convoyStageList.innerHTML = convoy.stages.map((stage, index) => {
+    const opponentCar = cars.find((car) => car.id === stage.opponentCarId);
+    const opponentEvolution = opponentCar ? currentEvolution(stage.opponentCarId) : null;
+    const opponentName = opponentEvolution?.name || stage.opponentName || "Opponent";
+    const opponentImg = opponentEvolution ? imageFor(opponentEvolution, "display") : "";
+    const opponentStats = stage.opponentCarId ? (displayedGearbornStats(stage.opponentCarId) || baseGearbornStatsAtLevel(stage.opponentCarId, 1) || {}) : {};
+    const playerCarId = stageSelections[index];
+    const playerCar = playerCarId ? cars.find((car) => car.id === playerCarId) : null;
+    const playerEvolution = playerCar ? currentEvolution(playerCarId) : null;
+    const playerName = playerEvolution?.name || "";
+    const playerImg = playerEvolution ? imageFor(playerEvolution, "display") : "";
+    const playerStats = playerCarId ? (displayedGearbornStats(playerCarId) || {}) : {};
+    const prevStageStatus = index === 0 ? "won" : progress[index - 1];
+    const isLocked = index > 0 && prevStageStatus !== "won";
+    const stageStatus = progress[index] || "";
+    const canStart = Boolean(playerCarId) && !isLocked;
+    const startLabel = stageStatus === "lost" ? "Retry Stage" : "Start Stage";
+    const modeIconHtml = convoyStageModeIconHtml(stage.type, convoy);
+    return `
+      <article class="convoy-stage-card-v2 ${stageStatus} ${isLocked ? "locked" : ""}">
+        <header class="convoy-stage-card-header">
+          <h2 class="convoy-stage-card-title">Stage ${index + 1}</h2>
+          <div class="convoy-stage-mode">${modeIconHtml}</div>
+        </header>
+        <div class="convoy-stage-matchup">
+          <div class="convoy-stage-side convoy-stage-side-opponent">
+            <span class="convoy-stage-side-kicker">Opponent</span>
+            <div class="convoy-stage-car-display">
+              ${opponentImg ? `<img src="${opponentImg}" alt="${escapeHtml(opponentName)}">` : `<span class="convoy-stage-car-placeholder">?</span>`}
+            </div>
+            <strong class="convoy-stage-car-name">${escapeHtml(opponentName)}</strong>
+            <div class="convoy-stage-stats">${renderConvoyStatBars(opponentStats)}</div>
+          </div>
+          <span class="convoy-stage-vs" aria-hidden="true">VS</span>
+          <div class="convoy-stage-side convoy-stage-side-player">
+            <span class="convoy-stage-side-kicker">Your Pick</span>
+            <button class="convoy-stage-car-display convoy-stage-car-picker-button ${playerCarId ? "filled" : "empty"}" type="button" data-convoy-pick-stage="${index}" ${isLocked ? "disabled" : ""}>
+              ${playerImg
+                ? `<img src="${playerImg}" alt="${escapeHtml(playerName)}">`
+                : `<div class="convoy-stage-car-picker-plus">
+                    <span class="convoy-stage-car-picker-plus-icon">+</span>
+                    <span class="convoy-stage-car-picker-plus-label">Choose Car</span>
+                  </div>`}
+            </button>
+            <strong class="convoy-stage-car-name">${playerName ? escapeHtml(playerName) : "—"}</strong>
+            <div class="convoy-stage-stats">${playerCarId ? renderConvoyStatBars(playerStats) : renderConvoyStatBars({})}</div>
+          </div>
+        </div>
+        <button class="convoy-stage-start" type="button" data-convoy-stage="${index}" ${canStart ? "" : "disabled"}>
+          ${isLocked ? "Locked" : startLabel}
+        </button>
+      </article>
+    `;
+  }).join("");
 }
 
 function renderConvoyLoadouts() {
   if (!el.convoyLoadoutSlots) return;
-  const owned = selectablePlayerCars();
-  el.convoyLoadoutSlots.innerHTML = state.convoy.loadouts.map((loadout, index) => `
-    <article class="convoy-loadout-slot">
-      <h3>${loadout?.name || `Empty Slot ${index + 1}`}</h3>
-      <input type="text" value="${loadout?.name || `Loadout ${index + 1}`}" maxlength="32" data-convoy-loadout-name="${index}">
-      <div class="convoy-loadout-selects">
-        ${[0, 1, 2].map((slot) => `
-          <select data-convoy-loadout-car="${index}:${slot}">
-            ${owned.map((car) => `<option value="${car.id}" ${loadout?.carIds?.[slot] === car.id ? "selected" : ""}>${currentEvolution(car.id).name}</option>`).join("")}
-          </select>
-        `).join("")}
-      </div>
-      <button class="primary" type="button" data-save-convoy-loadout="${index}">Save</button>
-    </article>
-  `).join("");
+  const inProgressConvoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || null;
+  const opponentSummary = inProgressConvoyId
+    ? convoyDefinitions[inProgressConvoyId].stages.map((stage, index) => {
+      const opp = currentEvolution(stage.opponentCarId);
+      return `<span class="convoy-loadout-opp-pill">S${index + 1}: ${escapeHtml(opp?.name || stage.opponentName || "?")}</span>`;
+    }).join("")
+    : "";
+  const helperEl = document.getElementById("convoy-loadouts-helper");
+  if (helperEl) {
+    helperEl.innerHTML = inProgressConvoyId
+      ? `<strong>Next Convoy:</strong> ${escapeHtml(convoyDefinitions[inProgressConvoyId].sponsor || "")} · ${opponentSummary}`
+      : "Build squads to deploy in future Convoys.";
+  }
+  el.convoyLoadoutSlots.innerHTML = state.convoy.loadouts.map((loadout, index) => {
+    const carIds = Array.isArray(loadout?.carIds) ? loadout.carIds : [null, null, null];
+    const name = loadout?.name || `Loadout ${index + 1}`;
+    const isValid = validConvoyLoadout(loadout);
+    const slotsHtml = [0, 1, 2].map((slot) => {
+      const carId = carIds[slot];
+      const evolution = carId ? currentEvolution(carId) : null;
+      const carName = evolution?.name || "";
+      const carImg = evolution ? imageFor(evolution, "display") : "";
+      return `
+        <button class="convoy-loadout-slot-pick ${carId ? "filled" : "empty"}" type="button" data-convoy-loadout-slot-pick="${index}:${slot}">
+          ${carImg
+            ? `<img src="${carImg}" alt="${escapeHtml(carName)}"><span class="convoy-loadout-slot-pick-name">${escapeHtml(carName)}</span>`
+            : `<span class="convoy-loadout-slot-pick-plus">+</span><span class="convoy-loadout-slot-pick-label">Slot ${slot + 1}</span>`}
+        </button>
+      `;
+    }).join("");
+    return `
+      <article class="convoy-loadout-slot-v2">
+        <header class="convoy-loadout-slot-header">
+          <input type="text" class="convoy-loadout-name-input" value="${escapeHtml(name)}" maxlength="32" data-convoy-loadout-name="${index}" placeholder="Loadout ${index + 1}">
+        </header>
+        <div class="convoy-loadout-slot-picks">${slotsHtml}</div>
+        <div class="convoy-loadout-slot-actions">
+          <button class="convoy-loadout-action-load" type="button" data-convoy-loadout-load="${index}" ${isValid ? "" : "disabled"}>Load</button>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
-function saveConvoyLoadout(index) {
-  const nameInput = document.querySelector(`[data-convoy-loadout-name="${index}"]`);
-  const carIds = [0, 1, 2].map((slot) => document.querySelector(`[data-convoy-loadout-car="${index}:${slot}"]`)?.value).filter(Boolean);
-  if (carIds.length !== 3 || new Set(carIds).size !== 3) {
-    showToast("Convoy Loadout", "Convoy loadouts require three different GearBorn.");
+function convoyStageModeIconHtml(stageType, convoy) {
+  if (stageType === "drag") {
+    return `<img class="convoy-mode-icon" src="assets/items/icon-drag-race.png" alt="Drag Race" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'DRAG'}))">`;
+  }
+  if (stageType === "battle") {
+    return `<img class="convoy-mode-icon" src="assets/items/icon-battle.png" alt="Battle" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'BATTLE'}))">`;
+  }
+  if (stageType === "h2h") {
+    return `<span class="convoy-mode-icon-stack">
+      <img class="convoy-mode-icon-base" src="${convoy.icon}" alt="Convoy" onerror="this.hidden=true">
+      <img class="convoy-mode-icon-face" src="${convoy.headshot}" alt="${escapeHtml(convoy.sponsor || "")}" onerror="this.hidden=true">
+    </span>`;
+  }
+  return `<span class="convoy-mode-icon-fallback">${escapeHtml(String(stageType).toUpperCase())}</span>`;
+}
+
+function renderConvoyStatBars(stats = {}) {
+  const tracks = [
+    { key: "speed", label: "SPD" },
+    { key: "acceleration", label: "ACC" },
+    { key: "handling", label: "HDL" },
+    { key: "torque", label: "TRQ" },
+    { key: "body", label: "BDY" },
+    { key: "powertrain", label: "PWR" }
+  ];
+  return tracks.map((track) => {
+    const value = Math.max(0, Math.min(100, Math.round(stats[track.key] || 0)));
+    return `
+      <div class="convoy-stat-bar-row">
+        <span class="convoy-stat-bar-label">${track.label}</span>
+        <div class="convoy-stat-bar-track">
+          <div class="convoy-stat-bar-fill" style="width:${value}%"></div>
+        </div>
+        <span class="convoy-stat-bar-value">${value || "—"}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function openConvoyStagePicker(stageIndex) {
+  const inProgress = state.convoy?.inProgress;
+  if (!inProgress) return;
+  const usedElsewhere = (inProgress.stageSelections || [])
+    .map((id, index) => index === stageIndex ? null : id)
+    .filter(Boolean);
+  openCarPicker({
+    title: `Choose your GearBorn for Stage ${stageIndex + 1}`,
+    selectedCarId: inProgress.stageSelections?.[stageIndex] || "",
+    filter: (carId) => !usedElsewhere.includes(carId),
+    onConfirm: (carId) => {
+      const selections = Array.isArray(inProgress.stageSelections) ? inProgress.stageSelections.slice(0, 3) : [null, null, null];
+      while (selections.length < 3) selections.push(null);
+      selections[stageIndex] = carId;
+      inProgress.stageSelections = selections;
+      saveState();
+      renderConvoy();
+    }
+  });
+}
+
+function loadConvoyLoadoutIntoStages(loadoutIndex) {
+  const loadout = state.convoy?.loadouts?.[loadoutIndex];
+  if (!validConvoyLoadout(loadout)) {
+    showToast("Loadout", "This loadout is incomplete.");
     return;
   }
-  state.convoy.loadouts[index] = { name: nameInput?.value?.trim() || `Loadout ${index + 1}`, carIds };
+  const inProgress = state.convoy?.inProgress;
+  if (!inProgress) return;
+  inProgress.stageSelections = loadout.carIds.slice(0, 3);
   saveState();
-  renderConvoyLoadouts();
+  renderConvoy();
+  showToast("Loadout Loaded", `${loadout.name || `Loadout ${loadoutIndex + 1}`} loaded into convoy slots.`);
+}
+
+function openConvoyLoadoutSlotPicker(loadoutIndex, slot) {
+  const loadout = state.convoy.loadouts[loadoutIndex] || { name: `Loadout ${loadoutIndex + 1}`, carIds: [null, null, null] };
+  const carIds = Array.isArray(loadout.carIds) ? loadout.carIds.slice(0, 3) : [null, null, null];
+  while (carIds.length < 3) carIds.push(null);
+  const usedElsewhere = carIds.filter((id, index) => index !== slot && id);
+  openCarPicker({
+    title: `Choose GearBorn for Slot ${slot + 1}`,
+    selectedCarId: carIds[slot] || "",
+    filter: (carId) => !usedElsewhere.includes(carId),
+    onConfirm: (carId) => {
+      carIds[slot] = carId;
+      state.convoy.loadouts[loadoutIndex] = {
+        name: loadout.name || `Loadout ${loadoutIndex + 1}`,
+        carIds
+      };
+      saveState();
+      renderConvoyLoadouts();
+    }
+  });
 }
 
 function rivalCarIdForPlayer(playerCarId = state.selectedStoryCar) {
@@ -2982,6 +3421,7 @@ function finishBattle() {
   const earned = isGauntlet ? 0 : tutorialActive() && !won ? 0 : won ? (battleState.reward ?? battleRewardForBossIndex(index)) : Math.round(35 + Math.max(0, index) * 18);
   addSprox(earned);
   recordRaceUsage(battleState.carId);
+  recordTunerStat(won ? "battlesWon" : "battlesLost");
   const partReward = won && !isGauntlet && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
   recordStoryRaceOutcome(won, battleState.campaignLevelIndex !== null);
   let unlockedBossName = "";
@@ -3682,7 +4122,7 @@ function renderGarage() {
   document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
   if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
   renderUnlockHubCard();
-  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || car.id === "rainbowlt")));
+  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
   el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
   el.garageGrid.innerHTML = garageCars.map((car) => {
     if (state.garageViewMode !== "compact") return isCarUnlocked(car.id) ? garageDetailedCardMarkup(car) : lockedGarageCard(car);
@@ -4753,6 +5193,7 @@ function finishRace(playerWon) {
   }
 
   recordRaceUsage(finishedRace.carId);
+  recordTunerStat(playerWon ? "dragRacesWon" : "dragRacesLost");
   recordStoryRaceOutcome(playerWon, isStoryRace);
   if (riskyPinkSlipLoss) {
     applyPinkSlipLossPenalty(finishedRace.carId);
@@ -4848,7 +5289,9 @@ function failDragRace(title) {
     maybeTriggerRoyalFlushGauntlet(storyCityForCampaignIndex(failedRace.campaignLevelIndex)?.id);
     pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
   }
+  recordRaceUsage(failedRace.carId);
   recordStoryRaceOutcome(false, isStoryRace);
+  recordTunerStat("dragRacesLost");
   const medalResult = !isGauntlet && isStoryRace
     ? saveStoryMedal(failedRace.campaignLevelIndex, { won: false })
     : { medal: "none", improved: false };
@@ -5215,11 +5658,12 @@ const forgeMedallionMap = {
   "butcher-hog":        "assets/medallions/medallion-sauspin.png",
   "tiger-cart":         "assets/medallions/medallion-puttercat.png",
   "gb-growler":         "assets/medallions/medallion-cruzdog.png",
-  "armadaddio":         "assets/medallions/medallion-manscape.png",
+  "armadaddio":         "assets/medallions/medallion-mansplore.png",
   "electro-beetle":     "assets/medallions/medallion-bertie.png",
   "flavor-coast":       "assets/medallions/medallion-carmieri.png",
   "future-bok":         "assets/medallions/medallion-sprynza.png",
   "wrestler-roo":       "assets/medallions/medallion-rumbleroo.png",
+  "narwhal-luxury":     "assets/medallions/medallion-narwraith.png",
   "silly-goose":        "assets/medallions/medallion-honky.png",
   "construction-blok":  "assets/medallions/medallion-blokparty.png",
   "skater-koala":       "assets/medallions/medallion-koaster.png",
@@ -6382,6 +6826,7 @@ function showView(view) {
   }
   if (view === "beta" && !betaRaceContext) openBetaPrototypeIntro();
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
+  if (view === "tuner-page") renderTunerPage();
   if (!["story", "play", "time-trial", "boss", "battle", "beta"].includes(view)) render();
 }
 
@@ -8326,6 +8771,9 @@ function finishVerticalRace(playerWon) {
     if (unlockedBossName) resultLines.push(`Boss Unlocked: ${unlockedBossName}`);
     el.storyMessage.textContent = "";
     if (raceState.campaignLevelIndex !== null && playerWon) completeCampaignLevel(raceState.campaignLevelIndex);
+    if (raceState.mode === "campaign-rival") {
+      recordTunerStat(resultWon ? "headToHeadWon" : "headToHeadLost");
+    }
   } else {
     const trackIndex = raceState.trackIndex;
     const medalSet = raceState.mode === "tutorial-time" ? tutorialMedals : timeMedals;
@@ -8356,6 +8804,7 @@ function finishVerticalRace(playerWon) {
     el.timeMessage.className = `race-message ${beaten ? "win" : ""}`;
     el.timeMessage.textContent = "";
     if (raceState.campaignLevelIndex !== null) completeCampaignLevel(raceState.campaignLevelIndex);
+    recordTunerStat("timeTrialsCompleted");
   }
   recordRaceUsage(raceState.carId);
   const partReward = isStoryRace && resultWon ? rollStoryPartReward() : null;
@@ -8452,6 +8901,9 @@ function failVerticalRace(title) {
     el.timeMessage.textContent = "";
   }
   const isStoryRace = raceState.campaignLevelIndex !== null;
+  recordRaceUsage(raceState.carId);
+  if (raceState.mode === "campaign-rival") recordTunerStat("headToHeadLost");
+  else if (raceState.mode === "time" || raceState.mode === "campaign-time" || raceState.mode === "tutorial-time") recordTunerStat("timeTrialsCompleted");
   recordStoryRaceOutcome(false, isStoryRace);
   saveState();
   const tutorialInTime = tutorialActive() && raceState.mode === "tutorial-time";

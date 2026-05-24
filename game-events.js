@@ -43,6 +43,14 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   });
 });
 
+document.getElementById("open-tuner-page")?.addEventListener("click", () => {
+  openTunerPage();
+});
+
+document.getElementById("tuner-page-back")?.addEventListener("click", () => {
+  closeTunerPage();
+});
+
 document.querySelectorAll("[data-training-2d]").forEach((button) => {
   button.addEventListener("click", () => {
     const trainingMode = button.getAttribute("data-training-2d");
@@ -488,32 +496,58 @@ el.garageLoadoutsOpen?.addEventListener("click", () => {
 });
 el.convoyLoadoutsBack?.addEventListener("click", () => showView(convoyLoadoutsReturnView || "convoy"));
 el.convoyLoadoutSlots?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-save-convoy-loadout]");
-  if (button) saveConvoyLoadout(Number(button.dataset.saveConvoyLoadout));
+  const slotPickButton = event.target.closest("[data-convoy-loadout-slot-pick]");
+  if (slotPickButton) {
+    const [loadoutIndex, slot] = slotPickButton.dataset.convoyLoadoutSlotPick.split(":").map(Number);
+    openConvoyLoadoutSlotPicker(loadoutIndex, slot);
+    return;
+  }
+  const loadButton = event.target.closest("[data-convoy-loadout-load]");
+  if (loadButton && !loadButton.disabled) {
+    loadConvoyLoadoutIntoStages(Number(loadButton.dataset.convoyLoadoutLoad));
+    showView("convoy");
+  }
+});
+el.convoyLoadoutSlots?.addEventListener("input", (event) => {
+  const nameInput = event.target.closest("[data-convoy-loadout-name]");
+  if (!nameInput) return;
+  const index = Number(nameInput.dataset.convoyLoadoutName);
+  const current = state.convoy.loadouts[index] || { name: "", carIds: [null, null, null] };
+  current.name = nameInput.value.trim() || `Loadout ${index + 1}`;
+  state.convoy.loadouts[index] = current;
+  saveState();
 });
 el.convoyStageList?.addEventListener("click", (event) => {
+  const pickButton = event.target.closest("[data-convoy-pick-stage]");
+  if (pickButton && !pickButton.disabled) {
+    openConvoyStagePicker(Number(pickButton.dataset.convoyPickStage));
+    return;
+  }
   const button = event.target.closest("[data-convoy-stage]");
-  if (!button) return;
-  const loadout = activeConvoyLoadout();
-  if (!loadout) {
-    showToast("Convoy Loadout", "Convoy loadouts require three different GearBorn.");
-    return;
-  }
+  if (!button || button.disabled) return;
   const slot = Number(button.dataset.convoyStage);
-  const carId = loadout.carIds?.[slot];
-  if (!carId || !isSelectablePlayerCar(carId)) {
-    showToast("Convoy Loadout", "Choose a valid GearBorn for this convoy stage.");
+  const inProgress = state.convoy?.inProgress;
+  if (!inProgress) return;
+  inProgress.stageProgress = inProgress.stageProgress || {};
+  inProgress.stageSelections = Array.isArray(inProgress.stageSelections) ? inProgress.stageSelections : [null, null, null];
+  if (slot > 0 && inProgress.stageProgress[slot - 1] !== "won") {
+    showToast("Convoy", "Complete the previous stage first.");
     return;
   }
-  const convoyId = state.convoy?.inProgress?.convoyId;
-  state.convoy.inProgress.stageProgress = state.convoy.inProgress.stageProgress || {};
-  state.convoy.inProgress.stageProgress[slot] = "won";
+  const carId = inProgress.stageSelections?.[slot];
+  if (!carId || !isSelectablePlayerCar(carId)) {
+    showToast("Convoy", "Choose a GearBorn for this stage first.");
+    return;
+  }
+  const convoyId = inProgress.convoyId;
+  inProgress.stageProgress[slot] = "won";
+  recordTunerStat("convoyStagesWon");
   if (slot >= 2) {
     completeConvoy(convoyId);
     showView("story");
     return;
   }
-  state.convoy.inProgress.currentStage = slot + 1;
+  inProgress.currentStage = slot + 1;
   saveState();
   showToast("Convoy Stage Placeholder", `Stage ${slot + 1} cleared with ${currentEvolution(carId).name}.`);
   renderConvoy();
@@ -574,6 +608,7 @@ el.evolveButton.addEventListener("click", async () => {
   el.evolutionModal.setAttribute("aria-hidden", "true");
   await playEvolutionAnimation(carId, evolutionIndex, () => {
     revealEvolution(carId, evolutionIndex);
+    recordTunerStat("evolutionsPerformed");
     state.garage[carId].evolution = evolutionIndex;
     state.garage[carId].unlockedEvolution = Math.max(state.garage[carId].unlockedEvolution ?? 0, evolutionIndex);
     saveState();
