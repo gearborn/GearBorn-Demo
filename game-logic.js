@@ -3910,6 +3910,7 @@ function renderProfiles() {
 function achievementRewardArt(achievement) {
   if (achievementIsSecretHidden(achievement)) return `<div class="achievement-trophy secret">?</div>`;
   if (achievement.id === "garbageMedallion") return carMarkupForEvolution("waste-management", 0, "display");
+  if (achievement.id === "narwraithMedallion") return carMarkupForEvolution("narwhal-luxury", 0, "display");
   const artFormIndex = artVanUnlockByAchievement[achievement.id];
   if (Number.isInteger(artFormIndex)) {
     const form = cars.find((car) => car.id === "art-van")?.evolutions[artFormIndex];
@@ -3936,6 +3937,7 @@ function renderAchievements() {
           <small>${hiddenSecret ? "Unlock this achievement to reveal its condition." : achievement.requirement}</small>
           <em>${hiddenSecret ? "Mystery reward" : record.granted ? "Reward unlocked" : achievement.reward}</em>
         </span>
+        <span class="achievement-card-reward" aria-hidden="true">${achievementRewardArt(achievement)}</span>
         <span class="achievement-progress">
           <strong>${hiddenSecret ? "???" : record.complete ? "Complete" : `${progress.percent}%`}</strong>
           <small>${hiddenSecret ? "Secret" : progress.label}</small>

@@ -990,7 +990,7 @@ body:not(.mode-active) .nav {
 
 .achievement-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 54px auto;
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -1023,10 +1023,76 @@ body:not(.mode-active) .nav {
 }
 
 .achievement-card-copy,
+.achievement-card-reward,
 .achievement-progress {
   display: grid;
   gap: 4px;
   min-width: 0;
+}
+
+.achievement-card-reward {
+  width: 54px;
+  height: 46px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.achievement-card-reward .car {
+  position: relative;
+  inset: auto;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  transform: none;
+  margin: 0;
+}
+
+.achievement-card-reward .car .car-image,
+.achievement-card-reward img {
+  position: static;
+  inset: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform: none;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.38));
+}
+
+.achievement-card-reward .car .car-body,
+.achievement-card-reward .car .car-glow,
+.achievement-card-reward .car .wheel {
+  display: none;
+}
+
+.achievement-card-reward .achievement-trophy,
+.achievement-card-reward .achievement-sprox-preview {
+  width: 34px;
+  height: 34px;
+  transform: none;
+}
+
+.achievement-card-reward .achievement-trophy.secret {
+  width: 30px;
+  height: 30px;
+  font-size: 1.1rem;
+  border-width: 1px;
+}
+
+.achievement-card-reward .achievement-reward-parts {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.achievement-card-reward .achievement-part-image {
+  width: 16px;
+  height: 16px;
 }
 
 .achievement-card strong,
