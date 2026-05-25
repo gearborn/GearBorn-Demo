@@ -4196,6 +4196,10 @@ small {
   letter-spacing: 0.16em;
 }
 
+.drag-side-camera .lane-label {
+  display: none;
+}
+
 .car {
   position: absolute;
   right: 24px;
@@ -5168,7 +5172,7 @@ small {
 
 .profile-name-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 128px;
+  grid-template-columns: minmax(0, 1fr) minmax(128px, 260px);
   gap: 12px;
   align-items: center;
 }
@@ -5187,6 +5191,35 @@ small {
   width: 128px;
   height: 82px;
   object-fit: contain;
+}
+
+.profile-evolution-line {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.profile-evolution-form {
+  display: grid;
+  width: clamp(48px, 5.2vw, 70px);
+  height: clamp(36px, 3.9vw, 52px);
+  place-items: center;
+  min-width: 0;
+}
+
+.profile-evolution-form img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.profile-evolution-arrow {
+  color: rgba(255, 200, 87, 0.8);
+  font-family: var(--font-ui);
+  font-size: clamp(0.78rem, 1vw, 1rem);
+  font-weight: 900;
 }
 
 .vindex-evolution-line {
@@ -6804,7 +6837,16 @@ small {
 
 .beta-mode.no-3d .beta-3d-start,
 .beta-mode.vs-only #hub-map-beta-start,
+.beta-mode.vs-only #last-gear-beta-start,
+.beta-mode.vs-only #last-gear-setup-panel,
 .beta-mode.vs-only [data-beta-mode="time"] {
+  display: none;
+}
+
+.beta-mode:not(.prototype-only) #last-gear-beta-start,
+.beta-mode:not(.prototype-only) #last-gear-setup-panel,
+.beta-mode:not(.prototype-only) #hub-map-beta-start,
+.beta-mode:not(.prototype-only) .beta-3d-start {
   display: none;
 }
 
@@ -8768,6 +8810,14 @@ small {
   .car-select-layout,
   .solo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-name-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-evolution-line {
+    justify-content: start;
   }
 
   .compact-car-grid {
@@ -14416,5 +14466,195 @@ body {
 
   .tuner-page-identity {
     justify-items: center;
+  }
+}
+
+/* Dialogue fit pass: story/VN dialogue should never become an internal scroll box. */
+.tutorial-card,
+.cutscene-modal,
+.bond-scene-card {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tutorial-card {
+  max-height: min(42svh, calc(100svh - 24px));
+  padding: clamp(12px, 1.8svh, 18px);
+}
+
+.tutorial-card[data-mode="vnScene"],
+.tutorial-card[data-mode="comicSplash"] {
+  max-height: min(34svh, calc(100svh - 24px));
+  overflow: hidden;
+}
+
+.tutorial-card #tutorial-copy {
+  margin-top: clamp(6px, 1svh, 12px);
+  font-size: clamp(0.78rem, 1.65svh, 0.98rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.tutorial-card[data-mode="vnScene"] #tutorial-copy,
+.tutorial-card[data-mode="comicSplash"] #tutorial-copy {
+  font-size: clamp(0.72rem, 1.55svh, 0.92rem);
+  line-height: 1.2;
+}
+
+.tutorial-card.dialogue-density-compact #tutorial-copy,
+.cutscene-modal.dialogue-density-compact .dialogue-box span,
+.bond-scene-card.dialogue-density-compact #bond-scene-text {
+  font-size: clamp(0.68rem, 1.42svh, 0.86rem);
+  line-height: 1.18;
+}
+
+.tutorial-card.dialogue-density-tiny #tutorial-copy,
+.cutscene-modal.dialogue-density-tiny .dialogue-box span,
+.bond-scene-card.dialogue-density-tiny #bond-scene-text {
+  font-size: clamp(0.6rem, 1.24svh, 0.76rem);
+  line-height: 1.14;
+}
+
+.tutorial-card.dialogue-density-compact,
+.tutorial-card.dialogue-density-tiny {
+  padding: clamp(9px, 1.45svh, 14px);
+}
+
+.tutorial-speaker {
+  gap: clamp(4px, 0.8svh, 8px);
+}
+
+.tutorial-card h2 {
+  font-size: clamp(1rem, 2svh, 1.35rem);
+  line-height: 1;
+}
+
+.tutorial-actions {
+  margin-top: clamp(8px, 1.2svh, 14px);
+}
+
+.tutorial-skip {
+  margin-top: clamp(5px, 0.8svh, 10px);
+}
+
+.cutscene-modal {
+  max-height: calc(100svh - 24px);
+  padding: clamp(12px, 1.8svh, 18px);
+}
+
+.cutscene-portrait,
+.boss-portrait {
+  width: min(220px, 48svh, 72vw);
+  height: min(220px, 30svh);
+}
+
+.dialogue-box {
+  gap: clamp(4px, 0.8svh, 8px);
+  margin-bottom: clamp(8px, 1.2svh, 14px);
+}
+
+.dialogue-box span {
+  font-size: clamp(0.78rem, 1.55svh, 0.95rem);
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+.bond-scene-card {
+  min-height: 0;
+  max-height: calc(100svh - 24px);
+  align-items: center;
+}
+
+.bond-scene-portrait {
+  min-height: 0;
+  max-height: min(420px, 58svh);
+}
+
+.bond-scene-dialogue {
+  padding: clamp(12px, 1.8svh, 20px);
+}
+
+#bond-scene-text {
+  margin: clamp(6px, 1svh, 10px) 0;
+  font-size: clamp(0.78rem, 1.55svh, 1rem);
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.rival-dialog-card {
+  max-height: calc(100svh - 36px);
+  overflow: hidden;
+}
+
+.rival-dialog-card .selection-preview-art {
+  width: min(220px, 42svh, 72vw);
+  height: min(220px, 30svh);
+}
+
+.rival-dialog-card p {
+  font-size: clamp(0.76rem, 1.55svh, 1rem);
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .tutorial-card,
+  .tutorial-card[data-scene],
+  .tutorial-card[data-mode="vnScene"],
+  .tutorial-card[data-mode="comicSplash"] {
+    width: calc(100vw - 18px);
+    max-height: min(34svh, calc(100svh - 20px));
+    overflow: hidden;
+  }
+
+  .tutorial-card #tutorial-copy {
+    font-size: clamp(0.66rem, 1.42svh, 0.84rem);
+    line-height: 1.16;
+  }
+
+  .tutorial-actions {
+    grid-template-columns: repeat(2, minmax(96px, 118px));
+  }
+
+  .tutorial-actions button {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+
+  .cutscene-modal {
+    width: calc(100vw - 20px);
+    max-height: calc(100svh - 20px);
+  }
+
+  .cutscene-portrait,
+  .boss-portrait {
+    width: min(180px, 54vw);
+    height: min(180px, 28svh);
+  }
+
+  #cutscene-modal .modal-actions {
+    grid-template-columns: repeat(2, minmax(96px, 118px));
+  }
+
+  #cutscene-modal #back-cutscene,
+  #cutscene-modal #continue-cutscene,
+  #cutscene-modal #skip-cutscene {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+
+  .bond-scene-card {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: calc(100vw - 20px);
+    max-height: calc(100svh - 20px);
+    padding: 14px;
+  }
+
+  .bond-scene-portrait {
+    max-height: 32svh;
   }
 }

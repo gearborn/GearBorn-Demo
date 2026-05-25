@@ -720,6 +720,7 @@ function renderBondScene() {
   el.bondSceneText.textContent = scene?.placeholder
     ? `${car.family} — Bond Level ${threshold}\nThis scene hasn't been written yet.`
     : (scene?.lines?.[0]?.text || `${form.name} shares a quiet moment.`);
+  setDialogueDensity(el.bondSceneModal.querySelector(".bond-scene-card"), el.bondSceneText.textContent);
   el.bondSceneModal.classList.add("active");
   el.bondSceneModal.setAttribute("aria-hidden", "false");
 }
@@ -2482,6 +2483,15 @@ function completeConvoy(convoyId) {
   return true;
 }
 
+function convoyStageOpponentEvolution(stage) {
+  const car = cars.find((item) => item.id === stage?.opponentCarId);
+  if (!car) return null;
+  if (Number.isInteger(stage.opponentEvolutionIndex)) {
+    return car.evolutions[Math.max(0, Math.min(car.evolutions.length - 1, stage.opponentEvolutionIndex))] || car.evolutions[0];
+  }
+  return currentEvolution(car.id);
+}
+
 function renderConvoy() {
   if (!el.convoyTitle || !el.convoyStageList) return;
   const convoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || "tyree";
@@ -2498,7 +2508,7 @@ function renderConvoy() {
   const stageSelections = state.convoy?.inProgress?.stageSelections || [null, null, null];
   el.convoyStageList.innerHTML = convoy.stages.map((stage, index) => {
     const opponentCar = cars.find((car) => car.id === stage.opponentCarId);
-    const opponentEvolution = opponentCar ? currentEvolution(stage.opponentCarId) : null;
+    const opponentEvolution = opponentCar ? convoyStageOpponentEvolution(stage) : null;
     const opponentName = opponentEvolution?.name || stage.opponentName || "Opponent";
     const opponentImg = opponentEvolution ? imageFor(opponentEvolution, "display") : "";
     const opponentStats = stage.opponentCarId ? (displayedGearbornStats(stage.opponentCarId) || baseGearbornStatsAtLevel(stage.opponentCarId, 1) || {}) : {};
@@ -2557,7 +2567,7 @@ function renderConvoyLoadouts() {
   const inProgressConvoyId = state.convoy?.inProgress?.convoyId || Object.keys(convoyDefinitions).find((id) => state.convoy?.available?.[id]) || null;
   const opponentSummary = inProgressConvoyId
     ? convoyDefinitions[inProgressConvoyId].stages.map((stage, index) => {
-      const opp = currentEvolution(stage.opponentCarId);
+      const opp = convoyStageOpponentEvolution(stage);
       return `<span class="convoy-loadout-opp-pill">S${index + 1}: ${escapeHtml(opp?.name || stage.opponentName || "?")}</span>`;
     }).join("")
     : "";
@@ -3885,6 +3895,24 @@ function characterMarkup(character) {
   `;
 }
 
+function profileSignatureLineMarkup(profile) {
+  const lineId = profile?.signatureLineId;
+  const line = lineId ? cars.find((car) => car.id === lineId) : null;
+  if (!line) {
+    return profile?.carImage ? `<img src="${profile.carImage}" alt="${escapeHtml(profile.car || profile.name)}" loading="lazy" decoding="async">` : "";
+  }
+  return `
+    <div class="profile-evolution-line" aria-label="${escapeHtml(line.family)} evolution line">
+      ${line.evolutions.map((form, index) => `
+        ${index ? `<span class="profile-evolution-arrow" aria-hidden="true">→</span>` : ""}
+        <span class="profile-evolution-form">
+          <img src="${imageFor(form, "display")}" alt="${escapeHtml(form.name)}" loading="lazy" decoding="async">
+        </span>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderProfiles() {
   el.profileList.innerHTML = racerProfiles.map((profile) => `
     <button class="vindex-button ${profile.id === state.selectedProfile ? "active" : ""}" type="button" data-profile="${profile.id}">
@@ -3903,7 +3931,9 @@ function renderProfiles() {
     : profile.car ? `${profile.car} · ${profile.city}, ${profile.country}` : "Story Tuner";
   const boss = bossChallengeBosses.find((item) => item.id === profile.id);
   const profileCarImage = boss ? bossCarDisplayImage(boss) : profile.carImage;
-  el.profileCarArt.innerHTML = profileCarImage ? `<img src="${profileCarImage}" alt="${profile.car}" loading="lazy" decoding="async">` : "";
+  el.profileCarArt.innerHTML = boss && profileCarImage
+    ? `<img src="${profileCarImage}" alt="${profile.car}" loading="lazy" decoding="async">`
+    : profileSignatureLineMarkup(profile);
   el.profileBio.textContent = profile.bio;
 }
 
@@ -5210,7 +5240,12 @@ function finishRace(playerWon) {
   if (!isGauntlet && isStoryRace && playerWon) {
     completeCampaignLevel(finishedRace.campaignLevelIndex);
   }
+  if (tutorialActive() && playerWon) {
+    setTutorialScene("drag-race-win");
+    saveState();
+  }
   render();
+  if (tutorialActive() && playerWon) renderTutorial();
   showRaceResult(el.dragTrack, {
     won: playerWon,
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
@@ -7316,6 +7351,20 @@ function tutorialLinesForScene(scene) {
   return tutorialDialogue[dialogueId] || [["tyree", scene.copy || "TUTORIAL_PLACEHOLDER_LINE"]];
 }
 
+function dialogueDensityForText(text = "") {
+  const plain = String(text).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (plain.length > 300) return "dialogue-density-tiny";
+  if (plain.length > 190) return "dialogue-density-compact";
+  return "";
+}
+
+function setDialogueDensity(node, text = "") {
+  if (!node) return;
+  node.classList.remove("dialogue-density-compact", "dialogue-density-tiny");
+  const density = dialogueDensityForText(text);
+  if (density) node.classList.add(density);
+}
+
 function normalizeTutorialLine(line) {
   if (line && typeof line === "object" && !Array.isArray(line)) {
     const content = typeof line.text === "function" ? line.text() : line.text;
@@ -7947,6 +7996,7 @@ function renderTutorial() {
     el.tutorialNext.hidden = false;
     if (el.tutorialNext.parentElement) el.tutorialNext.parentElement.hidden = false;
     el.tutorialNext.classList.add("finish");
+    setDialogueDensity(el.tutorialCard, "");
     el.tutorialCard.dataset.scene = scene.id;
     el.tutorialCard.dataset.mode = "comicSplash";
     el.tutorialCard.dataset.speaker = "splash";
@@ -7965,6 +8015,7 @@ function renderTutorial() {
   const vnCount = visualStage?.dataset.vnCount || "";
   const specialMarkup = tutorialSpecialLineMarkup(line.text);
   const isVnScene = scene.mode === "vnScene";
+  setDialogueDensity(el.tutorialCard, line.text);
   el.tutorialKicker.textContent = "";
   el.tutorialTitle.textContent = specialMarkup ? "" : speaker.name;
   el.tutorialCopy.innerHTML = specialMarkup || (line.text === "TUTORIAL_CHOICE_PROMPT" ? "Choose a response." : line.text);
@@ -8324,6 +8375,7 @@ function renderCutsceneLine() {
   if (!line) return;
   const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
   const character = cutsceneCharacterForLine(line);
+  setDialogueDensity(el.cutsceneModal, line.text);
   el.cutsceneLeftArt.innerHTML = characterMarkup(character);
   el.cutsceneLeftDialogue.innerHTML = line.text ? `<strong>${character.name}</strong><span>${line.text}</span>` : "";
   el.cutsceneRightArt.innerHTML = "";

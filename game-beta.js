@@ -849,6 +849,40 @@ function getRandomOpponentCars(count, playerCarId) {
   });
 }
 
+function betaMatchedEvolutionIndexForLine(playerCarId, opponentLineId) {
+  const playerLine = cars.find((car) => car.id === playerCarId);
+  const opponentLine = cars.find((car) => car.id === opponentLineId);
+  if (!playerLine || !opponentLine) return 0;
+  const playerProgress = state.garage[playerCarId] || { evolution: 0 };
+  const playerMax = Math.max(0, playerLine.evolutions.length - 1);
+  const opponentMax = Math.max(0, opponentLine.evolutions.length - 1);
+  if (!playerMax || !opponentMax) return 0;
+  return Math.max(0, Math.min(opponentMax, Math.round(((playerProgress.evolution || 0) / playerMax) * opponentMax)));
+}
+
+function betaOpponentSetupForLine(lineId, playerCarId, skill = 1.06) {
+  const car = cars.find((item) => item.id === lineId);
+  if (!car) return null;
+  const playerProgress = state.garage[playerCarId] || { level: 1 };
+  const evolution = betaMatchedEvolutionIndexForLine(playerCarId, lineId);
+  const form = car.evolutions[evolution] || car.evolutions[0];
+  const level = Math.max(1, (playerProgress.level || 1) - 3);
+  return {
+    car,
+    carId: car.id,
+    form,
+    evolution,
+    level,
+    ratings: betaRatingsForCar(car.id, level, evolution, false),
+    skill
+  };
+}
+
+function betaOpponentSetupForDriver(driver, playerCarId, fallback, skill = 1.06) {
+  const lineId = driver?.signatureLineId || (typeof npcSignatureLineIds === "object" ? npcSignatureLineIds[driver?.id] : "");
+  return betaOpponentSetupForLine(lineId, playerCarId, skill) || fallback;
+}
+
 function betaBossCarSetup(boss) {
   const bossIndex = Math.max(0, bossChallengeBosses.findIndex((item) => item.id === boss.id));
   const playerCarId = betaCurrentCarId();
@@ -958,7 +992,8 @@ function rivalOpponentSetup(level) {
 }
 
 function story2dOpponentsForLevel(level, mode = story2dModeForLevel(level), campaignIndex = null) {
-  const cacheKey = campaignIndex === null ? "" : `${campaignIndex}:${mode}:${state.selectedStoryCar}:${selectedTuner().id}`;
+  const selectedProgress = state.garage[state.selectedStoryCar] || {};
+  const cacheKey = campaignIndex === null ? "" : `${campaignIndex}:${mode}:${state.selectedStoryCar}:${selectedProgress.evolution || 0}:${selectedTuner().id}`;
   if (cacheKey && story2dOpponentCache.has(cacheKey)) return story2dOpponentCache.get(cacheKey);
   let opponents = [];
   if (!betaModeConfigs[mode]?.opponents) return [];
@@ -967,10 +1002,14 @@ function story2dOpponentsForLevel(level, mode = story2dModeForLevel(level), camp
   else if (level.type === "rival") opponents = [rivalOpponentSetup(level)];
   else {
     const drivers = betaNpcDriversForMode(mode);
-    opponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar).map((opponent, index) => ({
-      ...opponent,
-      driver: drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length]
-    }));
+    const randomOpponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar);
+    opponents = randomOpponents.map((opponent, index) => {
+      const driver = drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length];
+      return {
+        ...betaOpponentSetupForDriver(driver, state.selectedStoryCar, opponent, 1.04 + Math.random() * 0.07),
+        driver
+      };
+    });
   }
   if (cacheKey) story2dOpponentCache.set(cacheKey, opponents);
   return opponents;
@@ -1166,10 +1205,14 @@ function betaOpponentSetForMode(mode) {
     }];
   }
   const drivers = betaNpcDriversForMode(mode);
-  return getRandomOpponentCars(config.opponents, betaCurrentCarId()).map((opponent, index) => ({
-    ...opponent,
-    driver: drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length]
-  }));
+  const randomOpponents = getRandomOpponentCars(config.opponents, betaCurrentCarId());
+  return randomOpponents.map((opponent, index) => {
+    const driver = drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length];
+    return {
+      ...betaOpponentSetupForDriver(driver, betaCurrentCarId(), opponent, 1.04 + Math.random() * 0.07),
+      driver
+    };
+  });
 }
 
 function openBetaPreview(mode = betaPendingMode || "time", preserveOpponents = false) {
@@ -2333,6 +2376,7 @@ function lastGearMakeCar(entry, index, total) {
 }
 
 function openLastGearCarSelect() {
+  if (betaRaceContext?.source !== "prototype") return;
   state.lastGearSelectedCar = isSelectablePlayerCar(state.lastGearSelectedCar) ? state.lastGearSelectedCar : selectedCarIdForMode("beta");
   openCarPicker("lastgear");
 }
@@ -2352,6 +2396,7 @@ function readLastGearSetupConfig() {
 }
 
 function toggleLastGearSetupPanel(show = true) {
+  if (betaRaceContext?.source !== "prototype") return;
   if (!el.lastGearSetupPanel) {
     openLastGearCarSelect();
     return;
@@ -2360,6 +2405,7 @@ function toggleLastGearSetupPanel(show = true) {
 }
 
 function startLastGearBeta() {
+  if (betaRaceContext?.source !== "prototype") return;
   if (!el.lastGearCanvas) return;
   const settings = { ...readLastGearSetupConfig() };
   stopBetaDemo(false);

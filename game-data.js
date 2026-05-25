@@ -4452,22 +4452,37 @@ const profileBios = {
   "crosby-nash": "Crosby Nash looks terrifying right up until he opens his mouth. Gentle, encouraging, and relentlessly positive, Crosby treats every racer like they're already friends - whether they want him to or not. Most people enter races against him expecting intimidation tactics. Instead they get compliments, life advice, and heartfelt encouragement at red lights. Underneath the teddy bear energy is an incredibly capable driver who earned his reputation the hard way. Crosby doesn't race to crush people. He races because he genuinely wants to see how far everyone can go.",
   "eli-kaufman": "Most Tuners grew up dreaming about the spotlight. Eli Kaufman grew up carrying someone else's clubs through it. A longtime caddy for the city's elite racers, Eli learned the Tuner world one overheard conversation at a time - studying egos, rivalries, and strategy while staying invisible. After years of saving every tip he earned, Eli finally bought his way onto the track himself. Calm, patient, and impossible to rattle, he races the same way he worked: quietly, precisely, and always three steps ahead of the people underestimating him. He's also your best friend."
 };
-const otherNpcProfiles = [
+const otherNpcProfileSeeds = [
   { id: "eli-kaufman", name: "Eli Kaufman", city: "The Starting Grid" },
   { id: "portia-crosh", name: "Portia Crosh", city: "Good Tunes Studio" },
   { id: "lynx-incarso", name: "Lynx Incarso", city: "Unknown" },
   { id: "marlyn-adelaide", name: "Marlyn Adelaide", city: "Everywhere, Somehow Lost" },
   { id: "crosby-nash", name: "Crosby Nash", city: "The Open Road" }
-].map((profile) => ({
+];
+const npcSignatureLineIds = {
+  "dr-tyree": "metal-snake",
+  ashley: "space-dolphin",
+  "mack-spindell": "armadaddio",
+  "sloane-spindell": "chill-penguin",
+  "eli-kaufman": "tiger-cart",
+  "portia-crosh": "sorority-elephant",
+  "crosby-nash": "muscle-man",
+  "lynx-incarso": "butcher-hog",
+  "marlyn-adelaide": "silly-goose"
+};
+const npcSignatureLineIdForProfile = (profileId) => npcSignatureLineIds[profileId] || "";
+const npcProfiles = otherNpcProfileSeeds.map((profile) => ({
   ...profile,
   image: `assets/characters/headshots/headshot-${profile.id.split("-")[0]}.png`,
   headshot: `assets/characters/headshots/headshot-${profile.id.split("-")[0]}.png`,
   character: `assets/characters/character-${profile.id.split("-")[0]}.png`,
   category: "Other",
-  car: "Other",
+  signatureLineId: npcSignatureLineIdForProfile(profile.id),
+  car: cars.find((car) => car.id === npcSignatureLineIdForProfile(profile.id))?.family || "Other",
   country: "Other",
   bio: profileBios[profile.id] || "Profile bio coming soon."
 }));
+const otherNpcProfiles = npcProfiles;
 const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   id: boss.id,
   name: boss.name,
@@ -4482,6 +4497,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   image: "assets/characters/headshots/headshot-dr-tyree.png",
   category: "Other",
   car: "Mamburn",
+  signatureLineId: "metal-snake",
   carImage: "assets/cars/snake-mamburn-display.png",
   city: "Tuner Academy",
   country: "Other",
@@ -4494,6 +4510,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   character: "assets/characters/character-ashley.png",
   category: "Other",
   car: "Astromarino",
+  signatureLineId: "space-dolphin",
   carImage: "assets/cars/dolphin-astromarino-display.png",
   city: "Outside the Official Circuit",
   country: "Other",
@@ -4544,7 +4561,9 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   headshot: "assets/characters/headshots/headshot-mack-spindell.png",
   character: "assets/characters/mack-spindell.png",
   category: "Other",
-  car: "Other",
+  car: "Manstrocity",
+  signatureLineId: "armadaddio",
+  carImage: "assets/cars/armadillo-manstrocity-display.png",
   city: "Spindell Legacy Circuit",
   country: "Other",
   faction: "spindell",
@@ -4557,7 +4576,9 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   headshot: "assets/characters/headshots/headshot-sloane-spindell.png",
   character: "assets/characters/sloane-spindell.png",
   category: "Other",
-  car: "Other",
+  car: "Chillmatic",
+  signatureLineId: "chill-penguin",
+  carImage: "assets/cars/penguin-chillmatic-display.png",
   city: "Spindell Legacy Circuit",
   country: "Other",
   faction: "spindell",
@@ -4620,12 +4641,12 @@ const convoyParticipantStages = {
   mack: [
     { type: "drag", opponentCarId: "pickup", opponentName: "Mack's Murrka" },
     { type: "battle", opponentCarId: "construction-blok", opponentName: "Mack's Structable" },
-    { type: "h2h", opponentCarId: "frog", opponentName: "Mack's Kermajesty" }
+    { type: "h2h", opponentCarId: "armadaddio", opponentEvolutionIndex: 2, opponentName: "Mack's Manstrocity" }
   ],
   sloane: [
     { type: "drag", opponentCarId: "bee", opponentName: "Sloane's Baybee" },
     { type: "battle", opponentCarId: "space-dolphin", opponentName: "Sloane's Orbitide" },
-    { type: "h2h", opponentCarId: "frog", opponentName: "Sloane's Kermajesty" }
+    { type: "h2h", opponentCarId: "chill-penguin", opponentEvolutionIndex: 2, opponentName: "Sloane's Chillmatic" }
   ],
   eli: [
     { type: "drag", opponentCarId: "butcher-hog", opponentName: "Eli's Chopcicle" },
