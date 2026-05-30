@@ -1630,7 +1630,8 @@ function cityCoreLevelsTotal(city) {
 }
 
 function cityBossRequirement(city) {
-  return Math.max(1, cityCoreLevelsTotal(city) - 1);
+  const total = cityCoreLevelsTotal(city);
+  return total > 0 ? Math.max(1, total - 1) : 0;
 }
 
 function storyLevelReputationValue(level) {
@@ -1790,7 +1791,7 @@ function renderCampaign() {
   const repPercent = cityReputationPercent(city);
   el.bossUnlockNote.innerHTML = cityUnlocked && !city.final && !cityBossUnlocked(city)
     ? `<div class="reputation-meter" style="--rep:${repPercent}%">
-        <div class="rep-copy"><span>Reputation</span><strong>${Math.min(completedCore, requiredCore)}/${totalCore}</strong></div>
+        <div class="rep-copy"><span>Reputation</span><strong>${Math.min(completedCore, requiredCore)}/${requiredCore}</strong></div>
         <div class="rep-track"><i></i></div>
         <div class="rep-boss">
           <img class="rep-boss-bg" src="${storyLevelVisuals.boss.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
@@ -1819,6 +1820,12 @@ function tutorialMapLevels() {
   ]);
 }
 
+function cityEpisodeLabel(city) {
+  const episodeIndex = storyCities.findIndex((item) => item.id === city?.id);
+  const episodeNumber = episodeIndex >= 0 ? episodeIndex + 1 : 1;
+  return `EPISODE ${episodeNumber} - ${(city?.city || "City").toUpperCase()}`;
+}
+
 function maybeShowCityWelcome() {
   if (tutorialActive() || !viewIsActive("story")) return;
   const city = storyCities[state.selectedStoryCity] || storyCities[0];
@@ -1832,8 +1839,8 @@ function maybeShowCityWelcome() {
     el.cityUnlockIcon.innerHTML = banner
       ? `<img class="city-welcome-banner" src="${banner}" alt="Welcome to ${city.city}" loading="eager" decoding="async" onerror="this.remove(); this.parentElement.innerHTML='${city.icon ? `<img src=&quot;${city.icon}&quot; alt=&quot;&quot; aria-hidden=&quot;true&quot;>` : ""}'">`
       : (city.icon ? `<img src="${city.icon}" alt="" aria-hidden="true">` : "");
-    el.cityUnlockTitle.innerHTML = banner ? "" : `<strong>Welcome to ${city.city}</strong>`;
-    el.cityUnlockTitle.hidden = Boolean(banner);
+    el.cityUnlockTitle.innerHTML = banner ? cityEpisodeLabel(city) : `<strong>Welcome to ${city.city}</strong>`;
+    el.cityUnlockTitle.hidden = false;
     el.cityUnlockModal.classList.add("active");
     el.cityUnlockModal.setAttribute("aria-hidden", "false");
     el.cityUnlockClose.focus();
@@ -6033,7 +6040,7 @@ function showForgeUnlockedPopup(carId) {
   closeBtn.disabled = isForTutorial;
 
   if (isForTutorial) {
-    setTutorialScene("unlocked");
+    setTutorialScene(selectedTuner()?.id === "cha-cha" ? "unlocked-cc" : "unlocked");
     setupTutorialScene();
     renderTutorial();
   }
@@ -6875,6 +6882,17 @@ function resolveTutorialSceneId(sceneId = "intro") {
   return tutorialSceneAliases[sceneId] || sceneId;
 }
 
+function tutorialSceneAllowed(scene) {
+  return !scene?.characterOnly || scene.characterOnly === selectedTuner()?.id;
+}
+
+function nextTutorialSceneIndex(fromIndex) {
+  for (let index = fromIndex + 1; index < tutorialScenes.length; index += 1) {
+    if (tutorialSceneAllowed(tutorialScenes[index])) return index;
+  }
+  return tutorialScenes.length - 1;
+}
+
 function tutorialSceneIndex(sceneId = "intro") {
   const resolved = resolveTutorialSceneId(sceneId);
   const index = tutorialScenes.findIndex((scene) => scene.id === resolved);
@@ -6882,7 +6900,9 @@ function tutorialSceneIndex(sceneId = "intro") {
 }
 
 function currentTutorialScene() {
-  return tutorialScenes[state.tutorialScene] || tutorialScenes[0];
+  const scene = tutorialScenes[state.tutorialScene] || tutorialScenes[0];
+  if (tutorialSceneAllowed(scene)) return scene;
+  return tutorialScenes[nextTutorialSceneIndex((state.tutorialScene || 0) - 1)] || tutorialScenes[0];
 }
 
 function selectedPlayerCharacter() {
@@ -7145,9 +7165,11 @@ function setupTutorialScene() {
 
     case "garage":
     case "unlocked":
+    case "unlocked-cc":
     case "end":
     case "tyree-final":
     case "empty-garage":
+    case "spindell-labs":
     case "medallion-discovery":
     case "ashley-intro":
       closeUpgradeModal();
@@ -7190,6 +7212,7 @@ function setupTutorialScene() {
 
     case "the-forge":
     case "medallion-unlock":
+    case "medallion-sync":
       closeUpgradeModal();
       // Award Baybee, Murrka, Bunnae medallions for the tutorial forge demo.
       // The renderForgeInventory bypass (tutorialAwaitingForge) shows these
@@ -7430,6 +7453,8 @@ function tutorialSpeakerProfile(speaker) {
   if (speaker === "mamburn") return { name: "Mamburn", image: "assets/cars/snake-mamburn-display.png" };
   if (speaker === "snaytan") return { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png" };
   if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshots/headshot-ashley.png" };
+  if (speaker === "auntie") return { name: "Auntie", image: "assets/characters/headshots/headshot-auntie.png" };
+  if (speaker === "orion") return { name: "Orion Vincent", image: "assets/characters/headshots/headshot-orion.png" };
   if (speaker === "rival") {
     const rival = rivalCharacter();
     return { ...rival, image: rival.headshot || rival.image };
@@ -7439,7 +7464,7 @@ function tutorialSpeakerProfile(speaker) {
 }
 
 function tutorialSpecialLineMarkup(text) {
-  if (text !== "TUTORIAL_PLACEHOLDER_MEDALLIONS_ACQUIRED") return "";
+  if (text !== "TUTORIAL_PLACEHOLDER_MEDALLIONS_ACQUIRED" && text !== "MEDALLIONS_ACQUIRED") return "";
   return `
     <div class="tutorial-medallion-acquired">
       <img class="tutorial-sparkle" src="assets/tutorial/sparkle.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
@@ -7466,6 +7491,8 @@ function tutorialFullBodyForSpeaker(speakerKey) {
   if (speakerKey === "user") return selectedTuner().image;
   if (speakerKey === "rival") return rivalCharacter().image;
   if (speakerKey === "ashley") return "assets/characters/character-ashley.png";
+  if (speakerKey === "auntie") return "assets/characters/character-auntie.png";
+  if (speakerKey === "orion") return "assets/characters/character-orion.png";
   if (speakerKey === "tyree") return "assets/characters/dr-tyree.png";
   return "";
 }
@@ -7483,12 +7510,15 @@ function tutorialVnSpeakersForScene(scene, line) {
     "tyree-final": ["user", "rival", "tyree"],
     "empty-garage": ["user"],
     "ashley-intro": ["user", "ashley"],
-    "the-forge": ["user", "ashley"],
-    "medallion-unlock": ["user", "ashley"],
-    unlocked: ["user", "ashley"]
+    "the-forge": ["user", "ashley", "auntie"],
+    "medallion-unlock": ["user", "ashley", "auntie"],
+    unlocked: ["user", "ashley", "auntie"],
+    "spindell-labs": ["user", "orion", "tyree"],
+    "medallion-sync": ["user", "orion"],
+    "unlocked-cc": ["user", "orion"]
   };
   const speakers = [...(sceneSpeakers[scene.id] || ["user"])];
-  if (["user", "rival", "tyree", "ashley"].includes(line?.speaker) && !speakers.includes(line.speaker)) {
+  if (["user", "rival", "tyree", "ashley", "auntie", "orion"].includes(line?.speaker) && !speakers.includes(line.speaker)) {
     speakers.push(line.speaker);
   }
   return speakers.filter((speaker) => tutorialFullBodyForSpeaker(speaker));
@@ -7831,7 +7861,14 @@ function advanceTutorial() {
       break;
 
     case "empty-garage":
-      setTutorialScene("ashley-intro");
+      setTutorialScene(selectedTuner()?.id === "cha-cha" ? "spindell-labs" : "ashley-intro");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "spindell-labs":
+      setTutorialScene("medallion-sync");
       setupTutorialScene();
       saveState();
       render();
@@ -7851,6 +7888,12 @@ function advanceTutorial() {
       renderTutorial();
       break;
 
+    case "medallion-sync":
+      state.tutorialAwaitingForge = true;
+      saveState();
+      renderTutorial();
+      break;
+
     case "medallion-unlock":
       state.tutorialAwaitingForge = true;
       saveState();
@@ -7859,6 +7902,19 @@ function advanceTutorial() {
 
     case "unlocked":
       // Close the forge unlock popup then advance to starters
+      if (el.forgeUnlockedPopup) {
+        el.forgeUnlockedPopup.classList.remove("active");
+        el.forgeUnlockedPopup.classList.remove("tutorial-passive");
+        el.forgeUnlockedPopup.setAttribute("hidden", "");
+        el.forgeUnlockedPopup.setAttribute("aria-hidden", "true");
+      }
+      setTutorialScene("vindex");
+      setupTutorialScene();
+      saveState();
+      render();
+      break;
+
+    case "unlocked-cc":
       if (el.forgeUnlockedPopup) {
         el.forgeUnlockedPopup.classList.remove("active");
         el.forgeUnlockedPopup.classList.remove("tutorial-passive");
@@ -7891,7 +7947,7 @@ function advanceTutorial() {
 
     default:
       // Fallback: advance to next scene
-      state.tutorialScene = Math.min(tutorialScenes.length - 1, state.tutorialScene + 1);
+      state.tutorialScene = nextTutorialSceneIndex(state.tutorialScene || 0);
       setupTutorialScene();
       saveState();
       render();
@@ -7964,7 +8020,7 @@ function renderTutorial() {
     el.tutorialOverlay.classList.remove("active");
     return;
   }
-  if (scene.id === "the-forge" && state.tutorialAwaitingForge) {
+  if (["the-forge", "medallion-sync", "medallion-unlock"].includes(scene.id) && state.tutorialAwaitingForge) {
     // Hide tutorial overlay so user can freely interact with The Forge
     el.tutorialOverlay.classList.remove("active");
     return;

@@ -8333,7 +8333,7 @@ small {
 }
 
 .modal-overlay.city-welcome-active .city-unlock-modal {
-  width: min(96vw, calc((100svh - 96px) * 1.778));
+  width: min(96vw, calc((100svh - 154px) * 1.778));
   max-width: 1600px;
   padding: 0;
   border: 0;
@@ -8350,10 +8350,10 @@ small {
 }
 
 .city-unlock-modal .city-unlock-icon:has(.city-welcome-banner) {
-  width: min(96vw, calc((100svh - 96px) * 1.778));
+  width: min(96vw, calc((100svh - 154px) * 1.778));
   height: auto;
   max-width: 1600px;
-  max-height: calc(100svh - 96px);
+  max-height: calc(100svh - 154px);
   overflow: visible;
   border-radius: 0;
   background: transparent;
@@ -8363,7 +8363,7 @@ small {
   display: block;
   width: 100%;
   height: auto;
-  max-height: calc(100svh - 96px);
+  max-height: calc(100svh - 154px);
   object-fit: contain;
   border-radius: 0;
   box-shadow: none;
@@ -8375,6 +8375,18 @@ small {
 
 .city-unlock-modal h2 {
   line-height: 1.15;
+}
+
+.modal-overlay.city-welcome-active .city-unlock-modal h2 {
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 4.2vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.72), 0 0 24px rgba(255, 200, 87, 0.2);
 }
 
 .city-welcome-subcopy {
