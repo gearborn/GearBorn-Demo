@@ -1,7 +1,16 @@
 // ─── STATE PERSISTENCE & STARTUP ────────────────────────────────────────────
+function migrateSave(saved) {
+  if (!saved || typeof saved !== "object") return saved;
+  const version = Number(saved.saveVersion) || 1;
+  // v1 -> v2: no shape changes; version field introduced.
+  // Future migrations go here, e.g.: if (version < 3) { ...transform... }
+  saved.saveVersion = defaultState.saveVersion;
+  return saved;
+}
+
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(saveKey));
+    const saved = migrateSave(JSON.parse(gearbornStorageGetItem(saveKey)));
     return saved ? mergeState(defaultState, saved) : structuredClone(defaultState);
   } catch {
     return structuredClone(defaultState);
@@ -20,22 +29,93 @@ function mergeState(base, saved) {
     raceMedals: { ...base.raceMedals, ...saved.raceMedals },
     microObjectiveProgress: { ...base.microObjectiveProgress, ...saved.microObjectiveProgress },
     visitedStoryCities: { ...base.visitedStoryCities, ...saved.visitedStoryCities },
+    dailyCrankVault: { ...base.dailyCrankVault, ...saved.dailyCrankVault },
+    cityProgress: { ...base.cityProgress, ...saved.cityProgress },
+    crankVaultInventory: Array.isArray(saved.crankVaultInventory) ? saved.crankVaultInventory : base.crankVaultInventory,
     tunerStats: { ...base.tunerStats, ...saved.tunerStats },
     bond: { ...base.bond, ...saved.bond },
     partsInventory: { ...base.partsInventory, ...saved.partsInventory },
     equippedParts: { ...base.equippedParts, ...saved.equippedParts },
     achievements: { ...base.achievements, ...saved.achievements },
+    medallionRanks: { ...base.medallionRanks, ...saved.medallionRanks },
     garage: { ...base.garage, ...saved.garage }
   };
 }
 
 function saveState() {
-  localStorage.setItem(saveKey, JSON.stringify(state));
+  try {
+    gearbornStorageSetItem(saveKey, JSON.stringify(state));
+  } catch (err) {
+    console.warn("GearBorn save failed:", err);
+  }
 }
 
 function sanitizeState() {
   state.sprox = Number.isFinite(Number(state.sprox)) ? Math.max(0, Math.floor(Number(state.sprox))) : 0;
+  state.spins = Number.isFinite(Number(state.spins)) ? Math.max(0, Math.floor(Number(state.spins))) : 0;
+  state.gas = Number.isFinite(Number(state.gas)) ? Math.max(0, Math.floor(Number(state.gas))) : GAS_MAX;
+  state.gasUpdatedAt = Number.isFinite(Number(state.gasUpdatedAt)) && Number(state.gasUpdatedAt) > 0
+    ? Math.floor(Number(state.gasUpdatedAt))
+    : Date.now();
+  state.crankVaultInventory = Array.isArray(state.crankVaultInventory)
+    ? state.crankVaultInventory
+      .filter((vault) => vault && typeof vault === "object" && typeof vault.id === "string" && crankVaultDefs[vault.type])
+      .map((vault) => ({
+        id: vault.id,
+        type: vault.type,
+        source: String(vault.source || "story"),
+        candidateLines: Array.isArray(vault.candidateLines) ? vault.candidateLines.filter((lineId) => cars.some((car) => car.id === lineId)) : null,
+        receivedAt: Math.max(0, Math.floor(Number(vault.receivedAt) || 0))
+      }))
+    : [];
+  state.dailyCrankVault = state.dailyCrankVault && typeof state.dailyCrankVault === "object" ? state.dailyCrankVault : {};
+  state.dailyCrankVault.lastClaimedDayKey = typeof state.dailyCrankVault.lastClaimedDayKey === "string" ? state.dailyCrankVault.lastClaimedDayKey : null;
+  state.dailyGoals = state.dailyGoals && typeof state.dailyGoals === "object" ? state.dailyGoals : structuredClone(defaultState.dailyGoals);
+  state.dailyGoals.dayKey = typeof state.dailyGoals.dayKey === "string" ? state.dailyGoals.dayKey : null;
+  state.dailyGoals.progress = state.dailyGoals.progress && typeof state.dailyGoals.progress === "object" ? state.dailyGoals.progress : {};
+  dailyGoalDefs.forEach((goal) => {
+    state.dailyGoals.progress[goal.id] = Math.max(0, Math.min(goal.target, Math.floor(Number(state.dailyGoals.progress[goal.id]) || 0)));
+  });
+  Object.keys(state.dailyGoals.progress).forEach((goalId) => {
+    if (!dailyGoalDefs.some((goal) => goal.id === goalId)) delete state.dailyGoals.progress[goalId];
+  });
+  state.dailyGoals.claimed = state.dailyGoals.claimed && typeof state.dailyGoals.claimed === "object" ? state.dailyGoals.claimed : {};
+  Object.keys(state.dailyGoals.claimed).forEach((goalId) => {
+    if (!dailyGoalDefs.some((goal) => goal.id === goalId)) delete state.dailyGoals.claimed[goalId];
+    else state.dailyGoals.claimed[goalId] = Boolean(state.dailyGoals.claimed[goalId]);
+  });
+  state.dailyGoals.vaultClaimed = Boolean(state.dailyGoals.vaultClaimed);
+  state.dailyGoals.carsRacedToday = Array.isArray(state.dailyGoals.carsRacedToday)
+    ? state.dailyGoals.carsRacedToday.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index)
+    : [];
+  state.dailyGoals.loginStreak = Math.max(0, Math.floor(Number(state.dailyGoals.loginStreak) || 0));
+  state.dailyGoals.lastLoginDayKey = typeof state.dailyGoals.lastLoginDayKey === "string" ? state.dailyGoals.lastLoginDayKey : null;
+  state.cityProgress = state.cityProgress && typeof state.cityProgress === "object" ? state.cityProgress : {};
+  Object.keys(state.cityProgress).forEach((cityId) => {
+    if (!storyCities.some((city) => city.id === cityId)) {
+      delete state.cityProgress[cityId];
+      return;
+    }
+    const progress = state.cityProgress[cityId] && typeof state.cityProgress[cityId] === "object" ? state.cityProgress[cityId] : {};
+    progress.ladders = progress.ladders && typeof progress.ladders === "object" ? progress.ladders : {};
+    cityStructureTemplate.ladders.forEach(({ id }) => {
+      const ladder = progress.ladders[id] && typeof progress.ladders[id] === "object" ? progress.ladders[id] : {};
+      progress.ladders[id] = { bronze: Boolean(ladder.bronze), silver: Boolean(ladder.silver), gold: Boolean(ladder.gold) };
+    });
+    progress.storyRaces = Array.isArray(progress.storyRaces) ? progress.storyRaces.slice(0, cityStructureTemplate.storyRaceCount).map(Boolean) : [];
+    while (progress.storyRaces.length < cityStructureTemplate.storyRaceCount) progress.storyRaces.push(false);
+    progress.vaultRewards = progress.vaultRewards && typeof progress.vaultRewards === "object" ? progress.vaultRewards : {};
+    state.cityProgress[cityId] = progress;
+  });
   state.unlimitedSprox = Boolean(state.unlimitedSprox);
+  state.cheatUnlimitedSpins = Boolean(state.cheatUnlimitedSpins);
+  state.cheatUnlimitedGas = Boolean(state.cheatUnlimitedGas);
+  state.cheatUnlockAllStory = Boolean(state.cheatUnlockAllStory);
+  state.settings = state.settings && typeof state.settings === "object" ? state.settings : {};
+  state.settings.screenEffects = state.settings.screenEffects !== false;
+  state.settings.haptics = state.settings.haptics !== false;
+  state.settings.highVisCues = state.settings.highVisCues !== false;
+  state.settings.reducedMotion = state.settings.reducedMotion === true ? true : state.settings.reducedMotion === false ? false : null;
   state.unlockedCars = state.unlockedCars || {};
   state.bond = state.bond && typeof state.bond === "object" ? state.bond : {};
   state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
@@ -111,8 +191,16 @@ function sanitizeState() {
     ? state.convoyMedallions.filter((id, index, list) => typeof id === "string" && list.indexOf(id) === index)
     : [];
   state.medallionsOwned = Array.isArray(state.medallionsOwned)
-    ? state.medallionsOwned.filter((id, index, list) => cars.some((car) => car.id === id) && list.indexOf(id) === index)
+    ? state.medallionsOwned.filter((id) => cars.some((car) => car.id === id))
     : [];
+  state.medallionRanks = state.medallionRanks && typeof state.medallionRanks === "object" ? state.medallionRanks : {};
+  Object.keys(state.medallionRanks).forEach((lineId) => {
+    if (!cars.some((car) => car.id === lineId)) {
+      delete state.medallionRanks[lineId];
+      return;
+    }
+    state.medallionRanks[lineId] = Math.max(0, Math.min(5, Math.floor(Number(state.medallionRanks[lineId]) || 0)));
+  });
   state.bondScenesViewed = state.bondScenesViewed && typeof state.bondScenesViewed === "object" ? state.bondScenesViewed : {};
   state.favoriteCarIds = Array.isArray(state.favoriteCarIds) ? state.favoriteCarIds.filter((carId, index, list) => cars.some((car) => car.id === carId) && list.indexOf(carId) === index) : [];
   state.recentCarUses = Array.isArray(state.recentCarUses) ? state.recentCarUses
@@ -238,10 +326,13 @@ function sanitizeState() {
   if (!racerProfiles.some((profile) => profile.id === state.selectedProfile)) state.selectedProfile = racerProfiles[0].id;
   state.racerAlphaProfileView = state.racerAlphaProfileView === "unmasked" ? "unmasked" : "masked";
   if (!state.racerAlphaUnmasked) state.racerAlphaProfileView = "masked";
+  state.fusionIntroSeen = Boolean(state.fusionIntroSeen);
   if (state.selectedTuner && !tuners.some((tuner) => tuner.id === state.selectedTuner)) state.selectedTuner = null;
   state.tunerChoiceVersion = state.tunerChoiceVersion || 0;
   state.tutorialComplete = Boolean(state.tutorialComplete);
   state.tutorialActive = Boolean(state.tutorialActive);
+  state.tutorialFullRunEligible = Boolean(state.tutorialFullRunEligible);
+  state.tutorialFullRunCompleted = Boolean(state.tutorialFullRunCompleted);
   state.tutorialScene = Math.max(0, Math.min(Number(state.tutorialScene) || 0, tutorialScenes.length - 1));
   state.tutorialLine = Math.max(0, Number(state.tutorialLine) || 0);
   state.tutorialDragSprox = Math.max(0, Math.floor(Number(state.tutorialDragSprox) || 0));
@@ -281,6 +372,7 @@ function sanitizeState() {
     }
     // Reset all tutorial state so the game loads normally
     state.tutorialActive = false;
+    state.tutorialFullRunEligible = false;
     state.tutorialScene = 0;
     state.tutorialLine = 0;
     state.tutorialAwaitingUpgrade = false;
@@ -338,8 +430,19 @@ function sanitizeState() {
   });
 }
 
-let state = loadState();
-sanitizeState();
+let state;
+try {
+  state = loadState();
+  sanitizeState();
+  touchDailyGoals();
+  accrueGas();
+  saveState();
+  startGasDisplayTimer();
+} catch (error) {
+  console.error("GearBorn state startup failed:", error);
+  window.reportGearbornStartupError?.(error);
+  state = structuredClone(defaultState);
+}
 window.setConvoyAvailable = setConvoyAvailable;
 
 // ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────
@@ -354,12 +457,31 @@ document.querySelector("#forge-inventory-btn")?.addEventListener("click", () => 
   renderForgeInventory();
 });
 
+document.querySelector("#forge-mode-toggle")?.addEventListener("click", (e) => {
+  const button = e.target.closest("[data-forge-mode]");
+  if (button) setForgeMode(button.dataset.forgeMode);
+});
+
 document.querySelector("#forge-medallion-grid")?.addEventListener("click", (e) => {
+  const fusionParent = e.target.closest("[data-forge-fusion-parent]");
+  if (fusionParent) {
+    selectForgeFusionParent(fusionParent.dataset.forgeFusionParent);
+    return;
+  }
+  const fusionSlot = e.target.closest("[data-forge-fusion-slot]");
+  if (fusionSlot) {
+    clearForgeFusionSlot(fusionSlot.dataset.forgeFusionSlot);
+    return;
+  }
   const tile = e.target.closest("[data-forge-car]");
   if (tile) selectForgeMedallion(tile.dataset.forgeCar);
 });
 
 document.querySelector("#forge-unlock-btn")?.addEventListener("click", () => {
+  if (forgeMode === "fusion") {
+    forgeSelectedFusion();
+    return;
+  }
   if (tutorialActive() && currentTutorialScene()?.id === "the-forge") {
     setTutorialScene("medallion-unlock");
     state.tutorialAwaitingForge = true;
@@ -375,6 +497,12 @@ document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
   openForge();
 });
 
+el.confirmFusionGamble?.addEventListener("click", confirmFusionGamble);
+el.cancelFusionGamble?.addEventListener("click", closeFusionGambleConfirm);
+el.fusionGambleModal?.addEventListener("click", (e) => {
+  if (e.target === el.fusionGambleModal) closeFusionGambleConfirm();
+});
+
 if (beta3dDevEnabled()) document.body.classList.add("beta-dev-enabled");
 verifyMenuAssets();
 
@@ -387,26 +515,31 @@ document.addEventListener("click", (event) => {
 });
 
 const loadingExperience = startLoadingExperience();
-checkAchievements(true);
-saveState();
-render();
-if (beta3dDevEnabled()) showView("beta");
-// Only show first-time modal if truly a new player: no tutorial complete flag,
-// no story progress, no sprox earned, and no unlocked cars beyond the defaults.
-const hasAnyProgress = state.tutorialComplete
-  || state.sprox > 0
-  || state.highestCampaignIndex > 0
-  || Object.keys(state.completedCampaignLevels || {}).length > 0
-  || (state.unlockedLines || []).some((id) => !defaultUnlockedLines.includes(id));
-if (!beta3dDevEnabled() && !hasAnyProgress && !state.tutorialActive) {
-  openFirstTutorialModal();
-} else if (!beta3dDevEnabled() && state.tutorialActive) {
-  setupTutorialScene();
+try {
+  checkAchievements(true);
+  saveState();
+  render();
+  if (beta3dDevEnabled()) showView("beta");
+  // Only show first-time modal if truly a new player: no tutorial complete flag,
+  // no story progress, no sprox earned, and no unlocked cars beyond the defaults.
+  const hasAnyProgress = state.tutorialComplete
+    || state.sprox > 0
+    || state.highestCampaignIndex > 0
+    || Object.keys(state.completedCampaignLevels || {}).length > 0
+    || (state.unlockedLines || []).some((id) => !defaultUnlockedLines.includes(id));
+  if (!beta3dDevEnabled() && !hasAnyProgress && !state.tutorialActive) {
+    openFirstTutorialModal();
+  } else if (!beta3dDevEnabled() && state.tutorialActive) {
+    setupTutorialScene();
+  }
+} catch (error) {
+  console.error("GearBorn initial render failed:", error);
+  window.reportGearbornStartupError?.(error);
 }
 
 const finishInitialLoad = () => loadingExperience.complete();
 if (document.readyState === "complete") {
-  window.setTimeout(finishInitialLoad, 450);
+  window.setTimeout(finishInitialLoad, 1200);
 } else {
-  window.addEventListener("load", () => window.setTimeout(finishInitialLoad, 450), { once: true });
+  window.addEventListener("load", () => window.setTimeout(finishInitialLoad, 1200), { once: true });
 }

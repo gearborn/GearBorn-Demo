@@ -267,7 +267,7 @@ const cars = [
     tutorialOnly: true,
     evolutions: [
       { name: "Mamburn", images: { display: "assets/cars/snake-mamburn-display.png", race: "assets/cars/snake-mamburn-race.png", topdown: "assets/cars/snake-mamburn-topdown.png" } },
-      { name: "Snaytan", images: { display: "assets/cars/snake-snaytan-display.png", race: "assets/cars/snake-mamburn-race.png", topdown: "assets/cars/snake-mamburn-topdown.png" } }
+      { name: "Snaytan", images: { display: "assets/cars/snake-snaytan-display.png", race: "assets/cars/snake-snaytan-race.png", topdown: "assets/cars/snake-snaytan-topdown.png" } }
     ]
   },
   {
@@ -504,15 +504,226 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
   }
 );
 
+// Sheet-driven story reward lines. Placeholder image paths intentionally follow
+// one predictable convention so final art can be dropped in without code edits.
+const storyRewardLineDefs = [
+  { id: "monkey", family: "Monkey", color: "#65a30d", trait: "Vine vault", type: "Agility", playstyle: "Vine Vault", stats: [80, 84, 86, 70, 64, 76], forms: [["010", "Bananachi", "E"], ["011", "Primalor", "D"], ["012", "Rambokong", "C"]] },
+  { id: "minivan", family: "Minivan", color: "#94a3b8", trait: "Family cruiser", type: "Transmission", playstyle: "Family Cruiser", stats: [68, 72, 70, 87, 82, 72], forms: [["022", "Poola", "E"], ["023", "Iliadd", "D"], ["024", "Momageddon", "C"]] },
+  { id: "sun-lion", family: "Sun Lion", color: "#f59e0b", trait: "Solar rampage", type: "Power", playstyle: "Solar Rampage", stats: [84, 82, 74, 78, 76, 87], forms: [["025", "Sparkit", "E"], ["026", "Solman", "D"], ["027", "Maneiac", "C"]] },
+  { id: "all-terrain-spyder", family: "All-Terrain Spyder", color: "#84cc16", trait: "Trail weaver", type: "Grip", playstyle: "Trail Weaver", stats: [76, 74, 87, 78, 70, 76], forms: [["033", "Spydar", "E"], ["034", "Tarantread", "D"], ["035", "Arachciti", "C"]] },
+  { id: "emo-turtle", family: "Emo Turtle", color: "#64748b", trait: "Melancholy fortress", type: "Endurance", playstyle: "Melancholy Fortress", stats: [66, 68, 64, 76, 87, 80], forms: [["103", "Shellow", "E"], ["104", "Emostudo", "D"], ["105", "Terraprinze", "C"]] },
+  { id: "bucking-bronco", family: "Bucking Bronco", color: "#a16207", trait: "Stampede rebel", type: "Power", playstyle: "Stampede Rebel", stats: [82, 84, 68, 80, 78, 87], forms: [["106", "Whinnibago", "E"], ["107", "Bronclode", "D"], ["108", "Thunspur", "C"]] },
+  { id: "snake", family: "Snake", color: "#65a30d", trait: "Venom circuit", type: "Tech", playstyle: "Venom Circuit", stats: [86, 84, 80, 82, 66, 87], forms: [["109", "Venomoil", "C"], ["110", "Mamburn", "B"], ["111", "Snaytan", "A"]] },
+  { id: "galaxy-jelly", family: "Galaxy Jelly", color: "#a78bfa", trait: "Cosmic bloom", type: "Neutral", playstyle: "Cosmic Bloom", stats: [87, 87, 87, 87, 84, 87], forms: [["112", "Bloomula", "B"], ["113", "Lumedusa", "A"], ["114", "Anjelladon", "S"]] },
+  { id: "funvee", family: "Funvee", color: "#f97316", trait: "Party tank", type: "Endurance", playstyle: "Party Tank", stats: [72, 74, 68, 80, 86, 78], forms: [["124", "Funvee", "E"], ["125", "Braggadon", "D"], ["126", "Hummungus", "C"]] },
+  { id: "high-roller-cheetah", family: "High Roller Cheetah", color: "#eab308", trait: "Jackpot blitz", type: "Power", playstyle: "Jackpot Blitz", stats: [87, 84, 78, 76, 62, 84], forms: [["128", "Jackpaw", "E"], ["129", "Acelot", "D"], ["130", "Purrfecta", "C"]] },
+  { id: "combat-badger", family: "Combat Badger", color: "#78716c", trait: "Bunker brawler", type: "Power", playstyle: "Bunker Brawler", stats: [76, 80, 68, 82, 87, 87], forms: [["165", "Bootclaw", "E"], ["166", "Combadge", "D"], ["167", "Ermewatt", "C"]] },
+  { id: "jazz-panther", family: "Jazz Panther", color: "#7c3aed", trait: "Rhythm pouncer", type: "Grip", playstyle: "Rhythm Pouncer", stats: [80, 78, 86, 74, 68, 82], forms: [["171", "Panthroove", "E"], ["172", "Velvetone", "D"], ["173", "Velourious", "C"]] },
+  { id: "sports-car", family: "Sports Car", color: "#ef4444", trait: "Apex velocity", type: "Agility", playstyle: "Apex Velocity", stats: [86, 82, 80, 76, 62, 74], forms: [["177", "Ballparker", "E"], ["178", "Hoopra", "D"], ["179", "Grithouse", "C"]] },
+  { id: "magician", family: "Magician", color: "#8b5cf6", trait: "Illusion gambit", type: "Transmission", playstyle: "Illusion Gambit", stats: [74, 76, 80, 87, 64, 84], forms: [["180", "Hoptical", "E"], ["181", "Flockus-Pocus", "D"], ["182", "Ziegfroyd", "C"]] },
+  { id: "running-bulls", family: "Running Bulls", color: "#dc2626", trait: "Charging riot", type: "Power", playstyle: "Charging Riot", stats: [84, 82, 72, 84, 82, 87], forms: [["186", "Motoro", "D"], ["187", "Chargeté", "C"], ["188", "Knoxvillagrande", "B"]] },
+  { id: "island-luau", family: "Island Luau", color: "#06b6d4", trait: "Tidal groover", type: "Transmission", playstyle: "Tidal Groover", stats: [78, 80, 82, 87, 72, 84], forms: [["189", "Isluau", "D"], ["190", "Tikahuna", "C"], ["191", "Alohkaiju", "B"]] },
+  { id: "birds-of-metal", family: "Birds of Metal", color: "#334155", trait: "Skywire flock", type: "Tech", playstyle: "Skywire Flock", stats: [78, 80, 82, 72, 64, 87], forms: [["206", "Hawklycrüze", "E"], ["207", "Congiovi", "D"], ["208", "Bachelohde", "C"]] },
+  { id: "drift-pirate", family: "Drift Pirate", color: "#0f766e", trait: "Rogue slider", type: "Grip", playstyle: "Rogue Slider", stats: [82, 76, 87, 80, 64, 78], forms: [["219", "Driftplank", "E"], ["220", "Jolly Rider", "D"], ["221", "Nitralleon", "C"]] },
+  { id: "anime", family: "Anime", color: "#ec4899", trait: "Neon daydream", type: "Agility", playstyle: "Neon Daydream", stats: [84, 87, 86, 74, 64, 82], forms: [["234", "Irasshaimase", "D"], ["235", "Itadakimasu", "C"], ["236", "Konbanwa", "B"]] },
+  { id: "influencer-peacock", family: "Influencer Peacock", color: "#14b8a6", trait: "Viral showstopper", type: "Transmission", playstyle: "Viral Showstopper", stats: [86, 84, 82, 87, 66, 86], forms: [["249", "Hatchelorette", "C"], ["250", "Peaclout", "B"], ["251", "Inflewenze", "A"]] },
+  { id: "long-haul-camel", family: "Long-Haul Camel", color: "#d97706", trait: "Desert carrier", type: "Endurance", playstyle: "Desert Carrier", stats: [68, 70, 64, 84, 87, 74], forms: [["255", "Decalf", "E"], ["256", "Hoofinit", "D"], ["257", "Humpyear", "C"]] },
+  { id: "eager-beaver", family: "Eager Beaver", color: "#92400e", trait: "Dam builder", type: "Transmission", playstyle: "Dam Builder", stats: [72, 74, 76, 87, 84, 72], forms: [["258", "Dambitious", "E"], ["259", "Magnabeave", "D"], ["260", "Overabeaver", "C"]] },
+  { id: "octopus-gymnast", family: "Octopus Gymnast", color: "#c026d3", trait: "Tentacle twister", type: "Grip", playstyle: "Tentacle Twister", stats: [76, 80, 87, 78, 66, 82], forms: [["270", "Chalktopus", "E"], ["271", "Crimbum", "D"], ["272", "FreeOcto", "C"]] },
+  { id: "knight-sloth", family: "Knight Sloth", color: "#475569", trait: "Iron sentinel", type: "Endurance", playstyle: "Iron Sentinel", stats: [70, 68, 72, 82, 87, 84], forms: [["279", "Slowbadon", "D"], ["280", "Knightcrawler", "C"], ["281", "Slumblord", "B"]] }
+];
+const storyRewardAssetSlug = (value) => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+// parent names are final-form names; resolve them against the cars array so line ids stay data-driven.
+const fusionRecipes = [
+  { id: "clingkong",        name: "ClingKong",        parents: ["Rambokong", "FreeOcto"] },
+  { id: "beetyonce",        name: "Beetyonce",        parents: ["Motonarch", "Beetronox"] },
+  { id: "simbayote",        name: "Simbayote",        parents: ["Motonarch", "Maneiac"] },
+  { id: "yassibun",         name: "Yassibun",         parents: ["Matunnie", "Bair"] },
+  { id: "sunday-pickup",    name: "Sunday Pickup",    parents: ["Grithouse", "Manstrocity"] },
+  { id: "catsanova",        name: "Catsanova",        parents: ["Purrfecta", "Velourious"] },
+  { id: "bacconeer",        name: "Bacconeer",        parents: ["Swinecroft", "Nitralleon"] },
+  { id: "sleight-of-skull", name: "Sleight of Skull", parents: ["Ziegfroyd", "Nitralleon"] },
+  { id: "eaterbarker",      name: "EaterBarker",      parents: ["Arachciti", "Forterra"] },
+  { id: "manestage",        name: "Manestage",        parents: ["Maneiac", "Bachelohde"] },
+  { id: "baladgent",        name: "Baladgent",        parents: ["Ermewatt", "Overabeaver"] },
+  { id: "frontiermaxin",    name: "Frontiermaxin",    parents: ["Tookerjaw", "Thunspur"] },
+  { id: "wineohonk",        name: "WineO'Honk",       parents: ["Eggdon", "Momageddon"] },
+  { id: "porkerhouse",      name: "Porkerhouse",      parents: ["Swinecroft", "Grandmooster"] },
+  { id: "momentous",        name: "MoMentous",        parents: ["Hummungus", "Momageddon"] }
+];
+
+function fusionImagePath(fusionId, role) {
+  return `assets/cars/fusion-${fusionId}-${role}.png`;
+}
+
+function finalFormNameForLine(car) {
+  const finalEvolution = car?.evolutions?.[car.evolutions.length - 1]?.name;
+  const finalForm = car?.forms?.[car.forms.length - 1]?.[1];
+  return finalEvolution || finalForm || "";
+}
+
+function lineIdForFinalFormName(name) {
+  const matches = cars.filter((car) => finalFormNameForLine(car) === name);
+  // TODO verify final-form name if a future recipe resolves to zero or multiple lines.
+  return matches.length === 1 ? matches[0].id : "";
+}
+
+function fusionParentLineIds(recipe) {
+  if (!recipe) return [];
+  if (!recipe.parentLineIds) recipe.parentLineIds = recipe.parents.map(lineIdForFinalFormName);
+  return recipe.parentLineIds;
+}
+
+function inlineStatsForLine(car) {
+  if (!Array.isArray(car?.stats)) return null;
+  const [speed, acceleration, handling, torque, body, powertrain] = car.stats;
+  return { speed, acceleration, handling, torque, body, powertrain, type: car.type, playstyle: car.playstyle };
+}
+
+function statsForFusionParent(lineId) {
+  return gearbornStatProfiles[lineId] || inlineStatsForLine(cars.find((car) => car.id === lineId)) || {};
+}
+
+function computeFusionStats(parentLineAId, parentLineBId) {
+  const parentA = statsForFusionParent(parentLineAId);
+  const parentB = statsForFusionParent(parentLineBId);
+  return ["speed", "acceleration", "handling", "torque", "body", "powertrain"].reduce((stats, key) => {
+    stats[key] = Math.min(95, Math.max(Number(parentA[key]) || 0, Number(parentB[key]) || 0) + 5); // fusion stat rule
+    return stats;
+  }, {});
+}
+
+storyRewardLineDefs.forEach((line) => {
+  if (cars.some((car) => car.id === line.id)) return;
+  cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0, {
+    id: line.id,
+    family: line.family,
+    color: line.color,
+    trait: line.trait,
+    unlockable: true,
+    evolutions: line.forms.map(([, name]) => {
+      const slug = storyRewardAssetSlug(name);
+      return { name, images: { display: `assets/cars/${line.id}-${slug}-display.png`, race: `assets/cars/${line.id}-${slug}-race.png`, topdown: `assets/cars/${line.id}-${slug}-topdown.png` } };
+    })
+  });
+});
+fusionRecipes.forEach((recipe) => {
+  fusionParentLineIds(recipe);
+  if (cars.some((car) => car.id === recipe.id)) return;
+  cars.push({
+    id: recipe.id,
+    family: `${recipe.name} Line`, // TODO final fusion family naming.
+    color: "#ffc857", // TODO final fusion color palette.
+    trait: "Fusion", // TODO final fusion trait copy.
+    unlockable: true,
+    fusion: true,
+    evolutions: [
+      {
+        name: recipe.name,
+        images: {
+          display: fusionImagePath(recipe.id, "display"),
+          race: fusionImagePath(recipe.id, "race"),
+          topdown: fusionImagePath(recipe.id, "topdown")
+        }
+      }
+    ]
+  });
+});
+
 const defaultUnlockedLines = ["bee", "pickup", "rabbit"];
-const pinkSlipUnlockOrder = ["pig", "sorority-elephant", "grunge-fish", "florida-gator", "whale", "techno-dinosaur", "karate-cow", "frog"];
-const gauntletUnlockOrder = ["muscle-man", "chill-penguin", "space-dolphin", "butcher-hog", "electro-beetle", "silly-goose", "construction-blok", "skater-koala", "royal-flush", "rides-hair"];
-const convoyUnlockOrder = ["armadaddio", "tiger-cart", "wrestler-roo", "flavor-coast", "gb-growler", "future-bok"];
+const pinkSlipUnlockOrder = ["cake-train", "construction-blok", "tiger-cart", "influencer-peacock", "flavor-coast", "snake", "future-bok", "frog", "galaxy-jelly"];
+const gauntletUnlockOrder = ["gb-growler", "silly-goose", "pig", "electro-beetle", "funvee", "eager-beaver", "armadaddio", "high-roller-cheetah", "long-haul-camel", "monkey", "minivan", "birds-of-metal", "rides-hair", "sports-car", "magician", "karate-cow", "drift-pirate", "combat-badger", "bucking-bronco", "all-terrain-spyder", "emo-turtle", "jazz-panther", "octopus-gymnast", "sun-lion"];
+const convoyUnlockOrder = ["florida-gator", "grunge-fish", "royal-flush", "space-dolphin", "butcher-hog", "techno-dinosaur", "chill-penguin", "running-bulls"];
+const bossUnlockOrder = ["muscle-man", "sorority-elephant", "whale", "island-luau", "skater-koala", "anime", "knight-sloth", "wrestler-roo"];
 const coreGearbornLineIds = defaultUnlockedLines.concat(pinkSlipUnlockOrder);
 const starterCarIds = coreGearbornLineIds;
 const rivalStarterCarIds = defaultUnlockedLines;
-const achievementUnlockOrder = ["art-van", "cake-train"];
-const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, ["waste-management", "rainbowlt", "narwhal-luxury", "metal-snake", "training-car"]);
+const achievementUnlockOrder = ["art-van"];
+const garageLineOrder = defaultUnlockedLines.concat(pinkSlipUnlockOrder, achievementUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, bossUnlockOrder, ["waste-management", "rainbowlt", "narwhal-luxury", "metal-snake", "training-car"]);
+const crankVaultDefs = {
+  common: {
+    id: "common",
+    name: "Common CrankVault",
+    color: "blue",
+    cost: 50,
+    detail: "90% chance of E-Class, 9% chance of D-Class, 1% chance of C-Class, and 5 Spins.",
+    rewards: [
+      { kind: "medallion", weights: { E: 90, D: 9, C: 1 }, count: 1 },
+      { kind: "spins", amount: 5 }
+    ]
+  },
+  premium: {
+    id: "premium",
+    name: "Premium CrankVault",
+    color: "purple",
+    cost: 200,
+    detail: "One 60/40 D–C medallion (60% D-Class, 40% C-Class), two 85/15 E–D medallions (85% E-Class, 15% D-Class), and 20 Spins.",
+    rewards: [
+      { kind: "medallion", weights: { D: 60, C: 40 }, count: 1 },
+      { kind: "medallion", weights: { E: 85, D: 15 }, count: 2 },
+      { kind: "spins", amount: 20 }
+    ]
+  },
+  // TODO: tune earned ladder-vault economy once optional races have final balance.
+  sproxCommon: {
+    id: "sproxCommon",
+    name: "Sprox CrankVault",
+    color: "gold",
+    cost: 0,
+    rewards: [
+      { kind: "sprox", amount: 125 },
+      { kind: "spins", amount: 2 }
+    ]
+  },
+  cityMedallion: {
+    id: "cityMedallion",
+    name: "Medallion CrankVault",
+    color: "green",
+    cost: 0,
+    rewards: [
+      { kind: "medallion", weights: { E: 70, D: 25, C: 5 }, count: 1 }
+    ]
+  }
+};
+const dailyGoalRotation = ["drag", "vs", "battle"];
+const dailyGoalDefs = [
+  { id: "login",        name: "Start Your Engine", desc: "Log in today",                        target: 1,   reward: { sprox: 100 } },
+  { id: "winAny",       name: "Take the W",        desc: "Win 3 races",                          target: 3,   reward: { sprox: 150 } },
+  { id: "rotating",     name: "Specialist",        desc: "",                                     target: 3,   reward: { sprox: 200 } },
+  { id: "openVault",    name: "Crank It Open",     desc: "Open a CrankVault",                    target: 1,   reward: { sprox: 100 } },
+  { id: "storyConvoy",  name: "On the Road",       desc: "Win a Story or Convoy race",           target: 1,   reward: { sprox: 150 } },
+  { id: "finishRaces",  name: "Seat Time",         desc: "Finish 5 races",                       target: 5,   reward: { sprox: 150 } },
+  { id: "earnSprox",    name: "Payday",            desc: "Earn 500 Sprox",                       target: 500, reward: { spins: 2 } },
+  { id: "spendGarage",  name: "Shop Talk",         desc: "Spend Sprox in the Garage",            target: 1,   reward: { sprox: 100 } },
+  { id: "threeCars",    name: "Rotation Player",   desc: "Race with 3 different GearBorn",       target: 3,   reward: { sprox: 150 } }
+];
+const dailyGoalsRequiredForVault = dailyGoalDefs.length - 1;
+const medallionRankCosts = {
+  E: [1, 3, 3, 3, 5],
+  D: [1, 2, 2, 2, 3],
+  C: [1, 1, 1, 1, 1]
+};
+const cityStructureTemplate = {
+  ladders: [
+    { id: "drag", label: "Drag Race" },
+    { id: "trial", label: "Time Trial" },
+    { id: "exhibition", label: "Exhibition Race" },
+    { id: "battle", label: "Battle" }
+  ],
+  ladderTiers: ["bronze", "silver", "gold"],
+  storyRaceCount: 5
+};
+const cityDifficultyCurve = [
+  { opponentLevel: 1,  opponentEvolution: 0, skillMin: 0.96, skillMax: 1.01, aggression: 0.25 },
+  { opponentLevel: 2,  opponentEvolution: 0, skillMin: 0.98, skillMax: 1.03, aggression: 0.32 },
+  { opponentLevel: 3,  opponentEvolution: 1, skillMin: 1.00, skillMax: 1.05, aggression: 0.40 },
+  { opponentLevel: 4,  opponentEvolution: 1, skillMin: 1.01, skillMax: 1.06, aggression: 0.48 },
+  { opponentLevel: 5,  opponentEvolution: 1, skillMin: 1.02, skillMax: 1.08, aggression: 0.55 },
+  { opponentLevel: 6,  opponentEvolution: 2, skillMin: 1.03, skillMax: 1.09, aggression: 0.62 },
+  { opponentLevel: 7,  opponentEvolution: 2, skillMin: 1.04, skillMax: 1.10, aggression: 0.70 },
+  { opponentLevel: 8,  opponentEvolution: 2, skillMin: 1.05, skillMax: 1.12, aggression: 0.78 },
+  { opponentLevel: 9,  opponentEvolution: 2, skillMin: 1.06, skillMax: 1.14, aggression: 0.85 }
+];
 const maxCarLevel = 10;
 const tutorialCarId = "metal-snake";
 const tutorialOpponentCarId = "training-car";
@@ -570,9 +781,9 @@ const tutorialScenes = [
   { code: "T-023", id: "evolved-form", label: "EVOLVED FORM", view: "garage", mode: "dialogueOverlay", redirectTo: "evolve" },
   { code: "T-024", id: "tyree-final", label: "TYREE FINAL", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
   { code: "T-025", id: "empty-garage", label: "EMPTY GARAGE", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
-  { code: "T-025-cc", id: "spindell-labs", label: "SPINDELL LABS", view: "garage", mode: "vnScene", background: "assets/tutorial/spindell-labs-bg.png", characterOnly: "cha-cha" },
-  { code: "T-026-cc", id: "medallion-sync", label: "MEDALLION SYNC", view: "garage", mode: "menuTutorial", background: "assets/tutorial/spindell-labs-bg.png", characterOnly: "cha-cha" },
-  { code: "T-027-cc", id: "unlocked-cc", label: "UNLOCKED (CHA CHA)", view: "garage", mode: "vnScene", background: "assets/tutorial/spindell-labs-bg.png", characterOnly: "cha-cha" },
+{ code: "T-025-cc", id: "spindell-labs", label: "SPINDELL LABS", view: "garage", mode: "vnScene", background: "assets/spindell/spindell-bg.png", characterOnly: "cha-cha" },
+{ code: "T-026-cc", id: "medallion-sync", label: "MEDALLION SYNC", view: "garage", mode: "menuTutorial", background: "assets/spindell/spindell-bg.png", characterOnly: "cha-cha" },
+{ code: "T-027-cc", id: "unlocked-cc", label: "UNLOCKED (CHA CHA)", view: "garage", mode: "vnScene", background: "assets/spindell/spindell-bg.png", characterOnly: "cha-cha" },
   { code: "T-026", id: "medallion-discovery", label: "MEDALLION DISCOVERY", view: "garage", mode: "comicSplash", background: "assets/menu/garage_bg.png", redirectTo: "empty-garage" },
   { code: "T-027", id: "ashley-intro", label: "ASHLEY INTRO", view: "garage", mode: "vnScene", background: "assets/menu/garage_bg.png" },
   { code: "T-028", id: "the-forge", label: "THE FORGE", view: "garage", mode: "menuTutorial", background: "assets/forge/forge_bg.png", splash: "assets/tutorial/tutorial-comic-forge.png" },
@@ -656,11 +867,12 @@ const achievementDefs = [
   { id: "pinkSlip50", name: "Pink Slip Contender", requirement: "Win 50% of Pink Slip Races in Story Mode", reward: "5000 Sprox", type: "storyTypePercent", raceType: "pink-slip", percentTarget: 50, sprox: 5000 },
   { id: "allPinkSlips", name: "Pink Slip Collector", requirement: "Win all Pink Slip Races in Story Mode", reward: "Unlock Vandy-Warhaul", type: "storyType", raceType: "pink-slip" },
   { id: "vindex25", name: "VINdex Scout", requirement: "Encounter 25% of the VINdex", reward: "1000 Sprox", type: "vindex", percent: 25 },
-  { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Unlock Cuptrack", type: "vindex", percent: 50 },
+  { id: "vindex50", name: "VINdex Scholar", requirement: "Encounter 50% of the VINdex", reward: "Common CrankVault", type: "vindex", percent: 50 },
   { id: "vindex75", name: "VINdex Archivist", requirement: "Encounter 75% of the VINdex", reward: "3 Level 2 parts", type: "vindex", percent: 75 },
   { id: "vindex100", name: "VINdex Master", requirement: "Encounter 100% of the VINdex", reward: "Unlock Vanbrandt", type: "vindex", percent: 100 },
   { id: "garbageMedallion", name: "Garbage Day", requirement: "Lose 5 races or battles in a row", reward: "Garbage Medallion", type: "garbageMedallion", secret: true },
-  { id: "narwraithMedallion", name: "Deep Bond", requirement: "Reach Bond 25 with every non-secret GearBorn line", reward: "Narwraith Medallion", type: "narwhalBond", secret: true }
+  { id: "narwraithMedallion", name: "Deep Bond", requirement: "Reach Bond 25 with every non-secret GearBorn line", reward: "Narwraith Medallion", type: "narwhalBond", secret: true },
+  { id: "tutorialTutorqueMedallion", name: "Academy Graduate", requirement: "Complete the tutorial from the beginning", reward: "Tutorque Medallion", type: "tutorialFullRun", secret: true }
 ];
 
 // ─── TUTORIAL DIALOGUE ──────────────────────────────────────────────────────
@@ -1203,6 +1415,21 @@ const gearbornStatProfiles = {
     "type": "Neutral"
   }
 };
+storyRewardLineDefs.forEach((line) => {
+  const [speed, acceleration, handling, torque, body, powertrain] = line.stats;
+  gearbornStatProfiles[line.id] = { speed, acceleration, handling, torque, body, powertrain, playstyle: line.playstyle, type: line.type };
+});
+fusionRecipes.forEach((recipe) => {
+  const [parentAId, parentBId] = fusionParentLineIds(recipe);
+  const parentA = statsForFusionParent(parentAId);
+  const parentB = statsForFusionParent(parentBId);
+  gearbornStatProfiles[recipe.id] = {
+    ...computeFusionStats(parentAId, parentBId),
+    playstyle: "Fusion", // TODO playstyle
+    type: parentA.type || "Neutral",
+    type2: parentB.type || parentA.type || "Neutral"
+  };
+});
 
 const bossStatProfiles = {
   crusadome: { speed: 76, acceleration: 74, handling: 70, torque: 82, body: 90, powertrain: 68 },
@@ -1239,7 +1466,7 @@ const bosses = [
   { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/cars/pope-crusadome-topdown.png", portrait: "assets/characters/rev-rend.png", headshot: "assets/characters/headshots/headshot-rev-rend.png" },
   { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/cars/german-baronessex-topdown.png", portrait: "assets/characters/karen.png", headshot: "assets/characters/headshots/headshot-karen.png" },
   { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/characters/samir.png", headshot: "assets/characters/headshots/headshot-samir.png" },
-  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
+  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/influencer-peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
   { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
   { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
   { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/bok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
@@ -1257,16 +1484,28 @@ const campaignDragStages = [
   { rankKey: "A", name: "Crusadome", xp: 540, power: 1.85, image: "assets/cars/pope-crusadome-race.png", opponents: [{ name: "Crusadome", image: "assets/cars/pope-crusadome-race.png", power: 1.85 }, { name: "Barracobain", image: "assets/cars/fish-barracobain-race.png", power: 1.78 }, { name: "OlChap", image: "assets/cars/butcher-olchap-race.png", power: 1.75 }] },
   { rankKey: "S", name: "Hornula1", xp: 720, power: 2.12, image: "assets/cars/unicorn-hornula1-race.png", opponents: [{ name: "Hornula1", image: "assets/cars/unicorn-hornula1-race.png", power: 2.12 }] }
 ];
-const pinkSlipRacePlan = {
-  0: { carId: "pig",                rankKey: "D", xp: 180, power: 0.88, distance: 400 },
-  1: { carId: "sorority-elephant",  rankKey: "C", xp: 240, power: 0.90, distance: 800 },
-  2: { carId: "grunge-fish",        rankKey: "C", xp: 300, power: 0.94, distance: 800 },
-  3: { carId: "florida-gator",      rankKey: "B", xp: 360, power: 0.96, distance: 800 },
-  4: { carId: "whale",              rankKey: "B", xp: 420, power: 0.98, distance: 800 },
-  5: { carId: "techno-dinosaur",    rankKey: "A", xp: 540, power: 1.02, distance: 1600 },
-  6: { carId: "karate-cow",         rankKey: "S", xp: 680, power: 1.06, distance: 1600 },
-  7: { carId: "frog",               rankKey: "S", xp: 820, power: 1.08, distance: 1600 }
+const storyMedallionAssignments = {
+  indianapolis: { gauntlets: ["gb-growler", "silly-goose", "pig"], convoy: "florida-gator", boss: "muscle-man", pinkSlip: "cake-train" },
+  berlin: { gauntlets: ["electro-beetle", "funvee", "eager-beaver"], convoy: "grunge-fish", boss: "sorority-elephant", pinkSlip: "construction-blok" },
+  dubai: { gauntlets: ["armadaddio", "high-roller-cheetah", "long-haul-camel"], convoy: "royal-flush", boss: "whale", pinkSlip: "tiger-cart" },
+  rio: { gauntlets: ["monkey", "minivan", "birds-of-metal"], convoy: "space-dolphin", boss: "island-luau", pinkSlip: "influencer-peacock" },
+  "los-angeles": { gauntlets: ["rides-hair", "sports-car", "magician"], convoy: "butcher-hog", boss: "skater-koala", pinkSlip: "flavor-coast" },
+  seoul: { gauntlets: ["karate-cow", "drift-pirate", "combat-badger"], convoy: "techno-dinosaur", boss: "anime", pinkSlip: "snake" },
+  "cape-town": { gauntlets: ["bucking-bronco", "all-terrain-spyder", "emo-turtle"], convoy: "chill-penguin", boss: "knight-sloth", pinkSlip: "future-bok" },
+  bangalore: { gauntlets: ["jazz-panther", "octopus-gymnast", "sun-lion"], convoy: "running-bulls", boss: "wrestler-roo", pinkSlip: "frog" },
+  space: { gauntlets: [], convoy: null, boss: null, pinkSlip: "galaxy-jelly" }
 };
+const pinkSlipRacePlan = {
+  0: { carId: "cake-train",          rankKey: "C", xp: 180, power: 0.88, distance: 400 },
+  1: { carId: "construction-blok",   rankKey: "C", xp: 240, power: 0.90, distance: 800 },
+  2: { carId: "tiger-cart",          rankKey: "C", xp: 300, power: 0.94, distance: 800 },
+  3: { carId: "influencer-peacock",  rankKey: "C", xp: 360, power: 0.96, distance: 800 },
+  4: { carId: "flavor-coast",        rankKey: "C", xp: 420, power: 0.98, distance: 800 },
+  5: { carId: "snake",               rankKey: "C", xp: 540, power: 1.02, distance: 1600 },
+  6: { carId: "future-bok",          rankKey: "C", xp: 680, power: 1.06, distance: 1600 },
+  7: { carId: "frog",                rankKey: "C", xp: 820, power: 1.08, distance: 1600 }
+};
+const spacePinkSlipPlan = { carId: "galaxy-jelly", rankKey: "B", xp: 980, power: 1.12, distance: 1600 };
 const rivalRacePlan = {
   0: { id: "indianapolis-rival", mechanic: "circuitDuel", xp: 240, power: 1.08, distance: 500 },
   2: { id: "dubai-rival", mechanic: "circuitDuel", xp: 430, power: 1.32, distance: 500 },
@@ -1311,7 +1550,10 @@ const campaignLevels = bosses.flatMap((boss, index) => {
   if (rival) prelims.push(rival);
   const arc = prelims.concat(battle);
   return pinkSlipRacePlan[index] ? arc.concat([{ type: "pink-slip", title: pinkSlipStageFor(pinkSlipRacePlan[index]).title, drag: pinkSlipStageFor(pinkSlipRacePlan[index]), pinkSlipCarId: pinkSlipRacePlan[index].carId, track: boss.track, circuitMode: "duel" }]) : arc;
-}).concat([{ type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true, track: finalBoss.track, circuitMode: "duel" }]);
+}).concat([
+  { type: "pink-slip", title: pinkSlipStageFor(spacePinkSlipPlan).title, drag: pinkSlipStageFor(spacePinkSlipPlan), pinkSlipCarId: spacePinkSlipPlan.carId, track: finalBoss.track, circuitMode: "duel", unlockedWithCity: true },
+  { type: "boss", title: `${finalBoss.name} Final Boss`, bossIndex: bosses.length, final: true, track: finalBoss.track, circuitMode: "duel" }
+]);
 const storyNodeLayouts = [
   { key: "drag", x: 16, y: 70 },
   { key: "trial", x: 84, y: 70 },
@@ -1364,24 +1606,23 @@ const storyCities = bosses.map((boss, index) => {
   track: finalBoss.track,
   bossIndex: bosses.length,
   final: true,
-  levels: [{ ...campaignLevels[campaignLevels.length - 1], campaignIndex: campaignLevels.length - 1 }],
+  levels: campaignLevels.slice(-2).map((level, offset) => ({ ...level, campaignIndex: campaignLevels.length - 2 + offset })),
   icon: finalBoss.track.cityIcon
 }]);
-const gauntletCityLineMap = {
-  indianapolis: "silly-goose",
-  berlin: "butcher-hog",
-  dubai: "construction-blok",
-  rio: "skater-koala",
-  "los-angeles": "muscle-man",
-  seoul: "chill-penguin",
-  "cape-town": "space-dolphin",
-  bangalore: "electro-beetle"
-};
+const gauntletUnlockReputationPercents = [0, 50, 100];
 
-function medallionGauntletConfigForLine(gearBornLineId) {
+function cityDifficultyForCampaignIndex(campaignIndex) {
+  if (!Number.isFinite(campaignIndex) || campaignIndex < 0) return null;
+  const cityIndex = storyCities.findIndex((city) => (city.levels || []).some((level) => level.campaignIndex === campaignIndex));
+  return cityDifficultyCurve[Math.max(0, cityIndex)] || cityDifficultyCurve[cityDifficultyCurve.length - 1];
+}
+
+function medallionGauntletConfigForLine(gearBornLineId, options = {}) {
   return {
     enabled: true,
-    unlockReputationPercent: 50,
+    unlockReputationPercent: options.unlockReputationPercent ?? 0,
+    assignedCityId: options.assignedCityId || "",
+    slotIndex: options.slotIndex ?? 0,
     gearBornLineId,
     medallionId: gearBornLineId,
     displayName: cars.find((car) => car.id === gearBornLineId)?.evolutions[0]?.name || "A GearBorn",
@@ -1393,24 +1634,17 @@ function medallionGauntletConfigForLine(gearBornLineId) {
   };
 }
 
-const medallionGauntlets = Object.fromEntries(Object.entries(gauntletCityLineMap).map(([cityId, gearBornLineId]) => [
-  cityId,
-  medallionGauntletConfigForLine(gearBornLineId)
-]));
-const specialMedallionGauntlets = {
-  "royal-flush-special": {
-    ...medallionGauntletConfigForLine("royal-flush"),
-    special: true,
-    trigger: "firstPinkSlipLoss",
-    popupTitle: "You might be in the dumps, but dumps aren't always so bad..."
-  },
-  "rides-hair-special": {
-    ...medallionGauntletConfigForLine("rides-hair"),
-    special: true,
-    trigger: "sixEvolvedLines",
-    popupTitle: "You're growing as a Tuner... Is that a mustache?"
-  }
-};
+const medallionGauntlets = Object.fromEntries(Object.entries(storyMedallionAssignments).flatMap(([cityId, assignment]) =>
+  (assignment.gauntlets || []).map((gearBornLineId, slotIndex) => {
+    const gauntletKey = `${cityId}-gauntlet-${slotIndex + 1}`;
+    return [gauntletKey, medallionGauntletConfigForLine(gearBornLineId, {
+      assignedCityId: cityId,
+      slotIndex,
+      unlockReputationPercent: gauntletUnlockReputationPercents[slotIndex]
+    })];
+  })
+));
+const specialMedallionGauntlets = {};
 const timeMedals = [
   { key: "gold", label: "Gold", difficulty: "Hard", xp: 420, base: 55 },
   { key: "silver", label: "Silver", difficulty: "Medium", xp: 260, base: 65 },
@@ -1469,7 +1703,7 @@ const vindexEntries = [
   ["243", "Cuptrack", "Cake Train Line", "assets/cars/cake-cuptrack-display.png"],
   ["244", "Isittrain", "Cake Train Line", "assets/cars/cake-isittrain-display.png"],
   ["245", "Fonductor", "Cake Train Line", "assets/cars/cake-fonductor-display.png"],
-  ["251", "Inflewenze", "Influencer Line", "assets/cars/peacock-inflewenze-display.png"],
+  ["251", "Inflewenze", "Influencer Line", "assets/cars/influencer-peacock-inflewenze-display.png"],
   ["287", "Sponsore", "Bumper Sticker Line", "assets/cars/sticker-sponsore-display.png"],
   ["296", "Baronessex", "German Discipline Line", "assets/cars/german-baronessex-display.png"],
   ["298", "Crusadome", "Crusader Line", "assets/cars/pope-crusadome-display.png"],
@@ -1774,7 +2008,23 @@ const additionalVindexEntries = [
 additionalVindexEntries.forEach((entry) => {
   if (!vindexEntries.some((item) => item.number === entry.number && item.name === entry.name)) vindexEntries.push(entry);
 });
-vindexEntries.sort((a, b) => Number(a.number) - Number(b.number) || a.name.localeCompare(b.name));
+storyRewardLineDefs.forEach((line) => {
+  line.forms.forEach(([number, name]) => {
+    if (vindexEntries.some((entry) => entry.number === number && entry.name === name)) return;
+    vindexEntries.push({ number, name, line: `${line.family} Line`, image: `assets/cars/${line.id}-${storyRewardAssetSlug(name)}-display.png` });
+  });
+});
+fusionRecipes.forEach((recipe, index) => {
+  const number = `X${String(index + 1).padStart(3, "0")}`;
+  if (vindexEntries.some((entry) => entry.number === number && entry.name === recipe.name)) return;
+  vindexEntries.push({ number, name: recipe.name, line: `${recipe.name} Line`, image: fusionImagePath(recipe.id, "display") }); // TODO verify filename if fusion asset convention changes.
+});
+vindexEntries.sort((a, b) => {
+  const aFusion = String(a.number).startsWith("X");
+  const bFusion = String(b.number).startsWith("X");
+  if (aFusion || bFusion) return aFusion === bFusion ? String(a.number).localeCompare(String(b.number)) : (aFusion ? 1 : -1);
+  return Number(a.number) - Number(b.number) || a.name.localeCompare(b.name);
+});
 const vindexClassByNumber = {
   "010": "E",
   "032": "C",
@@ -1947,6 +2197,11 @@ Object.assign(vindexClassByNumber, {
 });
 Object.assign(vindexClassByNumber, {
   "310": "A"
+});
+storyRewardLineDefs.forEach((line) => {
+  line.forms.forEach(([number, , classLetter]) => {
+    vindexClassByNumber[number] = classLetter;
+  });
 });
 
 const tuners = [
@@ -2148,7 +2403,8 @@ const convoyParticipantProfiles = {
   mack: { sponsor: "Mack Spindell", headshot: "assets/characters/headshots/headshot-mack-spindell.png" },
   sloane: { sponsor: "Sloane Spindell", headshot: "assets/characters/headshots/headshot-sloane-spindell.png" },
   eli: { sponsor: "Eli Kaufman", headshot: "assets/characters/headshots/headshot-eli.png" },
-  crosby: { sponsor: "Crosby Nash", headshot: "assets/characters/headshots/headshot-crosby.png" }
+  crosby: { sponsor: "Crosby Nash", headshot: "assets/characters/headshots/headshot-crosby.png" },
+  portia: { sponsor: "Portia Crosh", headshot: "assets/characters/headshots/headshot-portia.png" }
 };
 const convoyParticipantStages = {
   tyree: [
@@ -2180,21 +2436,30 @@ const convoyParticipantStages = {
     { type: "drag", opponentCarId: "chill-penguin", opponentName: "Crosby's Brrap" },
     { type: "battle", opponentCarId: "karate-cow", opponentName: "Crosby's Udderlee" },
     { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Crosby's Astromarino" }
+  ],
+  portia: [
+    { type: "drag", opponentCarId: "sorority-elephant", opponentEvolutionIndex: 0, opponentName: "Portia's Elepledge" },
+    { type: "battle", opponentCarId: "sorority-elephant", opponentEvolutionIndex: 1, opponentName: "Portia's Sororitrunk" },
+    { type: "h2h", opponentCarId: "sorority-elephant", opponentEvolutionIndex: 2, opponentName: "Portia's Plaidonna" }
   ]
 };
 const convoyBranchPlan = [
-  { id: "mylo-berlin-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "berlin", participantId: "ashley", medallionId: "wrestler-roo" },
-  { id: "mylo-rio-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "rio", participantId: "tyree", medallionId: "gb-growler" },
-  { id: "mylo-seoul-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "seoul", participantId: "ashley", medallionId: "flavor-coast" },
-  { id: "mylo-bengaluru-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "bangalore", participantId: "tyree", medallionId: "future-bok" },
-  { id: "mylo-dubai-mack", factionId: "keyfree", playerTunerId: "mylo", cityId: "dubai", participantId: "mack", medallionId: "armadaddio" },
-  { id: "mylo-cape-town-eli", factionId: "keyfree", playerTunerId: "mylo", cityId: "cape-town", participantId: "eli", medallionId: "tiger-cart" },
-  { id: "chacha-berlin-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "berlin", participantId: "tyree", medallionId: "gb-growler" },
-  { id: "chacha-rio-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "rio", participantId: "ashley", medallionId: "wrestler-roo" },
-  { id: "chacha-seoul-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "seoul", participantId: "tyree", medallionId: "future-bok" },
-  { id: "chacha-bengaluru-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "bangalore", participantId: "ashley", medallionId: "flavor-coast" },
-  { id: "chacha-dubai-sloane", factionId: "spindell", playerTunerId: "cha-cha", cityId: "dubai", participantId: "sloane", medallionId: "armadaddio" },
-  { id: "chacha-cape-town-crosby", factionId: "spindell", playerTunerId: "cha-cha", cityId: "cape-town", participantId: "crosby", medallionId: "tiger-cart" }
+  { id: "mylo-indianapolis-eli", factionId: "keyfree", playerTunerId: "mylo", cityId: "indianapolis", participantId: "eli", medallionId: storyMedallionAssignments.indianapolis.convoy },
+  { id: "mylo-berlin-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "berlin", participantId: "ashley", medallionId: storyMedallionAssignments.berlin.convoy },
+  { id: "mylo-dubai-eli", factionId: "keyfree", playerTunerId: "mylo", cityId: "dubai", participantId: "eli", medallionId: storyMedallionAssignments.dubai.convoy },
+  { id: "mylo-rio-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "rio", participantId: "tyree", medallionId: storyMedallionAssignments.rio.convoy },
+  { id: "mylo-los-angeles-portia", factionId: "keyfree", playerTunerId: "mylo", cityId: "los-angeles", participantId: "portia", medallionId: storyMedallionAssignments["los-angeles"].convoy },
+  { id: "mylo-seoul-ashley", factionId: "keyfree", playerTunerId: "mylo", cityId: "seoul", participantId: "ashley", medallionId: storyMedallionAssignments.seoul.convoy },
+  { id: "mylo-cape-town-mack", factionId: "keyfree", playerTunerId: "mylo", cityId: "cape-town", participantId: "mack", medallionId: storyMedallionAssignments["cape-town"].convoy },
+  { id: "mylo-bengaluru-tyree", factionId: "keyfree", playerTunerId: "mylo", cityId: "bangalore", participantId: "tyree", medallionId: storyMedallionAssignments.bangalore.convoy },
+  { id: "chacha-indianapolis-crosby", factionId: "spindell", playerTunerId: "cha-cha", cityId: "indianapolis", participantId: "crosby", medallionId: storyMedallionAssignments.indianapolis.convoy },
+  { id: "chacha-berlin-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "berlin", participantId: "tyree", medallionId: storyMedallionAssignments.berlin.convoy },
+  { id: "chacha-dubai-sloane", factionId: "spindell", playerTunerId: "cha-cha", cityId: "dubai", participantId: "sloane", medallionId: storyMedallionAssignments.dubai.convoy },
+  { id: "chacha-rio-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "rio", participantId: "ashley", medallionId: storyMedallionAssignments.rio.convoy },
+  { id: "chacha-los-angeles-portia", factionId: "spindell", playerTunerId: "cha-cha", cityId: "los-angeles", participantId: "portia", medallionId: storyMedallionAssignments["los-angeles"].convoy },
+  { id: "chacha-seoul-tyree", factionId: "spindell", playerTunerId: "cha-cha", cityId: "seoul", participantId: "tyree", medallionId: storyMedallionAssignments.seoul.convoy },
+  { id: "chacha-cape-town-crosby", factionId: "spindell", playerTunerId: "cha-cha", cityId: "cape-town", participantId: "crosby", medallionId: storyMedallionAssignments["cape-town"].convoy },
+  { id: "chacha-bengaluru-ashley", factionId: "spindell", playerTunerId: "cha-cha", cityId: "bangalore", participantId: "ashley", medallionId: storyMedallionAssignments.bangalore.convoy }
 ];
 const legacyConvoyDefinitions = {
   tyree: {
@@ -2237,7 +2502,7 @@ const convoyDefinitions = convoyBranchPlan.reduce((definitions, plan) => {
     medallionId: plan.medallionId,
     stages: convoyParticipantStages[plan.participantId] || convoyParticipantStages.tyree,
     rewards: {
-      firstWin: { sprox: 3000, parts: ["placeholder-convoy-part"], medallions: 1, medallionIds: [plan.medallionId] },
+      firstWin: { sprox: 3000, parts: ["placeholder-convoy-part"], medallions: 1 },
       replayWin: { sprox: 1000 }
     }
   };

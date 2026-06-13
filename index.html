@@ -43,6 +43,16 @@
             <strong id="sprox-total">0 Sprox</strong>
             <span class="sprox-coin" aria-hidden="true">●</span>
           </div>
+          <div class="spin-wallet" aria-label="Spins balance">
+            <strong id="spin-total">0 Spins</strong>
+            <img class="spin-coin" src="assets/items/icon-spins.png" alt="" aria-hidden="true">
+          </div>
+          <div class="gas-tank" id="gas-tank" aria-label="Gas tank">
+            <span class="gas-icon" aria-hidden="true">⛽</span>
+            <div class="gas-meter"><i id="gas-fill"></i></div>
+            <strong id="gas-total">100/100</strong>
+            <small class="gas-next" id="gas-next" hidden></small>
+          </div>
           <button class="settings-gear-button" data-view="settings" type="button" aria-label="Settings">
             <img src="assets/menu/icon-settings.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="32" height="32">
           </button>
@@ -57,6 +67,9 @@
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
           <button class="nav-button" data-view="profiles" type="button">Racer Profiles</button>
           <button class="nav-button" data-view="achievements" type="button">Achievements</button>
+          <button class="nav-button crankvault-nav" data-view="crankvaults" type="button">
+            CrankVaults<span class="nav-badge" id="crankvault-badge" hidden>1</span>
+          </button>
           <button class="nav-button beta-nav" data-view="beta" type="button">Beta Mode</button>
         </nav>
       </header>
@@ -95,6 +108,7 @@
                   <button class="story-primary" data-view="story" type="button">Start Race</button>
                 </div>
               </aside>
+              <div class="menu-unlock-markers" id="menu-unlock-markers" aria-label="Closest unlocks" hidden></div>
               <div class="menu-secondary-grid">
                 <button class="menu-card garage-card" data-view="garage" type="button">
                   <img class="menu-card-icon-img" src="assets/menu/icon_garage.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="80" height="80" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'menu-card-icon',textContent:'G'}));">
@@ -468,11 +482,12 @@
                   <span id="vindex-line"></span>
                 </div>
                 <img class="vindex-class-stamp" id="vindex-class-stamp" alt="" hidden>
-                <img class="vindex-type-stamp" id="vindex-type-stamp" alt="" hidden>
+                <div class="vindex-type-stamp" id="vindex-type-stamp" hidden></div>
                 <div class="vindex-art" id="vindex-art"></div>
                 <div class="vindex-plate-wrap" id="vindex-plate"></div>
                 <div class="vindex-copy">
                   <strong id="vindex-status"></strong>
+                  <div id="vindex-medallion-tracks"></div>
                 </div>
               </section>
               <aside class="vindex-filter-panel" aria-label="VINdex filters">
@@ -523,6 +538,27 @@
             <div class="achievement-list" id="achievement-list"></div>
             <div class="achievement-detail" id="achievement-detail"></div>
           </div>
+        </section>
+
+        <section class="view" id="crankvaults-view" aria-labelledby="crankvaults-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading">
+            <p>Rewards</p>
+            <h1 id="crankvaults-title">CrankVaults</h1>
+          </div>
+          <div class="section-heading compact-heading">
+            <p>Daily</p>
+            <h2 id="daily-goals-title">Daily Goals</h2>
+          </div>
+          <div class="daily-goals" id="daily-goals"></div>
+          <div class="crankvault-daily" id="crankvault-daily"></div>
+          <div class="crankvault-store" id="crankvault-store"></div>
+          <p class="crankvault-odds-note" id="crankvault-odds-note"></p>
+          <div class="section-heading compact-heading">
+            <p>Inventory</p>
+            <h2 id="crankvault-inventory-title">Earned Vaults</h2>
+          </div>
+          <div class="crankvault-inventory" id="crankvault-inventory"></div>
         </section>
 
         <section class="view" id="play-view" aria-labelledby="play-title">
@@ -603,6 +639,7 @@
                 <div>
                   <span class="hud-label">Shift</span>
                   <strong id="shift-readout">Ready</strong>
+                  <small class="perfect-streak" id="perfect-streak" hidden></small>
                 </div>
               </div>
 
@@ -628,6 +665,7 @@
                 <div class="finish-line"></div>
                 <div class="launch-lights drag-light-tree" id="drag-launch-lights" aria-hidden="true">
                   <span class="launch-tree-spine"></span>
+                  <span class="launch-phase-label" id="launch-phase-label">STAGE</span>
                   <span class="launch-tree-row" data-launch-step="1">
                     <span class="launch-tree-arm left"></span>
                     <span class="launch-light red"></span>
@@ -727,6 +765,10 @@
               <h1 id="forge-title">Forge what's next.</h1>
               <small id="forge-subtitle">Unlock medallions through the old fire.</small>
             </div>
+            <div class="forge-mode-toggle segmented" id="forge-mode-toggle" role="group" aria-label="Forge mode">
+              <button type="button" data-forge-mode="unlock">Unlock</button>
+              <button type="button" data-forge-mode="fusion">Fusion</button>
+            </div>
             <div class="forge-layout">
               <div class="forge-scene">
                 <img class="forge-bg-img" src="assets/forge/forge_bg.png" alt="">
@@ -773,6 +815,29 @@
                 <label for="volume">Volume</label>
                 <input id="volume" type="range" min="0" max="100" value="45">
               </div>
+              <div class="field settings-toggle-field">
+                <label for="screen-effects">Screen effects</label>
+                <input id="screen-effects" type="checkbox" checked>
+                <small>Shake, speed lines, hit-stop, and reward pops.</small>
+              </div>
+              <div class="field settings-toggle-field">
+                <label for="haptics">Haptics</label>
+                <input id="haptics" type="checkbox" checked>
+                <small>Short device vibrations when supported.</small>
+              </div>
+              <div class="field settings-toggle-field">
+                <label for="high-vis-cues">High-visibility cues</label>
+                <input id="high-vis-cues" type="checkbox" checked>
+                <small>Extra text, outlines, and flashes for timing windows.</small>
+              </div>
+              <div class="field">
+                <label for="reduced-motion">Reduced motion</label>
+                <select id="reduced-motion">
+                  <option value="system">Follow system</option>
+                  <option value="off">Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
               <div class="field">
                 <label for="shift-key">Shift key</label>
                 <input id="shift-key" type="text" maxlength="12" value="Space" aria-describedby="key-note">
@@ -810,6 +875,8 @@
                 <div class="tuner-options" id="settings-tuner-options"></div>
               </div>
               <div class="danger-zone">
+                <button class="ghost" id="export-save" type="button">Export Save</button>
+                <button class="ghost" id="import-save" type="button">Import Save</button>
                 <button class="god-button" id="god-mode" type="button">God Mode</button>
                 <button class="tutorial-replay-button" id="replay-tutorial" type="button">Replay Tutorial</button>
                 <button class="builder-delete-button" id="delete-tracks" type="button">Delete Tracks</button>
@@ -869,9 +936,9 @@
             <!-- BETA SCREEN 1: Main menu -->
             <div class="beta-intro beta-screen" id="beta-intro">
               <p class="modal-kicker">Training Academy</p>
-              <h1 id="beta-title">Vs. Race</h1>
-              <h2>Choose a race format.</h2>
-              <p>Run full circuit races with the new racing engine.</p>
+              <h1 id="beta-title">Test Track</h1>
+              <h2>Choose a prototype.</h2>
+              <p>Early experiments from the GearBorn lab. Expect rough edges.</p>
               <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
                 <strong>Pseudo-3D Baybee Run</strong>
                 <span>Behind-the-car test on a longer prototype track.</span>
@@ -1365,6 +1432,18 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="fusion-gamble-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="fusion-gamble-title">
+        <p class="modal-kicker">Fusion Experiment</p>
+        <h2 id="fusion-gamble-title">Risk the Medallions?</h2>
+        <p id="fusion-gamble-copy">These two have no known fusion.</p>
+        <div class="modal-actions">
+          <button class="danger-button" id="confirm-fusion-gamble" type="button">Gamble</button>
+          <button class="ghost" id="cancel-fusion-gamble" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="unmask-modal" aria-hidden="true">
       <div class="evolution-modal" role="dialog" aria-modal="true" aria-labelledby="unmask-title">
         <div class="boss-portrait" id="unmask-portrait"></div>
@@ -1390,19 +1469,46 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="save-transfer-modal" aria-hidden="true" hidden>
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="save-transfer-title">
+        <h2 id="save-transfer-title">Save Code</h2>
+        <p id="save-transfer-copy">Copy this code somewhere safe.</p>
+        <textarea id="save-transfer-text" rows="6" spellcheck="false" aria-label="Save code"></textarea>
+        <div class="modal-actions">
+          <button class="ghost" id="save-transfer-copy-btn" type="button">Copy Code</button>
+          <button class="danger-button" id="save-transfer-import-btn" type="button" hidden>Import</button>
+          <button class="ghost" id="save-transfer-close" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="god-modal" aria-hidden="true">
       <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="god-title">
         <p class="modal-kicker">Activate God Mode</p>
         <h2 id="god-title">Enter the God Mode code.</h2>
-        <p>This will max every car, unlock all levels, evolve Rainbowlt into Hornula1 at Level 10, and grant unlimited Sprox.</p>
+        <p>Enter the full God Mode code or a development condition code.</p>
         <div class="field">
           <label for="god-code">Code</label>
           <input id="god-code" type="text" autocomplete="off">
           <small class="code-error" id="god-code-error"></small>
         </div>
+        <div class="god-cheat-status" id="god-cheat-status" aria-live="polite"></div>
         <div class="modal-actions">
-          <button class="god-button" id="confirm-god" type="button">Activate God Mode</button>
+          <button class="god-button" id="confirm-god" type="button">Apply Code</button>
           <button class="ghost" id="cancel-god" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="gas-empty-modal" aria-hidden="true">
+      <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="gas-empty-title">
+        <p class="modal-kicker">Pit Stop</p>
+        <h2 id="gas-empty-title">Out of Gas</h2>
+        <p id="gas-empty-copy">You need <strong id="gas-empty-cost">8</strong> gallons to enter this race. You have <strong id="gas-empty-have">0</strong>.</p>
+        <p class="gas-countdown">Next gallon in <strong id="gas-next-gallon">--:--</strong> · Full tank in <strong id="gas-full-tank">--:--:--</strong></p>
+        <div class="modal-actions">
+          <button class="god-button" id="gas-purchase" type="button">Purchase 100 Gallons — 30 Spins</button>
+          <button class="ghost" id="gas-empty-cancel" type="button">Cancel</button>
         </div>
       </div>
     </div>
@@ -1534,6 +1640,18 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="crankvault-reveal-modal" aria-hidden="true">
+      <div class="confirm-modal crankvault-reveal-card" role="dialog" aria-modal="true" aria-labelledby="crankvault-reveal-title">
+        <p class="modal-kicker">CrankVault Opened</p>
+        <h2 id="crankvault-reveal-title">Rewards</h2>
+        <div class="crankvault-reveal-hero" id="crankvault-reveal-hero"></div>
+        <div class="crankvault-reveal-results" id="crankvault-reveal-results"></div>
+        <div class="modal-actions">
+          <button class="primary" id="crankvault-reveal-close" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MEDALLION EARNED POPUP -->
     <div class="modal-overlay" id="medallion-earned-popup" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="medallion-earned-name">
       <div class="forge-popup">
@@ -1579,12 +1697,32 @@
     <img class="forge-fs-vat" id="forge-fs-vat" src="assets/forge/forge_vat.png" alt="">
   </div>
 
+    <script>
+      window.reportGearbornStartupError = (error) => {
+        const loadingTip = document.querySelector("#loading-tip");
+        const fuelFill = document.querySelector("#fuel-fill");
+        if (loadingTip) loadingTip.textContent = `Startup stopped: ${error?.message || String(error)}`;
+        if (fuelFill) fuelFill.classList.add("load-error");
+        console.error("GearBorn startup error:", error);
+      };
+      window.addEventListener("error", (event) => {
+        const message = String(event.error?.message || event.message || "");
+        if (!event.error && (!message || /^script error\.?$/i.test(message.trim()))) {
+          console.warn("Ignored opaque cross-origin script error.");
+          return;
+        }
+        window.reportGearbornStartupError(event.error || message);
+      });
+      window.addEventListener("unhandledrejection", (event) => {
+        window.reportGearbornStartupError(event.reason);
+      });
+    </script>
     <script src="gearborn-config.js"></script>
     <script src="game-data.js"></script>
     <script src="game-state.js"></script>
     <script src="game-logic.js"></script>
     <script src="game-dom.js"></script>
-    <script src="game-beta.js"></script>
+    <script src="game-race2d.js"></script>
     <script src="game-beta3d.js"></script>
     <script src="game-events.js"></script>
     <script src="game-init.js"></script>

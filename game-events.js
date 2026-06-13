@@ -214,11 +214,11 @@ el.betaCarSelectConfirm?.addEventListener("click", () => {
 });
 el.betaCarSelectBack?.addEventListener("click", closeBetaCarSelect);
 
-el.playerCar.addEventListener("change", (event) => {
+el.playerCar?.addEventListener("change", (event) => {
   setSelectedCarForMode("drag", event.target.value);
 });
 
-el.storyCar.addEventListener("change", (event) => {
+el.storyCar?.addEventListener("change", (event) => {
   setSelectedCarForMode("boss", event.target.value);
 });
 
@@ -226,17 +226,17 @@ el.campaignCar?.addEventListener("change", (event) => {
   setSelectedCarForMode("story", event.target.value);
 });
 
-el.timeCar.addEventListener("change", (event) => {
+el.timeCar?.addEventListener("change", (event) => {
   setSelectedCarForMode("time", event.target.value);
 });
 
-el.timeTrack.addEventListener("change", (event) => {
+el.timeTrack?.addEventListener("change", (event) => {
   state.selectedTimeTrack = event.target.value;
   saveState();
   render();
 });
 
-el.timeTrackGrid.addEventListener("click", (event) => {
+el.timeTrackGrid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-time-track]");
   if (!button) return;
   state.selectedTimeTrack = button.dataset.timeTrack;
@@ -244,7 +244,7 @@ el.timeTrackGrid.addEventListener("click", (event) => {
   render();
 });
 
-el.distanceOptions.addEventListener("click", (event) => {
+el.distanceOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-distance]");
   if (!button) return;
   state.selectedDistance = Number(button.dataset.distance);
@@ -260,7 +260,7 @@ el.dragOpponentCount?.addEventListener("click", (event) => {
   render();
 });
 
-el.opponentList.addEventListener("click", (event) => {
+el.opponentList?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-rank]");
   if (!button || button.disabled) return;
   state.selectedRank = button.dataset.rank;
@@ -268,25 +268,26 @@ el.opponentList.addEventListener("click", (event) => {
   render();
 });
 
-el.startRace.addEventListener("click", startRace);
-el.dragMapStart.addEventListener("click", startPendingDragRace);
+el.startRace?.addEventListener("click", startRace);
+el.dragMapStart?.addEventListener("click", startPendingDragRace);
 bindActionButton(el.shiftButton, shift);
 bindActionButton(el.nitroButton, useNitro);
 bindActionButton(el.dragLaneUp, () => moveDragLane(-1));
 bindActionButton(el.dragLaneDown, () => moveDragLane(1));
-el.startCampaign.addEventListener("click", () => {
+el.startCampaign?.addEventListener("click", () => {
   if (tutorialActive()) {
     // Tutorial dialogue controls the flow — Start Level just calls advanceTutorial
     advanceTutorial();
     return;
   }
+  if (startCityPlaceholderPreview()) return;
   startCampaignLevel();
 });
-el.changeStoryCar.addEventListener("click", () => { if (!tutorialActive()) setFlowStep("story", "car"); });
-el.storyCitySelect.addEventListener("click", () => { if (!tutorialActive()) openCitySelect(); });
-el.closeStoryPreview.addEventListener("click", closeStoryPreview);
-el.closeCitySelect.addEventListener("click", closeCitySelect);
-el.storyMapStage.addEventListener("click", (event) => {
+el.changeStoryCar?.addEventListener("click", () => { if (!tutorialActive()) setFlowStep("story", "car"); });
+el.storyCitySelect?.addEventListener("click", () => { if (!tutorialActive()) openCitySelect(); });
+el.closeStoryPreview?.addEventListener("click", closeStoryPreview);
+el.closeCitySelect?.addEventListener("click", closeCitySelect);
+el.storyMapStage?.addEventListener("click", (event) => {
   if (tutorialActive()) {
     const tutorialButton = event.target.closest("[data-tutorial-level]");
     if (!tutorialButton || tutorialButton.disabled) return;
@@ -308,26 +309,89 @@ el.storyMapStage.addEventListener("click", (event) => {
     startMedallionGauntlet(gauntletButton.dataset.gauntletCity);
     return;
   }
+  const ladderButton = event.target.closest("[data-city-ladder]");
+  if (ladderButton && !ladderButton.disabled) {
+    const [cityId, modeId, tier] = ladderButton.dataset.cityLadder.split(":");
+    openCityLadderPreview(cityId, modeId, tier);
+    return;
+  }
+  const storyRaceButton = event.target.closest("[data-city-story-race]");
+  if (storyRaceButton && !storyRaceButton.disabled) {
+    const [cityId, index] = storyRaceButton.dataset.cityStoryRace.split(":");
+    openCityStoryRacePreview(cityId, Number(index));
+    return;
+  }
   const button = event.target.closest("[data-story-level]");
   if (!button || button.disabled) return;
   openStoryPreview(Number(button.dataset.storyLevel));
 });
-el.storyCityGrid.addEventListener("click", (event) => {
+
+document.addEventListener("click", (event) => {
+  const rankButton = event.target.closest("[data-rank-up-line]");
+  if (rankButton) {
+    rankUp(rankButton.dataset.rankUpLine);
+    renderGarage();
+    renderVindex();
+    return;
+  }
+  const marker = event.target.closest("[data-unlock-marker]");
+  if (marker) {
+    const action = marker.dataset.unlockMarker;
+    if (action === "forge") openForge();
+    else if (action === "garage") showView("garage");
+    else showView("story");
+    return;
+  }
+  const claimButton = event.target.closest("[data-daily-goal-claim]");
+  if (claimButton) {
+    claimDailyGoalReward(claimButton.dataset.dailyGoalClaim);
+    return;
+  }
+  const vaultButton = event.target.closest("[data-daily-goals-vault-claim]");
+  if (vaultButton) {
+    claimDailyGoalsVault();
+    return;
+  }
+  const buyButton = event.target.closest("[data-crankvault-buy]");
+  if (buyButton) {
+    purchaseCrankVault(buyButton.dataset.crankvaultBuy);
+    return;
+  }
+  const dailyButton = event.target.closest("[data-crankvault-claim-daily]");
+  if (dailyButton) {
+    claimDailyCrankVault();
+    return;
+  }
+  const oddsButton = event.target.closest("[data-crankvault-odds]");
+  if (oddsButton) {
+    // TODO: replace this compact notice with a dedicated odds modal if the economy needs a deeper breakdown.
+    showToast("CrankVault Odds", `${crankVaultDefs.common.detail} ${crankVaultDefs.premium.detail}`);
+    return;
+  }
+  const openButton = event.target.closest("[data-crankvault-open]");
+  if (openButton) openInventoryCrankVault(openButton.dataset.crankvaultOpen);
+});
+
+el.crankVaultRevealClose?.addEventListener("click", closeCrankVaultReveal);
+el.crankVaultRevealModal?.addEventListener("click", (event) => {
+  if (event.target === el.crankVaultRevealModal) closeCrankVaultReveal();
+});
+el.storyCityGrid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-story-city]");
   if (!button || button.disabled) return;
   selectStoryCity(Number(button.dataset.storyCity));
 });
-el.startStory.addEventListener("click", () => openBossIntro());
-el.startBattle.addEventListener("click", () => {
+el.startStory?.addEventListener("click", () => openBossIntro());
+el.startBattle?.addEventListener("click", () => {
   if (tutorialActive() && currentTutorialScene().id === "battle") {
     setTutorialScene("battle");
     setupTutorialScene();
     saveState();
     return;
   }
-  beginBattle("battle");
+  requestRaceEntry({ kind: "battle" }, () => beginBattle("battle"));
 });
-el.battleList.addEventListener("click", (event) => {
+el.battleList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-battle-boss]");
   if (!button || button.disabled) return;
   if (tutorialActive() && button.dataset.battleBoss === "tutorial-tutorque") return;
@@ -335,12 +399,12 @@ el.battleList.addEventListener("click", (event) => {
   saveState();
   render();
 });
-el.battleActions.addEventListener("click", (event) => {
+el.battleActions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-battle-move]");
   if (!button || button.disabled) return;
   handleBattleMove(button.dataset.battleMove);
 });
-el.battleActions.addEventListener("touchstart", (event) => {
+el.battleActions?.addEventListener("touchstart", (event) => {
   const button = event.target.closest("[data-battle-move]");
   if (!button || button.disabled) return;
   event.preventDefault();
@@ -348,22 +412,23 @@ el.battleActions.addEventListener("touchstart", (event) => {
 }, { passive: false });
 bindActionButton(el.battleNextTurn, nextBattleTurn);
 bindActionButton(el.rotationTipDismiss, () => hideBetaRotationTip(true));
-el.continueBoss.addEventListener("click", () => {
+el.continueBoss?.addEventListener("click", () => {
   closeBossIntro();
   const startConfig = pendingBossRaceStart || { mode: "boss", options: {} };
   pendingBossRaceStart = null;
   modeFlow.boss = "race";
   renderFlowScreens();
-  beginVerticalRace(startConfig.mode, true, startConfig.options || {});
+  const boss = startConfig.options?.boss || selectedBoss();
+  requestRaceEntry({ kind: "boss", cityId: boss?.track?.id }, () => beginVerticalRace(startConfig.mode, true, startConfig.options || {}));
 });
 el.closeBoss?.addEventListener("click", closeBossIntro);
-el.unmaskButton.addEventListener("click", unmaskRacerAlpha);
-el.continueUnmask.addEventListener("click", closeRacerAlphaUnmask);
-el.backCutscene.addEventListener("click", rewindCutscene);
-el.continueCutscene.addEventListener("click", advanceCutscene);
-el.skipCutscene.addEventListener("click", closeStoryCutsceneAndStart);
+el.unmaskButton?.addEventListener("click", unmaskRacerAlpha);
+el.continueUnmask?.addEventListener("click", closeRacerAlphaUnmask);
+el.backCutscene?.addEventListener("click", rewindCutscene);
+el.continueCutscene?.addEventListener("click", advanceCutscene);
+el.skipCutscene?.addEventListener("click", closeStoryCutsceneAndStart);
 el.closeCutscene?.addEventListener("click", closeStoryCutsceneAndStart);
-el.startTimeTrial.addEventListener("click", () => {
+el.startTimeTrial?.addEventListener("click", () => {
   if (tutorialActive() && currentTutorialScene().id === "head2head") {
     startTutorialHeadToHeadRace();
     setTutorialScene("head2head-win");
@@ -373,12 +438,12 @@ el.startTimeTrial.addEventListener("click", () => {
   }
   modeFlow.time = "race";
   renderFlowScreens();
-  beginVerticalRace("time", true);
+  requestRaceEntry({ kind: "time" }, () => beginVerticalRace("time", true));
 });
-el.storyMapStart.addEventListener("click", startVerticalCountdown);
-el.timeMapStart.addEventListener("click", startVerticalCountdown);
+el.storyMapStart?.addEventListener("click", startVerticalCountdown);
+el.timeMapStart?.addEventListener("click", startVerticalCountdown);
 
-el.bossList.addEventListener("click", (event) => {
+el.bossList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-boss]");
   if (!button) return;
   state.selectedBoss = button.dataset.boss;
@@ -392,7 +457,7 @@ el.campaignList?.addEventListener("click", (event) => {
   openStoryPreview(Number(button.dataset.campaign));
 });
 
-el.vindexList.addEventListener("click", (event) => {
+el.vindexList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-vindex]");
   if (!button) return;
   state.selectedVindex = button.dataset.vindex;
@@ -408,7 +473,7 @@ el.vindexFilterButtons?.addEventListener("click", (event) => {
   renderVindex();
 });
 
-el.profileList.addEventListener("click", (event) => {
+el.profileList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-profile]");
   if (!button) return;
   state.selectedProfile = button.dataset.profile;
@@ -416,7 +481,7 @@ el.profileList.addEventListener("click", (event) => {
   renderProfiles();
 });
 
-el.profileArt.addEventListener("click", (event) => {
+el.profileArt?.addEventListener("click", (event) => {
   const alphaButton = event.target.closest("[data-alpha-view]");
   if (!alphaButton) return;
   state.racerAlphaProfileView = alphaButton.dataset.alphaView;
@@ -438,7 +503,7 @@ document.addEventListener("click", (event) => {
   selectTuner(button.dataset.tuner);
 });
 
-el.garageGrid.addEventListener("click", (event) => {
+el.garageGrid?.addEventListener("click", (event) => {
   const expandButton = event.target.closest("[data-expand-garage-card]");
   if (expandButton) {
     expandedGarageCardIds.add(expandButton.dataset.expandGarageCard);
@@ -540,6 +605,7 @@ el.convoyStageList?.addEventListener("click", (event) => {
     return;
   }
   const convoyId = inProgress.convoyId;
+  // TODO: charge gas when Convoy placeholder stages launch real races.
   inProgress.stageProgress[slot] = "won";
   recordTunerStat("convoyStagesWon");
   if (slot >= 2) {
@@ -562,9 +628,9 @@ el.vindexMemoriesPanel?.addEventListener("click", (event) => {
 });
 el.bondSceneContinue?.addEventListener("click", closeBondScene);
 
-el.confirmUpgrade.addEventListener("click", upgradeCarLevel);
-el.closeUpgrade.addEventListener("click", closeUpgradeModal);
-el.upgradeModal.addEventListener("click", (event) => {
+el.confirmUpgrade?.addEventListener("click", upgradeCarLevel);
+el.closeUpgrade?.addEventListener("click", closeUpgradeModal);
+el.upgradeModal?.addEventListener("click", (event) => {
   if (event.target === el.upgradeModal) {
     closeUpgradeModal();
     return;
@@ -597,7 +663,7 @@ el.replacePart?.addEventListener("click", () => {
   renderEquipPartModal();
 });
 
-el.evolveButton.addEventListener("click", async () => {
+el.evolveButton?.addEventListener("click", async () => {
   if (!evolutionModal || evolutionAnimationActive) return;
   const tutorialEvolving = tutorialActive() && currentTutorialScene().id === "evolve" && evolutionModal.carId === tutorialCarId;
   const carId = evolutionModal.carId;
@@ -630,21 +696,31 @@ el.evolveButton.addEventListener("click", async () => {
   });
 });
 
-el.closeEvolution.addEventListener("click", closeEvolutionModal);
+el.closeEvolution?.addEventListener("click", closeEvolutionModal);
 
-el.evolutionModal.addEventListener("click", (event) => {
+el.evolutionModal?.addEventListener("click", (event) => {
   if (event.target === el.evolutionModal) {
     closeEvolutionModal();
   }
 });
 
-el.resetProgress.addEventListener("click", openResetModal);
-el.confirmReset.addEventListener("click", resetRacingData);
-el.cancelReset.addEventListener("click", closeResetModal);
-el.godMode.addEventListener("click", openGodModal);
-el.confirmGod.addEventListener("click", activateGodMode);
-el.cancelGod.addEventListener("click", closeGodModal);
-el.replayTutorial.addEventListener("click", openTutorialReplayModal);
+el.resetProgress?.addEventListener("click", openResetModal);
+el.confirmReset?.addEventListener("click", resetRacingData);
+el.cancelReset?.addEventListener("click", closeResetModal);
+el.exportSave?.addEventListener("click", openExportSaveModal);
+el.importSave?.addEventListener("click", openImportSaveModal);
+el.saveTransferCopyBtn?.addEventListener("click", copySaveCode);
+el.saveTransferImportBtn?.addEventListener("click", importSaveCode);
+el.saveTransferClose?.addEventListener("click", closeSaveTransferModal);
+el.godMode?.addEventListener("click", openGodModal);
+el.confirmGod?.addEventListener("click", activateGodMode);
+el.cancelGod?.addEventListener("click", closeGodModal);
+el.gasPurchase?.addEventListener("click", purchaseGas);
+el.gasEmptyCancel?.addEventListener("click", closeGasEmptyModal);
+el.gasEmptyModal?.addEventListener("click", (event) => {
+  if (event.target === el.gasEmptyModal) closeGasEmptyModal();
+});
+el.replayTutorial?.addEventListener("click", openTutorialReplayModal);
 el.deleteTracks?.addEventListener("click", openDeleteTracksPanel);
 el.builderNew?.addEventListener("click", startNewBuilderTrack);
 el.builderLoad?.addEventListener("click", openBuilderLoadPanel);
@@ -692,32 +768,32 @@ el.builderModal?.addEventListener("click", (event) => {
 el.builderModalInput?.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && builderState.modalMode === "name") confirmBuilderSaveName();
 });
-el.tutorialReplayYes.addEventListener("click", () => {
+el.tutorialReplayYes?.addEventListener("click", () => {
   closeTutorialReplayModal();
-  startTutorial("intro");
+  startTutorial("intro", { fullRunEligible: true });
 });
-el.tutorialSceneSelect.addEventListener("click", renderTutorialSceneOptions);
-el.tutorialReplayCancel.addEventListener("click", closeTutorialReplayModal);
-el.tutorialSceneOptions.addEventListener("click", (event) => {
+el.tutorialSceneSelect?.addEventListener("click", renderTutorialSceneOptions);
+el.tutorialReplayCancel?.addEventListener("click", closeTutorialReplayModal);
+el.tutorialSceneOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-tutorial-scene]");
   if (!button) return;
   closeTutorialReplayModal();
   startTutorial(button.dataset.tutorialScene);
 });
-el.tutorialFirstYes.addEventListener("click", () => {
+el.tutorialFirstYes?.addEventListener("click", () => {
   closeFirstTutorialModal();
-  startTutorial("intro");
+  startTutorial("intro", { fullRunEligible: true });
 });
-el.tutorialFirstNo.addEventListener("click", () => {
+el.tutorialFirstNo?.addEventListener("click", () => {
   closeFirstTutorialModal();
   finishTutorial();
 });
-el.cityUnlockClose.addEventListener("click", closeCityUnlockModal);
+el.cityUnlockClose?.addEventListener("click", closeCityUnlockModal);
 el.confirmPinkSlipRisk?.addEventListener("click", confirmPinkSlipRisk);
 el.cancelPinkSlipRisk?.addEventListener("click", closePinkSlipWarning);
-el.tutorialBack.addEventListener("click", rewindTutorial);
-el.tutorialNext.addEventListener("click", advanceTutorial);
-el.tutorialSkip.addEventListener("click", openSkipTutorialConfirm);
+el.tutorialBack?.addEventListener("click", rewindTutorial);
+el.tutorialNext?.addEventListener("click", advanceTutorial);
+el.tutorialSkip?.addEventListener("click", openSkipTutorialConfirm);
 el.tutorialChoices?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-tutorial-choice]");
   if (!button) return;
@@ -728,29 +804,30 @@ el.confirmTutorialSkip?.addEventListener("click", () => {
   closeSkipTutorialConfirm();
   skipTutorial();
 });
-el.godCode.addEventListener("input", () => {
+el.godCode?.addEventListener("input", () => {
   el.godCodeError.textContent = "";
+  el.godCodeError.classList.remove("success");
 });
-el.godCode.addEventListener("keydown", (event) => {
+el.godCode?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
     activateGodMode();
   }
 });
 
-el.resetModal.addEventListener("click", (event) => {
+el.resetModal?.addEventListener("click", (event) => {
   if (event.target === el.resetModal) {
     closeResetModal();
   }
 });
 
-el.godModal.addEventListener("click", (event) => {
+el.godModal?.addEventListener("click", (event) => {
   if (event.target === el.godModal) {
     closeGodModal();
   }
 });
 
-el.tutorialReplayModal.addEventListener("click", (event) => {
+el.tutorialReplayModal?.addEventListener("click", (event) => {
   if (event.target === el.tutorialReplayModal) {
     closeTutorialReplayModal();
   }
@@ -762,14 +839,14 @@ el.tutorialSkipModal?.addEventListener("click", (event) => {
   }
 });
 
-el.tutorialFirstModal.addEventListener("click", (event) => {
+el.tutorialFirstModal?.addEventListener("click", (event) => {
   if (event.target === el.tutorialFirstModal) {
     closeFirstTutorialModal();
     finishTutorial();
   }
 });
 
-el.cityUnlockModal.addEventListener("click", (event) => {
+el.cityUnlockModal?.addEventListener("click", (event) => {
   if (event.target === el.cityUnlockModal) {
     closeCityUnlockModal();
   }
@@ -781,25 +858,49 @@ el.pinkSlipWarningModal?.addEventListener("click", (event) => {
   }
 });
 
-el.difficulty.addEventListener("change", (event) => {
+el.difficulty?.addEventListener("change", (event) => {
   state.settings.difficulty = event.target.value;
   saveState();
 });
 
-el.volume.addEventListener("input", (event) => {
+el.volume?.addEventListener("input", (event) => {
   state.settings.volume = Number(event.target.value);
   updateAudioVolumes();
   saveState();
 });
 
-el.shiftKey.addEventListener("keydown", (event) => {
+el.screenEffects?.addEventListener("change", (event) => {
+  state.settings.screenEffects = Boolean(event.target.checked);
+  saveState();
+  renderSettings();
+});
+
+el.haptics?.addEventListener("change", (event) => {
+  state.settings.haptics = Boolean(event.target.checked);
+  saveState();
+  renderSettings();
+});
+
+el.highVisCues?.addEventListener("change", (event) => {
+  state.settings.highVisCues = Boolean(event.target.checked);
+  saveState();
+  renderSettings();
+});
+
+el.reducedMotion?.addEventListener("change", (event) => {
+  state.settings.reducedMotion = event.target.value === "on" ? true : event.target.value === "off" ? false : null;
+  saveState();
+  renderSettings();
+});
+
+el.shiftKey?.addEventListener("keydown", (event) => {
   event.preventDefault();
   state.settings.shiftKey = normalizeKey(event);
   el.shiftKey.value = readableKey(state.settings.shiftKey);
   saveState();
 });
 
-el.nitroKey.addEventListener("keydown", (event) => {
+el.nitroKey?.addEventListener("keydown", (event) => {
   event.preventDefault();
   state.settings.nitroKey = normalizeKey(event);
   el.nitroKey.value = readableKey(state.settings.nitroKey);

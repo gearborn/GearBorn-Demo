@@ -36,6 +36,159 @@ let currentMusicKey = null;
 let currentMusicFade = null;
 let lastViewBeforeTunerPage = "menu";
 
+// TODO: tune the launch economy after live pacing data is available.
+const GAS_MAX = 100;
+const GAS_REGEN_MS = 3 * 60 * 1000;
+const GAS_COST_DEFAULT = 8;
+const GAS_COST_INDIANAPOLIS = 5;
+const GAS_PURCHASE_AMOUNT = 100;
+const GAS_PURCHASE_SPINS = 30;
+
+// TODO: tune drag mastery and nitro timing after live race telemetry is available.
+const DRAG_PERFECT_HEAT_STEP = 0.018;
+const DRAG_PERFECT_HEAT_CAP = 0.09;
+const DRAG_MASTERY_BONUS_MIN_STREAK = 3;
+const DRAG_MASTERY_BONUS_SPROX_PER_SHIFT = 12;
+const DRAG_NITRO_PERFECT_WINDOW_MS = 1400;
+const DRAG_NITRO_PERFECT_BONUS = 0.12;
+const DRAG_NITRO_DRAFT_BONUS = 0.08;
+const DRAG_NITRO_TOP_GEAR_BONUS = 0.08;
+const DRAG_SHAKE_LAUNCH = { intensity: 4, ms: 120 };
+const DRAG_SHAKE_NITRO = { intensity: 5, ms: 160 };
+const DRAG_HITSTOP_PHOTO_MS = 110;
+const DRAG_PHOTO_FINISH_MARGIN_METERS = 7;
+const DRAG_PHOTO_FINISH_REVEAL_DELAY_MS = 260;
+const VIEW_TRANSITION_MS = 190;
+
+// TODO: move dev cheat codes into injected config if these should not ship in plain text.
+const devCheatCodes = {
+  MOTHERLODE: { flag: "unlimitedSprox", stateKey: "unlimitedSprox", label: "Unlimited Sprox" },
+  FREESPIN: { flag: "unlimitedSpins", stateKey: "cheatUnlimitedSpins", label: "Unlimited Spins" },
+  LEADFOOT: { flag: "unlimitedGas", stateKey: "cheatUnlimitedGas", label: "Unlimited Gas" },
+  OPENROAD: { flag: "unlockAllStory", stateKey: "cheatUnlockAllStory", label: "Unlock All Story Races" }
+};
+
+let pendingGasEntry = null;
+let gasCountdownInterval = null;
+let gasDisplayInterval = null;
+let gasPaidGauntletKey = null;
+
+function devCheatActive(name) {
+  if (name === "unlimitedSprox") return Boolean(state.unlimitedSprox);
+  if (name === "unlimitedSpins") return Boolean(state.cheatUnlimitedSpins);
+  if (name === "unlimitedGas") return Boolean(state.cheatUnlimitedGas);
+  if (name === "unlockAllStory") return Boolean(state.cheatUnlockAllStory);
+  return false;
+}
+
+function allStoryUnlocked() {
+  return devCheatActive("unlockAllStory");
+}
+
+function accrueGas() {
+  const now = Date.now();
+  let last = Number(state.gasUpdatedAt) || now;
+  if (last > now) last = now;
+  if (state.gas >= GAS_MAX) {
+    state.gasUpdatedAt = now;
+    return;
+  }
+  const elapsed = now - last;
+  const gained = Math.floor(elapsed / GAS_REGEN_MS);
+  if (gained <= 0) {
+    state.gasUpdatedAt = last;
+    return;
+  }
+  const room = GAS_MAX - state.gas;
+  const applied = Math.min(gained, room);
+  state.gas += applied;
+  state.gasUpdatedAt = state.gas >= GAS_MAX ? now : last + applied * GAS_REGEN_MS;
+}
+
+function gasCostForRace(context = {}) {
+  if (context.isTutorial || tutorialActive()) return 0;
+  if (typeof context.gasCostOverride === "number") return Math.max(0, Math.floor(context.gasCostOverride));
+  if (context.cityId === "indianapolis") return GAS_COST_INDIANAPOLIS;
+  // TODO: add a per-level cost table when higher-city energy tuning is approved.
+  return GAS_COST_DEFAULT;
+}
+
+function canParticipate(cost) {
+  if (devCheatActive("unlimitedGas")) return true;
+  accrueGas();
+  return state.gas >= cost;
+}
+
+function spendGas(cost) {
+  if (devCheatActive("unlimitedGas")) return true;
+  accrueGas();
+  const value = Math.max(0, Math.floor(Number(cost) || 0));
+  if (state.gas < value) return false;
+  const wasPaused = state.gas >= GAS_MAX;
+  state.gas -= value;
+  if (wasPaused && state.gas < GAS_MAX) state.gasUpdatedAt = Date.now();
+  return true;
+}
+
+function requestRaceEntry(context, proceed) {
+  const cost = gasCostForRace(context);
+  if (canParticipate(cost)) {
+    spendGas(cost);
+    saveState();
+    renderGasBar();
+    proceed();
+    return;
+  }
+  openGasEmptyModal(cost, context, proceed);
+}
+
+function haptic(pattern) {
+  if (state?.settings?.haptics === false) return;
+  const deviceNavigator = globalThis.navigator || window.navigator;
+  const vibrate = deviceNavigator?.vibrate?.bind(deviceNavigator);
+  if (!vibrate) return;
+  try {
+    vibrate(pattern);
+  } catch (err) {
+    console.warn("GearBorn haptic failed:", err);
+  }
+}
+
+function screenShake(intensity = 4, ms = 120, target = el.dragTrack) {
+  if (!target || !effectsAllowed()) return;
+  target.style.setProperty("--shake-intensity", `${Math.max(1, intensity)}px`);
+  target.classList.add("screen-shake");
+  window.clearTimeout(target._gearbornShakeTimer);
+  target._gearbornShakeTimer = window.setTimeout(() => {
+    target.classList.remove("screen-shake");
+    target.style.removeProperty("--shake-intensity");
+  }, Math.max(40, ms));
+}
+
+function hitStop(ms = 90) {
+  if (!effectsAllowed() || !race) return;
+  race.hitStopUntil = Math.max(race.hitStopUntil || 0, performance.now() + Math.max(40, ms));
+  el.dragTrack?.classList.add("hit-stop");
+  window.setTimeout(() => el.dragTrack?.classList.remove("hit-stop"), Math.max(40, ms));
+}
+
+function flashHighVisCue(target = el.dragTrack) {
+  if (!target || state?.settings?.highVisCues === false) return;
+  target.classList.remove("high-vis-flash");
+  void target.offsetWidth;
+  target.classList.add("high-vis-flash");
+  window.setTimeout(() => target.classList.remove("high-vis-flash"), 160);
+}
+
+function showRaceStartReveal(label = "GO") {
+  if (!el.dragTrack || !effectsAllowed()) return;
+  el.dragTrack.dataset.startReveal = label;
+  el.dragTrack.classList.remove("race-start-reveal");
+  void el.dragTrack.offsetWidth;
+  el.dragTrack.classList.add("race-start-reveal");
+  window.setTimeout(() => el.dragTrack?.classList.remove("race-start-reveal"), 360);
+}
+
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -135,6 +288,24 @@ function formatSprox(amount = state.sprox) {
   return state.unlimitedSprox ? "∞ Sprox" : `${Math.max(0, Math.floor(amount))} Sprox`;
 }
 
+function formatSpins(amount = state.spins) {
+  return devCheatActive("unlimitedSpins") ? "∞ Spins" : `${Math.max(0, Math.floor(Number(amount) || 0))} Spins`;
+}
+
+function addSpins(amount) {
+  const before = Math.max(0, Math.floor(Number(state.spins) || 0));
+  state.spins = Math.max(0, Math.floor(before + (Number(amount) || 0)));
+  return state.spins - before;
+}
+
+function spendSpins(cost) {
+  if (devCheatActive("unlimitedSpins")) return true;
+  const value = Math.max(0, Math.floor(Number(cost) || 0));
+  if ((state.spins || 0) < value) return false;
+  state.spins -= value;
+  return true;
+}
+
 function sproxAmountMarkup(amount = state.sprox) {
   return `<span class="sprox-inline"><span>${formatSprox(amount)}</span><span class="sprox-coin" aria-hidden="true"></span></span>`;
 }
@@ -156,6 +327,11 @@ function recordTunerStat(key, increment = 1) {
   if (!key) return;
   state.tunerStats = state.tunerStats || {};
   state.tunerStats[key] = Math.max(0, Math.floor(Number(state.tunerStats[key]) || 0)) + increment;
+  if (key === "totalSproxEarned") recordDailyGoalProgress("earnSprox", increment);
+  const rotating = dailyRotatingGoalType();
+  if ((key === "dragRacesWon" && rotating === "drag")
+    || (key === "headToHeadWon" && rotating === "vs")
+    || (key === "battlesWon" && rotating === "battle")) recordDailyGoalProgress("rotating");
 }
 
 function recordTunerCarUsed(carId) {
@@ -206,7 +382,214 @@ function spendSprox(cost) {
   if (state.unlimitedSprox) return true;
   if (state.sprox < cost) return false;
   state.sprox -= cost;
+  recordDailyGoalProgress("spendGarage");
   return true;
+}
+
+function isFusionLine(lineId) {
+  return Boolean(fusionRecipes?.some((recipe) => recipe.id === lineId));
+}
+
+function classForLineId(lineId) {
+  if (isFusionLine(lineId)) return "A";
+  const car = cars.find((item) => item.id === lineId);
+  const baseName = car?.evolutions?.[0]?.name || car?.forms?.[0]?.[1] || "";
+  const entry = vindexEntries.find((item) => item.name === baseName);
+  return getVindexClass(entry);
+}
+
+function crankVaultEligibleLines(candidateLines = null) {
+  const exclusions = new Set(["art-van", "cake-train", "waste-management", "rainbowlt", "narwhal-luxury", "metal-snake", "training-car"]);
+  const unlockable = candidateLines || [...new Set(defaultUnlockedLines.concat(pinkSlipUnlockOrder, gauntletUnlockOrder, convoyUnlockOrder, bossUnlockOrder))];
+  return unlockable.reduce((groups, lineId) => {
+    const classLetter = classForLineId(lineId);
+    if (!exclusions.has(lineId) && !isFusionLine(lineId) && groups[classLetter] && cars.some((car) => car.id === lineId)) groups[classLetter].push(lineId);
+    return groups;
+  }, { E: [], D: [], C: [] });
+}
+
+function rollWeightedKey(weights = {}, validKeys = Object.keys(weights)) {
+  const entries = Object.entries(weights).filter(([key, weight]) => validKeys.includes(key) && Number(weight) > 0);
+  const total = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+  if (!total) return validKeys[0] || "";
+  let roll = Math.random() * total;
+  for (const [key, weight] of entries) {
+    roll -= Number(weight);
+    if (roll <= 0) return key;
+  }
+  return entries[entries.length - 1]?.[0] || "";
+}
+
+function grantMedallion(lineId) {
+  const car = cars.find((item) => item.id === lineId);
+  if (!car) return null;
+  state.medallionsOwned = Array.isArray(state.medallionsOwned) ? state.medallionsOwned : [];
+  const firstTime = !state.unlockedLines?.includes(lineId) && !state.medallionsOwned.includes(lineId);
+  state.medallionsOwned.push(lineId);
+  return { lineId, firstTime, classLetter: classForLineId(lineId) };
+}
+
+function openCrankVault(vaultDef, cityCandidatesOrNull = null) {
+  if (!vaultDef) return [];
+  recordDailyGoalProgress("openVault");
+  const pool = crankVaultEligibleLines(cityCandidatesOrNull);
+  const assignedCandidates = Array.isArray(cityCandidatesOrNull)
+    ? cityCandidatesOrNull.filter((lineId) => cars.some((car) => car.id === lineId))
+    : [];
+  const results = [];
+  vaultDef.rewards.forEach((reward) => {
+    if (reward.kind === "medallion") {
+      for (let index = 0; index < (reward.count || 1); index += 1) {
+        const availableClasses = Object.keys(pool).filter((classLetter) => pool[classLetter].length);
+        const classLetter = assignedCandidates.length ? "" : rollWeightedKey(reward.weights, availableClasses);
+        const candidates = assignedCandidates.length ? assignedCandidates : pool[classLetter] || [];
+        const lineId = candidates[Math.floor(Math.random() * candidates.length)];
+        const car = cars.find((item) => item.id === lineId);
+        const granted = lineId ? grantMedallion(lineId) : null;
+        if (granted && car) results.push({ kind: "medallion", ...granted, formName: car.evolutions[0].name, image: forgeMedallionSrc(lineId) });
+      }
+    } else if (reward.kind === "spins") {
+      results.push({ kind: "spins", amount: addSpins(reward.amount) });
+    } else if (reward.kind === "sprox") {
+      results.push({ kind: "sprox", amount: addSprox(reward.amount) });
+    }
+  });
+  saveState();
+  renderSproxWallet();
+  renderCrankVaultBadge();
+  return results;
+}
+
+function currentVaultDayKey() {
+  return new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function nextVaultResetTime() {
+  const now = new Date();
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12));
+  if (reset.getTime() <= now.getTime()) reset.setUTCDate(reset.getUTCDate() + 1);
+  return reset;
+}
+
+function dailyVaultAvailable() {
+  return state.dailyCrankVault?.lastClaimedDayKey !== currentVaultDayKey();
+}
+
+function dailyPreviousDayKey() {
+  return new Date(Date.now() - 12 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function touchDailyGoals() {
+  state.dailyGoals = state.dailyGoals && typeof state.dailyGoals === "object" ? state.dailyGoals : structuredClone(defaultState.dailyGoals);
+  const today = currentVaultDayKey();
+  if (state.dailyGoals.dayKey !== today) {
+    const yesterday = dailyPreviousDayKey();
+    state.dailyGoals.loginStreak = state.dailyGoals.lastLoginDayKey === yesterday
+      ? (state.dailyGoals.loginStreak || 0) + 1
+      : 1;
+    state.dailyGoals.lastLoginDayKey = today;
+    state.dailyGoals.dayKey = today;
+    state.dailyGoals.progress = { login: 1 };
+    state.dailyGoals.claimed = {};
+    state.dailyGoals.vaultClaimed = false;
+    state.dailyGoals.carsRacedToday = [];
+    if (state.dailyGoals.loginStreak > 0 && state.dailyGoals.loginStreak % 7 === 0) {
+      addCrankVaultToInventory("common", "login-streak");
+      showToast("7-Day Streak!", `${state.dailyGoals.loginStreak} days in a row. A Common CrankVault is in your inventory.`);
+    }
+    saveState();
+  }
+}
+
+function dailyGoalDayHash() {
+  return currentVaultDayKey().split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+}
+
+function dailyRotatingGoalType() {
+  return dailyGoalRotation[dailyGoalDayHash() % dailyGoalRotation.length] || "drag";
+}
+
+function dailyRotatingGoalLabel() {
+  const labels = { drag: "Win 3 Drag Races", vs: "Win 3 Vs Races", battle: "Win 3 Battles" };
+  return labels[dailyRotatingGoalType()] || labels.drag;
+}
+
+function dailyGoalsCompletedCount() {
+  touchDailyGoals();
+  return dailyGoalDefs.filter((goal) => (Number(state.dailyGoals.progress?.[goal.id]) || 0) >= goal.target).length;
+}
+
+function dailyGoalsVaultReady() {
+  touchDailyGoals();
+  return dailyGoalsCompletedCount() >= dailyGoalsRequiredForVault && !state.dailyGoals.vaultClaimed;
+}
+
+function updateDailyGoalsBadge() {
+  renderCrankVaultBadge();
+}
+
+function recordDailyGoalProgress(goalId, amount = 1) {
+  touchDailyGoals();
+  const def = dailyGoalDefs.find((goal) => goal.id === goalId);
+  if (!def) return;
+  const current = Math.max(0, Number(state.dailyGoals.progress[goalId]) || 0);
+  if (current >= def.target) return;
+  state.dailyGoals.progress[goalId] = Math.min(def.target, current + amount);
+  if (state.dailyGoals.progress[goalId] >= def.target && !(typeof tutorialActive === "function" && tutorialActive())) {
+    showToast("Daily Goal Complete", def.id === "rotating" ? dailyRotatingGoalLabel() : def.desc);
+  }
+  updateDailyGoalsBadge();
+  saveState();
+}
+
+function claimDailyGoalReward(goalId) {
+  touchDailyGoals();
+  const def = dailyGoalDefs.find((goal) => goal.id === goalId);
+  if (!def || state.dailyGoals.claimed[goalId]) return;
+  if ((state.dailyGoals.progress[goalId] || 0) < def.target) return;
+  state.dailyGoals.claimed[goalId] = true;
+  if (def.reward.sprox) addSprox(def.reward.sprox);
+  if (def.reward.spins) addSpins(def.reward.spins);
+  showToast("Reward Claimed", def.reward.sprox ? `+${def.reward.sprox} Sprox` : `+${def.reward.spins} Spins`);
+  saveState();
+  renderDailyGoals();
+  renderSproxWallet();
+}
+
+function claimDailyGoalsVault() {
+  touchDailyGoals();
+  if (!dailyGoalsVaultReady()) return;
+  state.dailyGoals.vaultClaimed = true;
+  addCrankVaultToInventory("common", "daily-goals");
+  showToast("Daily Goals Complete!", "A Common CrankVault has been added to your inventory.");
+  saveState();
+  renderDailyGoals();
+  renderCrankVaultBadge();
+}
+
+function addCrankVaultToInventory(type, source = "story", candidateLines = null) {
+  state.crankVaultInventory = Array.isArray(state.crankVaultInventory) ? state.crankVaultInventory : [];
+  state.crankVaultInventory.push({
+    id: `vault-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type,
+    source,
+    candidateLines: Array.isArray(candidateLines) ? candidateLines : null,
+    receivedAt: Date.now()
+  });
+  saveState();
+}
+
+function addAssignedMedallionCrankVault(lineId, source) {
+  if (!lineId) return false;
+  addCrankVaultToInventory("cityMedallion", source, [lineId]);
+  return true;
+}
+
+function addAssignedCityRewardVault(cityId, rewardKey, lineId, source) {
+  const progress = cityProgressFor(cityId);
+  if (!lineId || progress.vaultRewards[rewardKey]) return false;
+  progress.vaultRewards[rewardKey] = true;
+  return addAssignedMedallionCrankVault(lineId, source);
 }
 
 function evolutionIndexForLevel(level) {
@@ -226,8 +609,13 @@ function maxEligibleEvolutionForCar(carId, level) {
 
 function isCarUnlocked(carId) {
   const car = cars.find((item) => item.id === carId);
+  if (allStoryUnlocked()) return Boolean(car);
   if (tutorialActive() && [tutorialCarId, tutorialOpponentCarId].includes(carId)) return true;
   return Boolean(car && state.unlockedLines?.includes(carId));
+}
+
+function isPlayerCollectionCar(car) {
+  return Boolean(car && (!car.tutorialOnly || (car.id === "training-car" && isCarUnlocked(car.id))));
 }
 
 function orderedCarList(list) {
@@ -240,7 +628,8 @@ function orderedCarList(list) {
     const numberForLine = (car) => {
       const firstFormName = car.evolutions?.[0]?.name || "";
       const entry = vindexEntries.find((item) => item.name === firstFormName);
-      return entry ? Number(entry.number) : 9999;
+      const number = entry ? Number(entry.number) : 9999;
+      return Number.isFinite(number) ? number : 9999;
     };
     const aNumber = numberForLine(a);
     const bNumber = numberForLine(b);
@@ -272,7 +661,6 @@ function allBond25LinesComplete() {
 function hasMedallionForLine(carId) {
   return Boolean(
     state.medallionsOwned?.includes(carId) ||
-    state.convoyMedallions?.includes(carId) ||
     state.unlockedLines?.includes(carId)
   );
 }
@@ -322,6 +710,151 @@ function unlockedEvolutionIndex(carId) {
   const progress = state.garage[carId];
   if (carId === "art-van") return Math.max(...(state.unlockedArtVanForms || [0]));
   return Math.min(progress.unlockedEvolution ?? progress.evolution ?? 0, car.evolutions.length - 1);
+}
+
+function lineIsFullyEvolved(lineId) {
+  const car = cars.find((item) => item.id === lineId);
+  if (!car || !state.garage?.[lineId]) return false;
+  return unlockedEvolutionIndex(lineId) >= car.evolutions.length - 1;
+}
+
+function medallionTier(lineId) {
+  if (!isCarUnlocked(lineId)) return "none";
+  if (!lineIsFullyEvolved(lineId)) return "bronze";
+  if (bondLevelForLine(lineId) >= 25) return "gold";
+  return "silver";
+}
+
+function medallionTierLabel(tier) {
+  return { bronze: "Bronze", silver: "Silver", gold: "Gold" }[tier] || "";
+}
+
+function medallionRankFor(lineId) {
+  return Math.max(0, Math.min(5, Math.floor(Number(state.medallionRanks?.[lineId]) || 0)));
+}
+
+function medallionsHeldFor(lineId) {
+  return (state.medallionsOwned || []).filter((id) => id === lineId).length;
+}
+
+function duplicateMedallionsHeldFor(lineId) {
+  // NOTE: the first medallion represents the line unlock and is not ladder fuel; only duplicates beyond it count.
+  return Math.max(0, medallionsHeldFor(lineId) - 1);
+}
+
+function medallionRankCostList(lineId) {
+  // TODO: add B/A/S/special rank costs if those classes should become rank-able later.
+  return medallionRankCosts[classForLineId(lineId)] || null;
+}
+
+function spentForRank(lineId, rank = medallionRankFor(lineId)) {
+  const costs = medallionRankCostList(lineId);
+  if (!costs) return 0;
+  return costs.slice(0, Math.max(0, Math.min(5, Math.floor(Number(rank) || 0)))).reduce((total, cost) => total + cost, 0);
+}
+
+function spendableMedallionsForRank(lineId) {
+  return Math.max(0, duplicateMedallionsHeldFor(lineId) - spentForRank(lineId));
+}
+
+const fusionMedallionCost = 5; // fusion cost rule
+
+function fusionRecipeParentLineIds(recipe) {
+  return fusionParentLineIds(recipe);
+}
+
+function fusionRecipeFor(lineAId, lineBId) {
+  const pair = [lineAId, lineBId].filter(Boolean).sort().join("|");
+  return fusionRecipes.find((recipe) => fusionRecipeParentLineIds(recipe).slice().sort().join("|") === pair) || null;
+}
+
+function fusionParentsEligible(recipe) {
+  const [parentAId, parentBId] = fusionRecipeParentLineIds(recipe);
+  return medallionTier(parentAId) === "gold" && medallionTier(parentBId) === "gold";
+}
+
+function canForge(recipe) {
+  if (!recipe) return false;
+  const [parentAId, parentBId] = fusionRecipeParentLineIds(recipe);
+  return fusionParentsEligible(recipe)
+    && spendableMedallionsForRank(parentAId) >= fusionMedallionCost
+    && spendableMedallionsForRank(parentBId) >= fusionMedallionCost
+    && !isCarUnlocked(recipe.id);
+}
+
+function consumeMedallionsForFusion(lineId, count) {
+  state.medallionsOwned = Array.isArray(state.medallionsOwned) ? state.medallionsOwned : [];
+  let remaining = Math.max(0, Math.floor(Number(count) || 0));
+  state.medallionsOwned = state.medallionsOwned.filter((id) => {
+    if (id === lineId && remaining > 0) {
+      remaining -= 1;
+      return false;
+    }
+    return true;
+  });
+  return remaining === 0;
+}
+
+function performFusion(recipe) {
+  if (!recipe) return { error: "No fusion recipe found." };
+  if (isCarUnlocked(recipe.id)) return { error: "Fusion already owned." };
+  if (!fusionParentsEligible(recipe)) return { error: "Both parent lines must be Gold tier." };
+  if (!canForge(recipe)) return { error: `Fusion requires ${fusionMedallionCost} spendable medallions from each parent line.` };
+  const [parentAId, parentBId] = fusionRecipeParentLineIds(recipe);
+  consumeMedallionsForFusion(parentAId, fusionMedallionCost);
+  consumeMedallionsForFusion(parentBId, fusionMedallionCost);
+  grantMedallion(recipe.id);
+  unlockGearbornLine(recipe.id);
+  saveState();
+  return { fusionId: recipe.id, name: recipe.name };
+}
+
+function attemptFusion(parentAId, parentBId, options = {}) {
+  const recipe = fusionRecipeFor(parentAId, parentBId);
+  if (recipe) return performFusion(recipe);
+  if (!options.gamble) return { error: "No fusion recipe found." };
+  if (spendableMedallionsForRank(parentAId) < fusionMedallionCost || spendableMedallionsForRank(parentBId) < fusionMedallionCost) {
+    return { error: `Fusion gamble requires ${fusionMedallionCost} spendable medallions from each parent line.` };
+  }
+  consumeMedallionsForFusion(parentAId, fusionMedallionCost);
+  consumeMedallionsForFusion(parentBId, fusionMedallionCost);
+  const consolationSpins = 5; // TODO tune fusion whiff consolation.
+  addSpins(consolationSpins);
+  saveState();
+  return { whiffed: true, spins: consolationSpins };
+}
+
+function nextRankCost(lineId) {
+  const costs = medallionRankCostList(lineId);
+  const rank = medallionRankFor(lineId);
+  if (!costs || rank >= costs.length || rank >= 5) return null;
+  return costs[rank];
+}
+
+function canRankUp(lineId) {
+  const cost = nextRankCost(lineId);
+  return isCarUnlocked(lineId) && cost !== null && spendableMedallionsForRank(lineId) >= cost;
+}
+
+function rankUp(lineId) {
+  if (!canRankUp(lineId)) return medallionRankFor(lineId);
+  state.medallionRanks = state.medallionRanks || {};
+  state.medallionRanks[lineId] = Math.min(5, medallionRankFor(lineId) + 1);
+  saveState();
+  return state.medallionRanks[lineId];
+}
+
+function medallionRankBoost(lineId, rank = medallionRankFor(lineId)) {
+  const boosts = { speed: 0, acceleration: 0, handling: 0, torque: 0, body: 0, powertrain: 0 };
+  const value = Math.max(0, Math.min(5, Math.floor(Number(rank) || 0)));
+  if (!medallionRankCostList(lineId) || value <= 0) return boosts;
+  const baseStats = baseGearbornStatsAtLevel(lineId, state.garage?.[lineId]?.level || 1);
+  const stat = battleStrongestStat(baseStats);
+  // TODO tune: early ladder pass gives +1 per rank to the line's strongest stat and +1 body/powertrain at high rank.
+  boosts[stat] = value;
+  if (value >= 3) boosts.body += 1;
+  if (value >= 5) boosts.powertrain += 1;
+  return boosts;
 }
 
 function evolutionByIndex(carId, evolutionIndex) {
@@ -498,7 +1031,8 @@ function carStats(carId) {
     handling: 56 + (stats.handling - 76) * 0.45,
     boostEffectiveness: 0.88 + torqueNorm * 0.3,
     obstacleResistance: 1.12 - torqueNorm * 0.3,
-    shiftWindow: 0.12 + torqueNorm * 0.08
+    shiftWindow: 0.12 + torqueNorm * 0.08,
+    idealShiftRpm: Math.max(0.68, Math.min(0.79, 0.735 + (stats.torque - stats.handling) * 0.0012))
   };
 }
 
@@ -509,11 +1043,12 @@ function displayedGearbornStats(carId) {
 function displayedGearbornStatsAtLevel(carId, level) {
   const baseStats = baseGearbornStatsAtLevel(carId, level);
   const boosts = bondBoostsForCar(carId, baseStats);
+  const rankBoosts = medallionRankBoost(carId);
   const partBoosts = partBoostsForCar(carId);
   const formBoosts = formBoostsForCar(carId);
   return Object.fromEntries(Object.entries(baseStats).map(([key, value]) => [
     key,
-    Math.min(100, value + (boosts[key] || 0) + (partBoosts[key] || 0) + (formBoosts[key] || 0))
+    Math.min(100, value + (boosts[key] || 0) + (rankBoosts[key] || 0) + (partBoosts[key] || 0) + (formBoosts[key] || 0))
   ]));
 }
 
@@ -636,6 +1171,13 @@ function recordRaceUsage(carId) {
   recordTunerPlaySession();
   recordTunerCarUsed(carId);
   recordCarUsage(carId);
+  recordDailyGoalProgress("finishRaces");
+  touchDailyGoals();
+  state.dailyGoals.carsRacedToday = Array.isArray(state.dailyGoals.carsRacedToday) ? state.dailyGoals.carsRacedToday : [];
+  if (!state.dailyGoals.carsRacedToday.includes(carId)) {
+    state.dailyGoals.carsRacedToday.push(carId);
+    recordDailyGoalProgress("threeCars");
+  }
   state.bond = state.bond || {};
   const bond = state.bond[carId] || { races: 0, milestones: [] };
   bond.races = Math.max(0, Math.floor(Number(bond.races) || 0)) + 1;
@@ -740,6 +1282,8 @@ function closeBondScene() {
 
 function recordStoryRaceOutcome(won, isStoryRace) {
   recordTunerPlaySession();
+  if (won) recordDailyGoalProgress("winAny");
+  if (won && isStoryRace) recordDailyGoalProgress("storyConvoy");
   if (isStoryRace) {
     recordTunerStat(won ? "storyRacesWon" : "storyRacesLost");
   }
@@ -825,6 +1369,10 @@ function achievementProgress(achievement) {
     const total = required.length;
     const complete = hasMedallionForLine("narwhal-luxury") || (total > 0 && current >= total);
     return { current, total, percent: total ? Math.floor((current / total) * 100) : 0, complete, label: complete ? "Unlocked" : `${current}/${total} lines` };
+  }
+  if (achievement.type === "tutorialFullRun") {
+    const complete = Boolean(state.tutorialFullRunCompleted || hasMedallion("training-car"));
+    return { current: complete ? 1 : 0, total: 1, percent: complete ? 100 : 0, complete, label: complete ? "Unlocked" : "Secret" };
   }
   return { current: 0, total: 1, percent: 0, complete: false, label: "0%" };
 }
@@ -1054,8 +1602,8 @@ function grantAchievementReward(achievement, silent = false) {
     addSprox(1000);
     message = "1000 Sprox awarded.";
   } else if (achievement.id === "vindex50") {
-    unlockCarLine("cake-train");
-    message = "Cuptrack has joined your Garage.";
+    addCrankVaultToInventory("common", "VINdex Scholar Achievement");
+    message = "Common CrankVault added to your inventory.";
   } else if (achievement.id === "vindex75") {
     const parts = grantRandomLevelTwoParts(3);
     message = `Level 2 parts awarded: ${parts.join(", ")}`;
@@ -1063,6 +1611,9 @@ function grantAchievementReward(achievement, silent = false) {
     awardMedallion("waste-management");
     state.garbageMedallionAwarded = true;
     message = "Garbage Medallion awarded.";
+  } else if (achievement.id === "tutorialTutorqueMedallion") {
+    awardMedallion("training-car");
+    message = "Thank you for playing the Tutorial! Enjoy a Tutorque Medallion as a reward!";
   } else if (achievement.type === "storyTypePercent" && achievement.sprox) {
     addSprox(achievement.sprox);
     message = `${achievement.sprox} Sprox awarded.`;
@@ -1108,7 +1659,7 @@ function slugify(value) {
 function selectablePlayerCars() {
   return tutorialActive()
     ? cars.filter((car) => car.id === tutorialCarId)
-    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly));
+    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && isPlayerCollectionCar(car)));
 }
 
 function firstSelectablePlayerCarId() {
@@ -1273,7 +1824,7 @@ function renderCarSelectPreview(mode, node) {
 function renderCarTiles() {
   const available = tutorialActive() && currentTutorialScene().id === "mamburn"
     ? cars.filter((car) => car.id === tutorialCarId)
-    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && !car.tutorialOnly));
+    : orderedCarList(cars.filter((car) => isCarUnlocked(car.id) && isPlayerCollectionCar(car)));
   if (el.dragCarGrid) el.dragCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "drag")).join("");
   if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
@@ -1298,6 +1849,193 @@ function viewIsActive(view) {
 
 function embeddedViewIs(view) {
   return embeddedCampaignView?.view === view;
+}
+
+function computeClosestUnlocks() {
+  if (tutorialActive()) return [];
+  const markers = [];
+  let order = 0;
+  const addMarker = (marker) => {
+    if (!marker || !(marker.score > 0)) return;
+    if (marker.skipIfUnlocked && marker.lineId && isCarUnlocked(marker.lineId)) return;
+    markers.push({ ...marker, order: order++ });
+  };
+  const cityIndex = Math.max(0, Math.min(state.selectedStoryCity || 0, highestUnlockedStoryCityIndex()));
+  const city = storyCities[cityIndex] || storyCities[0];
+
+  (state.medallionsOwned || []).forEach((lineId) => {
+    const car = cars.find((item) => item.id === lineId);
+    if (!car || isCarUnlocked(lineId)) return;
+    addMarker({
+      score: 1,
+      kind: "forge",
+      subject: `line:${lineId}`,
+      lineId,
+      skipIfUnlocked: true,
+      title: car.evolutions?.[0]?.name || car.family || "GearBorn",
+      detail: `Medallion earned — waiting at ${unlockHubName()}`,
+      image: forgeMedallionSrc(lineId),
+      silhouette: false,
+      action: "forge"
+    });
+  });
+
+  cars.forEach((car) => {
+    if (!car || !isCarUnlocked(car.id)) return;
+    const progress = state.garage?.[car.id];
+    if (!progress) return;
+    const evolution = car.evolutions?.[unlockedEvolutionIndex(car.id)] || currentEvolution(car.id);
+    const title = evolution?.name || car.evolutions?.[0]?.name || car.family || "GearBorn";
+    const image = imageFor(evolution, "display");
+    if (progress.pendingEvolution) {
+      addMarker({
+        score: 0.95,
+        kind: "evolve-ready",
+        subject: `line:${car.id}`,
+        lineId: car.id,
+        title,
+        detail: "Ready to evolve!",
+        image,
+        silhouette: false,
+        action: "garage"
+      });
+      return;
+    }
+    const level = Math.max(1, Math.floor(Number(progress.level) || 1));
+    if (level < maxCarLevel && maxEligibleEvolutionForCar(car.id, level + 1) > unlockedEvolutionIndex(car.id)) {
+      addMarker({
+        score: 0.75,
+        kind: "evolve-close",
+        subject: `line:${car.id}`,
+        lineId: car.id,
+        title,
+        detail: `1 level from evolving — ${xpForNextLevel(level)} Sprox`,
+        image,
+        silhouette: false,
+        action: "garage"
+      });
+    }
+  });
+
+  if (city) {
+    gauntletsForCity(city).forEach(([gauntletKey, config]) => {
+      const progress = gauntletProgress(gauntletKey);
+      if (!progress.revealed || progress.completed) return;
+      const stage = Math.max(1, Math.min(3, Number(progress.currentStage) || 1));
+      addMarker({
+        score: 0.6 + ((stage - 1) / 3) * 0.3,
+        kind: "gauntlet-progress",
+        subject: `line:${config.gearBornLineId || config.medallionId || gauntletKey}`,
+        lineId: config.gearBornLineId || config.medallionId,
+        skipIfUnlocked: true,
+        title: "???",
+        detail: `Gauntlet stage ${stage} of 3`,
+        image: "",
+        silhouette: true,
+        action: "story"
+      });
+    });
+
+    if (!allStoryUnlocked()) {
+      const rep = cityReputationPercent(city);
+      const horizon = gauntletsForCity(city).find(([gauntletKey, config]) => {
+        const progress = gauntletProgress(gauntletKey);
+        return config.enabled && !progress.revealed && !progress.completed && rep > 0 && rep < config.unlockReputationPercent;
+      });
+      if (horizon) {
+        const [gauntletKey, config] = horizon;
+        addMarker({
+          score: (rep / config.unlockReputationPercent) * 0.65,
+          kind: "gauntlet-horizon",
+          subject: `line:${config.gearBornLineId || config.medallionId || gauntletKey}`,
+          lineId: config.gearBornLineId || config.medallionId,
+          skipIfUnlocked: true,
+          title: "???",
+          detail: `${config.unlockReputationPercent - rep}% reputation to a Medallion Gauntlet`,
+          image: "",
+          silhouette: true,
+          action: "story"
+        });
+      }
+    }
+
+    if (!cityBossUnlocked(city) && !cityBossCompleted(city)) {
+      const done = cityCoreLevelsCompleted(city);
+      const need = cityBossRequirement(city);
+      if (done > 0 && done < need) {
+        const bossLineId = bossUnlockOrder[storyCities.indexOf(city)];
+        addMarker({
+          score: (done / need) * 0.7,
+          kind: "boss-close",
+          subject: bossLineId ? `line:${bossLineId}` : `boss:${city.id}`,
+          lineId: bossLineId,
+          skipIfUnlocked: true,
+          title: "???",
+          detail: `${need - done} race${need - done === 1 ? "" : "s"} from the City Boss`,
+          image: "",
+          silhouette: true,
+          action: "story"
+        });
+      }
+    }
+
+    activeConvoysForCity(city.id).forEach((convoy) => {
+      if (!convoy || state.convoy?.completed?.[convoy.id]) return;
+      addMarker({
+        score: 0.55,
+        kind: "convoy",
+        subject: convoy.medallionId ? `line:${convoy.medallionId}` : `convoy:${convoy.id}`,
+        lineId: convoy.medallionId,
+        skipIfUnlocked: true,
+        title: convoy.name || convoy.sponsor || "Convoy",
+        detail: "Convoy medallion up for grabs",
+        image: "",
+        silhouette: true,
+        action: "story"
+      });
+    });
+  }
+
+  const seen = new Set();
+  return markers
+    .sort((a, b) => b.score - a.score || a.order - b.order)
+    .filter((marker) => {
+      const subject = marker.subject || `${marker.kind}:${marker.title}`;
+      if (seen.has(subject)) return false;
+      seen.add(subject);
+      return true;
+    })
+    .slice(0, 3);
+}
+
+function unlockMarkerArtMarkup(marker) {
+  if (marker.silhouette) return silhouetteMarkup();
+  if (marker.kind === "forge" && marker.lineId && !marker.image) {
+    return forgeMedallionMarkup(marker.lineId, marker.title, "unlock-marker-img");
+  }
+  if (!marker.image) return `<span class="unlock-marker-placeholder" aria-hidden="true">?</span>`;
+  return `<img class="unlock-marker-img" src="${marker.image}" alt="${escapeHtml(marker.title)}" loading="lazy" decoding="async" onerror="this.hidden=true;">`;
+}
+
+function renderUnlockMarkers() {
+  if (!el.menuUnlockMarkers) return;
+  const markers = computeClosestUnlocks();
+  if (!markers.length) {
+    el.menuUnlockMarkers.hidden = true;
+    el.menuUnlockMarkers.innerHTML = "";
+    return;
+  }
+  el.menuUnlockMarkers.hidden = false;
+  el.menuUnlockMarkers.innerHTML = markers.map((marker) => `
+    <button class="unlock-marker" type="button" data-unlock-marker="${escapeHtml(marker.action)}">
+      <span class="unlock-marker-art">${unlockMarkerArtMarkup(marker)}</span>
+      <span class="unlock-marker-text">
+        <span class="unlock-marker-kicker">Almost Yours</span>
+        <strong>${escapeHtml(marker.title)}</strong>
+        <small>${escapeHtml(marker.detail)}</small>
+      </span>
+    </button>
+  `).join("");
 }
 
 function renderMenuGoal() {
@@ -1381,7 +2119,10 @@ function render() {
   const needsCarSelect = needsDrag || needsTime || needsBoss || needsBattle || needsStory || tutorialActive();
   renderSproxWallet();
   updateTunerHeadshot();
-  if (activeView === "menu-view") renderMenuGoal();
+  if (activeView === "menu-view") {
+    renderMenuGoal();
+    renderUnlockMarkers();
+  }
   renderTutorial();
   renderFlowScreens();
   if (needsCarSelect) {
@@ -1399,6 +2140,10 @@ function render() {
   if (viewIsActive("vindex")) renderVindex();
   if (viewIsActive("profiles")) renderProfiles();
   if (viewIsActive("achievements")) renderAchievements();
+  if (viewIsActive("crankvaults")) {
+    renderCrankVaults();
+    renderDailyGoals();
+  }
   if (viewIsActive("settings") || el.tunerModal?.classList.contains("active")) renderTuners();
   if (needsDrag) {
     renderDistanceOptions();
@@ -1595,6 +2340,7 @@ function storyLevelCompleted(index) {
 }
 
 function storyCityUnlocked(cityIndex) {
+  if (allStoryUnlocked()) return true;
   if (cityIndex <= 0) return true;
   const previousCity = storyCities[cityIndex - 1];
   if (!previousCity) return false;
@@ -1631,7 +2377,7 @@ function cityCoreLevelsTotal(city) {
 
 function cityBossRequirement(city) {
   const total = cityCoreLevelsTotal(city);
-  return total > 0 ? Math.max(1, total - 1) : 0;
+  return total > 0 ? total : 0;
 }
 
 function storyLevelReputationValue(level) {
@@ -1640,6 +2386,7 @@ function storyLevelReputationValue(level) {
 }
 
 function cityReputationPercent(city) {
+  if (allStoryUnlocked()) return 100;
   const requiredCore = Math.min(cityBossRequirement(city), cityCoreLevelsTotal(city));
   return requiredCore ? Math.min(100, Math.round((cityCoreLevelsCompleted(city) / requiredCore) * 100)) : 100;
 }
@@ -1664,65 +2411,38 @@ function gauntletConfigByKey(gauntletKey) {
   return medallionGauntlets[gauntletKey] || specialMedallionGauntlets[gauntletKey] || null;
 }
 
-function gauntletRewardAlreadyUnlocked(config) {
-  return Boolean(config?.gearBornLineId && isCarUnlocked(config.gearBornLineId));
-}
-
 function gauntletAssignedCityId(gauntletKey) {
-  if (gauntletKey === "rides-hair-special") return "indianapolis";
+  const config = gauntletConfigByKey(gauntletKey);
   const progress = gauntletProgress(gauntletKey);
-  return progress.assignedCityId || (medallionGauntlets[gauntletKey] ? gauntletKey : state.selectedStoryCity != null ? storyCities[state.selectedStoryCity]?.id : storyCities[0]?.id);
+  return config?.assignedCityId || progress.assignedCityId || (state.selectedStoryCity != null ? storyCities[state.selectedStoryCity]?.id : storyCities[0]?.id);
 }
 
-function gauntletForCity(city) {
-  return city && !city.final ? medallionGauntlets[city.id] : null;
+function gauntletsForCity(city) {
+  return city && !city.final
+    ? Object.entries(medallionGauntlets).filter(([, config]) => config.assignedCityId === city.id)
+    : [];
 }
 
 function maybeTriggerMedallionGauntlet(city) {
-  const config = gauntletForCity(city);
-  if (!config?.enabled) return;
-  if (gauntletRewardAlreadyUnlocked(config)) return;
-  const progress = gauntletProgress(city.id);
-  if (progress.popupShown || progress.completed) return;
-  if (cityReputationPercent(city) < config.unlockReputationPercent) return;
-  saveGauntletProgress(city.id, { revealed: true, popupShown: true, currentStage: 1 });
-  saveState();
-  openGauntletPopup(city.id);
-}
-
-function revealSpecialMedallionGauntlet(gauntletKey, cityId) {
-  const config = specialMedallionGauntlets[gauntletKey];
-  if (!config?.enabled || !cityId) return false;
-  if (gauntletRewardAlreadyUnlocked(config)) return false;
-  const progress = gauntletProgress(gauntletKey);
-  if (progress.revealed || progress.completed || progress.rewardClaimed) return false;
-  saveGauntletProgress(gauntletKey, { revealed: true, popupShown: true, assignedCityId: cityId, currentStage: 1 });
+  if (allStoryUnlocked()) return;
+  const next = gauntletsForCity(city).find(([gauntletKey, config]) => {
+    const progress = gauntletProgress(gauntletKey);
+    return config.enabled && !progress.popupShown && !progress.completed && cityReputationPercent(city) >= config.unlockReputationPercent;
+  });
+  if (!next) return;
+  const [gauntletKey, config] = next;
+  if (config.unlockReputationPercent <= 0) {
+    saveGauntletProgress(gauntletKey, { revealed: true, popupShown: true, currentStage: 1 });
+    saveState();
+    return;
+  }
+  saveGauntletProgress(gauntletKey, { revealed: true, popupShown: true, currentStage: 1 });
   saveState();
   openGauntletPopup(gauntletKey);
-  return true;
 }
 
 function storyCityForCampaignIndex(index) {
   return storyCities.find((city) => city.levels.some((level) => level.campaignIndex === index)) || null;
-}
-
-function maybeTriggerRoyalFlushGauntlet(cityId) {
-  return revealSpecialMedallionGauntlet("royal-flush-special", cityId || storyCities[state.selectedStoryCity]?.id);
-}
-
-function evolvedLineCountForRidesHairTrigger() {
-  return cars.filter((car) => {
-    if (car.tutorialOnly || ["rainbowlt", "metal-snake", "training-car", "rides-hair", "royal-flush"].includes(car.id)) return false;
-    if (!isCarUnlocked(car.id)) return false;
-    if (car.id === "art-van") return (state.unlockedArtVanForms || []).some((index) => index > 0);
-    return unlockedEvolutionIndex(car.id) >= car.evolutions.length - 1;
-  }).length;
-}
-
-function maybeTriggerRidesHairGauntlet() {
-  if (evolvedLineCountForRidesHairTrigger() < 5) return false;
-  const city = storyCities.find((item) => item.id === "indianapolis") || storyCities[0];
-  return revealSpecialMedallionGauntlet("rides-hair-special", city.id);
 }
 
 function cityBossUnlocked(city) {
@@ -1736,16 +2456,18 @@ function cityBossCompleted(city) {
 }
 
 function storyLevelVisible(city, level) {
+  if (allStoryUnlocked()) return true;
   if (!["boss", "pink-slip"].includes(level.type)) return true;
   if (level.type === "boss") return cityBossUnlocked(city);
-  if (level.type === "pink-slip") return cityBossCompleted(city);
+  if (level.type === "pink-slip") return level.unlockedWithCity || cityBossCompleted(city);
   return false;
 }
 
 function storyLevelLocked(city, level) {
+  if (allStoryUnlocked()) return false;
   if (!storyCityUnlocked(storyCities.indexOf(city))) return true;
   if (level.type === "boss") return !cityBossUnlocked(city);
-  if (level.type === "pink-slip") return !cityBossCompleted(city);
+  if (level.type === "pink-slip") return !(level.unlockedWithCity || cityBossCompleted(city));
   return false;
 }
 
@@ -1799,16 +2521,218 @@ function renderCampaign() {
         </div>
       </div>`
     : "";
-  el.storyMapStage.innerHTML = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("") + gauntletMapNodeMarkup(city);
+  el.storyMapStage.innerHTML = renderCityStructure(city);
   if (!tutorialActive()) {
     window.setTimeout(() => maybeTriggerMedallionGauntlet(city), 0);
-    window.setTimeout(() => maybeTriggerRidesHairGauntlet(), 0);
   }
   if (el.storyCitySelect) el.storyCitySelect.hidden = false;
   if (el.changeStoryCar) el.changeStoryCar.hidden = false;
   renderStoryCityGrid();
   renderConvoyEntry();
   renderStoryLevelPreview();
+}
+
+function cityProgressFor(cityId) {
+  state.cityProgress = state.cityProgress && typeof state.cityProgress === "object" ? state.cityProgress : {};
+  if (!state.cityProgress[cityId] || typeof state.cityProgress[cityId] !== "object") {
+    state.cityProgress[cityId] = { ladders: {}, storyRaces: new Array(cityStructureTemplate.storyRaceCount).fill(false), vaultRewards: {} };
+  }
+  const progress = state.cityProgress[cityId];
+  progress.ladders = progress.ladders && typeof progress.ladders === "object" ? progress.ladders : {};
+  cityStructureTemplate.ladders.forEach(({ id }) => {
+    progress.ladders[id] = { bronze: false, silver: false, gold: false, ...(progress.ladders[id] || {}) };
+  });
+  progress.storyRaces = Array.isArray(progress.storyRaces) ? progress.storyRaces.slice(0, cityStructureTemplate.storyRaceCount).map(Boolean) : [];
+  while (progress.storyRaces.length < cityStructureTemplate.storyRaceCount) progress.storyRaces.push(false);
+  progress.vaultRewards = progress.vaultRewards && typeof progress.vaultRewards === "object" ? progress.vaultRewards : {};
+  return progress;
+}
+
+function placeholderLadderTierUnlocked(progress, modeId, tier) {
+  if (allStoryUnlocked()) return true;
+  if (tier === "bronze") return true;
+  if (tier === "silver") return Boolean(progress.ladders[modeId]?.bronze);
+  return Boolean(progress.ladders[modeId]?.silver);
+}
+
+let pendingCityPlaceholderPreview = null;
+
+function renderCityStructure(city) {
+  if (city.final) return `<div class="city-required-nodes">${city.levels.map((level) => storyMapNodeMarkup(city, level)).join("")}</div>`;
+  const progress = cityProgressFor(city.id);
+  const workingNodes = city.levels.map((level) => storyMapNodeMarkup(city, level)).join("");
+  const storyNodes = cityStructureStoryNodeMarkup(city, progress);
+  const ladderNodes = cityStructureLadderNodeMarkup(city, progress);
+  const gauntletNodes = gauntletMapNodeMarkup(city);
+  return `
+    ${storyNodes}
+    ${workingNodes}
+    ${gauntletNodes}
+    ${ladderNodes}
+  `;
+}
+
+function openCityStoryRacePreview(cityId, index) {
+  const city = storyCities.find((item) => item.id === cityId);
+  if (!city) return;
+  const progress = cityProgressFor(cityId);
+  const unlocked = allStoryUnlocked() || index === 0 || progress.storyRaces[index - 1];
+  if (!unlocked) return;
+  pendingCityPlaceholderPreview = { type: "story", cityId, index };
+  el.storyPreviewPanel.classList.add("active");
+  el.storyPreviewPanel.setAttribute("aria-hidden", "false");
+  closeCitySelect();
+  renderCityPlaceholderPreview();
+}
+
+function openCityLadderPreview(cityId, modeId, tier) {
+  const city = storyCities.find((item) => item.id === cityId);
+  if (!city) return;
+  const progress = cityProgressFor(cityId);
+  if (!placeholderLadderTierUnlocked(progress, modeId, tier)) return;
+  pendingCityPlaceholderPreview = { type: "ladder", cityId, modeId, tier };
+  el.storyPreviewPanel.classList.add("active");
+  el.storyPreviewPanel.setAttribute("aria-hidden", "false");
+  closeCitySelect();
+  renderCityPlaceholderPreview();
+}
+
+function renderCityPlaceholderPreview() {
+  if (!pendingCityPlaceholderPreview || !el.storyPreviewPanel?.classList.contains("active")) return;
+  const pending = pendingCityPlaceholderPreview;
+  const city = storyCities.find((item) => item.id === pending.cityId) || storyCities[state.selectedStoryCity] || storyCities[0];
+  const isStory = pending.type === "story";
+  const mode = cityStructureTemplate.ladders.find((item) => item.id === pending.modeId);
+  const tier = pending.tier || "";
+  const tierLabel = tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : "";
+  const exhibitionCount = pending.modeId === "exhibition" ? (tier === "bronze" ? "4 cars" : "6 cars") : "";
+  const title = isStory ? `Story Race ${pending.index + 1}` : `${mode?.label || "Ladder"} · ${tierLabel}`;
+  const typeCopy = isStory ? "Story Placeholder" : "Ladder Placeholder";
+  const meta = isStory
+    ? `${city.city} story sequence`
+    : `${city.city}${exhibitionCount ? ` · ${exhibitionCount}` : ""}`;
+  const color = isStory ? "#52c7ff" : cityLadderNodeColor(tier);
+  // TODO: replace placeholder previews with final race copy/art once story content is defined.
+  el.storyPreviewIcon.innerHTML = isStory
+    ? `<span class="story-node-icon layered type-story"><img class="node-bg" src="assets/items/icon-boss-training.png" alt="" aria-hidden="true"><span class="node-subject node-number">${pending.index + 1}</span></span>`
+    : `<span class="story-node-icon layered type-${pending.modeId}"><img class="node-bg" src="${cityLadderNodeVisual(pending.modeId).icon}" alt="" aria-hidden="true"><span class="node-subject node-tier">${tierLabel.slice(0, 1)}</span></span>`;
+  el.storyPreviewIcon.className = "story-level-icon story-preview-icon type-placeholder";
+  el.storyPreviewIcon.style.background = "transparent";
+  el.campaignType.textContent = typeCopy;
+  el.campaignTitle.textContent = title;
+  el.campaignMeta.textContent = meta;
+  el.storyPreviewArt.innerHTML = `<div class="story-map-preview city-placeholder-preview" style="--node-color:${color}"><span>${isStory ? "Story Race" : mode?.label || "Ladder"}</span></div>`;
+  if (el.storyPreviewLeaderboard) el.storyPreviewLeaderboard.innerHTML = "";
+  if (el.campaignRewards) el.campaignRewards.innerHTML = `<p>${isStory ? "Clears the next story placeholder." : tier === "gold" ? "First Gold clear grants a Sprox CrankVault." : "Clears this ladder tier."}</p>`;
+  if (el.storyLoadout) el.storyLoadout.innerHTML = "";
+  el.startCampaign.disabled = false;
+  el.startCampaign.textContent = isStory ? "Start Story Race" : "Start Ladder";
+}
+
+function startCityPlaceholderPreview() {
+  if (!pendingCityPlaceholderPreview) return false;
+  const pending = pendingCityPlaceholderPreview;
+  closeStoryPreview();
+  if (pending.type === "story") completePlaceholderStoryRace(pending.cityId, pending.index);
+  if (pending.type === "ladder") completePlaceholderLadder(pending.cityId, pending.modeId, pending.tier);
+  return true;
+}
+
+function cityStructureStoryNodeMarkup(city, progress) {
+  // TODO tune positions after final story race content is locked.
+  const positions = [
+    { x: 16, y: 22 },
+    { x: 31, y: 30 },
+    { x: 46, y: 24 },
+    { x: 61, y: 31 },
+    { x: 76, y: 22 }
+  ];
+  return progress.storyRaces.map((complete, index) => {
+    const unlocked = allStoryUnlocked() || index === 0 || progress.storyRaces[index - 1];
+    const position = positions[index] || { x: Math.min(86, 16 + index * 13), y: 26 };
+    const label = complete ? "Complete" : `Story ${index + 1}`;
+    return `
+      <button class="story-map-node city-story-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-city-story-race="${city.id}:${index}" style="left:${position.x}%; top:${position.y}%; --node-color:#52c7ff" ${unlocked ? "" : "disabled"}>
+        <span class="story-node-icon layered type-story">
+          <img class="node-bg" src="assets/items/icon-boss-training.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
+          <span class="node-subject node-number">${index + 1}</span>
+        </span>
+        <span class="story-node-label">${label}</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function cityStructureLadderNodeMarkup(city, progress) {
+  // TODO tune positions after final optional-race layout art is locked.
+  const positions = {
+    drag: { bronze: { x: 17, y: 70 }, silver: { x: 17, y: 82 }, gold: { x: 17, y: 94 } },
+    trial: { bronze: { x: 39, y: 70 }, silver: { x: 39, y: 82 }, gold: { x: 39, y: 94 } },
+    exhibition: { bronze: { x: 61, y: 70 }, silver: { x: 61, y: 82 }, gold: { x: 61, y: 94 } },
+    battle: { bronze: { x: 83, y: 70 }, silver: { x: 83, y: 82 }, gold: { x: 83, y: 94 } }
+  };
+  return cityStructureTemplate.ladders.flatMap((mode) =>
+    cityStructureTemplate.ladderTiers.map((tier) => {
+      const unlocked = placeholderLadderTierUnlocked(progress, mode.id, tier);
+      const complete = Boolean(progress.ladders[mode.id]?.[tier]);
+      const position = positions[mode.id]?.[tier] || { x: 50, y: 82 };
+      const count = mode.id === "exhibition" ? (tier === "bronze" ? "4 cars" : "6 cars") : "";
+      const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+      const label = complete ? "Complete" : `${mode.label.replace(" Race", "")} ${tierLabel}${count ? ` · ${count}` : ""}`;
+      const visual = cityLadderNodeVisual(mode.id);
+      return `
+        <button class="story-map-node city-ladder-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-city-ladder="${city.id}:${mode.id}:${tier}" style="left:${position.x}%; top:${position.y}%; --node-color:${cityLadderNodeColor(tier)}" ${unlocked ? "" : "disabled"}>
+          <span class="story-node-icon layered type-${mode.id}">
+            <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
+            <span class="node-subject node-tier">${tierLabel.slice(0, 1)}</span>
+          </span>
+          <span class="story-node-label">${label}</span>
+        </button>
+      `;
+    })
+  ).join("");
+}
+
+function cityLadderNodeVisual(modeId) {
+  if (modeId === "trial") return storyLevelVisuals.trial;
+  if (modeId === "battle") return storyLevelVisuals.battle;
+  if (modeId === "exhibition") return storyLevelVisuals.circuit;
+  return storyLevelVisuals.drag;
+}
+
+function cityLadderNodeColor(tier) {
+  if (tier === "gold") return "#ffc857";
+  if (tier === "silver") return "#cbd5e1";
+  return "#c47a39";
+}
+
+function completePlaceholderLadder(cityId, modeId, tier) {
+  const progress = cityProgressFor(cityId);
+  // TODO: charge gas when placeholder ladders become real race launches.
+  if (!placeholderLadderTierUnlocked(progress, modeId, tier)) return;
+  const firstWin = !progress.ladders[modeId][tier];
+  progress.ladders[modeId][tier] = true;
+  // TODO: replace this simulated clear with the final optional-race start flow.
+  if (firstWin && tier === "gold" && !progress.vaultRewards[`ladder-${modeId}`]) {
+    progress.vaultRewards[`ladder-${modeId}`] = true;
+    addCrankVaultToInventory("sproxCommon", `${cityId} ${modeId} gold`);
+    showToast("Sprox CrankVault Earned", "A Gold ladder reward was added to your CrankVault inventory.");
+  } else {
+    saveState();
+    showToast("Placeholder Win", `${modeId} ${tier} cleared.`);
+  }
+  renderCampaign();
+}
+
+function completePlaceholderStoryRace(cityId, index) {
+  const progress = cityProgressFor(cityId);
+  // TODO: charge gas when placeholder story races become real race launches.
+  if (!allStoryUnlocked() && index > 0 && !progress.storyRaces[index - 1]) return;
+  progress.storyRaces[index] = true;
+  // TODO: replace this simulated clear with final story-race content.
+  saveState();
+  showToast("Story Placeholder Complete", `Story Race ${index + 1} cleared.`);
+  renderCampaign();
 }
 
 function tutorialMapLevels() {
@@ -1868,25 +2792,19 @@ function storyMapNodeMarkup(city, level) {
 }
 
 function gauntletMapNodeMarkup(city) {
-  const nodes = [];
-  const normal = gauntletNodeMarkup(city.id, city, 18, 36);
-  if (normal) nodes.push(normal);
-  Object.keys(specialMedallionGauntlets).forEach((gauntletKey, index) => {
+  return gauntletsForCity(city).map(([gauntletKey, config], index) => {
+    if (!allStoryUnlocked() && cityReputationPercent(city) < config.unlockReputationPercent) return "";
     const progress = gauntletProgress(gauntletKey);
-    if (progress.revealed && gauntletAssignedCityId(gauntletKey) === city.id) {
-      const specialNode = gauntletNodeMarkup(gauntletKey, city, 82, 36 + index * 12);
-      if (specialNode) nodes.push(specialNode);
-    }
-  });
-  return nodes.join("");
+    if (!progress.revealed && !allStoryUnlocked()) saveGauntletProgress(gauntletKey, { revealed: true });
+    return gauntletNodeMarkup(gauntletKey, city, 18 + index * 32, 36);
+  }).join("");
 }
 
 function gauntletNodeMarkup(gauntletKey, city, x, y) {
   const config = gauntletConfigByKey(gauntletKey);
   if (!config?.enabled) return "";
-  if (gauntletRewardAlreadyUnlocked(config)) return "";
   const progress = gauntletProgress(gauntletKey);
-  if (!progress.revealed) return "";
+  if (!progress.revealed && !allStoryUnlocked()) return "";
   const car = cars.find((item) => item.id === config.gearBornLineId);
   const form = car?.evolutions[0];
   const label = progress.completed
@@ -1939,8 +2857,8 @@ function gauntletModal() {
       <h2></h2>
       <p></p>
       <div class="modal-actions">
-        <button class="primary-button" type="button" data-gauntlet-continue>Continue</button>
-        <button class="secondary-button" type="button" data-gauntlet-skip>Skip</button>
+        <button class="primary-button" type="button" data-gauntlet-continue>Play Now</button>
+        <button class="secondary-button" type="button" data-gauntlet-skip>Play Later</button>
       </div>
     </div>
   `;
@@ -1965,14 +2883,16 @@ function openGauntletPopup(cityId) {
   const car = cars.find((item) => item.id === config?.gearBornLineId);
   const form = car?.evolutions[0];
   const modal = gauntletModal();
+  const assignedCityId = gauntletAssignedCityId(cityId);
+  const gasCost = gasCostForRace({ kind: "gauntlet", cityId: assignedCityId });
   modal.dataset.cityId = cityId;
   modal.querySelector("h2").textContent = config?.popupTitle || `${config?.displayName || form?.name || "A GearBorn"} has been watching…`;
-  modal.querySelector("p").textContent = "Medallion Gauntlet unlocked.";
+  modal.querySelector("p").textContent = `Medallion Gauntlet unlocked. Play Now costs ${gasCost} gas.`;
   const img = modal.querySelector(".gauntlet-medallion-preview");
   img.src = forgeMedallionSrc(config.gearBornLineId);
   img.alt = `${form?.name || config.displayName} Medallion`;
-  modal.querySelector("[data-gauntlet-skip]").textContent = "Skip";
-  modal.querySelector("[data-gauntlet-continue]").textContent = "Continue";
+  modal.querySelector("[data-gauntlet-skip]").textContent = "Play Later";
+  modal.querySelector("[data-gauntlet-continue]").textContent = `Play Now — costs ${gasCost} gas`;
   modal.classList.add("active");
   modal.setAttribute("aria-hidden", "false");
 }
@@ -1987,9 +2907,23 @@ function closeGauntletPopup() {
 function startMedallionGauntlet(cityId) {
   const config = gauntletConfigByKey(cityId);
   if (!config?.enabled) return;
-  if (gauntletRewardAlreadyUnlocked(config)) return;
   const progress = gauntletProgress(cityId);
   if (progress.completed) return;
+  const assignedCityId = gauntletAssignedCityId(cityId);
+  const launch = () => startMedallionGauntletStage(cityId);
+  if ((progress.currentStage || 1) === 1 && gasPaidGauntletKey !== cityId) {
+    requestRaceEntry({ kind: "gauntlet", cityId: assignedCityId }, () => {
+      gasPaidGauntletKey = cityId;
+      launch();
+    });
+    return;
+  }
+  launch();
+}
+
+function startMedallionGauntletStage(cityId) {
+  const config = gauntletConfigByKey(cityId);
+  const progress = gauntletProgress(cityId);
   saveGauntletProgress(cityId, { revealed: true, popupShown: true });
   const stageNumber = progress.currentStage || 1;
   state.activeGauntlet = { cityId, stage: stageNumber, mode: config.stages[stageNumber - 1]?.mode || "drag" };
@@ -2006,6 +2940,7 @@ function startMedallionGauntlet(cityId) {
       power: 0.58 + stageNumber * 0.08,
       image: imageFor(opponent.form, "race")
     });
+    if (pendingDragRace) pendingDragRace.gasPrepaid = true;
     setFlowStep("drag", "race");
     startPendingDragRace();
     return;
@@ -2059,16 +2994,18 @@ function completeGauntletStage(won) {
   const config = gauntletConfigByKey(cityId);
   if (!config) return false;
   if (!won) {
+    gasPaidGauntletKey = null;
     state.activeGauntlet = null;
     saveState();
     return true;
   }
   const nextStage = Math.min(3, (active.stage || 1) + 1);
   if ((active.stage || 1) >= 3) {
-    awardMedallion(config.gearBornLineId);
+    addAssignedMedallionCrankVault(config.gearBornLineId, `${gauntletAssignedCityId(cityId)} Medallion Gauntlet`);
     saveGauntletProgress(cityId, { revealed: true, popupShown: true, currentStage: 3, completed: true, rewardClaimed: true });
+    gasPaidGauntletKey = null;
     state.activeGauntlet = null;
-    showToast("Medallion Gauntlet Complete", `${config.displayName} Medallion earned.`);
+    showToast("Medallion Gauntlet Complete", `${config.displayName} Medallion CrankVault earned.`);
   } else {
     saveGauntletProgress(cityId, { revealed: true, popupShown: true, currentStage: nextStage });
     state.activeGauntlet = null;
@@ -2473,17 +3410,13 @@ function completeConvoy(convoyId) {
   state.convoy = state.convoy || {};
   state.convoy.completed = state.convoy.completed || {};
   state.convoy.completed[convoyId] = true;
+  recordDailyGoalProgress("storyConvoy");
   state.convoy.inProgress = null;
   const reward = firstClear ? convoy.rewards?.firstWin || {} : convoy.rewards?.replayWin || {};
   if (reward.sprox) addSprox(reward.sprox);
-  state.convoyMedallions = state.convoyMedallions || [];
-  const medallionIds = convoy.rewards?.firstWin?.medallionIds || [];
-  const newlyEarnedMedallions = medallionIds.filter((medallionId) => !state.convoyMedallions.includes(medallionId));
-  newlyEarnedMedallions.forEach((medallionId) => state.convoyMedallions.push(medallionId));
+  const earnedVault = firstClear && addAssignedMedallionCrankVault(convoy.medallionId, `${convoy.cityId} Convoy`);
   const postScene = convoyStoryScriptFor(convoyId, "post")[0]?.text;
-  const medallionCopy = newlyEarnedMedallions.length
-    ? ` Medallion earned: ${newlyEarnedMedallions.join(", ")}.`
-    : " Medallion already earned.";
+  const medallionCopy = earnedVault ? " Medallion CrankVault earned." : "";
   showToast(firstClear ? "Convoy Complete" : "Convoy Replay Complete", postScene || `${convoy.name} complete.${medallionCopy}`);
   saveState();
   renderCampaign();
@@ -2787,6 +3720,10 @@ function renderStoryCityGrid() {
 
 function renderStoryLevelPreview() {
   const panelOpen = el.storyPreviewPanel.classList.contains("active");
+  if (panelOpen && pendingCityPlaceholderPreview) {
+    renderCityPlaceholderPreview();
+    return;
+  }
   const level = campaignLevels[state.selectedCampaign];
   if (!panelOpen || !level) return;
   const locked = storyLevelLocked(storyCities[state.selectedStoryCity], level);
@@ -2864,6 +3801,7 @@ function openStoryPreview(campaignIndex) {
   const level = campaignLevels[campaignIndex];
   if (!level || !city.levels.some((item) => item.campaignIndex === campaignIndex)) return;
   if (!storyLevelVisible(city, level) || storyLevelLocked(city, level)) return;
+  pendingCityPlaceholderPreview = null;
   state.selectedCampaign = campaignIndex;
   el.storyPreviewPanel.classList.add("active");
   el.storyPreviewPanel.setAttribute("aria-hidden", "false");
@@ -2874,6 +3812,7 @@ function openStoryPreview(campaignIndex) {
 
 function closeStoryPreview() {
   if (!el.storyPreviewPanel) return;
+  pendingCityPlaceholderPreview = null;
   el.storyPreviewPanel.classList.remove("active");
   el.storyPreviewPanel.setAttribute("aria-hidden", "true");
 }
@@ -3063,7 +4002,7 @@ function battleCarImageForBoss(boss) {
     Crusadome: "assets/cars/pope-crusadome-race.png",
     Baronessex: "assets/cars/german-baronessex-race.png",
     Shamacht: "assets/cars/whale-shamacht-race.png",
-    Inflewenze: "assets/cars/peacock-inflewenze-race.png",
+    Inflewenze: "assets/cars/influencer-peacock-inflewenze-race.png",
     Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-race.png",
     Matunnie: "assets/cars/rabbit-matunnie-race.png",
     Kuumbusta: "assets/cars/bok-kuumbusta-race.png",
@@ -3078,7 +4017,7 @@ function bossCarDisplayImage(boss) {
     Crusadome: "assets/cars/pope-crusadome-display.png",
     Baronessex: "assets/cars/german-baronessex-display.png",
     Shamacht: "assets/cars/whale-shamacht-display.png",
-    Inflewenze: "assets/cars/peacock-inflewenze-display.png",
+    Inflewenze: "assets/cars/influencer-peacock-inflewenze-display.png",
     Hurrdaboutis: "assets/cars/talkshow-hurrdaboutis-display.png",
     Matunnie: "assets/cars/rabbit-matunnie-display.png",
     Kuumbusta: "assets/cars/bok-kuumbusta-display.png",
@@ -3499,7 +4438,18 @@ function finishBattle() {
         setFlowStep("battle", "match");
       }
     },
-    onRaceAgain: () => beginBattle(battleState.mode, battleState.restartOptions || { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex })
+    onRaceAgain: () => {
+      const restartOptions = battleState.restartOptions || { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex };
+      if (battleState.campaignLevelIndex !== null) {
+        startCampaignRace(battleState.campaignLevelIndex, campaignLevels[battleState.campaignLevelIndex]);
+        return;
+      }
+      if (battleState.mode === "gauntlet-battle") {
+        beginBattle(battleState.mode, restartOptions);
+        return;
+      }
+      requestRaceEntry({ kind: "battle" }, () => beginBattle(battleState.mode, restartOptions));
+    }
   });
 }
 
@@ -3579,6 +4529,8 @@ function renderTimeTrackGrid() {
 }
 
 function getVindexClass(entry) {
+  const playable = playableEntryMeta(entry);
+  if (isFusionLine(playable?.car?.id)) return "A";
   return vindexClassByNumber[entry?.number] || "";
 }
 
@@ -3586,6 +4538,16 @@ function getVindexType(entry) {
   const playable = playableEntryMeta(entry);
   if (playable) return gearbornStatProfiles[playable.car.id]?.type || "";
   return oneOffTypeMeta[entry?.name]?.type || "";
+}
+
+function getVindexTypes(entry) {
+  const playable = playableEntryMeta(entry);
+  if (playable && isFusionLine(playable.car.id)) {
+    const profile = gearbornStatProfiles[playable.car.id] || {};
+    return [profile.type, profile.type2].filter(Boolean);
+  }
+  const type = getVindexType(entry);
+  return type ? [type] : [];
 }
 
 function getClassStamp(classLetter) {
@@ -3639,7 +4601,10 @@ function vindexProgressCounts() {
   const total = vindexEntries.length;
   const owned = vindexEntries.filter((entry) => getStatus(entry) === "owned").length;
   const seen = vindexEntries.filter((entry) => ["owned", "seen"].includes(getStatus(entry))).length;
-  return { total, owned, seen, locked: Math.max(0, total - seen) };
+  const fusionEntries = vindexEntries.filter((entry) => isFusionLine(playableEntryMeta(entry)?.car?.id));
+  const fusionsTotal = fusionEntries.length;
+  const fusionsOwned = fusionEntries.filter((entry) => getStatus(entry) === "owned").length;
+  return { total, owned, seen, locked: Math.max(0, total - seen), fusionsOwned, fusionsTotal };
 }
 
 function vindexPlateMarkup(entry, discovered) {
@@ -3707,13 +4672,14 @@ function renderVindex() {
       <p><span>Owned</span><strong>${counts.owned} / ${counts.total}</strong></p>
       <p><span>Seen</span><strong>${counts.seen} / ${counts.total}</strong></p>
       <p><span>Locked</span><strong>${counts.locked} / ${counts.total}</strong></p>
+      <p><span>Fusions</span><strong>${counts.fusionsOwned} / ${counts.fusionsTotal}</strong></p>
     `;
   }
   const entry = vindexEntries.find((item) => item.number === state.selectedVindex) || vindexEntries[0];
   const status = getStatus(entry);
   const discovered = status !== "locked";
   const classLetter = getVindexClass(entry);
-  const typeLabel = getVindexType(entry);
+  const typeLabels = getVindexTypes(entry);
   el.vindexArt.innerHTML = `
     ${discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup()}
     ${discovered ? honkButtonMarkup(`data-honk-vindex="${entry.number}"`) : ""}
@@ -3734,14 +4700,17 @@ function renderVindex() {
     }
   }
   if (el.vindexTypeStamp) {
-    const typeStamp = discovered ? getTypeTile(typeLabel) : "";
-    el.vindexTypeStamp.hidden = !typeStamp;
-    if (typeStamp) {
-      el.vindexTypeStamp.src = typeStamp;
-      el.vindexTypeStamp.alt = `${typeLabel} type`;
-    }
+    el.vindexTypeStamp.hidden = !discovered || !typeLabels.length;
+    el.vindexTypeStamp.innerHTML = discovered ? typeLabels.map((typeLabel) => {
+      const typeStamp = getTypeTile(typeLabel);
+      return typeStamp ? `<img src="${typeStamp}" alt="${typeLabel} type" loading="lazy" decoding="async" onerror="this.hidden=true">` : "";
+    }).join("") : "";
   }
   if (el.vindexPlate) el.vindexPlate.innerHTML = vindexPlateMarkup(entry, discovered);
+  if (el.vindexMedallionTracks) {
+    const playable = playableEntryMeta(entry);
+    el.vindexMedallionTracks.innerHTML = discovered && playable ? medallionMasteryMarkup(playable.car.id, { compact: true }) : "";
+  }
   renderVindexMemories(entry, discovered);
 }
 
@@ -3948,12 +4917,13 @@ function achievementRewardArt(achievement) {
   if (achievementIsSecretHidden(achievement)) return `<div class="achievement-trophy secret">?</div>`;
   if (achievement.id === "garbageMedallion") return carMarkupForEvolution("waste-management", 0, "display");
   if (achievement.id === "narwraithMedallion") return carMarkupForEvolution("narwhal-luxury", 0, "display");
+  if (achievement.id === "tutorialTutorqueMedallion") return carMarkupForEvolution("training-car", 0, "display");
   const artFormIndex = artVanUnlockByAchievement[achievement.id];
   if (Number.isInteger(artFormIndex)) {
     const form = cars.find((car) => car.id === "art-van")?.evolutions[artFormIndex];
     return form ? carMarkupForEvolution("art-van", artFormIndex, "display") : silhouetteMarkup();
   }
-  if (achievement.id === "vindex50") return carMarkupForEvolution("cake-train", 0, "display");
+  if (achievement.id === "vindex50") return `<div class="achievement-trophy">◇</div>`;
   if (achievement.id === "vindex75") return `<div class="achievement-reward-parts">${partTypes.slice(0, 3).map((part) => partImageMarkup({ ...part, level: 2, bonus: 3, stars: "★★" }, "achievement-part-image")).join("")}</div>`;
   if (achievement.id === "vindex25" || achievement.sprox || /sprox/i.test(achievement.reward || "")) return `<span class="achievement-sprox-preview sprox-coin" aria-label="Sprox reward"></span>`;
   return `<div class="achievement-trophy">★</div>`;
@@ -4112,6 +5082,7 @@ function garageDetailedCardMarkup(car, extraClass = "") {
           ${artVanFormBonusMarkup(car.id)}
           ${garageStatsMarkup(stats, car.id)}
           ${garageBondMarkup(car.id)}
+          ${medallionMasteryMarkup(car.id)}
           <div class="meta-row">
             <span>${maxed ? "Max Level" : `Upgrade: ${upgradeCost} Sprox`}</span>
             <span>${progress.pendingEvolution ? "Ready to evolve" : "Race ready"}</span>
@@ -4161,7 +5132,7 @@ function renderGarage() {
   document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
   if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
   renderUnlockHubCard();
-  const garageCars = orderedCarList(cars.filter((car) => !car.tutorialOnly && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
+  const garageCars = orderedCarList(cars.filter((car) => isPlayerCollectionCar(car) && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
   el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
   el.garageGrid.innerHTML = garageCars.map((car) => {
     if (state.garageViewMode !== "compact") return isCarUnlocked(car.id) ? garageDetailedCardMarkup(car) : lockedGarageCard(car);
@@ -4250,6 +5221,31 @@ function garageBondMarkup(carId) {
   `;
 }
 
+function medallionMasteryMarkup(lineId, { compact = false } = {}) {
+  const costs = medallionRankCostList(lineId);
+  const tier = medallionTier(lineId);
+  const tierLabel = medallionTierLabel(tier);
+  const rank = medallionRankFor(lineId);
+  const cost = nextRankCost(lineId);
+  const spendable = spendableMedallionsForRank(lineId);
+  const progressText = cost === null ? "Rank complete" : `${Math.min(spendable, cost)} / ${cost} medallions toward Rank ${rank + 1}`;
+  const rankUi = costs ? `
+    <div class="medallion-rank-row">
+      <span>Rank ${rank} / 5</span>
+      <strong>${progressText}</strong>
+      <button class="ghost medallion-rank-up" type="button" data-rank-up-line="${lineId}" ${canRankUp(lineId) ? "" : "disabled"}>Rank Up</button>
+    </div>
+  ` : "";
+  if (!tierLabel && !rankUi) return "";
+  return `
+    <div class="medallion-mastery-panel ${compact ? "compact" : ""}" aria-label="Medallion mastery">
+      <div class="medallion-mastery-title">Medallion Mastery</div>
+      ${tierLabel ? `<span class="medallion-tier-badge ${tier}">${tierLabel}</span>` : ""}
+      ${rankUi}
+    </div>
+  `;
+}
+
 function artVanFormBonusMarkup(carId) {
   if (carId !== "art-van") return "";
   const bonus = currentEvolution(carId)?.formBonus;
@@ -4294,13 +5290,15 @@ function statBarSegments(carId, statKey, level = state.garage?.[carId]?.level ||
   if (!carId || !state.garage?.[carId]) return null;
   const baseStats = baseGearbornStatsAtLevel(carId, level);
   const bondBoosts = bondBoostsForCar(carId, baseStats);
+  const rankBoosts = medallionRankBoost(carId);
   const partBoosts = partBoostsForCar(carId);
   const formBoosts = formBoostsForCar(carId);
   const basePct = normalizedGearbornStat(Math.min(100, baseStats[statKey])) * 100;
   const bondPct = Math.min(Math.max(0, (bondBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct));
-  const partPct = Math.min(Math.max(0, (partBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct));
-  const formPct = Math.min(Math.max(0, (formBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct - partPct));
-  return { basePct, bondPct, partPct, formPct };
+  const rankPct = Math.min(Math.max(0, (rankBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct));
+  const partPct = Math.min(Math.max(0, (partBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct - rankPct));
+  const formPct = Math.min(Math.max(0, (formBoosts[statKey] || 0) / 40 * 100), Math.max(0, 100 - basePct - bondPct - rankPct - partPct));
+  return { basePct, bondPct, rankPct, partPct, formPct };
 }
 
 function garageStatsMarkup(stats, carId = "") {
@@ -4324,13 +5322,15 @@ function statFillMarkup(value, segments = null) {
   const pct = normalizedGearbornStat(value) * 100;
   const basePct = segments ? Math.min(segments.basePct, pct) : pct;
   const bondPct = segments ? Math.min(segments.bondPct, Math.max(0, pct - basePct)) : 0;
-  const partPct = segments ? Math.min(segments.partPct, Math.max(0, pct - basePct - bondPct)) : 0;
-  const formPct = segments ? Math.min(segments.formPct || 0, Math.max(0, pct - basePct - bondPct - partPct)) : 0;
+  const rankPct = segments ? Math.min(segments.rankPct || 0, Math.max(0, pct - basePct - bondPct)) : 0;
+  const partPct = segments ? Math.min(segments.partPct, Math.max(0, pct - basePct - bondPct - rankPct)) : 0;
+  const formPct = segments ? Math.min(segments.formPct || 0, Math.max(0, pct - basePct - bondPct - rankPct - partPct)) : 0;
   return `
     <div class="stat-base" style="width:${basePct}%"></div>
     ${bondPct > 0 ? `<i class="stat-bond" style="left:${basePct}%; width:${bondPct}%"></i>` : ""}
-    ${partPct > 0 ? `<i class="stat-parts" style="left:${basePct + bondPct}%; width:${partPct}%"></i>` : ""}
-    ${formPct > 0 ? `<i class="stat-form" style="left:${basePct + bondPct + partPct}%; width:${formPct}%"></i>` : ""}
+    ${rankPct > 0 ? `<i class="stat-rank" style="left:${basePct + bondPct}%; width:${rankPct}%"></i>` : ""}
+    ${partPct > 0 ? `<i class="stat-parts" style="left:${basePct + bondPct + rankPct}%; width:${partPct}%"></i>` : ""}
+    ${formPct > 0 ? `<i class="stat-form" style="left:${basePct + bondPct + rankPct + partPct}%; width:${formPct}%"></i>` : ""}
   `;
 }
 
@@ -4634,6 +5634,10 @@ function carMarkup(color) {
 function renderSettings() {
   el.difficulty.value = state.settings.difficulty;
   el.volume.value = state.settings.volume;
+  if (el.screenEffects) el.screenEffects.checked = state.settings.screenEffects !== false;
+  if (el.haptics) el.haptics.checked = state.settings.haptics !== false;
+  if (el.highVisCues) el.highVisCues.checked = state.settings.highVisCues !== false;
+  if (el.reducedMotion) el.reducedMotion.value = state.settings.reducedMotion === true ? "on" : state.settings.reducedMotion === false ? "off" : "system";
   el.shiftKey.value = readableKey(state.settings.shiftKey);
   el.nitroKey.value = readableKey(state.settings.nitroKey);
   el.verticalUpKey.value = readableKey(state.settings.verticalKeys.up);
@@ -4685,6 +5689,7 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   el.rivalRacer.style.transform = "translateX(0)";
   el.playerRacer.classList.remove("nitro-active");
   el.rivalRacer.classList.remove("nitro-active");
+  el.dragLaunchLights?.classList.remove("staging");
   race = null;
   updateNitroHud();
   paintCars();
@@ -4693,9 +5698,16 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
 
 function startPendingDragRace() {
   const config = pendingDragRace || { campaignLevelIndex: null, dragStage: null };
-  el.dragMapStart.classList.remove("active");
-  startDragRace(config.campaignLevelIndex, config.dragStage);
-  pendingDragRace = null;
+  const launch = () => {
+    el.dragMapStart.classList.remove("active");
+    startDragRace(config.campaignLevelIndex, config.dragStage);
+    pendingDragRace = null;
+  };
+  if (config.gasPrepaid) {
+    launch();
+    return;
+  }
+  requestRaceEntry({ kind: "drag", isTutorial: Boolean(config.dragStage?.tutorial) }, launch);
 }
 
 function dragBackgroundFor(campaignLevelIndex, dragStage) {
@@ -4764,6 +5776,11 @@ function setLaunchPhase(phase, step = 1) {
   race.launchPhase = phase;
   race.launchPhaseStartTime = performance.now();
   race.launchStep = step;
+  el.dragLaunchLights?.classList.toggle("staging", ["red", "yellow", "green"].includes(phase));
+  el.dragLaunchLights?.classList.toggle("high-vis-cues", state.settings.highVisCues !== false);
+  if (el.launchPhaseLabel) {
+    el.launchPhaseLabel.textContent = phase === "green" ? "GO" : phase === "yellow" ? "SET" : "STAGE";
+  }
   el.dragLaunchLights?.querySelectorAll(".launch-tree-row").forEach((row) => {
     row.classList.toggle("active", row.dataset.launchStep === String(step));
   });
@@ -4773,6 +5790,8 @@ function setLaunchPhase(phase, step = 1) {
   if (phase === "green") {
     playAudioCue("raceStart");
     playSound("race-countdown-go");
+    flashHighVisCue(el.dragLaunchLights);
+    haptic([20, 20, 35]);
   } else {
     playAudioCue("raceCountdown");
     playSound("race-countdown-beep");
@@ -4790,11 +5809,17 @@ function launchDragPlayer() {
   } else if (race.launchPhase === "red" || race.launchPhase === "yellow") {
     race.launchBonus = 0.7;
     message = "Jumped Start";
+    race.perfectStreak = 0;
   } else {
     race.launchBonus = 1;
   }
   race.launchBonusUntil = now + 2000;
   race.launchPhase = "launched";
+  race.launchGrade = message;
+  el.dragLaunchLights?.classList.remove("staging");
+  haptic(message === "Perfect Launch" ? [20, 18, 30] : 24);
+  screenShake(DRAG_SHAKE_LAUNCH.intensity, DRAG_SHAKE_LAUNCH.ms);
+  showRaceStartReveal(message === "Jumped Start" ? "JUMPED" : "GO");
   race.gear = 1;
   race.rpm = 0.2;
   el.shiftReadout.textContent = message;
@@ -4810,6 +5835,18 @@ function updateGearshiftIndicator(animate = false) {
   if (!el.gearshiftIndicator) return;
   const gear = race?.gear || 0;
   el.gearshiftIndicator.src = `assets/race/gearshift-${gear > 0 ? Math.min(6, gear) : "p"}.png`;
+  if (el.tachFill?.parentElement) {
+    const ideal = race?.idealShiftRpm ?? 0.73;
+    const window = race?.shiftWindow ?? 0.12;
+    const perfectHalf = window * 0.38;
+    const tach = el.tachFill.parentElement;
+    tach.style.setProperty("--shift-good-left", `${Math.max(0, (ideal - window) * 100)}%`);
+    tach.style.setProperty("--shift-good-width", `${Math.min(100, window * 2 * 100)}%`);
+    tach.style.setProperty("--shift-good-right", `${Math.min(100, (ideal + window) * 100)}%`);
+    tach.style.setProperty("--shift-perfect-left", `${Math.max(0, (ideal - perfectHalf) * 100)}%`);
+    tach.style.setProperty("--shift-perfect-width", `${Math.min(100, perfectHalf * 2 * 100)}%`);
+    tach.classList.toggle("high-vis-cues", state.settings.highVisCues !== false);
+  }
   if (animate) {
     el.gearshiftIndicator.classList.remove("shifting");
     void el.gearshiftIndicator.offsetWidth;
@@ -4931,12 +5968,20 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
     accelPenalty: 1,
     topGearBoost: 1,
     shiftWindow: car.shiftWindow,
+    idealShiftRpm: car.idealShiftRpm,
     nitroCharge: 0,
     nitroActive: false,
     nitroTimer: 0,
+    nitroMultiplier: dragNitroMultiplier,
+    nitroUsed: false,
+    nitroContext: [],
     overheatCount: 0,
     overheatLatched: false,
     shiftScore: [],
+    perfectStreak: 0,
+    longestPerfectStreak: 0,
+    lastShiftLabel: "",
+    lastShiftAt: 0,
     rank,
     distance,
     dragStage,
@@ -4985,6 +6030,11 @@ function updateRace(now) {
     requestAnimationFrame(updateRace);
     return;
   }
+  if (race.hitStopUntil && now < race.hitStopUntil) {
+    drawRace();
+    requestAnimationFrame(updateRace);
+    return;
+  }
 
   updateLaneTransition(now);
   if (race.gear > 0) {
@@ -4994,7 +6044,7 @@ function updateRace(now) {
     if (race.gear >= 6) {
       const speedRatio = Math.min(1, race.playerSpeed / race.playerMaxSpeed);
       const topGearPull = Math.max(0.16, 1 - speedRatio);
-      race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * race.accelPenalty * launchBoost * draftBoost * topGearPull * dt;
+      race.playerSpeed += race.playerAcceleration * race.playerPower * race.topGearBoost * race.accelPenalty * perfectHeatMultiplier() * launchBoost * draftBoost * topGearPull * dt;
       race.rpm = 0.74;
     } else {
       const gearDrag = 1 - (race.gear - 1) * 0.08;
@@ -5002,7 +6052,7 @@ function updateRace(now) {
       if (race.rpm > 0.86) {
         race.accelPenalty = Math.max(0.42, race.accelPenalty - 0.34 * dt);
       }
-      race.playerSpeed += race.playerAcceleration * race.playerPower * race.accelPenalty * launchBoost * draftBoost * gearDrag * rpmPower * dt;
+      race.playerSpeed += race.playerAcceleration * race.playerPower * race.accelPenalty * perfectHeatMultiplier() * launchBoost * draftBoost * gearDrag * rpmPower * dt;
       race.rpm += (0.22 + race.playerSpeed / 260) * dt;
     }
   } else {
@@ -5022,7 +6072,7 @@ function updateRace(now) {
     opponent.distance += mphToMetersPerSecond(opponent.speed) * dt;
   });
 
-  const playerNitroScale = race.nitroActive ? dragNitroMultiplier : 1;
+  const playerNitroScale = race.nitroActive ? (race.nitroMultiplier || dragNitroMultiplier) : 1;
   const playerCap = (race.gear >= 6 ? race.playerMaxSpeed : race.gear > 0 ? race.playerMaxSpeed * (0.58 + race.gear * 0.15) : 0) * playerNitroScale;
   race.playerSpeed = Math.min(race.playerSpeed, playerCap);
 
@@ -5035,6 +6085,7 @@ function updateRace(now) {
     if (!race.overheatLatched) {
       race.overheatCount += 1;
       race.overheatLatched = true;
+      race.perfectStreak = 0;
       race.accelPenalty = Math.max(0.34, race.accelPenalty - 0.18);
       if (race.overheatCount >= 3) {
         failDragRace("Engine Overheated");
@@ -5066,7 +6117,7 @@ function shift() {
     el.shiftReadout.textContent = "Top";
     return;
   }
-  const ideal = 0.73;
+  const ideal = race.idealShiftRpm ?? 0.73;
   const diff = Math.abs(race.rpm - ideal);
   const torque = race.playerTorque ?? 0.5;
   let label = "Early";
@@ -5081,6 +6132,17 @@ function shift() {
   }
 
   race.shiftScore.push(label);
+  race.lastShiftLabel = label;
+  race.lastShiftAt = performance.now();
+  if (label === "Perfect") {
+    race.perfectStreak += 1;
+    race.longestPerfectStreak = Math.max(race.longestPerfectStreak, race.perfectStreak);
+    haptic([18, 16, 18]);
+    flashHighVisCue(el.tachFill?.parentElement);
+  } else {
+    race.perfectStreak = 0;
+    if (label === "Good") haptic(18);
+  }
   if (label === "Perfect" || label === "Good") {
     race.nitroCharge = Math.min(4, race.nitroCharge + 1);
   }
@@ -5103,6 +6165,29 @@ function shift() {
   el.shiftReadout.textContent = label;
   updateNitroHud();
   beep(label);
+}
+
+function perfectHeatMultiplier() {
+  const streak = race?.perfectStreak || 0;
+  return 1 + Math.min(DRAG_PERFECT_HEAT_CAP, streak * DRAG_PERFECT_HEAT_STEP);
+}
+
+function nitroContextForRace() {
+  if (!race) return [];
+  const contexts = [];
+  if (race.lastShiftLabel === "Perfect" && performance.now() - race.lastShiftAt <= DRAG_NITRO_PERFECT_WINDOW_MS) contexts.push("Perfect");
+  if (race.draftBonus > 1.01) contexts.push("Draft");
+  if (race.gear >= 6 || race.topGearBoost > 1.01) contexts.push("Top Gear");
+  return contexts;
+}
+
+function nitroMultiplierForRace() {
+  const contexts = nitroContextForRace();
+  let bonus = 0;
+  if (contexts.includes("Perfect")) bonus += DRAG_NITRO_PERFECT_BONUS;
+  if (contexts.includes("Draft")) bonus += DRAG_NITRO_DRAFT_BONUS;
+  if (contexts.includes("Top Gear")) bonus += DRAG_NITRO_TOP_GEAR_BONUS;
+  return { contexts, multiplier: dragNitroMultiplier * (1 + bonus) };
 }
 
 function updateDragNitroTimers(dt) {
@@ -5142,14 +6227,367 @@ function useNitro() {
   race.nitroCharge = 0;
   race.nitroActive = true;
   race.nitroTimer = dragNitroDuration;
-  race.playerSpeed = Math.min(race.playerSpeed * dragNitroMultiplier, race.playerMaxSpeed * dragNitroMultiplier);
-  el.shiftReadout.textContent = "Nitro";
+  race.nitroUsed = true;
+  const nitro = nitroMultiplierForRace();
+  race.nitroContext = nitro.contexts;
+  race.nitroMultiplier = nitro.multiplier;
+  race.playerSpeed = Math.min(race.playerSpeed * nitro.multiplier, race.playerMaxSpeed * nitro.multiplier);
+  el.shiftReadout.textContent = nitro.contexts.length ? `Nitro · ${nitro.contexts.join(" + ")}` : "Nitro";
+  haptic([35, 18, 35]);
+  screenShake(DRAG_SHAKE_NITRO.intensity, DRAG_SHAKE_NITRO.ms);
   playSound("engine-nitro");
   updateNitroHud();
 }
 
 function renderSproxWallet() {
   if (el.sproxTotal) el.sproxTotal.textContent = formatSprox();
+  if (el.spinTotal) el.spinTotal.textContent = formatSpins();
+  renderGasBar();
+  renderCrankVaultBadge();
+}
+
+let crankVaultResetInterval = null;
+
+function renderGasBar() {
+  accrueGas();
+  if (!el.gasTotal) return;
+  const cheat = devCheatActive("unlimitedGas");
+  const gas = cheat ? GAS_MAX : Math.max(0, Math.floor(state.gas));
+  el.gasTotal.textContent = cheat ? "∞" : `${gas}/${GAS_MAX}`;
+  if (el.gasFill) el.gasFill.style.width = `${Math.min(100, (gas / GAS_MAX) * 100)}%`;
+  if (el.gasTank) el.gasTank.classList.toggle("gas-overfilled", !cheat && state.gas > GAS_MAX);
+  if (el.gasTank) el.gasTank.classList.toggle("gas-empty", !cheat && state.gas <= 0);
+  if (el.gasNext) {
+    const showCountdown = !cheat && state.gas < GAS_MAX;
+    el.gasNext.hidden = !showCountdown;
+    if (showCountdown) el.gasNext.textContent = `Next +1 in ${formatClock(msUntilNextGallon())}`;
+  }
+}
+
+function startGasDisplayTimer() {
+  if (gasDisplayInterval) return;
+  renderGasBar();
+  gasDisplayInterval = window.setInterval(renderGasBar, 1000);
+}
+
+function formatClock(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatClockLong(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function msUntilNextGallon() {
+  accrueGas();
+  if (state.gas >= GAS_MAX) return 0;
+  const since = Date.now() - (Number(state.gasUpdatedAt) || Date.now());
+  return Math.max(0, GAS_REGEN_MS - (since % GAS_REGEN_MS));
+}
+
+function msUntilFullTank() {
+  accrueGas();
+  if (state.gas >= GAS_MAX) return 0;
+  const gallonsNeeded = GAS_MAX - state.gas;
+  return msUntilNextGallon() + (gallonsNeeded - 1) * GAS_REGEN_MS;
+}
+
+function openGasEmptyModal(cost, context, proceed) {
+  pendingGasEntry = { cost, context, proceed };
+  if (el.gasEmptyCost) el.gasEmptyCost.textContent = String(cost);
+  el.gasEmptyModal?.classList.add("active");
+  el.gasEmptyModal?.setAttribute("aria-hidden", "false");
+  if (!gasCountdownInterval) gasCountdownInterval = window.setInterval(updateGasEmptyCopy, 1000);
+  updateGasEmptyCopy();
+}
+
+function updateGasEmptyCopy() {
+  accrueGas();
+  if (el.gasEmptyHave) el.gasEmptyHave.textContent = String(Math.max(0, Math.floor(state.gas)));
+  if (el.gasNextGallon) el.gasNextGallon.textContent = formatClock(msUntilNextGallon());
+  if (el.gasFullTank) el.gasFullTank.textContent = formatClockLong(msUntilFullTank());
+  renderGasBar();
+  if (pendingGasEntry && canParticipate(pendingGasEntry.cost)) {
+    const entry = pendingGasEntry;
+    closeGasEmptyModal();
+    spendGas(entry.cost);
+    saveState();
+    renderGasBar();
+    entry.proceed();
+  }
+}
+
+function closeGasEmptyModal() {
+  pendingGasEntry = null;
+  if (gasCountdownInterval) {
+    window.clearInterval(gasCountdownInterval);
+    gasCountdownInterval = null;
+  }
+  el.gasEmptyModal?.classList.remove("active");
+  el.gasEmptyModal?.setAttribute("aria-hidden", "true");
+}
+
+function purchaseGas() {
+  if (!spendSpins(GAS_PURCHASE_SPINS)) {
+    showToast("Not Enough Spins", `You need ${GAS_PURCHASE_SPINS} Spins to buy gas.`);
+    return;
+  }
+  state.gas += GAS_PURCHASE_AMOUNT;
+  if (state.gas >= GAS_MAX) state.gasUpdatedAt = Date.now();
+  saveState();
+  showToast("Gas Purchased", `+${GAS_PURCHASE_AMOUNT} gallons added.`);
+  renderSproxWallet();
+  updateGasEmptyCopy();
+}
+
+function renderCrankVaultBadge() {
+  if (el.crankVaultBadge) el.crankVaultBadge.hidden = !(dailyVaultAvailable() || dailyGoalsVaultReady());
+}
+
+function dailyGoalsResetCopy() {
+  const remaining = Math.max(0, nextVaultResetTime().getTime() - Date.now());
+  const hours = Math.floor(remaining / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+function dailyGoalProgressBar(goal, progress) {
+  const value = Math.max(0, Math.min(goal.target, Math.floor(Number(progress) || 0)));
+  const pct = goal.target ? Math.min(100, (value / goal.target) * 100) : 0;
+  return `
+    <div class="daily-goal-progress" aria-label="${value} of ${goal.target}">
+      <span style="width:${pct}%"></span>
+    </div>
+    <small>${value} / ${goal.target}</small>
+  `;
+}
+
+function dailyGoalRewardCopy(goal) {
+  if (goal.reward?.sprox) return `+${goal.reward.sprox} Sprox`;
+  if (goal.reward?.spins) return `+${goal.reward.spins} Spins`;
+  return "Reward";
+}
+
+function renderDailyGoals() {
+  if (!el.dailyGoals) return;
+  touchDailyGoals();
+  const completed = dailyGoalsCompletedCount();
+  const streak = Math.max(0, Math.floor(Number(state.dailyGoals.loginStreak) || 0));
+  const goalRows = dailyGoalDefs.map((goal) => {
+    const progress = Math.max(0, Number(state.dailyGoals.progress?.[goal.id]) || 0);
+    const complete = progress >= goal.target;
+    const claimed = Boolean(state.dailyGoals.claimed?.[goal.id]);
+    const desc = goal.id === "rotating" ? dailyRotatingGoalLabel() : goal.desc;
+    return `
+      <article class="daily-goal-row ${complete ? "complete" : ""}">
+        <div class="daily-goal-copy">
+          <strong>${escapeHtml(goal.name)}</strong>
+          <span>${escapeHtml(desc)}</span>
+        </div>
+        <div class="daily-goal-meter">
+          ${dailyGoalProgressBar(goal, progress)}
+        </div>
+        <button class="ghost daily-goal-claim" type="button" data-daily-goal-claim="${goal.id}" ${complete && !claimed ? "" : "disabled"}>
+          ${claimed ? "✓" : complete ? dailyGoalRewardCopy(goal) : "Claim"}
+        </button>
+      </article>
+    `;
+  }).join("");
+  el.dailyGoals.innerHTML = `
+    <div class="daily-goals-summary">
+      <strong>${completed} / ${dailyGoalDefs.length} complete — ${dailyGoalsRequiredForVault} unlocks the vault</strong>
+      <span>Reset in ${dailyGoalsResetCopy()}</span>
+      <span>Login streak: ${streak} day${streak === 1 ? "" : "s"} · CrankVault every 7th day</span>
+    </div>
+    <div class="daily-goals-list">${goalRows}</div>
+    <article class="daily-goal-vault">
+      <img class="crankvault-img crankvault-img-sm" src="assets/crankvaults/blue-crankvault-closed.png" alt="Common CrankVault"
+        onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'crankvault-img-fallback',textContent:'◈'}))">
+      <div>
+        <strong>Daily Goals Vault</strong>
+        <span>Complete any ${dailyGoalsRequiredForVault} goals to claim a Common CrankVault.</span>
+      </div>
+      <button class="primary" type="button" data-daily-goals-vault-claim ${dailyGoalsVaultReady() ? "" : "disabled"}>
+        ${state.dailyGoals.vaultClaimed ? "Claimed" : "Claim Vault"}
+      </button>
+    </article>
+  `;
+}
+
+function crankVaultPoolCopy() {
+  return "Medallions can be any E/D/C GearBorn in the unlockable pool (excludes specials, achievement, and tutorial lines).";
+}
+
+function crankVaultColor(def) {
+  return def?.color || "blue";
+}
+
+function crankVaultArtSrc(def, open = false) {
+  return `assets/crankvaults/${crankVaultColor(def)}-crankvault-${open ? "open" : "closed"}.png`;
+}
+
+function crankVaultArtMarkup(def, { open = false, size = "lg" } = {}) {
+  return `<img class="crankvault-img crankvault-img-${size}" src="${crankVaultArtSrc(def, open)}" alt="${escapeHtml(def?.name || "CrankVault")}"
+    onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'crankvault-img-fallback',textContent:'◈'}))">`;
+}
+
+function crankVaultShortDetail(vault) {
+  const medallions = vault.rewards.reduce((sum, reward) => sum + (reward.kind === "medallion" ? reward.count || 1 : 0), 0);
+  const spins = vault.rewards.reduce((sum, reward) => sum + (reward.kind === "spins" ? reward.amount || 0 : 0), 0);
+  return `${medallions} medallion${medallions === 1 ? "" : "s"}${spins ? ` + ${spins} Spins` : ""}`;
+}
+
+function renderCrankVaults() {
+  if (!el.crankVaultDaily || !el.crankVaultStore || !el.crankVaultInventory) return;
+  const free = dailyVaultAvailable();
+  el.crankVaultDaily.dataset.dailyAvailable = String(free);
+  el.crankVaultDaily.innerHTML = free
+    ? `
+      ${crankVaultArtMarkup(crankVaultDefs.common, { size: "sm" })}
+      <div class="crankvault-daily-copy">
+        <strong>Free daily Common CrankVault is ready</strong>
+        <span id="crankvault-reset"></span>
+      </div>
+      <button class="primary" type="button" data-crankvault-claim-daily>Claim</button>
+    `
+    : `<span id="crankvault-reset"></span>`;
+  el.crankVaultStore.innerHTML = [crankVaultDefs.common, crankVaultDefs.premium].map((vault) => {
+    return `
+      <article class="crankvault-card" data-vault-color="${crankVaultColor(vault)}">
+        ${crankVaultArtMarkup(vault)}
+        <h2>${vault.name}</h2>
+        <p>${crankVaultShortDetail(vault)}</p>
+        <button class="primary" type="button" data-crankvault-buy="${vault.id}">${formatSpins(vault.cost)}</button>
+      </article>
+    `;
+  }).join("");
+  if (el.crankVaultOddsNote) {
+    // TODO: replace the lightweight odds notice with a dedicated reward-table modal if the economy needs deeper inspection.
+    el.crankVaultOddsNote.innerHTML = `${crankVaultPoolCopy()} <button class="text-button" type="button" data-crankvault-odds>Odds</button>`;
+  }
+  if (el.crankVaultInventoryTitle) {
+    const count = state.crankVaultInventory.length;
+    el.crankVaultInventoryTitle.textContent = `Earned Vaults${count ? ` · ${count}` : ""}`;
+  }
+  el.crankVaultInventory.innerHTML = state.crankVaultInventory.length
+    ? state.crankVaultInventory.map((vault) => {
+      const def = crankVaultDefs[vault.type] || crankVaultDefs.common;
+      return `
+        <article class="crankvault-inventory-card" data-vault-color="${crankVaultColor(def)}">
+          ${crankVaultArtMarkup(def, { size: "sm" })}
+          <h3>${def.name}</h3>
+          <small>${vault.source || "Story reward"}</small>
+          <button class="primary" type="button" data-crankvault-open="${vault.id}">Open</button>
+        </article>
+      `;
+    }).join("")
+    : `<p class="empty-note">Earned CrankVaults will wait here until you open them.</p>`;
+  updateCrankVaultResetCopy();
+  if (!crankVaultResetInterval) crankVaultResetInterval = window.setInterval(updateCrankVaultResetCopy, 1000);
+}
+
+function stopCrankVaultResetTimer() {
+  if (!crankVaultResetInterval) return;
+  window.clearInterval(crankVaultResetInterval);
+  crankVaultResetInterval = null;
+}
+
+function updateCrankVaultResetCopy() {
+  renderCrankVaultBadge();
+  if (viewIsActive("crankvaults") && el.crankVaultDaily?.dataset.dailyAvailable !== String(dailyVaultAvailable())) {
+    renderCrankVaults();
+    return;
+  }
+  const resetEl = document.querySelector("#crankvault-reset");
+  if (!resetEl) return;
+  const remaining = Math.max(0, nextVaultResetTime().getTime() - Date.now());
+  const hours = Math.floor(remaining / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  resetEl.textContent = `Next free Common CrankVault in ${hours}h ${minutes}m ${seconds}s`;
+  if (viewIsActive("crankvaults")) renderDailyGoals();
+}
+
+function crankVaultRewardMarkup(result) {
+  if (result.kind === "medallion") {
+    return `
+      <article class="crankvault-reward">
+        ${forgeMedallionMarkup(result.lineId, result.formName, "crankvault-medallion")}
+        <div><strong>${result.formName} Medallion</strong><span>${result.firstTime ? `Take it to ${unlockHubName()} to unlock` : "Duplicate medallion"}</span></div>
+        <img class="crankvault-class-stamp" src="${getClassStamp(result.classLetter)}" alt="Class ${result.classLetter}" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{textContent:'${result.classLetter}'}))">
+      </article>
+    `;
+  }
+  return `<article class="crankvault-reward"><span class="crankvault-img-fallback">◈</span><div><strong>+${result.amount} ${result.kind === "sprox" ? "Sprox" : "Spins"}</strong><span>Added to your wallet</span></div></article>`;
+}
+
+function showCrankVaultReveal(def, results) {
+  if (!el.crankVaultRevealModal) return;
+  el.crankVaultRevealTitle.textContent = def.name;
+  if (el.crankVaultRevealHero) el.crankVaultRevealHero.innerHTML = crankVaultArtMarkup(def);
+  el.crankVaultRevealResults.innerHTML = "";
+  el.crankVaultRevealModal.classList.add("active");
+  el.crankVaultRevealModal.setAttribute("aria-hidden", "false");
+  const delay = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 280;
+  window.setTimeout(() => {
+    if (!el.crankVaultRevealModal.classList.contains("active")) return;
+    if (el.crankVaultRevealHero) {
+      el.crankVaultRevealHero.innerHTML = crankVaultArtMarkup(def, { open: true });
+      el.crankVaultRevealHero.classList.remove("pop");
+      requestAnimationFrame(() => el.crankVaultRevealHero.classList.add("pop"));
+    }
+    el.crankVaultRevealResults.innerHTML = results.map(crankVaultRewardMarkup).join("");
+  }, delay);
+}
+
+function revealCrankVault(def, candidateLines = null) {
+  showCrankVaultReveal(def, openCrankVault(def, candidateLines));
+}
+
+function purchaseCrankVault(type) {
+  const vault = crankVaultDefs[type];
+  if (!vault) return;
+  if (!spendSpins(vault.cost)) {
+    showToast("Not Enough Spins", `You need ${formatSpins(vault.cost)} to open this CrankVault.`);
+    return;
+  }
+  revealCrankVault(vault);
+  renderCrankVaults();
+  render();
+}
+
+function claimDailyCrankVault() {
+  if (!dailyVaultAvailable()) return;
+  state.dailyCrankVault.lastClaimedDayKey = currentVaultDayKey();
+  showToast("Common CrankVault Received", "Your daily free Common CrankVault is ready.");
+  revealCrankVault(crankVaultDefs.common);
+  renderCrankVaults();
+  render();
+}
+
+function openInventoryCrankVault(id) {
+  const vaultIndex = state.crankVaultInventory.findIndex((vault) => vault.id === id);
+  if (vaultIndex < 0) return;
+  const [vault] = state.crankVaultInventory.splice(vaultIndex, 1);
+  const def = crankVaultDefs[vault.type] || crankVaultDefs.common;
+  revealCrankVault(def, vault.candidateLines);
+  saveState();
+  renderCrankVaults();
+  render();
+}
+
+function closeCrankVaultReveal() {
+  el.crankVaultRevealModal?.classList.remove("active");
+  el.crankVaultRevealModal?.setAttribute("aria-hidden", "true");
+  render();
 }
 
 function showToast(title, message) {
@@ -5180,8 +6618,15 @@ function updateNitroHud() {
   if (el.nitroReadout) el.nitroReadout.textContent = race?.nitroActive ? "BOOST" : `${percent}%`;
   if (el.nitroButton) {
     const ready = Boolean(race?.active && !race.finished && charge >= 4 && !race.nitroActive);
+    const bonusWindow = ready && nitroContextForRace().length > 0;
     el.nitroButton.disabled = !ready;
     el.nitroButton.classList.toggle("ready", ready);
+    el.nitroButton.classList.toggle("bonus-window", bonusWindow);
+  }
+  if (el.perfectStreak) {
+    const streak = race?.perfectStreak || 0;
+    el.perfectStreak.hidden = streak < 1;
+    el.perfectStreak.textContent = streak ? `Perfect x${streak} · +${Math.round((perfectHeatMultiplier() - 1) * 100)}% heat` : "";
   }
 }
 
@@ -5197,7 +6642,9 @@ function topGearBoostForShift(label) {
 function finishRace(playerWon) {
   race.active = false;
   race.finished = true;
+  el.dragLaunchLights?.classList.remove("staging");
   playSound(playerWon ? "win-jingle" : "lose-jingle");
+  haptic(playerWon ? [25, 25, 45] : [60]);
   race.nitroActive = false;
   race.rivalNitroActive = false;
   (race.opponents || []).forEach((opponent) => {
@@ -5205,6 +6652,17 @@ function finishRace(playerWon) {
   });
   drawRace();
   const finishedRace = race;
+  const bestOpponentDistance = Math.max(0, ...(finishedRace.opponents || []).map((opponent) => opponent.distance));
+  const finishMargin = Math.abs(finishedRace.playerDistance - bestOpponentDistance);
+  const photoFinish = bestOpponentDistance > 0 && finishMargin <= DRAG_PHOTO_FINISH_MARGIN_METERS;
+  finishedRace.photoFinish = photoFinish ? { won: playerWon, margin: finishMargin } : null;
+  if (photoFinish && effectsAllowed()) {
+    // TODO: add a dedicated photo-finish stinger sound once the audio asset exists.
+    el.dragTrack?.classList.add("photo-finish-moment");
+    screenShake(8, 220);
+    hitStop(DRAG_HITSTOP_PHOTO_MS);
+    window.setTimeout(() => el.dragTrack?.classList.remove("photo-finish-moment"), DRAG_PHOTO_FINISH_REVEAL_DELAY_MS + 180);
+  }
   const isGauntlet = Boolean(finishedRace.gauntlet);
   const isStoryRace = finishedRace.campaignLevelIndex !== null && finishedRace.campaignLevelIndex !== undefined;
   const finishedLevel = isStoryRace ? campaignLevels[finishedRace.campaignLevelIndex] : null;
@@ -5230,6 +6688,13 @@ function finishRace(playerWon) {
     el.raceMessage.className = "race-message loss";
     el.raceMessage.textContent = "";
   }
+  const masteryBonus = playerWon && !isGauntlet && finishedRace.longestPerfectStreak >= DRAG_MASTERY_BONUS_MIN_STREAK
+    ? finishedRace.longestPerfectStreak * DRAG_MASTERY_BONUS_SPROX_PER_SHIFT
+    : 0;
+  if (masteryBonus) {
+    addSprox(masteryBonus);
+    earned += masteryBonus;
+  }
 
   recordRaceUsage(finishedRace.carId);
   recordTunerStat(playerWon ? "dragRacesWon" : "dragRacesLost");
@@ -5253,7 +6718,7 @@ function finishRace(playerWon) {
   }
   render();
   if (tutorialActive() && playerWon) renderTutorial();
-  showRaceResult(el.dragTrack, {
+  const resultPayload = {
     won: playerWon,
     title: tutorialActive() && !playerWon ? "RACE LOST" : undefined,
     sprox: earned,
@@ -5265,6 +6730,8 @@ function finishRace(playerWon) {
     raceAgainLabel: "Race Again",
     hideRaceAgain: tutorialActive() && !playerWon,
     hideSprox: tutorialActive() && !playerWon,
+    dragSummary: dragRaceSummary(finishedRace, masteryBonus),
+    photoFinish: effectsAllowed() ? finishedRace.photoFinish : null,
     disableActions: tutorialActive() && playerWon,
     onPrimary: () => {
       if (tutorialActive() && !playerWon) {
@@ -5288,10 +6755,6 @@ function finishRace(playerWon) {
         const finishStory = () => {
           finishStoryRaceScreen();
         };
-        if (playerWon && pinkSlipCarId && !isCarUnlocked(pinkSlipCarId)) {
-          showPinkSlipUnlock(pinkSlipCarId, finishStory);
-          return;
-        }
         if (playerWon && finishedLevel?.type === "rival") {
           openRivalDialogue(finishedLevel, "post", finishStory);
           return;
@@ -5310,13 +6773,17 @@ function finishRace(playerWon) {
         prepareDragRace(null, null);
       }
     }
-  });
+  };
+  const revealResult = () => showRaceResult(el.dragTrack, resultPayload);
+  if (photoFinish && effectsAllowed()) window.setTimeout(revealResult, DRAG_PHOTO_FINISH_REVEAL_DELAY_MS);
+  else revealResult();
 }
 
 function failDragRace(title) {
   if (!race?.active || race.finished) return;
   race.active = false;
   race.finished = true;
+  el.dragLaunchLights?.classList.remove("staging");
   race.nitroActive = false;
   race.rivalNitroActive = false;
   (race.opponents || []).forEach((opponent) => {
@@ -5330,7 +6797,6 @@ function failDragRace(title) {
   let pinkSlipPenaltyLine = "";
   if (isPinkSlipRiskActive(failedLevel)) {
     applyPinkSlipLossPenalty(failedRace.carId);
-    maybeTriggerRoyalFlushGauntlet(storyCityForCampaignIndex(failedRace.campaignLevelIndex)?.id);
     pinkSlipPenaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
   }
   recordRaceUsage(failedRace.carId);
@@ -5353,6 +6819,7 @@ function failDragRace(title) {
     lines: pinkSlipPenaltyLine ? [pinkSlipPenaltyLine] : [],
     hideRaceAgain: tutorialActive(),
     hideSprox: tutorialActive(),
+    dragSummary: dragRaceSummary(failedRace),
     onPrimary: () => {
       if (tutorialActive()) {
         prepareDragRace(null, tutorialDragStage());
@@ -5383,6 +6850,33 @@ function failDragRace(title) {
   });
 }
 
+function dragRaceSummary(finishedRace, masteryBonus = 0) {
+  const counts = { Perfect: 0, Good: 0, Late: 0, Early: 0 };
+  (finishedRace?.shiftScore || []).forEach((label) => {
+    if (Object.prototype.hasOwnProperty.call(counts, label)) counts[label] += 1;
+  });
+  return {
+    launchGrade: finishedRace?.launchGrade || "Not launched",
+    counts,
+    longestPerfectStreak: finishedRace?.longestPerfectStreak || 0,
+    nitroUsed: Boolean(finishedRace?.nitroUsed),
+    masteryBonus
+  };
+}
+
+function dragRaceSummaryMarkup(summary) {
+  if (!summary) return "";
+  return `
+    <div class="drag-result-breakdown">
+      <strong>Drag Breakdown</strong>
+      <span>Launch: ${escapeHtml(summary.launchGrade)}</span>
+      <span>Shifts: ${summary.counts.Perfect} Perfect · ${summary.counts.Good} Good · ${summary.counts.Late} Late · ${summary.counts.Early} Early</span>
+      <span>Longest Perfect streak: ${summary.longestPerfectStreak}</span>
+      <span>Nitro: ${summary.nitroUsed ? "Used" : "Not used"}${summary.masteryBonus ? ` · Mastery bonus +${formatSprox(summary.masteryBonus)}` : ""}</span>
+    </div>
+  `;
+}
+
 function showRaceResult(trackNode, result) {
   if (!trackNode) {
     result.onPrimary?.();
@@ -5390,12 +6884,14 @@ function showRaceResult(trackNode, result) {
   }
   trackNode.querySelectorAll(".race-result-popup").forEach((node) => node.remove());
   const popup = document.createElement("div");
-  popup.className = `race-result-popup ${result.won ? "win" : "loss"} ${result.disableActions ? "tutorial-passive" : ""}`;
+  popup.className = `race-result-popup ${result.won ? "win" : "loss"} ${result.disableActions ? "tutorial-passive" : ""} ${effectsAllowed() ? "result-build" : ""}`;
   popup.innerHTML = `
     <div class="race-result-card">
+      ${result.photoFinish ? `<p class="photo-finish-stinger">${result.won ? "WIN" : "LOSE"} · PHOTO FINISH</p>` : ""}
       <h2>${result.title || (result.won ? "Victory" : "Defeat")}</h2>
       ${medalResultMarkup(result.medal, result.medalImproved)}
-      ${result.hideSprox ? "" : `<p>Sprox Earned: <strong>${sproxResultMarkup(result.sprox ?? 0)}</strong></p>`}
+      ${result.hideSprox ? "" : `<p class="reward-pop">Sprox Earned: <strong>${sproxResultMarkup(result.sprox ?? 0)}</strong></p>`}
+      ${dragRaceSummaryMarkup(result.dragSummary)}
       ${(result.lines || []).map((line) => `<p>${line}</p>`).join("")}
       <div class="race-result-actions">
         <button class="primary ${result.primaryTone === "success" ? "success-result" : ""}" type="button" data-result-action="primary" ${result.disableActions ? "disabled" : ""}>${result.primaryLabel || "Continue"}</button>
@@ -5416,6 +6912,9 @@ function showRaceResult(trackNode, result) {
     result.onPrimary?.();
   });
   trackNode.appendChild(popup);
+  if (effectsAllowed()) {
+    requestAnimationFrame(() => popup.classList.add("result-build-ready"));
+  }
   animateCountUpNumbers(popup);
   if (normalizeMedal(result.medal) !== "none") playAudioCue("medalReveal");
 }
@@ -5428,7 +6927,7 @@ function clearRaceResultPopups() {
 }
 
 function animateCountUpNumbers(root) {
-  if (reduceMotionEnabled()) {
+  if (reduceMotionEnabled() || state.settings.screenEffects === false) {
     root.querySelectorAll(".count-up-number").forEach((node) => {
       node.textContent = formatSprox(Number(node.dataset.countTarget) || 0);
     });
@@ -5496,7 +6995,6 @@ function revealEvolution(carId, evolutionIndex) {
     progress.pendingEvolution = unlockedEvolutionIndex(carId) + 1;
   }
   const unlockedCarId = unlockSecretCars();
-  maybeTriggerRidesHairGauntlet();
   const form = currentEvolution(carId);
   evolutionModal = { mode: "unlocked", carId, evolution: evolutionIndex };
   el.evolutionModal.classList.add("evolution-unlocked");
@@ -5639,14 +7137,6 @@ function hasMedallion(carId) {
   return (state.medallionsOwned || []).includes(carId);
 }
 
-function showPinkSlipUnlock(carId, onContinue) {
-  const car = cars.find((item) => item.id === carId);
-  if (!car) { onContinue?.(); return; }
-  awardMedallion(carId);
-  pendingPinkSlipContinue = onContinue;
-  showMedallionEarnedPopup(carId, onContinue);
-}
-
 // ─── MEDALLION EARNED POPUP ──────────────────────────────────────────────────
 function showMedallionEarnedPopup(carId, onContinue) {
   const car = cars.find((c) => c.id === carId);
@@ -5693,6 +7183,21 @@ const forgeMedallionMap = {
   "florida-gator":      "assets/medallions/medallion-gladigator.png",
   "grunge-fish":        "assets/medallions/medallion-moshfin.png",
   "karate-cow":         "assets/medallions/medallion-udderlee.png",
+  "monkey":             "assets/medallions/medallion-bananachi.png",
+  "all-terrain-spyder": "assets/medallions/medallion-spydar.png",
+  "sun-lion":           "assets/medallions/medallion-sparkit.png",
+  "emo-turtle":         "assets/medallions/medallion-shellow.png",
+  "snake":              "assets/medallions/medallion-venomoil.png",
+  "galaxy-jelly":       "assets/medallions/medallion-bloomula.png",
+  "high-roller-cheetah":"assets/medallions/medallion-jackpaw.png",
+  "combat-badger":      "assets/medallions/medallion-bootclaw.png",
+  "jazz-panther":       "assets/medallions/medallion-panthroove.png",
+  "sports-car":         "assets/medallions/medallion-ballparker.png",
+  "magician":           "assets/medallions/medallion-hoptical.png",
+  "drift-pirate":       "assets/medallions/medallion-driftplank.png",
+  "island-luau":        "assets/medallions/medallion-isluau.png",
+  "long-haul-camel":    "assets/medallions/medallion-decalf.png",
+  "octopus-gymnast":    "assets/medallions/medallion-chalktopus.png",
   "art-van":            "assets/medallions/medallion-vanvass.png",
   "cake-train":         "assets/medallions/medallion-cuptrack.png",
   "muscle-man":         "assets/medallions/medallion-tourquette.png",
@@ -5713,29 +7218,326 @@ const forgeMedallionMap = {
   "skater-koala":       "assets/medallions/medallion-koaster.png",
   "royal-flush":        "assets/medallions/medallion-whiffleton.png",
   "rides-hair":         "assets/medallions/medallion-staschel.png",
-  "hornula1":           "assets/medallions/medallion-hornula1.png",
+  "funvee":             "assets/medallions/medallion-funvee.png",
+  "eager-beaver":       "assets/medallions/medallion-dambitious.png",
+  "minivan":            "assets/medallions/medallion-poola.png",
+  "birds-of-metal":     "assets/medallions/medallion-hawklycruze.png",
+  "running-bulls":      "assets/medallions/medallion-motoro.png",
+  "anime":              "assets/medallions/medallion-irasshaimase.png",
+  "influencer-peacock": "assets/medallions/medallion-hatchelorette.png",
+  "bucking-bronco":     "assets/medallions/medallion-whinnibago.png",
+  "rainbowlt":          "assets/medallions/medallion-rainbowlt.png",
+  "training-car":       "assets/medallions/medallion-tutorque.png",
 };
 
 function forgeMedallionSrc(carId) {
   return forgeMedallionMap[carId] || "";
 }
 
+function forgeMedallionMarkup(carId, label, className = "") {
+  const src = forgeMedallionSrc(carId);
+  const classLetter = classForLineId(carId);
+  if (src) return `<img class="${className}" src="${src}" alt="${escapeHtml(label || carId)} Medallion" onerror="this.hidden=true">`;
+  // TODO: add forge-medallion art for all unlockable lines.
+  return `<span class="forge-medallion-fallback ${className}" aria-label="${escapeHtml(label || carId)} Medallion">
+    <img src="${getClassStamp(classLetter)}" alt="Class ${classLetter}" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{textContent:'${classLetter || '?'}'}))">
+  </span>`;
+}
+
 let forgeSelectedCarId = null;
 let forgeAnimating = false;
+let forgeMode = "unlock";
+let forgeFusionA = null;
+let forgeFusionB = null;
+let forgeFusionMessage = "";
+
+function fusionParentLineIdSet() {
+  return new Set(fusionRecipes.flatMap((recipe) => fusionRecipeParentLineIds(recipe)));
+}
+
+function firstCityClearedForFusion() {
+  const firstCity = storyCities[0];
+  const firstBoss = firstCity?.levels?.find((level) => level.type === "boss");
+  return Boolean(firstBoss && storyLevelCompleted(firstBoss.campaignIndex));
+}
+
+function fusionUnlocked() {
+  if (tutorialActive()) return false;
+  const parentIds = fusionParentLineIdSet();
+  // TODO confirm gate: default unlock is first city cleared plus any valid fusion parent reaching Gold tier.
+  return firstCityClearedForFusion() && cars.some((car) => parentIds.has(car.id) && medallionTier(car.id) === "gold");
+}
+
+function maybeShowFusionIntro() {
+  if (!fusionUnlocked() || state.fusionIntroSeen) return;
+  state.fusionIntroSeen = true;
+  saveState();
+  showToast("Fusion Unlocked", `${unlockHubName()} can now fuse Gold-tier GearBorn.`);
+}
+
+function setForgeMode(nextMode) {
+  forgeMode = nextMode === "fusion" && fusionUnlocked() ? "fusion" : "unlock";
+  if (forgeMode !== "fusion") {
+    forgeFusionA = null;
+    forgeFusionB = null;
+    forgeFusionMessage = "";
+  }
+  openForge();
+}
+
+function fusionParentName(lineId) {
+  const car = cars.find((item) => item.id === lineId);
+  return car?.evolutions?.[0]?.name || car?.forms?.[0]?.[1] || lineId;
+}
+
+function fusionParentTileMarkup(lineId) {
+  const selected = [forgeFusionA, forgeFusionB].includes(lineId);
+  const count = spendableMedallionsForRank(lineId);
+  const name = fusionParentName(lineId);
+  return `
+    <button class="forge-medallion-tile forge-fusion-parent-tile${selected ? " active" : ""}" data-forge-fusion-parent="${lineId}" type="button" aria-label="${escapeHtml(name)} fusion parent">
+      ${forgeMedallionMarkup(lineId, name)}
+      <span>${escapeHtml(name)}</span>
+      <small>Gold · ${count} spendable</small>
+    </button>
+  `;
+}
+
+function fusionSlotMarkup(slot, lineId) {
+  const name = lineId ? fusionParentName(lineId) : `Parent ${slot}`;
+  return `
+    <button class="forge-fusion-slot ${lineId ? "filled" : "empty"}" type="button" data-forge-fusion-slot="${slot}" ${lineId ? "" : "disabled"}>
+      ${lineId ? forgeMedallionMarkup(lineId, name, "forge-fusion-slot-medallion") : `<span class="forge-fusion-slot-empty">+</span>`}
+      <strong>${escapeHtml(name)}</strong>
+      <small>${lineId ? `${spendableMedallionsForRank(lineId)} spendable` : "Select a Gold parent"}</small>
+    </button>
+  `;
+}
+
+function fusionRecipeStatusMarkup(recipe) {
+  if (!recipe) return "";
+  const [parentAId, parentBId] = fusionRecipeParentLineIds(recipe);
+  const issues = [];
+  if (isCarUnlocked(recipe.id)) issues.push("Fusion already owned.");
+  if (!fusionParentsEligible(recipe)) issues.push("Both parent lines must be Gold tier.");
+  if (spendableMedallionsForRank(parentAId) < fusionMedallionCost || spendableMedallionsForRank(parentBId) < fusionMedallionCost) {
+    issues.push(`Requires ${fusionMedallionCost} spendable medallions from each parent.`);
+  }
+  return issues.length ? `<p class="forge-fusion-error">${issues.join(" ")}</p>` : `<p class="forge-fusion-ready">Ready to fuse.</p>`;
+}
+
+function renderForgeFusionPicker() {
+  if (!el.forgeMedallionGrid) return;
+  const parentIds = [...fusionParentLineIdSet()]
+    .filter((lineId) => medallionTier(lineId) === "gold")
+    .sort((a, b) => fusionParentName(a).localeCompare(fusionParentName(b)));
+  const bothSelected = forgeFusionA && forgeFusionB && forgeFusionA !== forgeFusionB;
+  const recipe = bothSelected ? fusionRecipeFor(forgeFusionA, forgeFusionB) : null;
+  const fusionCar = recipe ? cars.find((car) => car.id === recipe.id) : null;
+  const fusionForm = fusionCar?.evolutions?.[0];
+  const canFuse = recipe && canForge(recipe);
+  // NOTE: Fusion consumes actual duplicate medallions, which also lowers the parent line's remaining rank-up fuel.
+  const preview = bothSelected
+    ? (recipe ? `
+        <div class="forge-fusion-preview">
+          <div class="forge-fusion-preview-art">${carMarkupForEvolution(recipe.id, 0, "display")}</div>
+          <div>
+            <span>Known Fusion</span>
+            <strong>${escapeHtml(recipe.name)}</strong>
+            <small>${fusionForm?.name ? escapeHtml(fusionForm.name) : "Fusion line"}</small>
+            <em>Cost: ${fusionMedallionCost} ${escapeHtml(fusionParentName(forgeFusionA))} + ${fusionMedallionCost} ${escapeHtml(fusionParentName(forgeFusionB))}</em>
+          </div>
+        </div>
+        ${fusionRecipeStatusMarkup(recipe)}
+      ` : `
+        <div class="forge-fusion-preview no-recipe">
+          <div class="forge-fusion-question">?</div>
+          <div>
+            <span>No known fusion</span>
+            <strong>Experiment?</strong>
+            <small>Risk ${fusionMedallionCost} medallions from each parent for a consolation reward.</small>
+          </div>
+        </div>
+      `)
+    : `<p class="forge-fusion-help">Pick two Gold-tier parent lines to see whether the Forge knows a fusion.</p>`;
+  el.forgeMedallionGrid.innerHTML = `
+    <div class="forge-fusion-picker">
+      <div class="forge-fusion-slots">
+        ${fusionSlotMarkup("A", forgeFusionA)}
+        ${fusionSlotMarkup("B", forgeFusionB)}
+      </div>
+      ${preview}
+      ${forgeFusionMessage ? `<p class="forge-fusion-message">${escapeHtml(forgeFusionMessage)}</p>` : ""}
+      <div class="forge-fusion-parent-list">
+        ${parentIds.length ? parentIds.map(fusionParentTileMarkup).join("") : `<p class="forge-empty">Fusion requires Gold-tier parent lines. Clear the first city, then raise a valid parent line to Gold.</p>`}
+      </div>
+    </div>
+  `;
+  if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
+  if (el.forgeSelectedName) el.forgeSelectedName.textContent = recipe ? `${recipe.name} Fusion` : "Select two Gold-tier parents";
+  if (el.forgeUnlockBtn) {
+    el.forgeUnlockBtn.disabled = !(bothSelected && (canFuse || !recipe));
+    el.forgeUnlockBtn.textContent = recipe
+      ? (canFuse ? `Forge ${recipe.name}` : "Fusion Locked")
+      : (bothSelected ? "Gamble Experiment" : "Select Two Parents");
+  }
+}
+
+function selectForgeFusionParent(lineId) {
+  if (forgeMode !== "fusion" || medallionTier(lineId) !== "gold") return;
+  forgeFusionMessage = "";
+  if (forgeFusionA === lineId) {
+    forgeFusionA = null;
+  } else if (forgeFusionB === lineId) {
+    forgeFusionB = null;
+  } else if (!forgeFusionA) {
+    forgeFusionA = lineId;
+  } else if (!forgeFusionB) {
+    forgeFusionB = lineId;
+  } else {
+    forgeFusionA = lineId;
+    forgeFusionB = null;
+  }
+  renderForgeInventory();
+}
+
+function clearForgeFusionSlot(slot) {
+  if (slot === "A") forgeFusionA = null;
+  if (slot === "B") forgeFusionB = null;
+  forgeFusionMessage = "";
+  renderForgeInventory();
+}
+
+function openFusionGambleConfirm() {
+  if (!forgeFusionA || !forgeFusionB) return;
+  if (el.fusionGambleCopy) {
+    el.fusionGambleCopy.textContent = `These two have no known fusion. Risk ${fusionMedallionCost} ${fusionParentName(forgeFusionA)} medallions and ${fusionMedallionCost} ${fusionParentName(forgeFusionB)} medallions to experiment? You'll get something in return, but not a fusion.`;
+  }
+  el.fusionGambleModal?.classList.add("active");
+  el.fusionGambleModal?.setAttribute("aria-hidden", "false");
+  el.cancelFusionGamble?.focus();
+}
+
+function closeFusionGambleConfirm() {
+  el.fusionGambleModal?.classList.remove("active");
+  el.fusionGambleModal?.setAttribute("aria-hidden", "true");
+}
+
+async function runFusionReveal(recipe, parentAId, parentBId) {
+  const overlay = document.getElementById("forge-fullscreen");
+  const area = document.getElementById("forge-fs-anim-area");
+  const fsVat = document.getElementById("forge-fs-vat");
+  if (!overlay || !area || !effectsAllowed()) {
+    showForgeUnlockedPopup(recipe.id);
+    return;
+  }
+  const step = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(70, Math.round(ms))));
+  try {
+    const fsBg = document.querySelector(".forge-fs-bg");
+    if (fsBg) fsBg.src = activeUnlockHub() === "spindellLabs" ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
+    if (fsVat) {
+      fsVat.src = activeUnlockHub() === "spindellLabs" ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
+      fsVat.alt = activeUnlockHub() === "spindellLabs" ? "Spindell sync port" : "The Forge vat";
+    }
+    area.innerHTML = `
+      <div class="forge-fusion-reveal-label">FUSION</div>
+      <div class="forge-fusion-reveal-parent parent-a">${forgeMedallionMarkup(parentAId, fusionParentName(parentAId))}</div>
+      <div class="forge-fusion-reveal-parent parent-b">${forgeMedallionMarkup(parentBId, fusionParentName(parentBId))}</div>
+      <div class="forge-fusion-reveal-flash"></div>
+      <div class="forge-anim-layer forge-anim-car-reveal forge-fusion-car-reveal">${carMarkupForEvolution(recipe.id, 0, "display")}</div>
+    `; // TODO polish fusion reveal with bespoke parent convergence animation.
+    overlay.classList.add("active", "forge-fusion-animation");
+    overlay.setAttribute("aria-hidden", "false");
+    playAudioCue("evolutionBuild");
+    await step(200);
+    area.querySelectorAll(".forge-fusion-reveal-parent").forEach((node) => node.classList.add("converge"));
+    await step(850);
+    fsVat?.classList.add("forge-shake");
+    area.querySelector(".forge-fusion-reveal-flash")?.classList.add("active");
+    await step(650);
+    fsVat?.classList.remove("forge-shake");
+    playAudioCue("evolutionReveal");
+    area.querySelector(".forge-fusion-car-reveal")?.classList.add("step-reveal");
+    await step(1400);
+  } finally {
+    fsVat?.classList.remove("forge-shake");
+    overlay.classList.remove("active", "forge-fusion-animation");
+    overlay.setAttribute("aria-hidden", "true");
+    area.innerHTML = "";
+    showForgeUnlockedPopup(recipe.id);
+  }
+}
+
+async function forgeSelectedFusion() {
+  if (forgeMode !== "fusion" || forgeAnimating || !forgeFusionA || !forgeFusionB) return;
+  const recipe = fusionRecipeFor(forgeFusionA, forgeFusionB);
+  if (!recipe) {
+    openFusionGambleConfirm();
+    return;
+  }
+  forgeAnimating = true;
+  if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = true;
+  const parentAId = forgeFusionA;
+  const parentBId = forgeFusionB;
+  const result = performFusion(recipe);
+  if (result.error) {
+    forgeFusionMessage = result.error;
+    forgeAnimating = false;
+    renderForgeInventory();
+    return;
+  }
+  forgeFusionA = null;
+  forgeFusionB = null;
+  forgeFusionMessage = "";
+  render();
+  renderForgeInventory();
+  await runFusionReveal(recipe, parentAId, parentBId);
+  forgeAnimating = false;
+}
+
+function confirmFusionGamble() {
+  closeFusionGambleConfirm();
+  if (!forgeFusionA || !forgeFusionB) return;
+  const result = attemptFusion(forgeFusionA, forgeFusionB, { gamble: true });
+  if (result.fusionId) {
+    const recipe = fusionRecipes.find((item) => item.id === result.fusionId);
+    if (recipe) runFusionReveal(recipe, forgeFusionA, forgeFusionB);
+    forgeFusionA = null;
+    forgeFusionB = null;
+  } else if (result.whiffed) {
+    forgeFusionMessage = `No fusion formed. You received ${result.spins || 0} Spins as consolation.`;
+    showToast("Fusion Experiment", forgeFusionMessage);
+    forgeFusionA = null;
+    forgeFusionB = null;
+  } else {
+    forgeFusionMessage = result.error || "Fusion experiment failed.";
+  }
+  render();
+  renderForgeInventory();
+}
 
 function openForge() {
   showView("garage");
   forgeSelectedCarId = null;
   forgeAnimating = false;
+  if (!fusionUnlocked()) forgeMode = "unlock";
+  maybeShowFusionIntro();
   const spindell = activeUnlockHub() === "spindellLabs";
   if (el.forgePanel) {
-    el.forgePanel.classList.toggle("spindell-labs-view", spindell);
-    el.forgePanel.classList.toggle("forge-unlock-view", !spindell);
+    el.forgePanel.classList.toggle("spindell-labs-view", spindell && forgeMode === "unlock");
+    el.forgePanel.classList.toggle("forge-unlock-view", !spindell && forgeMode === "unlock");
+    el.forgePanel.classList.toggle("forge-fusion-view", forgeMode === "fusion");
   }
-  if (el.forgeKicker) el.forgeKicker.textContent = spindell ? "Spindell Labs" : "The Forge";
-  if (el.forgeTitle) el.forgeTitle.textContent = spindell ? "Spindell Labs" : "Forge what's next.";
+  if (el.forgeModeToggle) {
+    el.forgeModeToggle.hidden = !fusionUnlocked();
+    el.forgeModeToggle.querySelectorAll("[data-forge-mode]").forEach((button) => button.classList.toggle("active", button.dataset.forgeMode === forgeMode));
+  }
+  if (el.forgeKicker) el.forgeKicker.textContent = forgeMode === "fusion" ? unlockHubName() : (spindell ? "Spindell Labs" : "The Forge");
+  if (el.forgeTitle) el.forgeTitle.textContent = forgeMode === "fusion" ? "Fuse two Golds." : (spindell ? "Spindell Labs" : "Forge what's next.");
   if (el.forgeSubtitle) {
-    el.forgeSubtitle.textContent = spindell
+    el.forgeSubtitle.textContent = forgeMode === "fusion"
+      ? "Combine two Gold-tier lines of different types into something new."
+      : spindell
       ? "Unlock medallions through precision key calibration. Guide: Orion Vincent."
       : "Forge Unlock. The Forge answers. Guide: Auntie.";
   }
@@ -5748,7 +7550,7 @@ function openForge() {
     el.forgeVatImg.alt = spindell ? "Spindell sync port" : "The Forge vat";
   }
   if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
-  if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = spindell ? "Select a Key" : "Select a Medallion"; }
+  if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = forgeMode === "fusion" ? "Select Two Parents" : (spindell ? "Select a Key" : "Select a Medallion"); }
   if (el.forgeAnimationArea) {
     el.forgeAnimationArea.innerHTML = spindell
       ? `<img class="spindell-idle-sync-tube" src="assets/spindell/spindell-sync-tube.png" alt="" aria-hidden="true" onerror="this.hidden=true;">`
@@ -5756,7 +7558,7 @@ function openForge() {
     el.forgeAnimationArea.classList.remove("animating");
   }
   if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
-  if (el.forgeSelectedName) el.forgeSelectedName.textContent = spindell ? "Select a key medallion to sync" : "Select a Medallion to unlock";
+  if (el.forgeSelectedName) el.forgeSelectedName.textContent = forgeMode === "fusion" ? "Select two Gold-tier parents" : (spindell ? "Select a key medallion to sync" : "Select a Medallion to unlock");
   // Show forge panel inside garage-view, hide garage content
   if (el.garageContent) el.garageContent.hidden = true;
   if (el.forgePanel) el.forgePanel.hidden = false;
@@ -5773,6 +7575,20 @@ function closeForge() {
 
 function renderForgeInventory() {
   if (!el.forgeMedallionGrid) return;
+  if (el.forgeModeToggle) {
+    el.forgeModeToggle.hidden = !fusionUnlocked();
+    el.forgeModeToggle.querySelectorAll("[data-forge-mode]").forEach((button) => button.classList.toggle("active", button.dataset.forgeMode === forgeMode));
+  }
+  if (el.forgePanel) {
+    const spindell = activeUnlockHub() === "spindellLabs";
+    el.forgePanel.classList.toggle("spindell-labs-view", spindell && forgeMode === "unlock");
+    el.forgePanel.classList.toggle("forge-unlock-view", !spindell && forgeMode === "unlock");
+    el.forgePanel.classList.toggle("forge-fusion-view", forgeMode === "fusion");
+  }
+  if (forgeMode === "fusion") {
+    renderForgeFusionPicker();
+    return;
+  }
   // During tutorial forge scene, show only the 3 demo medallions awarded for this demo
   const tutorialForgeDemoIds = ["bee", "pickup", "rabbit"];
   const tutorialForge = tutorialActive() && state.tutorialAwaitingForge;
@@ -5783,10 +7599,9 @@ function renderForgeInventory() {
     ? owned.map((carId) => {
         const car = cars.find((c) => c.id === carId);
         const form = car?.evolutions?.[0];
-        const src = forgeMedallionSrc(carId);
         const active = forgeSelectedCarId === carId ? " active" : "";
         return `<button class="forge-medallion-tile${active}" data-forge-car="${carId}" type="button" aria-label="${form?.name || carId} Medallion">
-          ${src ? `<img src="${src}" alt="${form?.name || carId}" onerror="this.style.opacity='.3'">` : ""}
+          ${forgeMedallionMarkup(carId, form?.name || carId)}
           <span>${form?.name || carId}</span>
         </button>`;
       }).join("")
@@ -5794,15 +7609,17 @@ function renderForgeInventory() {
 }
 
 function selectForgeMedallion(carId) {
+  if (forgeMode !== "unlock") return;
   forgeSelectedCarId = carId;
   renderForgeInventory();
   const car = cars.find((c) => c.id === carId);
   const form = car?.evolutions?.[0];
   if (el.forgeSelectedName) el.forgeSelectedName.textContent = form?.name || carId;
   if (el.forgeSelectedMedallion) {
-    el.forgeSelectedMedallion.src = forgeMedallionSrc(carId);
+    const src = forgeMedallionSrc(carId);
+    el.forgeSelectedMedallion.src = src;
     el.forgeSelectedMedallion.alt = (form?.name || carId) + " Medallion";
-    el.forgeSelectedMedallion.removeAttribute("hidden");
+    el.forgeSelectedMedallion.toggleAttribute("hidden", !src);
   }
   el.forgeUnlockBtn.disabled = false;
   el.forgeUnlockBtn.textContent = activeUnlockHub() === "spindellLabs" ? `Sync ${form?.name || carId}` : `Unlock ${form?.name || carId}`;
@@ -6060,10 +7877,10 @@ function showForgeUnlockedPopup(carId) {
     forgeSelectedCarId = null;
     if (el.forgeUnlockBtn) {
       el.forgeUnlockBtn.disabled = true;
-      el.forgeUnlockBtn.textContent = "Select a Medallion";
+      el.forgeUnlockBtn.textContent = forgeMode === "fusion" ? "Select Two Parents" : "Select a Medallion";
     }
     if (el.forgeSelectedMedallion) el.forgeSelectedMedallion.setAttribute("hidden", "");
-    if (el.forgeSelectedName) el.forgeSelectedName.textContent = "Select a Medallion to unlock";
+    if (el.forgeSelectedName) el.forgeSelectedName.textContent = forgeMode === "fusion" ? "Select two Gold-tier parents" : "Select a Medallion to unlock";
     if (!isForTutorial) {
       closeForge();
       renderForgeInventory();
@@ -6120,8 +7937,92 @@ function closeResetModal() {
   el.resetModal.setAttribute("aria-hidden", "true");
 }
 
+function encodeSaveCode() {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  } catch (error) {
+    console.warn("GearBorn export failed:", error);
+    return "";
+  }
+}
+
+function decodeSaveCode(code) {
+  try {
+    const parsed = JSON.parse(decodeURIComponent(escape(atob(String(code).trim()))));
+    if (!parsed || typeof parsed !== "object" || !parsed.selectedCar) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function openExportSaveModal() {
+  const code = encodeSaveCode();
+  if (!code) {
+    showToast("Export failed", "Could not generate a save code.");
+    return;
+  }
+  el.saveTransferTitle.textContent = "Export Save";
+  el.saveTransferCopy.textContent = "Copy this code somewhere safe. Paste it on any device to restore your garage.";
+  el.saveTransferText.value = code;
+  el.saveTransferText.readOnly = true;
+  el.saveTransferCopyBtn.hidden = false;
+  el.saveTransferImportBtn.hidden = true;
+  el.saveTransferModal.hidden = false;
+  el.saveTransferModal.classList.add("active");
+  el.saveTransferModal.setAttribute("aria-hidden", "false");
+}
+
+function openImportSaveModal() {
+  el.saveTransferTitle.textContent = "Import Save";
+  el.saveTransferCopy.textContent = "Paste a save code below. This will replace your current progress.";
+  el.saveTransferText.value = "";
+  el.saveTransferText.readOnly = false;
+  el.saveTransferCopyBtn.hidden = true;
+  el.saveTransferImportBtn.hidden = false;
+  el.saveTransferModal.hidden = false;
+  el.saveTransferModal.classList.add("active");
+  el.saveTransferModal.setAttribute("aria-hidden", "false");
+  el.saveTransferText.focus();
+}
+
+function copySaveCode() {
+  const code = el.saveTransferText.value;
+  if (!code) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(code)
+      .then(() => showToast("Copied", "Save code copied to clipboard."))
+      .catch(() => {
+        el.saveTransferText.select();
+        showToast("Copy manually", "Select the text and copy it.");
+      });
+  } else {
+    el.saveTransferText.select();
+    showToast("Copy manually", "Select the text and copy it.");
+  }
+}
+
+function importSaveCode() {
+  const parsed = decodeSaveCode(el.saveTransferText.value);
+  if (!parsed) {
+    showToast("Invalid code", "That save code could not be read.");
+    return;
+  }
+  const migrated = migrateSave(parsed);
+  state = mergeState(defaultState, migrated);
+  sanitizeState();
+  saveState();
+  window.location.reload();
+}
+
+function closeSaveTransferModal() {
+  el.saveTransferModal.hidden = true;
+  el.saveTransferModal.classList.remove("active");
+  el.saveTransferModal.setAttribute("aria-hidden", "true");
+}
+
 function resetRacingData() {
-  localStorage.removeItem(saveKey);
+  gearbornStorageRemoveItem(saveKey);
   state = structuredClone(defaultState);
   sanitizeState();
   race = null;
@@ -6137,6 +8038,8 @@ function resetRacingData() {
   pendingPinkSlipRiskStart = null;
   pendingBossRaceStart = null;
   pendingCityUnlock = null;
+  gasPaidGauntletKey = null;
+  closeGasEmptyModal();
   storyReplayOpen = false;
   modeFlow.drag = "car";
   modeFlow.time = "car";
@@ -6167,6 +8070,8 @@ function resetRacingData() {
 function openGodModal() {
   el.godCode.value = "";
   el.godCodeError.textContent = "";
+  el.godCodeError.classList.remove("success");
+  renderDevCheatStatus();
   el.godModal.classList.add("active");
   el.godModal.setAttribute("aria-hidden", "false");
   el.godCode.focus();
@@ -6177,6 +8082,17 @@ function closeGodModal() {
   el.godModal.setAttribute("aria-hidden", "true");
   el.godCode.value = "";
   el.godCodeError.textContent = "";
+  el.godCodeError.classList.remove("success");
+}
+
+function renderDevCheatStatus() {
+  if (!el.godCheatStatus) return;
+  el.godCheatStatus.innerHTML = Object.values(devCheatCodes).map((cheat) => `
+    <span class="${state[cheat.stateKey] ? "active" : ""}">
+      <strong>${escapeHtml(cheat.label)}</strong>
+      <em>${state[cheat.stateKey] ? "Enabled" : "Off"}</em>
+    </span>
+  `).join("");
 }
 
 function openTutorialReplayModal() {
@@ -6231,50 +8147,67 @@ function renderTutorialSceneOptions() {
 }
 
 function activateGodMode() {
+  const entered = el.godCode.value.trim();
   const godModePassword = getGodModePassword();
-  if (!godModePassword || el.godCode.value.trim() !== godModePassword) {
-    el.godCodeError.textContent = "Incorrect code.";
+  if (godModePassword && entered === godModePassword) {
+    state.unlimitedSprox = true;
+    state.unlockedLines = cars.map((car) => car.id);
+    state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
+    state.unlockedArtVanForms = cars.find((car) => car.id === "art-van")?.evolutions.map((_, index) => index) || [];
+    achievementDefs.forEach((achievement) => {
+      state.achievements[achievement.id] = { complete: true, granted: true };
+    });
+    cars.forEach((car) => {
+      state.garage[car.id] = {
+        level: maxCarLevel,
+        xp: 0,
+        evolution: car.evolutions.length - 1,
+        unlockedEvolution: car.evolutions.length - 1,
+        pendingEvolution: null
+      };
+    });
+    state.garage.rainbowlt = {
+      level: maxCarLevel,
+      xp: 0,
+      evolution: cars.find((car) => car.id === "rainbowlt").evolutions.length - 1,
+      unlockedEvolution: cars.find((car) => car.id === "rainbowlt").evolutions.length - 1,
+      pendingEvolution: null
+    };
+    state.highestRankIndex = ranks.length - 1;
+    state.highestBossIndex = bossChallengeBosses.length - 1;
+    state.highestCampaignIndex = campaignLevels.length - 1;
+    state.completedCampaignLevels = Object.fromEntries(campaignLevels.map((_, index) => [index, true]));
+    state.selectedStoryCity = storyCities.length - 1;
+    state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
+    state.selectedBoss = finalBoss.id;
+    saveState();
+    closeGodModal();
+    closeEvolutionModal();
+    closeUpgradeModal();
+    render();
+    showView("garage");
+    el.raceMessage.className = "race-message win";
+    el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, evolved, and stocked with unlimited Sprox.";
+    return;
+  }
+  const cheat = devCheatCodes[entered.toUpperCase()];
+  if (cheat) {
+    state[cheat.stateKey] = !state[cheat.stateKey];
+    saveState();
+    render();
+    renderSproxWallet();
+    const enabled = state[cheat.stateKey];
+    el.godCode.value = "";
+    el.godCodeError.textContent = `${cheat.label}: ${enabled ? "Enabled" : "Disabled"}.`;
+    el.godCodeError.classList.add("success");
+    renderDevCheatStatus();
+    showToast(cheat.label, enabled ? "Enabled" : "Disabled");
     el.godCode.focus();
     return;
   }
-  state.unlimitedSprox = true;
-  state.unlockedLines = cars.map((car) => car.id);
-  state.unlockedCars = Object.fromEntries(state.unlockedLines.map((carId) => [carId, true]));
-  state.unlockedArtVanForms = cars.find((car) => car.id === "art-van")?.evolutions.map((_, index) => index) || [];
-  achievementDefs.forEach((achievement) => {
-    state.achievements[achievement.id] = { complete: true, granted: true };
-  });
-  cars.forEach((car) => {
-    state.garage[car.id] = {
-      level: maxCarLevel,
-      xp: 0,
-      evolution: car.evolutions.length - 1,
-      unlockedEvolution: car.evolutions.length - 1,
-      pendingEvolution: null
-    };
-  });
-  state.garage.rainbowlt = {
-    level: maxCarLevel,
-    xp: 0,
-    evolution: cars.find((car) => car.id === "rainbowlt").evolutions.length - 1,
-    unlockedEvolution: cars.find((car) => car.id === "rainbowlt").evolutions.length - 1,
-    pendingEvolution: null
-  };
-  state.highestRankIndex = ranks.length - 1;
-  state.highestBossIndex = bossChallengeBosses.length - 1;
-  state.highestCampaignIndex = campaignLevels.length - 1;
-  state.completedCampaignLevels = Object.fromEntries(campaignLevels.map((_, index) => [index, true]));
-  state.selectedStoryCity = storyCities.length - 1;
-  state.selectedCampaign = Math.min(state.selectedCampaign || 0, state.highestCampaignIndex);
-  state.selectedBoss = finalBoss.id;
-  saveState();
-  closeGodModal();
-  closeEvolutionModal();
-  closeUpgradeModal();
-  render();
-  showView("garage");
-  el.raceMessage.className = "race-message win";
-  el.raceMessage.textContent = "God Mode activated. All GearBorn lines are unlocked, maxed, evolved, and stocked with unlimited Sprox.";
+  el.godCodeError.classList.remove("success");
+  el.godCodeError.textContent = "Incorrect code.";
+  el.godCode.focus();
 }
 
 function carNameKey(name = "") {
@@ -6347,6 +8280,7 @@ function drawRace() {
     el.dragTrack.style.setProperty("--drag-bg-x", `${Math.round(race.bgScroll || 0)}px`);
     el.dragTrack.style.setProperty("--drag-road-x", `${Math.round(race.roadScroll || 0)}px`);
     el.dragTrack.classList.toggle("chromatic-vignette", Boolean(race.nitroActive));
+    el.dragTrack.classList.toggle("nitro-speed-lines", Boolean(race.nitroActive && effectsAllowed()));
     const finishLine = el.dragTrack.querySelector(".finish-line");
     if (finishLine) {
       const finishX = baseX + (race.target - race.playerDistance) * metersToPx;
@@ -6453,7 +8387,7 @@ function selectedBoss() {
 
 function loadCustomTracks() {
   try {
-    const tracks = JSON.parse(localStorage.getItem(customTracksKey) || "[]");
+    const tracks = JSON.parse(gearbornStorageGetItem(customTracksKey) || "[]");
     return Array.isArray(tracks) ? tracks : [];
   } catch {
     return [];
@@ -6461,7 +8395,11 @@ function loadCustomTracks() {
 }
 
 function saveCustomTracks(tracks) {
-  localStorage.setItem(customTracksKey, JSON.stringify(tracks));
+  try {
+    gearbornStorageSetItem(customTracksKey, JSON.stringify(tracks));
+  } catch (err) {
+    console.warn("GearBorn custom tracks save failed:", err);
+  }
 }
 
 function createBlankBuilderGrid() {
@@ -6825,12 +8763,24 @@ function showView(view) {
   if (view !== "beta") stopBeta3d(false);
   if (view !== "beta" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
+  if (view !== "crankvaults") stopCrankVaultResetTimer();
+  closeGasEmptyModal();
   // Reset forge panel when navigating to garage, unless tutorial is opening The Forge
   if (view === "garage" && !(tutorialActive() && currentTutorialScene()?.id === "the-forge")) {
     if (el.forgePanel) el.forgePanel.hidden = true;
     if (el.garageContent) el.garageContent.hidden = false;
   }
-  el.views.forEach((panel) => panel.classList.toggle("active", panel.id === `${view}-view`));
+  let activePanel = null;
+  el.views.forEach((panel) => {
+    const active = panel.id === `${view}-view`;
+    panel.classList.toggle("active", active);
+    panel.classList.remove("view-transition-enter");
+    if (active) activePanel = panel;
+  });
+  if (activePanel && effectsAllowed()) {
+    activePanel.classList.add("view-transition-enter");
+    window.setTimeout(() => activePanel.classList.remove("view-transition-enter"), VIEW_TRANSITION_MS);
+  }
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
   const activeNavView = view === "beta" && betaRaceContext?.source === "training"
     ? "solo"
@@ -6942,6 +8892,10 @@ function activeUnlockHub() {
   return activeFactionId() === "spindell" ? "spindellLabs" : "forge";
 }
 
+function unlockHubName() {
+  return activeUnlockHub() === "spindellLabs" ? "Spindell Labs" : "The Forge";
+}
+
 function unlockAnimationType() {
   return activeUnlockHub() === "spindellLabs" ? "spindellKeySync" : "forgeUnlock";
 }
@@ -6970,11 +8924,11 @@ function tutorialActive() {
   return Boolean(state.tutorialActive);
 }
 
-function startTutorial(sceneId = "intro") {
+function startTutorial(sceneId = "intro", options = {}) {
   const resolvedSceneId = resolveTutorialSceneId(sceneId);
   const sceneIndex = tutorialSceneIndex(resolvedSceneId);
   if (!storyTunerReady()) {
-    pendingIntroView = `tutorial:${resolvedSceneId}`;
+    pendingIntroView = `tutorial:${resolvedSceneId}:${options.fullRunEligible ? "full" : "scene"}`;
     openTunerModal();
     return;
   }
@@ -6984,6 +8938,7 @@ function startTutorial(sceneId = "intro") {
   state.unlimitedSprox = false;
   state.tutorialActive = true;
   state.tutorialComplete = false;
+  state.tutorialFullRunEligible = Boolean(options.fullRunEligible && resolvedSceneId === "intro");
   state.tutorialScene = sceneIndex;
   state.tutorialLine = 0;
   state.tutorialAwaitingUpgrade = false;
@@ -7012,7 +8967,8 @@ function startTutorial(sceneId = "intro") {
   render();
 }
 
-function finishTutorial() {
+function finishTutorial(options = {}) {
+  const completedFullRun = Boolean(options.completedFullRun && state.tutorialFullRunEligible);
   // Restore everything that existed before the tutorial started
   if (!state.unlimitedSprox) {
     state.sprox = Math.max(0, Math.floor(state.tutorialStartingSprox || 0));
@@ -7030,6 +8986,8 @@ function finishTutorial() {
   }
   state.tutorialActive = false;
   state.tutorialComplete = true;
+  state.tutorialFullRunEligible = false;
+  if (completedFullRun) state.tutorialFullRunCompleted = true;
   state.tutorialScene = 0;
   state.tutorialLine = 0;
   state.tutorialAwaitingUpgrade = false;
@@ -7055,6 +9013,7 @@ function finishTutorial() {
   if (el.storyCitySelect) el.storyCitySelect.hidden = false;
   if (el.changeStoryCar) el.changeStoryCar.hidden = false;
   if (el.storyPreviewPanel) el.storyPreviewPanel.setAttribute("aria-hidden", "true");
+  if (completedFullRun) checkAchievements();
   saveState();
   showView("menu");
   render();
@@ -7454,7 +9413,7 @@ function tutorialSpeakerProfile(speaker) {
   if (speaker === "snaytan") return { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png" };
   if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshots/headshot-ashley.png" };
   if (speaker === "auntie") return { name: "Auntie", image: "assets/characters/headshots/headshot-auntie.png" };
-  if (speaker === "orion") return { name: "Orion Vincent", image: "assets/characters/headshots/headshot-orion.png" };
+  if (speaker === "orion") return { name: "Orion Vincent", image: "assets/characters/headshots/headshot-orion-vincent.png" };
   if (speaker === "rival") {
     const rival = rivalCharacter();
     return { ...rival, image: rival.headshot || rival.image };
@@ -7491,8 +9450,8 @@ function tutorialFullBodyForSpeaker(speakerKey) {
   if (speakerKey === "user") return selectedTuner().image;
   if (speakerKey === "rival") return rivalCharacter().image;
   if (speakerKey === "ashley") return "assets/characters/character-ashley.png";
-  if (speakerKey === "auntie") return "assets/characters/character-auntie.png";
-  if (speakerKey === "orion") return "assets/characters/character-orion.png";
+  if (speakerKey === "auntie") return "assets/characters/auntie.png";
+  if (speakerKey === "orion") return "assets/characters/orion-vincent.png";
   if (speakerKey === "tyree") return "assets/characters/dr-tyree.png";
   return "";
 }
@@ -7942,7 +9901,7 @@ function advanceTutorial() {
       break;
 
     case "end":
-      finishTutorial();
+      finishTutorial({ completedFullRun: true });
       break;
 
     default:
@@ -8162,6 +10121,20 @@ function completeCampaignLevel(index) {
     }
   }
   if (completedLevel?.type === "boss") unlockNextTrainingBossFromBoss((completedLevel.final ? finalBoss : bosses[completedLevel.bossIndex])?.id);
+  if (!wasCompleted && cityIndex >= 0 && completedLevel?.type === "boss") {
+    const city = storyCities[cityIndex];
+    const lineId = storyMedallionAssignments[city.id]?.boss;
+    if (addAssignedCityRewardVault(city.id, "boss", lineId, `${city.id} Boss Race`)) {
+      showToast("Boss Medallion CrankVault Earned", "Your first-time Boss win added a CrankVault to your inventory.");
+    }
+  }
+  if (!wasCompleted && cityIndex >= 0 && completedLevel?.type === "pink-slip") {
+    const city = storyCities[cityIndex];
+    const lineId = storyMedallionAssignments[city.id]?.pinkSlip;
+    if (addAssignedCityRewardVault(city.id, "pink-slip", lineId, `${city.id} Pink Slip`)) {
+      showToast("Pink Slip Medallion CrankVault Earned", "Your first-time Pink Slip win added a CrankVault to your inventory.");
+    }
+  }
   if (!wasCompleted && featureEnabled("enableReputationAnimations") && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type)) {
     playAudioCue("reputationGain");
     playSound("bond-up");
@@ -8170,7 +10143,6 @@ function completeCampaignLevel(index) {
   if (!wasCompleted && completedLevel && !["boss", "pink-slip"].includes(completedLevel.type) && cityIndex >= 0) {
     maybeTriggerMedallionGauntlet(storyCities[cityIndex]);
   }
-  maybeTriggerRidesHairGauntlet();
   checkAchievements();
   saveState();
 }
@@ -8209,7 +10181,7 @@ function isPinkSlipRiskActive(level) {
 function openPinkSlipWarning(level, onConfirm) {
   const rewardName = level?.drag?.name || cars.find((car) => car.id === level?.pinkSlipCarId)?.evolutions[0]?.name || "this GearBorn";
   pendingPinkSlipRiskStart = onConfirm;
-  el.pinkSlipWarningCopy.textContent = `Pink Slip races risk your car and your parts. If you lose, your car will return to Level 1 and you will lose any equipped parts. Do you want to risk your car to unlock ${rewardName}?`;
+  el.pinkSlipWarningCopy.textContent = `Pink Slip races risk your car and your parts. If you lose, your car will return to Level 1 and you will lose any equipped parts. Do you want to risk your car to earn the ${rewardName} Medallion CrankVault?`;
   el.pinkSlipWarningModal.classList.add("active");
   el.pinkSlipWarningModal.setAttribute("aria-hidden", "false");
   el.cancelPinkSlipRisk.focus();
@@ -8227,7 +10199,12 @@ function confirmPinkSlipRisk() {
   start?.();
 }
 
-function startCampaignRace(index, level) {
+function startCampaignRace(index, level, gasPrepaid = false) {
+  if (!gasPrepaid) {
+    const city = storyCityForCampaignIndex(index) || storyCities[state.selectedStoryCity] || storyCities[0];
+    requestRaceEntry({ kind: level?.type || "story", cityId: city.id, gasCostOverride: level?.gasCostOverride }, () => startCampaignRace(index, level, true));
+    return;
+  }
   closeStoryPreview();
   closeCitySelect();
   if (level.type === "rival") {
@@ -8235,7 +10212,7 @@ function startCampaignRace(index, level) {
     return;
   }
   if (level.type === "pink-slip") {
-    startStory2dRace(index, level);
+    startStory2dRace(index, level, true);
     return;
   }
   if (level.type === "drag") {
@@ -8245,10 +10222,11 @@ function startCampaignRace(index, level) {
     saveState();
     render();
     prepareDragRace(index, level.drag);
+    if (pendingDragRace) pendingDragRace.gasPrepaid = true;
     return;
   }
   if (level.type === "trial" || level.type === "circuit") {
-    startStory2dRace(index, level);
+    startStory2dRace(index, level, true);
     return;
   }
   if (level.type === "battle") {
@@ -8260,7 +10238,7 @@ function startCampaignRace(index, level) {
     beginBattle("campaign-battle", { boss, campaignLevelIndex: index });
     return;
   }
-  startStory2dRace(index, level);
+  startStory2dRace(index, level, true);
 }
 
 function shouldShowStoryCutscene(index, level) {
@@ -8306,6 +10284,7 @@ function startRivalCampaignRace(index, level) {
     saveState();
     render();
     prepareDragRace(index, rivalDragStage(level));
+    if (pendingDragRace) pendingDragRace.gasPrepaid = true;
     return;
   }
   if (level.mechanic === "battle") {
@@ -8324,10 +10303,15 @@ function startRivalCampaignRace(index, level) {
     });
     return;
   }
-  startStory2dRace(index, level);
+  startStory2dRace(index, level, true);
 }
 
-function startStory2dRace(index, level) {
+function startStory2dRace(index, level, gasPrepaid = false) {
+  if (!gasPrepaid) {
+    const city = storyCityForCampaignIndex(index) || storyCities[state.selectedStoryCity] || storyCities[0];
+    requestRaceEntry({ kind: level?.type || "story", cityId: city.id, gasCostOverride: level?.gasCostOverride }, () => startStory2dRace(index, level, true));
+    return;
+  }
   betaRaceContext = { source: "story", campaignLevelIndex: index, level };
   betaPendingMode = story2dModeForLevel(level);
   betaPreviewMode = betaPendingMode;
@@ -8583,9 +10567,9 @@ function selectTuner(tunerId) {
   render();
   if (pendingIntroView) {
     if (pendingIntroView.startsWith("tutorial:")) {
-      const sceneId = pendingIntroView.split(":")[1] || "intro";
+      const [, sceneId = "intro", mode = "scene"] = pendingIntroView.split(":");
       pendingIntroView = null;
-      startTutorial(sceneId);
+      startTutorial(sceneId, { fullRunEligible: mode === "full" });
       return;
     }
     pendingIntroView = null;
@@ -8679,6 +10663,14 @@ function startVerticalCountdown() {
     raceStateRef.last = raceStateRef.startTime;
     requestAnimationFrame(updateVerticalRace);
   });
+}
+
+function retryStandaloneVerticalRace(raceState) {
+  if (raceState.mode === "boss") {
+    requestRaceEntry({ kind: "boss", cityId: raceState.bossData?.track?.id }, () => beginVerticalRace("boss", true, { boss: raceState.bossData }));
+    return;
+  }
+  requestRaceEntry({ kind: "time" }, () => beginVerticalRace("time", true, { track: storyTracks.find((track) => track.id === raceState.trackId) }));
 }
 
 function runCountdown(node, done) {
@@ -8984,11 +10976,7 @@ function finishVerticalRace(playerWon) {
         startCampaignRace(raceState.campaignLevelIndex, campaignLevels[raceState.campaignLevelIndex]);
         return;
       }
-      if (raceState.mode === "boss") {
-        beginVerticalRace("boss", true, { boss: raceState.bossData });
-        return;
-      }
-      beginVerticalRace("time", true, { track: storyTracks.find((track) => track.id === raceState.trackId) });
+      retryStandaloneVerticalRace(raceState);
     }
   });
 }
@@ -9046,11 +11034,7 @@ function failVerticalRace(title) {
         startCampaignRace(raceState.campaignLevelIndex, campaignLevels[raceState.campaignLevelIndex]);
         return;
       }
-      if (raceState.mode === "boss") {
-        beginVerticalRace("boss", true, { boss: raceState.bossData });
-        return;
-      }
-      beginVerticalRace("time", true, { track: storyTracks.find((track) => track.id === raceState.trackId) });
+      retryStandaloneVerticalRace(raceState);
     }
   });
 }

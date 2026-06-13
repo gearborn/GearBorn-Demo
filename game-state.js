@@ -1,5 +1,50 @@
 // ─── STATE MANAGEMENT ───────────────────────────────────────────────────────
 const saveKey = "gearborn-demo-save-v1";
+const gearbornMemoryStorage = new Map();
+let gearbornPersistentStorage;
+let gearbornStorageResolved = false;
+
+function gearbornStorage() {
+  if (gearbornStorageResolved) return gearbornPersistentStorage;
+  gearbornStorageResolved = true;
+  try {
+    gearbornPersistentStorage = window.localStorage;
+  } catch (error) {
+    console.warn("GearBorn persistence unavailable; using session memory.", error);
+    gearbornPersistentStorage = null;
+  }
+  return gearbornPersistentStorage;
+}
+
+function gearbornStorageGetItem(key) {
+  try {
+    const storage = gearbornStorage();
+    return storage ? storage.getItem(key) : gearbornMemoryStorage.get(key) || null;
+  } catch (error) {
+    console.warn(`GearBorn could not read storage key "${key}"; using session memory.`, error);
+    return gearbornMemoryStorage.get(key) || null;
+  }
+}
+
+function gearbornStorageSetItem(key, value) {
+  const serialized = String(value);
+  gearbornMemoryStorage.set(key, serialized);
+  try {
+    gearbornStorage()?.setItem(key, serialized);
+  } catch (error) {
+    console.warn(`GearBorn could not persist storage key "${key}"; keeping it in session memory.`, error);
+  }
+}
+
+function gearbornStorageRemoveItem(key) {
+  gearbornMemoryStorage.delete(key);
+  try {
+    gearbornStorage()?.removeItem(key);
+  } catch (error) {
+    console.warn(`GearBorn could not remove storage key "${key}"; cleared session memory only.`, error);
+  }
+}
+
 const tunerChoiceVersion = 1;
 const storyCutsceneScripts = {
   "rev-rend": {
@@ -382,7 +427,12 @@ function getGodModePassword() {
 }
 
 function reduceMotionEnabled() {
-  return Boolean(gameFeatureConfig.reduceMotion || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+  const setting = state?.settings?.reducedMotion;
+  return Boolean(gameFeatureConfig.reduceMotion || setting === true || (setting === null && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches));
+}
+
+function effectsAllowed() {
+  return state?.settings?.screenEffects !== false && !reduceMotionEnabled();
 }
 
 function featureEnabled(key) {
@@ -507,6 +557,7 @@ function saveStoryMedal(levelIndex, result = {}) {
 }
 
 const defaultState = {
+  saveVersion: 2,
   selectedCar: cars[0].id,
   selectedRank: "E",
   selectedDistance: 400,
@@ -517,6 +568,10 @@ const defaultState = {
     volume: 45,
     shiftKey: "Space",
     nitroKey: "N",
+    screenEffects: true,
+    haptics: true,
+    highVisCues: true,
+    reducedMotion: null,
     verticalKeys: {
       up: "W",
       down: "S",
@@ -534,13 +589,22 @@ const defaultState = {
   selectedProfile: racerProfiles[0].id,
   racerAlphaUnmasked: false,
   racerAlphaProfileView: "masked",
+  fusionIntroSeen: false,
   sprox: 0,
+  spins: 0,
+  gas: 100,
+  gasUpdatedAt: 0,
   unlimitedSprox: false,
+  cheatUnlimitedSpins: false,
+  cheatUnlimitedGas: false,
+  cheatUnlockAllStory: false,
   selectedTuner: null,
   tunerChosen: false,
   tunerChoiceVersion: 0,
   tutorialComplete: false,
   tutorialActive: false,
+  tutorialFullRunEligible: false,
+  tutorialFullRunCompleted: false,
   tutorialScene: 0,
   tutorialLine: 0,
   tutorialDragSprox: 0,
@@ -601,6 +665,20 @@ const defaultState = {
   consecutiveLosses: 0,
   garbageMedallionAwarded: false,
   completedCampaignLevels: {},
+  crankVaultInventory: [],
+  dailyCrankVault: {
+    lastClaimedDayKey: null
+  },
+  dailyGoals: {
+    dayKey: null,
+    progress: {},
+    claimed: {},
+    vaultClaimed: false,
+    carsRacedToday: [],
+    loginStreak: 0,
+    lastLoginDayKey: null
+  },
+  cityProgress: {},
   raceMedals: {},
   microObjectiveProgress: {},
   betaTimeTrials: {},
@@ -618,6 +696,7 @@ const defaultState = {
   unlockedArtVanForms: [],
   unlockedLines: [...defaultUnlockedLines],
   medallionsOwned: [],
+  medallionRanks: {},
   convoyMedallions: [],
   timeTrials: {},
   storyTimeTrials: {},

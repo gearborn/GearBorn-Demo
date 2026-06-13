@@ -1,4 +1,155 @@
+// game-race2d.js — LIVE 2D race engine (story mode, circuits, drag support systems)
+// plus the Last Gear arena mode. Production code.
+// Historical note: identifiers retain the legacy "beta" prefix; a mechanical
+// rename is deferred. Do not confuse with game-beta3d.js, which IS beta.
 // ─── BETA TRACK DATA & CIRCUIT MODE ───────────────────────────────────────
+const BETA_AI_TUNING = {
+  // Stuck watchdog
+  stuckTimeoutMs: 4000,
+  stuckRespawnPauseMs: 900,
+
+  // Racecraft
+  apexBiasMax: 34,
+  overtakeOffsetMax: 42,
+  blockOffsetMax: 30,
+  offsetLerpRate: 2.2,
+  overtakeProbeRange: 150,
+  blockProbeRange: 170,
+  aiDecisionMinMs: 700,
+  aiDecisionMaxMs: 1100,
+  aiOffsetDtMax: 0.05,
+  aiOffsetInitialDt: 0.016,
+  aggressionVariance: 0.12,
+
+  // Slipstream (applies to player AND AI)
+  slipstreamRange: 230,
+  slipstreamMinRange: 30,
+  slipstreamMinLeaderSpeed: 120,
+  slipstreamSeekSpeedTolerance: 42,
+  slipstreamSeekRangeMult: 1.4,
+  slipstreamHalfAngle: 0.30,
+  slipstreamChargeMs: 650,
+  slipstreamMaxSpeedMult: 1.10,
+  slipstreamAccelMult: 1.18,
+
+  // Rubber band (bounded, asymmetric)
+  rubberBandMaxBoost: 0.06,
+  rubberBandMaxDrag: 0.03,
+  rubberBandRange: 900
+};
+
+const RACE_JUICE_TUNING = {
+  shakeDecayPerSec: 26,
+  collisionShakeDivisor: 14,
+  collisionShakeMin: 2,
+  collisionShakeMax: 14,
+  hitstopMs: 70,
+  hitstopImpactThreshold: 260,
+  wallShake: 4,
+  sparkCountSmall: 6,
+  sparkCountBig: 12,
+  sparkLifeMs: 420,
+  slowmoMs: 750,
+  slowmoScale: 0.35,
+  confettiCount: 36,
+  positionFlashMs: 900
+};
+
+function juiceEnabled() {
+  return !(typeof reduceMotionEnabled === "function" && reduceMotionEnabled())
+    && state?.settings?.screenEffects !== false;
+}
+
+function raceJuiceHaptic(pattern) {
+  if (typeof haptic === "function") haptic(pattern);
+}
+
+function raceJuiceSpawnParticle(kind, x, y, options = {}) {
+  if (!juiceEnabled() || !betaState?.particles) return;
+  const angle = options.angle ?? Math.random() * Math.PI * 2;
+  const speed = options.speed ?? 120;
+  const ttl = options.ttl ?? RACE_JUICE_TUNING.sparkLifeMs;
+  betaState.particles.push({
+    kind,
+    x,
+    y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    ttl,
+    life: ttl,
+    size: options.size ?? 4,
+    color: options.color || "#ffc857"
+  });
+}
+
+function raceJuiceSpawnSparks(x, y, count = RACE_JUICE_TUNING.sparkCountSmall) {
+  if (!juiceEnabled()) return;
+  for (let i = 0; i < count; i += 1) {
+    raceJuiceSpawnParticle("spark", x, y, {
+      angle: Math.random() * Math.PI * 2,
+      speed: 120 + Math.random() * 260,
+      ttl: RACE_JUICE_TUNING.sparkLifeMs * (0.72 + Math.random() * 0.52),
+      size: 2 + Math.random() * 4,
+      color: Math.random() > 0.38 ? "#ffc857" : "#ffffff"
+    });
+  }
+}
+
+function raceJuiceSpawnConfetti(x, y, count = RACE_JUICE_TUNING.confettiCount) {
+  if (!juiceEnabled()) return;
+  const colors = ["#ffc857", "#52c7ff", "#6ee7a8", "#ff5d5d", "#ffffff"];
+  for (let i = 0; i < count; i += 1) {
+    raceJuiceSpawnParticle("confetti", x, y, {
+      angle: -Math.PI / 2 + (Math.random() - 0.5) * 2.4,
+      speed: 90 + Math.random() * 280,
+      ttl: 700 + Math.random() * 520,
+      size: 3 + Math.random() * 5,
+      color: colors[i % colors.length]
+    });
+  }
+}
+
+function raceJuiceUpdateParticles(dt) {
+  if (!betaState?.particles?.length) return;
+  betaState.particles.forEach((particle) => {
+    particle.x += particle.vx * dt;
+    particle.y += particle.vy * dt;
+    particle.vy += (particle.kind === "confetti" ? 130 : 360) * dt;
+    particle.life -= dt * 1000;
+  });
+  betaState.particles = betaState.particles.filter((particle) => particle.life > 0);
+}
+
+function raceJuiceDrawParticles(ctx) {
+  if (!betaState?.particles?.length) return;
+  betaState.particles.forEach((particle) => {
+    const alpha = Math.max(0, Math.min(1, particle.life / particle.ttl));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = particle.color;
+    ctx.translate(particle.x, particle.y);
+    if (particle.kind === "confetti") {
+      ctx.rotate((betaState.elapsed || 0) * 8 + particle.x * 0.01);
+      ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size * 1.7, particle.size);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+function raceJuiceImpactFeedback(impact, x, y, options = {}) {
+  if (juiceEnabled() && betaState) {
+    const shake = betaClamp(impact / RACE_JUICE_TUNING.collisionShakeDivisor, RACE_JUICE_TUNING.collisionShakeMin, RACE_JUICE_TUNING.collisionShakeMax);
+    betaState.shake = Math.max(betaState.shake || 0, shake);
+    raceJuiceSpawnSparks(x, y, options.big ? RACE_JUICE_TUNING.sparkCountBig : RACE_JUICE_TUNING.sparkCountSmall);
+    if (options.big) betaState.hitPauseUntil = Math.max(betaState.hitPauseUntil || 0, performance.now() + RACE_JUICE_TUNING.hitstopMs);
+  }
+  raceJuiceHaptic(options.big ? [20, 15, 30] : 18);
+}
+
 const betaTileSize = 256;
 const betaLapsRequired = 2;
 const betaTileImages = {};
@@ -424,7 +575,11 @@ function resizeBetaCanvas() {
 function showBetaRotationTip() {
   if (!el.rotationTip || state.dismissedRotationTips || !betaIsMobilePortrait()) return;
   el.rotationTip.hidden = false;
-  requestAnimationFrame(() => el.rotationTip?.classList.add("active"));
+  if (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) {
+    el.rotationTip?.classList.add("active");
+  } else {
+    requestAnimationFrame(() => el.rotationTip?.classList.add("active"));
+  }
 }
 
 function hideBetaRotationTip(persist = false) {
@@ -827,15 +982,40 @@ function getEligibleBetaOpponentLines(playerCarId) {
   return list.length ? list : cars.filter((car) => defaultUnlockedLines.includes(car.id) && car.id !== playerCarId);
 }
 
-function getRandomOpponentCars(count, playerCarId) {
+function betaDifficultySkill(difficulty, fallbackSkill) {
+  if (!difficulty) return fallbackSkill;
+  const min = Number(difficulty.skillMin) || fallbackSkill;
+  const max = Number(difficulty.skillMax) || min;
+  return min + Math.random() * Math.max(0, max - min);
+}
+
+function betaDifficultyAggression(difficulty) {
+  if (!difficulty) return 0.4;
+  const base = Number.isFinite(Number(difficulty?.aggression)) ? Number(difficulty.aggression) : 0.4;
+  return Math.max(0, Math.min(1, base + (Math.random() * 2 - 1) * BETA_AI_TUNING.aggressionVariance));
+}
+
+function betaDifficultyEvolution(car, playerCarId, difficulty) {
+  if (!difficulty) return betaMatchedEvolutionIndexForLine(playerCarId, car.id);
+  return Math.max(0, Math.min(car.evolutions.length - 1, Math.floor(Number(difficulty.opponentEvolution) || 0)));
+}
+
+function betaDifficultyLevel(playerCarId, difficulty, mirrorFloor = false) {
+  if (difficulty) return Math.max(1, Math.floor(Number(difficulty.opponentLevel) || 1));
+  const playerProgress = state.garage[playerCarId] || { level: 1 };
+  const mirrored = (playerProgress.level || 1) - 3;
+  return mirrorFloor ? Math.max(1, mirrored) : mirrored;
+}
+
+function getRandomOpponentCars(count, playerCarId, difficulty = null) {
   const playerProgress = state.garage[playerCarId] || { level: 1, evolution: 0 };
   const pool = getEligibleBetaOpponentLines(playerCarId);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   return Array.from({ length: count }, (_, index) => {
     const car = shuffled[index % shuffled.length];
-    const evolution = Math.min(playerProgress.evolution || 0, car.evolutions.length - 1);
+    const evolution = difficulty ? betaDifficultyEvolution(car, playerCarId, difficulty) : Math.min(playerProgress.evolution || 0, car.evolutions.length - 1);
     const form = car.evolutions[evolution] || car.evolutions[0];
-    const level = (playerProgress.level || 1) - 3;
+    const level = difficulty ? betaDifficultyLevel(playerCarId, difficulty) : (playerProgress.level || 1) - 3;
     const ratings = betaRatingsForCar(car.id, level, evolution, false);
     return {
       car,
@@ -844,7 +1024,8 @@ function getRandomOpponentCars(count, playerCarId) {
       evolution,
       level,
       ratings,
-      skill: 1.04 + Math.random() * 0.07
+      skill: betaDifficultySkill(difficulty, 1.04 + Math.random() * 0.07),
+      aggression: betaDifficultyAggression(difficulty)
     };
   });
 }
@@ -860,13 +1041,12 @@ function betaMatchedEvolutionIndexForLine(playerCarId, opponentLineId) {
   return Math.max(0, Math.min(opponentMax, Math.round(((playerProgress.evolution || 0) / playerMax) * opponentMax)));
 }
 
-function betaOpponentSetupForLine(lineId, playerCarId, skill = 1.06) {
+function betaOpponentSetupForLine(lineId, playerCarId, skill = 1.06, difficulty = null) {
   const car = cars.find((item) => item.id === lineId);
   if (!car) return null;
-  const playerProgress = state.garage[playerCarId] || { level: 1 };
-  const evolution = betaMatchedEvolutionIndexForLine(playerCarId, lineId);
+  const evolution = betaDifficultyEvolution(car, playerCarId, difficulty);
   const form = car.evolutions[evolution] || car.evolutions[0];
-  const level = Math.max(1, (playerProgress.level || 1) - 3);
+  const level = betaDifficultyLevel(playerCarId, difficulty, true);
   return {
     car,
     carId: car.id,
@@ -874,23 +1054,25 @@ function betaOpponentSetupForLine(lineId, playerCarId, skill = 1.06) {
     evolution,
     level,
     ratings: betaRatingsForCar(car.id, level, evolution, false),
-    skill
+    skill: betaDifficultySkill(difficulty, skill),
+    aggression: betaDifficultyAggression(difficulty)
   };
 }
 
-function betaOpponentSetupForDriver(driver, playerCarId, fallback, skill = 1.06) {
+function betaOpponentSetupForDriver(driver, playerCarId, fallback, skill = 1.06, difficulty = null) {
   const lineId = driver?.signatureLineId || (typeof npcSignatureLineIds === "object" ? npcSignatureLineIds[driver?.id] : "");
-  return betaOpponentSetupForLine(lineId, playerCarId, skill) || fallback;
+  return betaOpponentSetupForLine(lineId, playerCarId, skill, difficulty) || fallback;
 }
 
-function betaBossCarSetup(boss) {
+function betaBossCarSetup(boss, difficulty = null) {
   const bossIndex = Math.max(0, bossChallengeBosses.findIndex((item) => item.id === boss.id));
   const playerCarId = betaCurrentCarId();
-  const playerProgress = state.garage[playerCarId] || { level: 1, evolution: 0 };
-  const level = Math.max(1, (playerProgress.level || 1) - 3);
+  const level = betaDifficultyLevel(playerCarId, difficulty, true);
   const knownLine = cars.find((car) => car.evolutions.some((form) => form.name === boss.car));
   if (knownLine) {
-    const evolution = Math.max(0, knownLine.evolutions.findIndex((form) => form.name === boss.car));
+    const evolution = difficulty
+      ? betaDifficultyEvolution(knownLine, playerCarId, difficulty)
+      : Math.max(0, knownLine.evolutions.findIndex((form) => form.name === boss.car));
     const form = knownLine.evolutions[evolution] || knownLine.evolutions[0];
     return {
       car: knownLine,
@@ -899,7 +1081,8 @@ function betaBossCarSetup(boss) {
       evolution,
       level,
       ratings: betaRatingsForCar(knownLine.id, level, evolution, false),
-      skill: 1
+      skill: betaDifficultySkill(difficulty, 1),
+      aggression: betaDifficultyAggression(difficulty)
     };
   }
   const ratingBase = Math.min(98, 72 + bossIndex * 3);
@@ -925,7 +1108,8 @@ function betaBossCarSetup(boss) {
     evolution: 0,
     level,
     ratings,
-    skill: 1
+    skill: betaDifficultySkill(difficulty, 1),
+    aggression: betaDifficultyAggression(difficulty)
   };
 }
 
@@ -959,35 +1143,39 @@ function story2dModeForLevel(level) {
   return "duel";
 }
 
-function pinkSlipOpponentSetup(level) {
+function pinkSlipOpponentSetup(level, difficulty = null) {
   const car = cars.find((item) => item.id === level.pinkSlipCarId) || cars[0];
-  const form = car.evolutions[0];
-  const playerProgress = state.garage[state.selectedStoryCar] || { level: 1 };
-  const levelValue = Math.max(1, (playerProgress.level || 1) - 3);
+  const evolution = betaDifficultyEvolution(car, state.selectedStoryCar, difficulty);
+  const form = car.evolutions[evolution] || car.evolutions[0];
+  const levelValue = betaDifficultyLevel(state.selectedStoryCar, difficulty, true);
   return {
     driver: { id: `pink-${car.id}`, name: form.name, headshot: forgeMedallionSrc(car.id), image: forgeMedallionSrc(car.id) },
     car,
     carId: car.id,
     form,
-    evolution: 0,
+    evolution,
     level: levelValue,
-    ratings: betaRatingsForCar(car.id, levelValue, 0, false),
-    skill: 1.03
+    ratings: betaRatingsForCar(car.id, levelValue, evolution, false),
+    skill: betaDifficultySkill(difficulty, 1.03),
+    aggression: betaDifficultyAggression(difficulty)
   };
 }
 
-function rivalOpponentSetup(level) {
+function rivalOpponentSetup(level, difficulty = null) {
   const rival = rivalTuner();
-  const setup = rivalCarSetup(state.selectedStoryCar);
+  const lineId = rival?.signatureLineId || (typeof npcSignatureLineIds === "object" ? npcSignatureLineIds[rival?.id] : "");
+  const setup = difficulty && lineId ? betaOpponentSetupForLine(lineId, state.selectedStoryCar, 1.04, difficulty) : null;
+  const fallback = rivalCarSetup(state.selectedStoryCar);
   return {
     driver: rival,
-    car: setup.car,
-    carId: setup.carId,
-    form: setup.form,
-    evolution: setup.evolution,
-    level: setup.level,
-    ratings: setup.stats || setup.ratings,
-    skill: 1.04
+    car: (setup || fallback).car,
+    carId: (setup || fallback).carId,
+    form: (setup || fallback).form,
+    evolution: (setup || fallback).evolution,
+    level: (setup || fallback).level,
+    ratings: (setup || fallback).stats || (setup || fallback).ratings,
+    skill: setup?.skill || betaDifficultySkill(difficulty, 1.04),
+    aggression: setup?.aggression ?? betaDifficultyAggression(difficulty)
   };
 }
 
@@ -997,16 +1185,18 @@ function story2dOpponentsForLevel(level, mode = story2dModeForLevel(level), camp
   if (cacheKey && story2dOpponentCache.has(cacheKey)) return story2dOpponentCache.get(cacheKey);
   let opponents = [];
   if (!betaModeConfigs[mode]?.opponents) return [];
-  if (level.type === "boss") opponents = [{ ...betaBossCarSetup(level.final ? finalBoss : bosses[level.bossIndex]), driver: level.final ? finalBoss : bosses[level.bossIndex] }];
-  else if (level.type === "pink-slip") opponents = [pinkSlipOpponentSetup(level)];
-  else if (level.type === "rival") opponents = [rivalOpponentSetup(level)];
+  const difficulty = cityDifficultyForCampaignIndex(campaignIndex ?? level.campaignIndex ?? -1);
+  const bossDifficulty = difficulty ? { ...difficulty, opponentLevel: (Number(difficulty.opponentLevel) || 1) + 1 } : null;
+  if (level.type === "boss") opponents = [{ ...betaBossCarSetup(level.final ? finalBoss : bosses[level.bossIndex], bossDifficulty), driver: level.final ? finalBoss : bosses[level.bossIndex] }];
+  else if (level.type === "pink-slip") opponents = [pinkSlipOpponentSetup(level, difficulty)];
+  else if (level.type === "rival") opponents = [rivalOpponentSetup(level, difficulty)];
   else {
     const drivers = betaNpcDriversForMode(mode);
-    const randomOpponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar);
+    const randomOpponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar, difficulty);
     opponents = randomOpponents.map((opponent, index) => {
       const driver = drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length];
       return {
-        ...betaOpponentSetupForDriver(driver, state.selectedStoryCar, opponent, 1.04 + Math.random() * 0.07),
+        ...betaOpponentSetupForDriver(driver, state.selectedStoryCar, opponent, 1.04 + Math.random() * 0.07, difficulty),
         driver
       };
     });
@@ -1034,7 +1224,7 @@ function betaImageReady(img) {
     const done = () => resolve();
     img.addEventListener("load", done, { once: true });
     img.addEventListener("error", done, { once: true });
-    window.setTimeout(done, 1400);
+    window.setTimeout(done, (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 80 : 1400);
   });
 }
 
@@ -1046,7 +1236,7 @@ async function preloadBetaRaceAssets() {
   ].filter(Boolean);
   await Promise.race([
     Promise.all(images.map(betaImageReady)),
-    new Promise((resolve) => window.setTimeout(resolve, 2600))
+    new Promise((resolve) => window.setTimeout(resolve, (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 120 : 2600))
   ]);
 }
 
@@ -1074,7 +1264,7 @@ function setBetaLoading(active) {
       if (!el.betaLoading || el.betaLoading.hidden) { clearInterval(fillTimer); return; }
       pct = Math.min(92, pct + 4 + Math.random() * 10);
       if (fill) fill.style.width = pct + "%";
-    }, 180);
+    }, (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 1000 : 180);
     el.betaLoading._fillTimer = fillTimer;
   }
   if (!active && el.betaLoading._fillTimer) {
@@ -1435,7 +1625,8 @@ function startBetaDemo(mode = betaState?.config?.id || "time") {
       y: pos.y,
       angle: betaTrack.startAngle,
       ai: true,
-      skill: opponent.skill
+      skill: opponent.skill,
+      aggression: opponent.aggression ?? 0.4
     });
   });
   const savedGhost = config.id === "time" ? state.betaTimeTrials?.testTrack?.ghost || null : null;
@@ -1530,7 +1721,14 @@ function betaProgressRacer(racer) {
     if (racer.lap >= betaLapsRequired) {
       racer.finished = true;
       racer.finishTime = betaState.elapsed;
-      if (racer.id === "player") finishBetaDemo();
+      if (racer.id === "player") {
+        if (juiceEnabled()) {
+          betaState.slowmoUntil = performance.now() + RACE_JUICE_TUNING.slowmoMs;
+          raceJuiceSpawnConfetti(racer.x, racer.y, RACE_JUICE_TUNING.confettiCount);
+        }
+        raceJuiceHaptic([40, 30, 60]);
+        finishBetaDemo();
+      }
     } else {
       racer.lap += 1;
       racer.checkpoint = 0;
@@ -1635,6 +1833,12 @@ function betaResolveCarCollisions() {
       const va = { x: Math.cos(a.angle) * a.speed, y: Math.sin(a.angle) * a.speed };
       const vb = { x: Math.cos(b.angle) * b.speed, y: Math.sin(b.angle) * b.speed };
       const closingSpeed = (vb.x - va.x) * nx + (vb.y - va.y) * ny;
+      if ((a.id === "player" || b.id === "player") && betaState?.racers) {
+        const impact = Math.hypot(vb.x - va.x, vb.y - va.y);
+        raceJuiceImpactFeedback(impact, (a.x + b.x) / 2, (a.y + b.y) / 2, {
+          big: impact >= RACE_JUICE_TUNING.hitstopImpactThreshold
+        });
+      }
       if (closingSpeed < -22) {
         a.speed *= 0.9 + Math.min(0.08, a.physics.body / 1200);
         b.speed *= 0.9 + Math.min(0.08, b.physics.body / 1200);
@@ -1788,7 +1992,6 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
   let penaltyLine = "";
   if (riskyPinkSlipLoss) {
     applyPinkSlipLossPenalty(carId);
-    maybeTriggerRoyalFlushGauntlet(storyCityForCampaignIndex(context.campaignLevelIndex)?.id);
     penaltyLine = "You lost the Pink Slip race. Your GearBorn has been returned to Level 1 and its equipped parts were taken.";
   }
   const partReward = won ? rollStoryPartReward() : null;
@@ -1810,10 +2013,6 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
         betaRaceContext = null;
         finishStoryRaceScreen();
       };
-      if (won && level.type === "pink-slip" && level.pinkSlipCarId && !isCarUnlocked(level.pinkSlipCarId)) {
-        showPinkSlipUnlock(level.pinkSlipCarId, finishStory);
-        return;
-      }
       if (won && level.type === "rival") {
         openRivalDialogue(level, "post", finishStory);
         return;
@@ -3955,6 +4154,15 @@ function betaNotify(message, duration = 1500) {
   betaState.notificationUntil = betaNowMs() + duration;
 }
 
+function betaPlayerHazardJuice(racer) {
+  if (!betaState || racer?.id !== "player") return;
+  if (juiceEnabled()) {
+    betaState.shake = Math.max(betaState.shake || 0, 8);
+    raceJuiceSpawnSparks(racer.x, racer.y, 8);
+  }
+  raceJuiceHaptic([25, 20, 25]);
+}
+
 function betaApplyHit(racer, effect = "slow", strength = 1, source = "hazard") {
   if (!racer || racer.finished || racer.ghost) return;
   const now = betaNowMs();
@@ -4180,6 +4388,7 @@ function betaApplyBoostPads(now) {
       const pwr = racer.physics.pwrMultiplier || 1.16;
       racer.boostUntil = Math.max(racer.boostUntil || 0, now + 820 * pwr);
       racer.speed = Math.min(racer.physics.maxSpeed * (1.08 + pwr * 0.1), racer.speed + 92 * pwr);
+      if (racer.id === "player") raceJuiceHaptic(10);
       racer.lastPadAt = now;
     });
   });
@@ -4207,6 +4416,7 @@ function betaUpdateTraps(now) {
       if (trap.expired || racer.id === trap.owner || racer.finished) return;
       if (betaDistance(racer, trap) > trap.radius + 26) return;
       betaApplyHit(racer, trap.type === "oil" ? "spin" : "slow", trap.type === "oil" ? 1.1 : 1.2, "trap");
+      betaPlayerHazardJuice(racer);
       // Item-dropped traps (source:"item") disappear after one trigger.
       // Spike strip always disappears. Map oil slicks (no source) persist.
       if (trap.source === "item" || trap.type === "tire") {
@@ -4236,6 +4446,7 @@ function betaUpdateProjectiles(dt, now) {
         return;
       }
       betaApplyHit(racer, "burst", projectile.power || 1, "projectile");
+      betaPlayerHazardJuice(racer);
       projectile.expired = true;
     });
   });
@@ -4455,7 +4666,7 @@ function betaDrawStatusEffects(ctx, racer) {
   }
 }
 
-function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0, ai = false, skill = 1, ghost = false }) {
+function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0, ai = false, skill = 1, aggression = 0.4, ghost = false }) {
   return {
     id,
     name,
@@ -4477,6 +4688,7 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     finishTime: null,
     ai,
     skill,
+    aggression,
     ghost,
     item: null,
     boostUntil: 0,
@@ -4488,6 +4700,7 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     itemCooldownUntil: 0,
     teleportPortal: null,
     aiWaypoint: 0,
+    lastProgressWaypoint: -1,
     offTrackSince: null,
     stuckSince: null,
     lastRecoveryX: x,
@@ -4495,11 +4708,103 @@ function betaMakeRacer({ id, name, carId, form, ratings, color, x, y, angle = 0,
     lastProgressScore: 0,
     lastProgressAt: 0,
     lastWaypointDistance: Infinity,
+    lateralOffset: 0,
+    aiIntentOffset: 0,
+    nextAiDecisionAt: 0,
+    lastAiControlAt: 0,
+    slipstreamSince: 0,
+    slipstreamActive: false,
     respawnUntil: 0,
     image: betaMakeImage(imageFor(form, "topdown")),
     record: [],
     lastRecord: 0
   };
+}
+
+function betaClamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function betaRaceOrderAhead(a, b) {
+  if (!a || !b) return false;
+  if (a.lap !== b.lap) return a.lap > b.lap;
+  if (a.checkpoint !== b.checkpoint) return a.checkpoint > b.checkpoint;
+  const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+  if (!line?.length) return false;
+  return betaNearestAiLineIndex(a, line) > betaNearestAiLineIndex(b, line);
+}
+
+function betaLineDirection(line, index) {
+  const current = line[index % line.length] || line[0];
+  const next = line[(index + 1) % line.length] || current;
+  return Math.atan2(next.y - current.y, next.x - current.x);
+}
+
+function betaOffsetPoint(point, angle, offset) {
+  return {
+    x: point.x - Math.sin(angle) * offset,
+    y: point.y + Math.cos(angle) * offset
+  };
+}
+
+function betaRoadSafeOffset(point, angle, offset) {
+  const target = betaOffsetPoint(point, angle, offset);
+  return betaSurfaceAt(target.x, target.y) === "road";
+}
+
+function betaUpdateSlipstream(racer, now) {
+  if (!betaState?.racers?.length || racer.finished) return;
+  let inStream = false;
+  for (const leader of betaState.racers) {
+    if (leader === racer || leader.finished) continue;
+    const dx = racer.x - leader.x;
+    const dy = racer.y - leader.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > BETA_AI_TUNING.slipstreamRange || dist < BETA_AI_TUNING.slipstreamMinRange) continue;
+    if (Math.abs(leader.speed) < BETA_AI_TUNING.slipstreamMinLeaderSpeed) continue;
+    const wakeAngle = leader.angle + Math.PI;
+    const angleToRacer = Math.atan2(dy, dx);
+    if (Math.abs(betaNormalizeAngle(angleToRacer - wakeAngle)) <= BETA_AI_TUNING.slipstreamHalfAngle) {
+      inStream = true;
+      break;
+    }
+  }
+  if (inStream) {
+    if (!racer.slipstreamSince) racer.slipstreamSince = now;
+    racer.slipstreamActive = now - racer.slipstreamSince >= BETA_AI_TUNING.slipstreamChargeMs;
+  } else {
+    racer.slipstreamSince = 0;
+    racer.slipstreamActive = false;
+  }
+}
+
+function betaWatchdogCheck(racer, now) {
+  if (!racer.ai || racer.finished) return;
+  const waypoint = racer.aiWaypoint || 0;
+  if (waypoint !== racer.lastProgressWaypoint) {
+    racer.lastProgressWaypoint = waypoint;
+    racer.lastProgressAt = now;
+    return;
+  }
+  if (!racer.lastProgressAt) {
+    racer.lastProgressAt = now;
+    return;
+  }
+  if (now - racer.lastProgressAt < BETA_AI_TUNING.stuckTimeoutMs) return;
+  const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
+  if (!line?.length) return;
+  const nearest = betaNearestAiLineIndex(racer, line);
+  const point = line[nearest];
+  const next = line[(nearest + 1) % line.length];
+  racer.x = point.x;
+  racer.y = point.y;
+  racer.prevX = point.x;
+  racer.prevY = point.y;
+  racer.speed = 0;
+  racer.angle = Math.atan2(next.y - point.y, next.x - point.x);
+  racer.aiWaypoint = (nearest + 1) % line.length;
+  racer.respawnUntil = now + BETA_AI_TUNING.stuckRespawnPauseMs;
+  racer.lastProgressAt = now;
 }
 
 function betaAiControls(racer) {
@@ -4523,8 +4828,72 @@ function betaAiControls(racer) {
   const lookAhead = surface === "grass"
     ? 1
     : Math.max(1, Math.min(3, 1 + Math.floor(Math.abs(racer.speed || 0) / 150)));
-  const nextTarget = line[((racer.aiWaypoint || 0) + lookAhead) % line.length] || line[0];
-  const desired = Math.atan2(nextTarget.y - racer.y, nextTarget.x - racer.x);
+  const targetIndex = ((racer.aiWaypoint || 0) + lookAhead) % line.length;
+  const nextTarget = line[targetIndex] || line[0];
+  const lineAngle = betaLineDirection(line, targetIndex);
+  const prevAngle = betaLineDirection(line, (targetIndex - 1 + line.length) % line.length);
+  const nextAngle = betaLineDirection(line, (targetIndex + 1) % line.length);
+  const turnDelta = betaNormalizeAngle(nextAngle - prevAngle);
+  const handling = betaClamp((racer.ratings?.handling || 70) / 100, 0, 1);
+  let desiredOffset = -Math.sign(turnDelta) * BETA_AI_TUNING.apexBiasMax * handling;
+  const now = betaNowMs();
+  if (!racer.nextAiDecisionAt || now >= racer.nextAiDecisionAt) {
+    racer.nextAiDecisionAt = now + BETA_AI_TUNING.aiDecisionMinMs + Math.random() * Math.max(0, BETA_AI_TUNING.aiDecisionMaxMs - BETA_AI_TUNING.aiDecisionMinMs);
+    racer.aiIntentOffset = 0;
+    const traffic = (betaState?.racers || []).filter((other) => other !== racer && !other.finished);
+    const forwardTraffic = traffic
+      .map((other) => {
+        const dx = other.x - racer.x;
+        const dy = other.y - racer.y;
+        const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
+        const lateral = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
+        return { other, forward, lateral };
+      })
+      .filter((item) => item.forward > 0 && item.forward < BETA_AI_TUNING.overtakeProbeRange && Math.abs(item.lateral) < BETA_AI_TUNING.overtakeOffsetMax);
+    if (forwardTraffic.length) {
+      const target = forwardTraffic.sort((a, b) => a.forward - b.forward)[0];
+      const sideA = betaRoadSafeOffset(nextTarget, lineAngle, BETA_AI_TUNING.overtakeOffsetMax) ? 1 : 0;
+      const sideB = betaRoadSafeOffset(nextTarget, lineAngle, -BETA_AI_TUNING.overtakeOffsetMax) ? -1 : 0;
+      const side = sideA && sideB ? (target.lateral <= 0 ? 1 : -1) : (sideA || sideB);
+      racer.aiIntentOffset = side * BETA_AI_TUNING.overtakeOffsetMax * betaClamp(racer.aggression || 0.4, 0, 1);
+    }
+    const chasingTraffic = traffic
+      .map((other) => {
+        const dx = other.x - racer.x;
+        const dy = other.y - racer.y;
+        const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
+        const lateral = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
+        return { other, forward, lateral };
+      })
+      .filter((item) => item.forward < 0 && item.forward > -BETA_AI_TUNING.blockProbeRange);
+    if (chasingTraffic.length && Math.random() < betaClamp(racer.aggression || 0.4, 0, 1)) {
+      const rival = chasingTraffic.sort((a, b) => Math.abs(a.forward) - Math.abs(b.forward))[0];
+      racer.aiIntentOffset = betaClamp(rival.lateral, -BETA_AI_TUNING.blockOffsetMax, BETA_AI_TUNING.blockOffsetMax);
+    }
+  }
+  desiredOffset += racer.aiIntentOffset || 0;
+  const slipstreamTarget = (betaState?.racers || []).find((other) => {
+    if (other === racer || other.finished) return false;
+    const dx = other.x - racer.x;
+    const dy = other.y - racer.y;
+    const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
+    return forward > 0 && forward < BETA_AI_TUNING.slipstreamRange * BETA_AI_TUNING.slipstreamSeekRangeMult && (racer.speed || 0) <= (other.speed || 0) + BETA_AI_TUNING.slipstreamSeekSpeedTolerance;
+  });
+  if (slipstreamTarget) {
+    const dx = slipstreamTarget.x - racer.x;
+    const dy = slipstreamTarget.y - racer.y;
+    const lateralToWake = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
+    desiredOffset = betaClamp(lateralToWake, -BETA_AI_TUNING.overtakeOffsetMax, BETA_AI_TUNING.overtakeOffsetMax);
+  }
+  if (!betaRoadSafeOffset(nextTarget, lineAngle, desiredOffset)) desiredOffset = 0;
+  const offsetDt = racer.lastAiControlAt
+    ? Math.min(BETA_AI_TUNING.aiOffsetDtMax, Math.max(0, (now - racer.lastAiControlAt) / 1000))
+    : BETA_AI_TUNING.aiOffsetInitialDt;
+  racer.lastAiControlAt = now;
+  racer.lateralOffset += (desiredOffset - (racer.lateralOffset || 0)) * Math.min(1, BETA_AI_TUNING.offsetLerpRate * offsetDt);
+  if (!betaRoadSafeOffset(nextTarget, lineAngle, racer.lateralOffset || 0)) racer.lateralOffset *= 0.55;
+  const offsetTarget = betaOffsetPoint(nextTarget, lineAngle, racer.lateralOffset || 0);
+  const desired = Math.atan2(offsetTarget.y - racer.y, offsetTarget.x - racer.x);
   const delta = Math.atan2(Math.sin(desired - racer.angle), Math.cos(desired - racer.angle));
   const forwardDistance = surface === "grass" ? 48 : 86;
   const aheadX = racer.x + Math.cos(racer.angle) * forwardDistance;
@@ -4604,6 +4973,14 @@ async function startBetaDemo(mode = betaState?.config?.id || "time", options = {
     active: false,
     finished: false,
     debug: false,
+    shake: 0,
+    hitPauseUntil: 0,
+    slowmoUntil: 0,
+    particles: [],
+    lastPlacement: 0,
+    slipstreamWasActive: false,
+    lastWallFxAt: 0,
+    positionFlashTimer: null,
     startTime: 0,
     elapsed: 0,
     last: performance.now(),
@@ -4675,6 +5052,21 @@ function betaDriveRacer(racer, dt, controls = {}) {
     maxSpeed *= 0.58 + Math.min(0.18, (racer.physics.torque || 70) / 520);
     accel *= 0.74 + Math.min(0.16, (racer.ratings.acceleration || 70) / 600);
   }
+  if (racer.slipstreamActive) {
+    maxSpeed *= BETA_AI_TUNING.slipstreamMaxSpeedMult;
+    accel *= BETA_AI_TUNING.slipstreamAccelMult;
+  }
+  if (racer.ai && betaState?.player) {
+    const gap = Math.hypot(betaState.player.x - racer.x, betaState.player.y - racer.y);
+    const playerAhead = (betaState.player.lap > racer.lap)
+      || (betaState.player.lap === racer.lap && betaState.player.checkpoint > racer.checkpoint);
+    const t = Math.min(1, gap / BETA_AI_TUNING.rubberBandRange);
+    const band = playerAhead
+      ? 1 + BETA_AI_TUNING.rubberBandMaxBoost * t
+      : 1 - BETA_AI_TUNING.rubberBandMaxDrag * t;
+    maxSpeed *= band;
+    accel *= band;
+  }
   if (controls.up) racer.speed += accel * dt;
   if (controls.down) racer.speed -= racer.physics.brake * dt;
   if (!controls.up && !controls.down) racer.speed *= Math.max(0, 1 - (1.35 - racer.physics.torque / 180) * dt);
@@ -4695,10 +5087,21 @@ function betaDriveRacer(racer, dt, controls = {}) {
   racer.y += Math.sin(racer.angle) * racer.speed * dt;
   const nextClass = betaSurfaceAt(racer.x, racer.y);
   if (nextClass === "wall") {
+    const wallSpeed = Math.abs(racer.speed);
+    const noseX = racer.prevX + Math.cos(racer.angle) * 36;
+    const noseY = racer.prevY + Math.sin(racer.angle) * 36;
     // Wall collision: reverse both player and AI
     racer.x = racer.prevX;
     racer.y = racer.prevY;
     racer.speed *= -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
+    if (racer.id === "player" && wallSpeed > 120 && betaState && (!betaState.lastWallFxAt || now - betaState.lastWallFxAt > 250)) {
+      if (juiceEnabled()) {
+        betaState.shake = Math.max(betaState.shake || 0, RACE_JUICE_TUNING.wallShake);
+        raceJuiceSpawnSparks(noseX, noseY, 4);
+      }
+      raceJuiceHaptic(15);
+      betaState.lastWallFxAt = now;
+    }
     if (racer.ai) {
       // Immediately re-aim toward next waypoint to escape the wall
       const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
@@ -4722,31 +5125,58 @@ function betaDriveRacer(racer, dt, controls = {}) {
 }
 
 function updateBetaRace(now) {
-  if (!betaState || betaState.finished) return;
-  const dt = Math.min(0.035, (now - betaState.last) / 1000);
-  betaState.last = now;
-  betaState.elapsed = betaState.active ? (now - betaState.startTime) / 1000 : 0;
-  betaDriveRacer(betaState.player, dt, {
-    up: betaInput("up"),
-    down: betaInput("down"),
-    left: betaInput("left"),
-    right: betaInput("right")
-  });
-  betaAiUseItems();
-  betaState.racers.filter((racer) => racer.ai && !racer.finished).forEach((racer) => betaDriveRacer(racer, dt, betaAiControls(racer)));
-  betaResolveCarCollisions();
-  const itemNow = betaNowMs();
-  betaCollectItemBoxes(itemNow);
-  betaApplyBoostPads(itemNow);
-  betaApplyObstacles(itemNow);
-  betaUpdateTraps(itemNow);
-  betaUpdateProjectiles(dt, itemNow);
-  betaState.racers.filter((racer) => !racer.finished).forEach((racer) => betaUpdateOffTrackRecovery(racer, itemNow));
-  betaState.racers.filter((racer) => !racer.finished).forEach(betaProgressRacer);
-  betaRecordGhostSample(now);
-  betaState.ghostPoint = betaGhostPointAt(betaState.elapsed);
-  drawBetaFrame();
-  betaState.raf = requestAnimationFrame(updateBetaRace);
+  try {
+    if (!betaState || betaState.finished) return;
+    if (juiceEnabled() && betaState.hitPauseUntil && now < betaState.hitPauseUntil) {
+      betaState.last = now;
+      drawBetaFrame();
+      betaState.raf = requestAnimationFrame(updateBetaRace);
+      return;
+    }
+    let dt = Math.min(0.035, (now - betaState.last) / 1000);
+    if (juiceEnabled() && betaState.slowmoUntil && performance.now() < betaState.slowmoUntil) {
+      dt *= RACE_JUICE_TUNING.slowmoScale;
+    }
+    betaState.last = now;
+    betaState.elapsed = betaState.active ? (now - betaState.startTime) / 1000 : 0;
+    const frameNow = betaNowMs();
+    betaState.racers.forEach((racer) => betaUpdateSlipstream(racer, frameNow));
+    if (betaState.player.slipstreamActive && !betaState.slipstreamWasActive) raceJuiceHaptic(12);
+    betaState.slipstreamWasActive = Boolean(betaState.player.slipstreamActive);
+    betaDriveRacer(betaState.player, dt, {
+      up: betaInput("up"),
+      down: betaInput("down"),
+      left: betaInput("left"),
+      right: betaInput("right")
+    });
+    betaAiUseItems();
+    betaState.racers.filter((racer) => racer.ai && !racer.finished).forEach((racer) => {
+      const controls = betaAiControls(racer);
+      betaWatchdogCheck(racer, frameNow);
+      betaDriveRacer(racer, dt, controls);
+    });
+    betaResolveCarCollisions();
+    const itemNow = betaNowMs();
+    betaCollectItemBoxes(itemNow);
+    betaApplyBoostPads(itemNow);
+    betaApplyObstacles(itemNow);
+    betaUpdateTraps(itemNow);
+    betaUpdateProjectiles(dt, itemNow);
+    betaState.racers.filter((racer) => !racer.finished).forEach((racer) => betaUpdateOffTrackRecovery(racer, itemNow));
+    betaState.racers.filter((racer) => !racer.finished).forEach(betaProgressRacer);
+    betaRecordGhostSample(now);
+    betaState.ghostPoint = betaGhostPointAt(betaState.elapsed);
+    raceJuiceUpdateParticles(dt);
+    drawBetaFrame();
+    betaState.raf = requestAnimationFrame(updateBetaRace);
+  } catch (error) {
+    console.error("GearBorn race loop crashed:", error);
+    try {
+      if (betaState?.raf) cancelAnimationFrame(betaState.raf);
+      if (betaState) betaState.finished = true;
+      showToast("Race interrupted", "Something went wrong mid-race. Use Back to exit safely.");
+    } catch {}
+  }
 }
 
 function drawBetaFrame() {
@@ -4767,6 +5197,11 @@ function drawBetaFrame() {
   const startRow = Math.max(0, Math.floor(camY / betaTileSize) - 1);
   const endRow = Math.min(betaTrack.height - 1, Math.ceil((camY + h) / betaTileSize) + 1);
   ctx.save();
+  if (juiceEnabled() && betaState.shake > 0) {
+    const shake = betaState.shake;
+    ctx.translate((Math.random() * 2 - 1) * shake, (Math.random() * 2 - 1) * shake);
+    betaState.shake = Math.max(0, betaState.shake - RACE_JUICE_TUNING.shakeDecayPerSec / 60);
+  }
   ctx.translate(-camX, -camY);
   for (let y = startRow; y <= endRow; y += 1) {
     for (let x = startCol; x <= endCol; x += 1) drawBetaTile(ctx, betaTrack.grid[y][x], x * betaTileSize, y * betaTileSize);
@@ -4778,6 +5213,7 @@ function drawBetaFrame() {
   betaState.racers.forEach((racer) => betaDrawStatusEffects(ctx, racer));
   betaState.racers.filter((racer) => racer.ai).forEach((racer) => drawBetaCar(ctx, racer));
   drawBetaCar(ctx, betaState.player);
+  raceJuiceDrawParticles(ctx);
   if (betaState.debug) drawBetaDebug(ctx);
   ctx.restore();
   if (betaState.notification && betaState.notificationUntil > betaNowMs()) {
@@ -4808,6 +5244,23 @@ function drawBetaFrame() {
   const betaHudPosPanel = document.getElementById("beta-hud-pos-panel");
   if (betaHudPosPanel) betaHudPosPanel.hidden = betaState.config.id === "time";
   el.betaPosition.textContent = betaState.config.id === "time" ? "" : betaOrdinal(placement);
+  if (betaState.config.id !== "time") {
+    if (betaState.lastPlacement && placement !== betaState.lastPlacement) {
+      const gained = placement < betaState.lastPlacement;
+      if (gained) raceJuiceHaptic(14);
+      if (juiceEnabled()) {
+        const panel = el.betaPosition?.parentElement || betaHudPosPanel;
+        if (panel) {
+          panel.classList.remove("position-up", "position-down");
+          void panel.offsetWidth;
+          panel.classList.add(gained ? "position-up" : "position-down");
+          window.clearTimeout(betaState.positionFlashTimer);
+          betaState.positionFlashTimer = window.setTimeout(() => panel.classList.remove("position-up", "position-down"), RACE_JUICE_TUNING.positionFlashMs);
+        }
+      }
+    }
+    betaState.lastPlacement = placement;
+  }
 }
 
 function betaDrawOffTrackWarning(ctx, w, h) {
@@ -4852,6 +5305,21 @@ function drawBetaCar(ctx, racer = betaState.player) {
   ctx.translate(racer.x, racer.y);
   ctx.rotate(racer.angle + Math.PI / 2);
   if (racer.spinUntil > betaNowMs()) ctx.rotate(Math.sin(betaState.elapsed * 16) * 0.12);
+  if (racer.slipstreamActive) {
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.strokeStyle = racer.color || "#52c7ff";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    [-18, 0, 18].forEach((xOffset, index) => {
+      const wobble = Math.sin((betaState?.elapsed || 0) * 18 + index) * 3;
+      ctx.beginPath();
+      ctx.moveTo(xOffset + wobble, 42);
+      ctx.lineTo(xOffset - wobble * 0.5, 74 + index * 7);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
   if (racer.image?.complete && racer.image.naturalWidth) {
     ctx.drawImage(racer.image, -34, -48, 68, 96);
   } else {

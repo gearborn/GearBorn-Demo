@@ -57,7 +57,7 @@ const beta3dObjects = [
 
 function beta3dDevEnabled() {
   const params = new URLSearchParams(window.location.search);
-  return params.has("beta3d") || params.has("beta") || window.localStorage.getItem("gearborn_beta_dev") === "1";
+  return params.has("beta3d") || params.has("beta") || gearbornStorageGetItem("gearborn_beta_dev") === "1";
 }
 
 function beta3dCurveAt(z) {
@@ -321,8 +321,14 @@ function finishBeta3dRun() {
   beta3dState.active = false;
   if (beta3dState.raf) cancelAnimationFrame(beta3dState.raf);
   const elapsed = beta3dState.elapsed;
-  const previous = Number(window.localStorage.getItem("beta3d_bestTime") || 0);
-  if (!previous || elapsed < previous) window.localStorage.setItem("beta3d_bestTime", String(elapsed));
+  const previous = Number(gearbornStorageGetItem("beta3d_bestTime") || 0);
+  if (!previous || elapsed < previous) {
+    try {
+      gearbornStorageSetItem("beta3d_bestTime", String(elapsed));
+    } catch (err) {
+      console.warn("GearBorn beta3d best time save failed:", err);
+    }
+  }
   el.beta3dFinalTime.textContent = `Final time: ${elapsed.toFixed(2)} s${!previous || elapsed < previous ? " · New Best!" : ` · Best: ${previous.toFixed(2)} s`}`;
   el.beta3dResults.hidden = false;
   drawBeta3dFrame();
@@ -1017,8 +1023,10 @@ function hubMapDraw() {
   let drawX = hubMapState.playerX;
   let drawY = hubMapState.playerY;
   if (hubMapState.moveTween) {
-    const progress = Math.min(1, (performance.now() - hubMapState.moveTween.startTime) / 200);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const progress = (typeof reduceMotionEnabled === "function" && reduceMotionEnabled())
+      ? 1
+      : Math.min(1, (performance.now() - hubMapState.moveTween.startTime) / 200);
+    const eased = (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 1 : 1 - Math.pow(1 - progress, 3);
     drawX = hubMapState.moveTween.fromX + (hubMapState.moveTween.toX - hubMapState.moveTween.fromX) * eased;
     drawY = hubMapState.moveTween.fromY + (hubMapState.moveTween.toY - hubMapState.moveTween.fromY) * eased;
     if (progress >= 1) {
