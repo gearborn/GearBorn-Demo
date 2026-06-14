@@ -162,6 +162,33 @@ document.addEventListener("pointerdown", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const devTool = event.target.closest("[data-dev-test-tool]");
+  if (devTool) {
+    showDevTestScreen(devTool.dataset.devTestTool || "home");
+    return;
+  }
+  const devBack = event.target.closest("[data-dev-test-back]");
+  if (devBack) {
+    showDevTestScreen(devBack.dataset.devTestBack || "home");
+    return;
+  }
+  const devCharacter = event.target.closest("[data-dev-test-character]");
+  if (devCharacter) {
+    devTestState.characterId = devCharacter.dataset.devTestCharacter || "mylo";
+    renderDevTestSceneSelect();
+    return;
+  }
+  const devSceneCategory = event.target.closest("[data-dev-test-scene-category]");
+  if (devSceneCategory) {
+    devTestState.sceneCategory = devSceneCategory.dataset.devTestSceneCategory || "tutorial";
+    renderDevTestSceneSelect();
+    return;
+  }
+  const devScene = event.target.closest("[data-dev-test-scene]");
+  if (devScene && !devScene.disabled) {
+    openDevTestScene(devScene.dataset.devTestScene);
+    return;
+  }
   const wheelButton = event.target.closest("[data-honk-button]");
   if (wheelButton) {
     event.preventDefault();
@@ -206,6 +233,18 @@ document.addEventListener("click", (event) => {
     window.setTimeout(() => vindexHonk.classList.remove("playing"), 180);
   }
 });
+
+el.devTestSoundSelect?.addEventListener("change", playDevTestSound);
+el.devTestSoundPlay?.addEventListener("click", playDevTestSound);
+el.devTestSoundStop?.addEventListener("click", stopDevTestSound);
+el.devTestHonkSelect?.addEventListener("change", playDevTestHonk);
+el.devTestHonkEmotion?.addEventListener("change", playDevTestHonk);
+el.devTestHonkPlay?.addEventListener("click", playDevTestHonk);
+el.devTestHonkStop?.addEventListener("click", stopDevTestHonk);
+el.devTestForgePlay?.addEventListener("click", () => playDevTestUnlockAnimation("forge"));
+el.devTestSpindellPlay?.addEventListener("click", () => playDevTestUnlockAnimation("spindell"));
+el.devTestScenePrev?.addEventListener("click", () => stepDevTestScene(-1));
+el.devTestSceneNext?.addEventListener("click", () => stepDevTestScene(1));
 
 // Beta car select screen
 el.betaCarSelectConfirm?.addEventListener("click", () => {
@@ -306,7 +345,7 @@ el.storyMapStage?.addEventListener("click", (event) => {
   }
   const gauntletButton = event.target.closest("[data-gauntlet-city]");
   if (gauntletButton && !gauntletButton.disabled) {
-    startMedallionGauntlet(gauntletButton.dataset.gauntletCity);
+    openGauntletPreview(gauntletButton.dataset.gauntletCity);
     return;
   }
   const ladderButton = event.target.closest("[data-city-ladder]");
@@ -327,6 +366,13 @@ el.storyMapStage?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const ladderDifficulty = event.target.closest("[data-city-ladder-difficulty]");
+  if (ladderDifficulty && pendingCityPlaceholderPreview?.type === "ladder") {
+    pendingCityPlaceholderPreview.tier = ladderDifficulty.dataset.cityLadderDifficulty;
+    renderCityPlaceholderPreview();
+    return;
+  }
+
   const rankButton = event.target.closest("[data-rank-up-line]");
   if (rankButton) {
     rankUp(rankButton.dataset.rankUpLine);
@@ -605,18 +651,21 @@ el.convoyStageList?.addEventListener("click", (event) => {
     return;
   }
   const convoyId = inProgress.convoyId;
-  // TODO: charge gas when Convoy placeholder stages launch real races.
-  inProgress.stageProgress[slot] = "won";
-  recordTunerStat("convoyStagesWon");
-  if (slot >= 2) {
-    completeConvoy(convoyId);
-    showView("story");
-    return;
-  }
-  inProgress.currentStage = slot + 1;
-  saveState();
-  showToast("Convoy Stage Placeholder", `Stage ${slot + 1} cleared with ${currentEvolution(carId).name}.`);
-  renderConvoy();
+  const convoy = convoyDefinitions[convoyId];
+  requestRaceEntry({ kind: "convoy", cityId: convoy?.cityId }, () => {
+    // TODO: replace this placeholder clear with real Convoy stage race launches.
+    inProgress.stageProgress[slot] = "won";
+    recordTunerStat("convoyStagesWon");
+    if (slot >= 2) {
+      completeConvoy(convoyId);
+      showView("story");
+      return;
+    }
+    inProgress.currentStage = slot + 1;
+    saveState();
+    showToast("Convoy Stage Placeholder", `Stage ${slot + 1} cleared with ${currentEvolution(carId).name}.`);
+    renderConvoy();
+  });
 });
 
 el.vindexMemoriesButton?.addEventListener("click", toggleVindexMemories);
@@ -927,6 +976,13 @@ function isKeySettingFocused() {
   ].includes(document.activeElement);
 }
 
+function isTextEntryFocused() {
+  const target = document.activeElement;
+  if (!target) return false;
+  if (target.isContentEditable) return true;
+  return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+}
+
 bindVerticalKeyInput(el.verticalUpKey, "up");
 bindVerticalKeyInput(el.verticalDownKey, "down");
 bindVerticalKeyInput(el.verticalLeftKey, "left");
@@ -934,6 +990,7 @@ bindVerticalKeyInput(el.verticalRightKey, "right");
 
 document.addEventListener("keydown", (event) => {
   const key = normalizeKey(event);
+  if (event.key !== "Escape" && isTextEntryFocused() && !isKeySettingFocused()) return;
   if (verticalRace?.active && isVerticalControlKey(key)) {
     event.preventDefault();
     verticalRace.keys[key] = true;
@@ -1000,6 +1057,7 @@ document.addEventListener("keydown", (event) => {
     closeEvolutionModal();
     return;
   }
+  if (isTextEntryFocused() && !isKeySettingFocused()) return;
   if (isKeySettingFocused()) return;
   if (key === state.settings.shiftKey) {
     event.preventDefault();

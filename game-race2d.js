@@ -5,7 +5,7 @@
 // ─── BETA TRACK DATA & CIRCUIT MODE ───────────────────────────────────────
 const BETA_AI_TUNING = {
   // Stuck watchdog
-  stuckTimeoutMs: 4000,
+  stuckTimeoutMs: 1800,
   stuckRespawnPauseMs: 900,
 
   // Racecraft
@@ -35,7 +35,12 @@ const BETA_AI_TUNING = {
   // Rubber band (bounded, asymmetric)
   rubberBandMaxBoost: 0.06,
   rubberBandMaxDrag: 0.03,
-  rubberBandRange: 900
+  rubberBandRange: 900,
+
+  // Grass recovery
+  aiGrassMaxSpeedMin: 0.72,
+  aiGrassAccelMin: 0.62,
+  aiOffTrackRespawnMs: 1800
 };
 
 const RACE_JUICE_TUNING = {
@@ -498,8 +503,12 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
   if (racer.ai) {
     const nearestIndex = betaNearestAiLineIndex(racer);
     if (betaAiRacingLine?.length && surface !== "wall") {
-      const lineAhead = surface === "road" ? 2 : 3;
+      const lineAhead = surface === "road" ? 2 : 5;
       racer.aiWaypoint = (nearestIndex + lineAhead) % betaAiRacingLine.length;
+      if (surface !== "road") {
+        racer.lateralOffset *= 0.45;
+        racer.aiIntentOffset = 0;
+      }
     }
     if (!racer.lastProgressAt) {
       racer.lastProgressAt = now;
@@ -516,7 +525,7 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
       racer.lastRecoveryX = racer.x;
       racer.lastRecoveryY = racer.y;
       racer.lastProgressAt = now;
-      if (racer.stuckSince && now - racer.stuckSince >= 3200) {
+      if (racer.stuckSince && now - racer.stuckSince >= BETA_AI_TUNING.stuckTimeoutMs) {
         betaRespawnRacer(racer, now);
         return;
       }
@@ -527,7 +536,7 @@ function betaUpdateOffTrackRecovery(racer, now = betaNowMs()) {
     return;
   }
   racer.offTrackSince = racer.offTrackSince || now;
-  const limit = racer.ai ? 4200 : 5000;
+  const limit = racer.ai ? BETA_AI_TUNING.aiOffTrackRespawnMs : 5000;
   if (now - racer.offTrackSince >= limit) betaRespawnRacer(racer, now);
 }
 
@@ -1190,6 +1199,21 @@ function story2dOpponentsForLevel(level, mode = story2dModeForLevel(level), camp
   if (level.type === "boss") opponents = [{ ...betaBossCarSetup(level.final ? finalBoss : bosses[level.bossIndex], bossDifficulty), driver: level.final ? finalBoss : bosses[level.bossIndex] }];
   else if (level.type === "pink-slip") opponents = [pinkSlipOpponentSetup(level, difficulty)];
   else if (level.type === "rival") opponents = [rivalOpponentSetup(level, difficulty)];
+  else if (level.cityStructureEvent?.type === "story") {
+    const plan = typeof cityStoryRacePlanFor === "function" ? cityStoryRacePlanFor(level.cityStructureEvent.cityId, level.cityStructureEvent.index) : null;
+    const participantId = typeof cityStoryParticipantId === "function" ? cityStoryParticipantId(plan) : "";
+    const driver = typeof cityStoryParticipantProfile === "function" ? cityStoryParticipantProfile(participantId) : null;
+    const lineId = typeof cityStoryOpponentLineId === "function" ? cityStoryOpponentLineId(plan) : "";
+    const named = lineId ? betaOpponentSetupForLine(lineId, state.selectedStoryCar, 1.03, difficulty) : null;
+    const randomOpponents = getRandomOpponentCars(Math.max(0, betaModeConfigs[mode].opponents - (named ? 1 : 0)), state.selectedStoryCar, difficulty);
+    opponents = (named ? [{ ...named, driver: driver || { id: participantId, name: named.form.name } }] : []).concat(randomOpponents.map((opponent, index) => {
+      const fallbackDriver = betaNpcDriversForMode(mode)[index] || otherNpcProfiles[index % otherNpcProfiles.length];
+      return {
+        ...betaOpponentSetupForDriver(fallbackDriver, state.selectedStoryCar, opponent, 1.04 + Math.random() * 0.07, difficulty),
+        driver: fallbackDriver
+      };
+    }));
+  }
   else {
     const drivers = betaNpcDriversForMode(mode);
     const randomOpponents = getRandomOpponentCars(betaModeConfigs[mode].opponents, state.selectedStoryCar, difficulty);
@@ -2013,6 +2037,10 @@ function finishStory2dRace(context, won, placement, elapsed, resultLine) {
         betaRaceContext = null;
         finishStoryRaceScreen();
       };
+      if (won && level.cityStructureEvent?.type === "story") {
+        finishRuntimeStoryWithPost(level, finishStory);
+        return;
+      }
       if (won && level.type === "rival") {
         openRivalDialogue(level, "post", finishStory);
         return;
@@ -5041,9 +5069,13 @@ function betaDriveRacer(racer, dt, controls = {}) {
   const slowed = racer.slowUntil > now;
   const shielded = racer.shieldUntil > now;   // Big Bubba blocks grass penalty
   const effectiveClass = shielded ? "road" : currentClass;
-  const grassFactor = effectiveClass === "grass" ? Math.min(0.48, 0.28 + racer.physics.torque / 520) : 1;
+  const grassFactor = effectiveClass === "grass"
+    ? (racer.ai ? Math.max(BETA_AI_TUNING.aiGrassMaxSpeedMin, Math.min(0.88, 0.62 + racer.physics.torque / 460)) : Math.min(0.48, 0.28 + racer.physics.torque / 520))
+    : 1;
   let maxSpeed = racer.physics.maxSpeed * grassFactor;
-  let accel = racer.physics.acceleration * (effectiveClass === "grass" ? 0.32 + racer.physics.torque / 480 : 1);
+  let accel = racer.physics.acceleration * (effectiveClass === "grass"
+    ? (racer.ai ? Math.max(BETA_AI_TUNING.aiGrassAccelMin, Math.min(0.9, 0.54 + racer.physics.torque / 420)) : 0.32 + racer.physics.torque / 480)
+    : 1);
   if (boosted) {
     maxSpeed *= 1.22 + (racer.physics.powertrain || 70) / 620;
     accel *= 1.25;
@@ -5110,8 +5142,10 @@ function betaDriveRacer(racer, dt, controls = {}) {
   } else if (racer.ai && nextClass === "grass") {
     const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
     const nearest = betaNearestAiLineIndex(racer, line);
-    const target = line[(nearest + 1) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
+    const target = line[(nearest + 3) % line.length] || line[(nearest + 1) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
     const desired = Math.atan2(target.y - racer.y, target.x - racer.x);
+    racer.lateralOffset *= 0.35;
+    racer.aiIntentOffset = 0;
     if (currentClass === "road") {
       racer.x = racer.prevX;
       racer.y = racer.prevY;
@@ -5119,8 +5153,8 @@ function betaDriveRacer(racer, dt, controls = {}) {
     } else {
       racer.speed *= 0.86;
     }
-    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 6.5 * dt);
-    racer.aiWaypoint = (nearest + 1) % line.length;
+    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 9.5 * dt);
+    racer.aiWaypoint = (nearest + 3) % line.length;
   }
 }
 

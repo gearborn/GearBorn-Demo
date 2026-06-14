@@ -71,6 +71,7 @@
             CrankVaults<span class="nav-badge" id="crankvault-badge" hidden>1</span>
           </button>
           <button class="nav-button beta-nav" data-view="beta" type="button">Beta Mode</button>
+          <button class="nav-button" data-view="dev-test" type="button">Dev Test</button>
         </nav>
       </header>
 
@@ -1272,6 +1273,125 @@
           <div class="hub-map-beta-shell">
             <canvas id="hub-map-beta-canvas" width="768" height="512" aria-label="Hub map beta tile canvas"></canvas>
             <div class="hub-map-beta-debug">Tile: <strong id="hub-map-beta-coords">12, 8</strong></div>
+          </div>
+        </section>
+
+        <section class="view dev-test-view" id="dev-test-view" aria-labelledby="dev-test-title">
+          <button class="back-link" data-view="menu" type="button">Back</button>
+          <div class="section-heading">
+            <p>Tools</p>
+            <h1 id="dev-test-title">Dev Test</h1>
+          </div>
+
+          <div class="dev-test-screen active" id="dev-test-home">
+            <div class="dev-test-tool-grid">
+              <button class="beta-option-card" type="button" data-dev-test-tool="sounds">
+                <strong>Sounds</strong>
+                <span>Audition game sounds and GearBorn honks.</span>
+              </button>
+              <button class="beta-option-card" type="button" data-dev-test-tool="animations">
+                <strong>Animations</strong>
+                <span>Preview Forge and Spindell unlock sequences.</span>
+              </button>
+              <button class="beta-option-card" type="button" data-dev-test-tool="scenes">
+                <strong>Scene Select</strong>
+                <span>Browse tutorial, story, space, and bond memory scenes.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="dev-test-screen" id="dev-test-sounds" hidden>
+            <button class="back-link" type="button" data-dev-test-back="home">Back to Dev Test</button>
+            <div class="dev-test-panels">
+              <section class="dev-test-panel">
+                <div class="section-heading compact-heading">
+                  <p>Sound Player</p>
+                  <h2>Game Sounds</h2>
+                </div>
+                <label class="dev-test-field">Sound
+                  <select id="dev-test-sound-select"></select>
+                </label>
+                <div class="modal-actions">
+                  <button class="success-button" id="dev-test-sound-play" type="button">Play Sound</button>
+                  <button class="ghost" id="dev-test-sound-stop" type="button">Stop Sound</button>
+                </div>
+              </section>
+              <section class="dev-test-panel">
+                <div class="section-heading compact-heading">
+                  <p>Honk Player</p>
+                  <h2>Honks</h2>
+                </div>
+                <label class="dev-test-field">GearBorn
+                  <select id="dev-test-honk-select"></select>
+                </label>
+                <label class="dev-test-field">Mood
+                  <select id="dev-test-honk-emotion">
+                    <option value="happy">Happy</option>
+                    <option value="angry">Angry</option>
+                  </select>
+                </label>
+                <div class="modal-actions">
+                  <button class="success-button" id="dev-test-honk-play" type="button">Play Honk</button>
+                  <button class="ghost" id="dev-test-honk-stop" type="button">Stop Honk</button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="dev-test-screen" id="dev-test-animations" hidden>
+            <button class="back-link" type="button" data-dev-test-back="home">Back to Dev Test</button>
+            <div class="dev-test-panels">
+              <section class="dev-test-panel">
+                <div class="section-heading compact-heading">
+                  <p>Unlock Animation</p>
+                  <h2>Forge Unlock</h2>
+                </div>
+                <label class="dev-test-field">Medallion
+                  <select id="dev-test-forge-medallion"></select>
+                </label>
+                <button class="success-button" id="dev-test-forge-play" type="button">Play Forge Unlock</button>
+              </section>
+              <section class="dev-test-panel">
+                <div class="section-heading compact-heading">
+                  <p>Unlock Animation</p>
+                  <h2>Spindell Unlock</h2>
+                </div>
+                <label class="dev-test-field">Medallion
+                  <select id="dev-test-spindell-medallion"></select>
+                </label>
+                <button class="success-button" id="dev-test-spindell-play" type="button">Play Spindell Unlock</button>
+              </section>
+            </div>
+          </div>
+
+          <div class="dev-test-screen" id="dev-test-scenes" hidden>
+            <button class="back-link" type="button" data-dev-test-back="home">Back to Dev Test</button>
+            <div class="dev-test-character-row" id="dev-test-character-row"></div>
+            <div class="dev-test-scene-layout">
+              <aside class="dev-test-scene-nav" id="dev-test-scene-nav"></aside>
+              <div class="dev-test-scene-list" id="dev-test-scene-list"></div>
+            </div>
+          </div>
+
+          <div class="dev-test-screen" id="dev-test-scene-player" hidden>
+            <button class="back-link" type="button" data-dev-test-back="scenes">Back to Scene Select</button>
+            <div class="dev-test-scene-player-card">
+              <div class="section-heading compact-heading">
+                <p id="dev-test-scene-code">Scene</p>
+                <h2 id="dev-test-scene-title">Scene Preview</h2>
+              </div>
+              <div class="dev-test-dialogue-row">
+                <div class="dev-test-speaker-portrait" id="dev-test-scene-portrait"></div>
+                <div class="dev-test-dialogue-copy">
+                  <strong id="dev-test-scene-speaker">Speaker</strong>
+                  <p id="dev-test-scene-text"></p>
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button class="ghost" id="dev-test-scene-prev" type="button">Previous</button>
+                <button class="success-button" id="dev-test-scene-next" type="button">Next</button>
+              </div>
+            </div>
           </div>
         </section>
 

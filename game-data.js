@@ -713,6 +713,25 @@ const cityStructureTemplate = {
   ladderTiers: ["bronze", "silver", "gold"],
   storyRaceCount: 5
 };
+// Per-city story-race definitions. Each entry is one of the 5 linear story races.
+// type: drag | trial | circuit | rival | battle
+// opponentId: participant id for story races that have a named opponent (null otherwise)
+// scenePre / scenePost: placeholder keys for the VN dialogue that plays before/after the race.
+// TODO: add the remaining city story plans as their story content is locked.
+const cityStoryRacePlans = {
+  indianapolis: [
+    { slot: 0, type: "drag", opponentId: { mylo: "eli", "cha-cha": "crosby" }, scenePre: "indy-s1-pre", scenePost: "indy-s1-post" },
+    { slot: 1, type: "trial", opponentId: null, scenePre: "indy-s2-pre", scenePost: "indy-s2-post" },
+    { slot: 2, type: "circuit", opponentId: { mylo: "eli", "cha-cha": "crosby" }, scenePre: "indy-s3-pre", scenePost: "indy-s3-post" },
+    { slot: 3, type: "rival", opponentId: "rival", scenePre: "indy-s4-pre", scenePost: "indy-s4-post" },
+    { slot: 4, type: "battle", opponentId: "lynx", scenePre: "indy-s5-pre", scenePost: "indy-s5-post" }
+  ]
+};
+
+function cityStoryRacePlanFor(cityId, slotIndex) {
+  const plan = cityStoryRacePlans[cityId];
+  return plan ? plan[slotIndex] || null : null;
+}
 const cityDifficultyCurve = [
   { opponentLevel: 1,  opponentEvolution: 0, skillMin: 0.96, skillMax: 1.01, aggression: 0.25 },
   { opponentLevel: 2,  opponentEvolution: 0, skillMin: 0.98, skillMax: 1.03, aggression: 0.32 },
@@ -879,6 +898,7 @@ const achievementDefs = [
 const tutorialLine = (speaker, text) => ({ speaker, text });
 const tutorialChoice = (choices) => ({ speaker: "user", text: "TUTORIAL_CHOICE_PROMPT", choices });
 const tutorialChoiceOption = (label, responseLines) => ({ label, responseLines: responseLines.map(([speaker, text]) => ({ speaker, text })) });
+const storyLine = tutorialLine;
 
 const tutorialDialogueByCharacter = {
   "mylo": {
@@ -1055,6 +1075,54 @@ const tutorialDialogueAliases = {
   "medallion-sync": "medallion-sync",
   "unlocked-cc": "unlocked-cc"
 };
+
+// Story scene dialogue. Mirrors tutorialDialogueByCharacter structure.
+// TODO: replace these placeholders once the Indianapolis story scripts are locked.
+const storyDialogueByCharacter = {
+  "mylo": {
+    "indy-arrival": [storyLine("ashley", "PLACEHOLDER: Indianapolis arrival — Ashley briefs on Rev-rend.")],
+    "indy-s1-pre": [storyLine("eli", "PLACEHOLDER: Pre-Drag — meet Eli, stock Puttercat, 'Freaky'.")],
+    "indy-s1-post": [storyLine("eli", "PLACEHOLDER: Post-Drag — Eli on the system.")],
+    "indy-s2-pre": [storyLine("ashley", "PLACEHOLDER: Pre-Time Trial — open qualifier framing.")],
+    "indy-s2-post": [storyLine("roberto", "PLACEHOLDER: Post-Time Trial — Roberto Yucca notices the time.")],
+    "indy-s3-pre": [storyLine("eli", "PLACEHOLDER: Pre-4-Car — Eli in the field.")],
+    "indy-s3-post": [storyLine("ashley", "PLACEHOLDER: Post-4-Car — great Tuner, bad car.")],
+    "indy-s4-pre": [storyLine("rival", "PLACEHOLDER: Pre-Rival — Cha Cha at the H2H line.")],
+    "indy-s4-post": [storyLine("rival", "PLACEHOLDER: Post-Rival — same hook, different bait.")],
+    "indy-s5-pre": [storyLine("lynx", "PLACEHOLDER: Pre-Battle — Lynx, intimidation, will you flinch.")],
+    "indy-s5-post": [storyLine("lynx", "PLACEHOLDER: Post-Battle — respect; boss unlocks.")],
+    "indy-boss-pre": [storyLine("revrend", "PLACEHOLDER: Boss intro — Rev-rend's pitch.")],
+    "indy-boss-post": [storyLine("revrend", "PLACEHOLDER: Boss win — the offer stays open.")],
+    "indy-exit": [storyLine("ashley", "PLACEHOLDER: Leaving Indianapolis — Karen's post, Berlin cliffhanger.")]
+  },
+  "cha-cha": {
+    "indy-arrival": [storyLine("orion", "PLACEHOLDER: Indianapolis arrival — Orion briefs on Rev-rend / the name.")],
+    "indy-s1-pre": [storyLine("crosby", "PLACEHOLDER: Pre-Drag — meet Crosby, stock Tourquette, cheerful.")],
+    "indy-s1-post": [storyLine("crosby", "PLACEHOLDER: Post-Drag — Crosby loses cheerfully.")],
+    "indy-s2-pre": [storyLine("orion", "PLACEHOLDER: Pre-Time Trial — just you and the clock.")],
+    "indy-s2-post": [storyLine("crosby", "PLACEHOLDER: Post-Time Trial — genuine, non-backhanded compliment about HER.")],
+    "indy-s3-pre": [storyLine("crosby", "PLACEHOLDER: Pre-4-Car — Crosby in the field, name vs racer.")],
+    "indy-s3-post": [storyLine("orion", "PLACEHOLDER: Post-4-Car — beat them without the name.")],
+    "indy-s4-pre": [storyLine("rival", "PLACEHOLDER: Pre-Rival — Mylo at the H2H line.")],
+    "indy-s4-post": [storyLine("rival", "PLACEHOLDER: Post-Rival — unsettled he kept up.")],
+    "indy-s5-pre": [storyLine("lynx", "PLACEHOLDER: Pre-Battle — Lynx doesn't care about the name.")],
+    "indy-s5-post": [storyLine("lynx", "PLACEHOLDER: Post-Battle — the cracked part wins; boss unlocks.")],
+    "indy-boss-pre": [storyLine("revrend", "PLACEHOLDER: Boss intro — Rev-rend wants the Spindell banner.")],
+    "indy-boss-post": [storyLine("revrend", "PLACEHOLDER: Boss win — still deciding what a Spindell is.")],
+    "indy-exit": [storyLine("orion", "PLACEHOLDER: Leaving Indianapolis — Karen's post, Berlin cliffhanger.")]
+  }
+};
+
+function storyDialogueForCharacter(characterId) {
+  return storyDialogueByCharacter[characterId] || storyDialogueByCharacter["mylo"];
+}
+
+const storyDialogue = new Proxy({}, {
+  get(_target, sceneId) {
+    const charId = (typeof selectedTuner === "function" && selectedTuner()?.id) || "mylo";
+    return storyDialogueForCharacter(charId)[sceneId];
+  }
+});
 
 const displayImageScaleByName = {
   swinecroft: 1.22,
@@ -1613,7 +1681,10 @@ const gauntletUnlockReputationPercents = [0, 50, 100];
 
 function cityDifficultyForCampaignIndex(campaignIndex) {
   if (!Number.isFinite(campaignIndex) || campaignIndex < 0) return null;
-  const cityIndex = storyCities.findIndex((city) => (city.levels || []).some((level) => level.campaignIndex === campaignIndex));
+  const runtimeCityId = campaignLevels[campaignIndex]?.cityStructureEvent?.cityId;
+  const cityIndex = runtimeCityId
+    ? storyCities.findIndex((city) => city.id === runtimeCityId)
+    : storyCities.findIndex((city) => (city.levels || []).some((level) => level.campaignIndex === campaignIndex));
   return cityDifficultyCurve[Math.max(0, cityIndex)] || cityDifficultyCurve[cityDifficultyCurve.length - 1];
 }
 
@@ -2430,12 +2501,12 @@ const convoyParticipantStages = {
   eli: [
     { type: "drag", opponentCarId: "butcher-hog", opponentName: "Eli's Chopcicle" },
     { type: "battle", opponentCarId: "skater-koala", opponentName: "Eli's Koaster" },
-    { type: "h2h", opponentCarId: "pickup", opponentName: "Eli's Tookerjaw" }
+    { type: "h2h", opponentCarId: "tiger-cart", opponentEvolutionIndex: 0, opponentName: "Eli's Puttercat" }
   ],
   crosby: [
     { type: "drag", opponentCarId: "chill-penguin", opponentName: "Crosby's Brrap" },
     { type: "battle", opponentCarId: "karate-cow", opponentName: "Crosby's Udderlee" },
-    { type: "h2h", opponentCarId: "space-dolphin", opponentName: "Crosby's Astromarino" }
+    { type: "h2h", opponentCarId: "muscle-man", opponentEvolutionIndex: 0, opponentName: "Crosby's Tourquette" }
   ],
   portia: [
     { type: "drag", opponentCarId: "sorority-elephant", opponentEvolutionIndex: 0, opponentName: "Portia's Elepledge" },
