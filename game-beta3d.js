@@ -1169,4 +1169,366 @@ document.addEventListener("keyup", (event) => {
 
 // TODO: NPCs, sprites, map transitions, interactions, and dialogue hooks.
 
+// ─── PHOTO CATCH BETA FOUNDATION ─────────────────────────────────────────────
+
+const photoCatchState = {
+  active: false,
+  stream: null,
+  rafId: 0,
+  stage: "viewfinder",
+  captureColor: null,
+  chosenBody: null,
+  match: null
+};
+let photoCatchAssetsReady = false;
+let photoCatchCameraError = "";
+
+// body types: compact | sedan | sports | suv | truck | van
+const photoCatchSilhouetteTags = {
+  bee: "compact", pickup: "truck", pig: "sedan", rabbit: "compact",
+  whale: "suv", frog: "compact", "techno-dinosaur": "suv",
+  "sorority-elephant": "suv", "florida-gator": "truck", "grunge-fish": "sedan",
+  "karate-cow": "van", "art-van": "van", "cake-train": "van",
+  rainbowlt: "sports", "metal-snake": "sports", "training-car": "sedan",
+  "muscle-man": "sports", "waste-management": "truck", "chill-penguin": "compact",
+  "space-dolphin": "sports", "butcher-hog": "truck", "gb-growler": "suv",
+  armadaddio: "suv", "electro-beetle": "compact", "flavor-coast": "van",
+  "future-bok": "sports", "wrestler-roo": "suv", "tiger-cart": "compact",
+  "silly-goose": "sedan", "construction-blok": "truck", "skater-koala": "compact",
+  "rides-hair": "sedan", "royal-flush": "sports", "narwhal-luxury": "sedan"
+};
+const PHOTO_CATCH_BODY_TYPES = ["compact", "sedan", "sports", "suv", "truck", "van"];
+const PHOTO_CATCH_STORE_KEY = "photoCatch_caught";
+
+function photoCatchIsActive() {
+  return document.querySelector("#photo-catch-beta-view")?.classList.contains("active");
+}
+
+function photoCatchLoadCaught() {
+  try {
+    return JSON.parse(gearbornStorageGetItem(PHOTO_CATCH_STORE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function photoCatchSaveCaught(id) {
+  const list = photoCatchLoadCaught();
+  if (!list.includes(id)) list.push(id);
+  try {
+    gearbornStorageSetItem(PHOTO_CATCH_STORE_KEY, JSON.stringify(list));
+  } catch (err) {
+    console.warn("Photo Catch save failed:", err);
+  }
+}
+
+function photoCatchHexToRgb(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex || "")) return null;
+  const value = parseInt(hex.slice(1), 16);
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255
+  };
+}
+
+function photoCatchColorDistance(a, b) {
+  return Math.hypot((a.r || 0) - (b.r || 0), (a.g || 0) - (b.g || 0), (a.b || 0) - (b.b || 0));
+}
+
+function photoCatchAverageColorFromCanvas(canvas) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx || !canvas.width || !canvas.height) return null;
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let count = 0;
+  for (let index = 0; index < data.length; index += 64) {
+    r += data[index];
+    g += data[index + 1];
+    b += data[index + 2];
+    count += 1;
+  }
+  if (!count) return null;
+  return { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) };
+}
+
+function photoCatchAverageColorFromSource(source, width, height) {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.floor(width || 1));
+  canvas.height = Math.max(1, Math.floor(height || 1));
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  return photoCatchAverageColorFromCanvas(canvas);
+}
+
+function photoCatchRandomColor() {
+  return {
+    r: 40 + Math.floor(Math.random() * 190),
+    g: 40 + Math.floor(Math.random() * 190),
+    b: 40 + Math.floor(Math.random() * 190)
+  };
+}
+
+function photoCatchStopCamera() {
+  if (photoCatchState.stream) {
+    photoCatchState.stream.getTracks().forEach((track) => track.stop());
+    photoCatchState.stream = null;
+  }
+  if (el.photoCatchBetaVideo) {
+    el.photoCatchBetaVideo.pause();
+    el.photoCatchBetaVideo.srcObject = null;
+  }
+}
+
+function photoCatchTick() {
+  if (!photoCatchState.active || !photoCatchIsActive()) return;
+  photoCatchState.rafId = requestAnimationFrame(photoCatchTick);
+}
+
+function photoCatchStartLoop() {
+  if (photoCatchState.rafId) cancelAnimationFrame(photoCatchState.rafId);
+  photoCatchState.rafId = requestAnimationFrame(photoCatchTick);
+}
+
+async function photoCatchStartCamera() {
+  photoCatchCameraError = "";
+  photoCatchStopCamera();
+  if (!navigator.mediaDevices?.getUserMedia || !el.photoCatchBetaVideo) {
+    photoCatchCameraError = "Camera unavailable on this device.";
+    photoCatchRender();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+    if (!photoCatchState.active) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    photoCatchState.stream = stream;
+    el.photoCatchBetaVideo.srcObject = stream;
+    await el.photoCatchBetaVideo.play().catch(() => {});
+    photoCatchRender();
+  } catch (err) {
+    console.warn("Photo Catch camera unavailable:", err);
+    photoCatchCameraError = "Camera permission denied or unavailable.";
+    photoCatchRender();
+  }
+}
+
+function photoCatchCaptureVideo() {
+  const video = el.photoCatchBetaVideo;
+  const width = video?.videoWidth || 0;
+  const height = video?.videoHeight || 0;
+  if (!video || !width || !height) {
+    photoCatchSimulateCapture();
+    return;
+  }
+  photoCatchState.captureColor = photoCatchAverageColorFromSource(video, width, height) || photoCatchRandomColor();
+  photoCatchState.stage = "bodytype";
+  photoCatchStopCamera();
+  photoCatchRender();
+}
+
+function photoCatchHandleFile(file) {
+  if (!file) return;
+  const image = new Image();
+  const objectUrl = URL.createObjectURL(file);
+  image.onload = () => {
+    photoCatchState.captureColor = photoCatchAverageColorFromSource(image, image.naturalWidth, image.naturalHeight) || photoCatchRandomColor();
+    photoCatchState.stage = "bodytype";
+    URL.revokeObjectURL(objectUrl);
+    photoCatchRender();
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl);
+    photoCatchSimulateCapture();
+  };
+  image.src = objectUrl;
+}
+
+function photoCatchSimulateCapture() {
+  photoCatchState.captureColor = photoCatchRandomColor();
+  photoCatchState.stage = "bodytype";
+  photoCatchStopCamera();
+  photoCatchRender();
+}
+
+function photoCatchMatch() {
+  const body = photoCatchState.chosenBody;
+  const captureColor = photoCatchState.captureColor || photoCatchRandomColor();
+  let candidates = cars.filter((car) => photoCatchSilhouetteTags[car.id] === body);
+  if (!candidates.length) candidates = cars.slice();
+  candidates = candidates
+    .map((car) => ({ car, rgb: photoCatchHexToRgb(car.color) }))
+    .filter((entry) => entry.rgb);
+  if (!candidates.length) {
+    candidates = cars
+      .map((car) => ({ car, rgb: photoCatchHexToRgb(car.color) }))
+      .filter((entry) => entry.rgb);
+  }
+  const ranked = candidates
+    .map((entry) => ({ car: entry.car, score: photoCatchColorDistance(captureColor, entry.rgb) }))
+    .sort((a, b) => a.score - b.score);
+  const top = ranked.slice(0, Math.min(3, ranked.length));
+  const chosen = top.length ? top[Math.floor(Math.random() * top.length)].car : cars[0];
+  photoCatchState.match = chosen || null;
+  if (chosen) photoCatchSaveCaught(chosen.id);
+  return chosen;
+}
+
+function photoCatchPickBody(body) {
+  if (!PHOTO_CATCH_BODY_TYPES.includes(body)) return;
+  photoCatchState.chosenBody = body;
+  photoCatchMatch();
+  photoCatchState.stage = "reveal";
+  photoCatchRender();
+}
+
+function photoCatchReset() {
+  photoCatchState.stage = "viewfinder";
+  photoCatchState.captureColor = null;
+  photoCatchState.chosenBody = null;
+  photoCatchState.match = null;
+  photoCatchRender();
+  photoCatchStartCamera();
+}
+
+function photoCatchRenderViewfinder() {
+  const hasCamera = Boolean(photoCatchState.stream);
+  const fallbackCopy = photoCatchCameraError
+    ? `<p class="photo-catch-beta-note">${escapeHtml(photoCatchCameraError)} Use a photo or simulate a catch.</p>`
+    : `<p class="photo-catch-beta-note">Frame a real vehicle, then capture the color read.</p>`;
+  return `
+    <div class="photo-catch-beta-panel">
+      <strong>${hasCamera ? "Viewfinder ready" : "Viewfinder fallback"}</strong>
+      ${fallbackCopy}
+      <div class="photo-catch-beta-actions">
+        <button class="primary" type="button" data-photo-catch-action="capture" ${hasCamera ? "" : "disabled"}>Capture</button>
+        <label class="ghost photo-catch-beta-file">Use Photo
+          <input type="file" accept="image/*" capture="environment" data-photo-catch-file>
+        </label>
+        <button class="ghost" type="button" data-photo-catch-action="simulate">Simulate Catch</button>
+      </div>
+    </div>
+  `;
+}
+
+function photoCatchRenderBodyType() {
+  const color = photoCatchState.captureColor || { r: 0, g: 0, b: 0 };
+  return `
+    <div class="photo-catch-beta-panel">
+      <strong>Choose the body type you caught</strong>
+      <span class="photo-catch-beta-swatch" style="background: rgb(${color.r}, ${color.g}, ${color.b});"></span>
+      <div class="photo-catch-beta-body-grid">
+        ${PHOTO_CATCH_BODY_TYPES.map((body) => `
+          <button class="ghost" type="button" data-photo-catch-body="${body}">${body}</button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function photoCatchRenderReveal() {
+  const match = photoCatchState.match;
+  if (!match) {
+    return `
+      <div class="photo-catch-beta-panel">
+        <strong>No match found</strong>
+        <button class="primary" type="button" data-photo-catch-action="again">Catch Another</button>
+      </div>
+    `;
+  }
+  const baseForm = match.evolutions?.[0] || {};
+  const image = baseForm.images?.display || "";
+  return `
+    <article class="photo-catch-beta-reveal">
+      <span class="photo-catch-beta-badge">Medallion Preview</span>
+      ${image ? `<img src="${image}" alt="${escapeHtml(baseForm.name || match.family)}" loading="lazy" decoding="async">` : ""}
+      <div>
+        <p>${escapeHtml(match.family || "GearBorn")}</p>
+        <h2>${escapeHtml(baseForm.name || match.family || "GearBorn")}</h2>
+        <span>${escapeHtml(photoCatchState.chosenBody || "vehicle")} match</span>
+      </div>
+      <div class="photo-catch-beta-actions">
+        <button class="primary" type="button" data-photo-catch-action="again">Catch Another</button>
+        <button class="ghost" type="button" data-photo-catch-action="back">Back</button>
+      </div>
+    </article>
+  `;
+}
+
+function photoCatchRender() {
+  if (!el.photoCatchBetaStage) return;
+  if (el.photoCatchBetaVideo) {
+    el.photoCatchBetaVideo.hidden = photoCatchState.stage !== "viewfinder";
+  }
+  if (photoCatchState.stage === "bodytype") {
+    el.photoCatchBetaStage.innerHTML = photoCatchRenderBodyType();
+  } else if (photoCatchState.stage === "reveal") {
+    el.photoCatchBetaStage.innerHTML = photoCatchRenderReveal();
+  } else {
+    el.photoCatchBetaStage.innerHTML = photoCatchRenderViewfinder();
+  }
+}
+
+function photoCatchOpen() {
+  photoCatchAssetsReady = true;
+  photoCatchState.active = true;
+  photoCatchState.stage = "viewfinder";
+  photoCatchState.captureColor = null;
+  photoCatchState.chosenBody = null;
+  photoCatchState.match = null;
+  showView("photo-catch-beta");
+  photoCatchRender();
+  photoCatchStartLoop();
+  photoCatchStartCamera();
+}
+
+function photoCatchClose() {
+  stopPhotoCatchBeta(false);
+  betaRaceContext = { source: "prototype" };
+  showView("beta");
+  openBetaPrototypeIntro();
+}
+
+function stopPhotoCatchBeta(showIntro = true) {
+  photoCatchState.active = false;
+  if (photoCatchState.rafId) cancelAnimationFrame(photoCatchState.rafId);
+  photoCatchState.rafId = 0;
+  photoCatchStopCamera();
+  if (showIntro && photoCatchIsActive()) {
+    betaRaceContext = { source: "prototype" };
+    showView("beta");
+    openBetaPrototypeIntro();
+  }
+}
+
+el.photoCatchBetaStart?.addEventListener("click", photoCatchOpen);
+el.photoCatchBetaBack?.addEventListener("click", photoCatchClose);
+el.photoCatchBetaStage?.addEventListener("click", (event) => {
+  if (!photoCatchIsActive()) return;
+  const action = event.target.closest("[data-photo-catch-action]")?.dataset.photoCatchAction;
+  const body = event.target.closest("[data-photo-catch-body]")?.dataset.photoCatchBody;
+  if (body) {
+    photoCatchPickBody(body);
+    return;
+  }
+  if (action === "capture") photoCatchCaptureVideo();
+  else if (action === "simulate") photoCatchSimulateCapture();
+  else if (action === "again") photoCatchReset();
+  else if (action === "back") photoCatchClose();
+});
+el.photoCatchBetaStage?.addEventListener("change", (event) => {
+  if (!photoCatchIsActive()) return;
+  if (!event.target.matches("[data-photo-catch-file]")) return;
+  photoCatchHandleFile(event.target.files?.[0]);
+});
+window.addEventListener("pagehide", () => stopPhotoCatchBeta(false));
+
 // ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────

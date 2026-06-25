@@ -948,6 +948,10 @@
                 <strong>Hub Map (Beta)</strong>
                 <span>Walk a tiny tile-map prototype.</span>
               </button>
+              <button class="beta-option-card" id="photo-catch-beta-start" type="button">
+                <strong>Photo Catch (Beta)</strong>
+                <span>Snap a real car. Match it to a GearBorn.</span>
+              </button>
               <button class="beta-option-card" id="last-gear-beta-start" type="button">
                 <strong>Last Gear</strong>
                 <span>8 GearBorn enter. One leaves the platform.</span>
@@ -1273,6 +1277,18 @@
           <div class="hub-map-beta-shell">
             <canvas id="hub-map-beta-canvas" width="768" height="512" aria-label="Hub map beta tile canvas"></canvas>
             <div class="hub-map-beta-debug">Tile: <strong id="hub-map-beta-coords">12, 8</strong></div>
+          </div>
+        </section>
+
+        <section class="view" id="photo-catch-beta-view" aria-labelledby="photo-catch-beta-title">
+          <button class="back-link" id="photo-catch-beta-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Beta Mode</p>
+            <h1 id="photo-catch-beta-title">Photo Catch (Beta)</h1>
+          </div>
+          <div class="photo-catch-beta-shell">
+            <video id="photo-catch-beta-video" playsinline muted autoplay></video>
+            <div id="photo-catch-beta-stage"><!-- JS renders viewfinder / body-type / reveal here --></div>
           </div>
         </section>
 

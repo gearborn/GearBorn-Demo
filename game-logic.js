@@ -9398,6 +9398,7 @@ function showView(view) {
   if (view !== "beta") stopBetaDemo(false);
   if (view !== "beta") stopBeta3d(false);
   if (view !== "beta" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
+  if (view !== "photo-catch-beta" && typeof stopPhotoCatchBeta === "function") stopPhotoCatchBeta(false);
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
   if (view !== "crankvaults") stopCrankVaultResetTimer();
   if (view !== "dev-test") {
