@@ -1305,9 +1305,20 @@
           <div class="studio-beta-stage">
             <video id="gearborn-studio-beta-video" playsinline muted autoplay hidden></video>
             <canvas id="gearborn-studio-beta-canvas"></canvas>
+            <button id="gearborn-studio-beta-capture-fab" class="studio-beta-fab" type="button" hidden>Capture</button>
+            <button id="gearborn-studio-beta-add" class="studio-beta-add" type="button">+ GearBorn</button>
           </div>
-          <div id="gearborn-studio-beta-picker"></div>
+          <div id="gearborn-studio-beta-layers"></div>
           <div id="gearborn-studio-beta-controls"></div>
+          <div id="gearborn-studio-beta-picker-modal" class="studio-beta-modal" hidden>
+            <div class="studio-beta-modal-card">
+              <div class="studio-beta-modal-head">
+                <strong>Pick a GearBorn</strong>
+                <button id="gearborn-studio-beta-picker-close" class="ghost" type="button">Close</button>
+              </div>
+              <div id="gearborn-studio-beta-picker"></div>
+            </div>
+          </div>
         </section>
 
         <section class="view dev-test-view" id="dev-test-view" aria-labelledby="dev-test-title">
