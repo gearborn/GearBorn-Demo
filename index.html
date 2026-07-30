@@ -952,6 +952,10 @@
                 <strong>Photo Catch (Beta)</strong>
                 <span>Snap a real car. Match it to a GearBorn.</span>
               </button>
+              <button class="beta-option-card" id="gearborn-studio-beta-start" type="button">
+                <strong>GearBorn Studio (Beta)</strong>
+                <span>Drop GearBorns into real photos. Pose, stack, save.</span>
+              </button>
               <button class="beta-option-card" id="last-gear-beta-start" type="button">
                 <strong>Last Gear</strong>
                 <span>8 GearBorn enter. One leaves the platform.</span>
@@ -1290,6 +1294,20 @@
             <video id="photo-catch-beta-video" playsinline muted autoplay></video>
             <div id="photo-catch-beta-stage"><!-- JS renders viewfinder / body-type / reveal here --></div>
           </div>
+        </section>
+
+        <section class="view" id="gearborn-studio-beta-view" aria-labelledby="gearborn-studio-beta-title">
+          <button class="back-link" id="gearborn-studio-beta-back" type="button">Back</button>
+          <div class="section-heading">
+            <p>Beta Mode</p>
+            <h1 id="gearborn-studio-beta-title">GearBorn Studio (Beta)</h1>
+          </div>
+          <div class="studio-beta-stage">
+            <video id="gearborn-studio-beta-video" playsinline muted autoplay hidden></video>
+            <canvas id="gearborn-studio-beta-canvas"></canvas>
+          </div>
+          <div id="gearborn-studio-beta-picker"></div>
+          <div id="gearborn-studio-beta-controls"></div>
         </section>
 
         <section class="view dev-test-view" id="dev-test-view" aria-labelledby="dev-test-title">

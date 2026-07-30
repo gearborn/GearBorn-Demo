@@ -9399,6 +9399,7 @@ function showView(view) {
   if (view !== "beta") stopBeta3d(false);
   if (view !== "beta" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
   if (view !== "photo-catch-beta" && typeof stopPhotoCatchBeta === "function") stopPhotoCatchBeta(false);
+  if (view !== "gearborn-studio-beta" && typeof stopGearbornStudioBeta === "function") stopGearbornStudioBeta();
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
   if (view !== "crankvaults") stopCrankVaultResetTimer();
   if (view !== "dev-test") {

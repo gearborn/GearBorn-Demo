@@ -1531,4 +1531,904 @@ el.photoCatchBetaStage?.addEventListener("change", (event) => {
 });
 window.addEventListener("pagehide", () => stopPhotoCatchBeta(false));
 
+// ─── GEARBORN STUDIO BETA FOUNDATION ─────────────────────────────────────────
+
+const studioState = {
+  active: false,
+  stream: null,
+  rafId: 0,
+  stage: "live",
+  frame: null,
+  stickers: [],
+  selectedId: null,
+  nextId: 1,
+  cameraError: "",
+  detectorMessage: "",
+  detectionBox: null,
+  liveTrack: false,
+  dragging: false,
+  dragOffsetX: 0,
+  dragOffsetY: 0
+};
+let studioDetector = null;
+let studioDetectorState = "idle";
+let studioLiveTrackTimer = 0;
+let studioLiveTrackBusy = false;
+const STUDIO_VEHICLE_LABELS = ["car", "truck", "bus", "motorcycle"];
+const STUDIO_DETECT_INTERVAL_MS = 550;
+const STUDIO_TOPDOWN_PROBE_CACHE = new Map();
+const studioPointers = new Map();
+let studioGestureStart = null;
+
+function studioIsActive() {
+  return document.querySelector("#gearborn-studio-beta-view")?.classList.contains("active");
+}
+
+async function studioLoadDetector(onProgress) {
+  if (studioDetector) return studioDetector;
+  if (studioDetectorState === "failed") return null;
+  studioDetectorState = "loading";
+  studioState.detectorMessage = "Loading auto-place assist...";
+  studioRenderControls();
+  try {
+    const TF = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3");
+    const MODEL = "Xenova/yolos-tiny";
+    let detector;
+    try {
+      detector = await TF.pipeline("object-detection", MODEL, {
+        device: "webgpu",
+        dtype: "q8",
+        progress_callback: onProgress
+      });
+    } catch (gpuErr) {
+      console.warn("Studio: WebGPU off, WASM fallback.", gpuErr);
+      detector = await TF.pipeline("object-detection", MODEL, {
+        dtype: "q8",
+        progress_callback: onProgress
+      });
+    }
+    studioDetector = detector;
+    studioDetectorState = "ready";
+    studioState.detectorMessage = "Auto-place ready.";
+    studioRenderControls();
+    return detector;
+  } catch (err) {
+    console.warn("Studio: detector load failed — manual only.", err);
+    studioDetectorState = "failed";
+    studioState.detectorMessage = "Auto-place unavailable. Manual tools still work.";
+    studioRenderControls();
+    return null;
+  }
+}
+
+async function studioDetectVehicles(input) {
+  const detector = studioDetector;
+  if (!detector) return [];
+  try {
+    const output = await detector(input, { threshold: 0.5, percentage: true });
+    return output
+      .filter((item) => STUDIO_VEHICLE_LABELS.includes(item.label))
+      .map((item) => ({
+        ...item,
+        area: (item.box.xmax - item.box.xmin) * (item.box.ymax - item.box.ymin)
+      }))
+      .sort((a, b) => (b.area * b.score) - (a.area * a.score));
+  } catch (err) {
+    console.warn("Studio: detect failed.", err);
+    return [];
+  }
+}
+
+function studioFormFor(carId, formIndex = 0) {
+  const car = cars.find((item) => item.id === carId) || cars[0];
+  const form = car?.evolutions?.[formIndex] || car?.evolutions?.[0];
+  return { car, form };
+}
+
+function studioImageSrc(carId, formIndex = 0, role = "race") {
+  const { form } = studioFormFor(carId, formIndex);
+  if (!form) return "";
+  return imageFor(form, role) || imageFor(form, "race") || imageFor(form, "display");
+}
+
+function studioProbeImage(src) {
+  if (!src) return Promise.resolve(false);
+  if (STUDIO_TOPDOWN_PROBE_CACHE.has(src)) return Promise.resolve(STUDIO_TOPDOWN_PROBE_CACHE.get(src));
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      STUDIO_TOPDOWN_PROBE_CACHE.set(src, true);
+      resolve(true);
+    };
+    img.onerror = () => {
+      STUDIO_TOPDOWN_PROBE_CACHE.set(src, false);
+      resolve(false);
+    };
+    img.src = src;
+  });
+}
+
+async function studioTopdownAvailable(carId, formIndex = 0) {
+  const src = studioImageSrc(carId, formIndex, "topdown");
+  return studioProbeImage(src);
+}
+
+function studioCarOptions() {
+  return cars.flatMap((car) => (car.evolutions || []).map((form, formIndex) => ({
+    carId: car.id,
+    formIndex,
+    family: car.family || car.id,
+    name: form.name || car.family || car.id,
+    src: imageFor(form, "race") || imageFor(form, "display")
+  })));
+}
+
+function studioSelectedSticker() {
+  return studioState.stickers.find((sticker) => sticker.id === studioState.selectedId) || null;
+}
+
+function studioMaxZ() {
+  return studioState.stickers.reduce((max, sticker) => Math.max(max, Number(sticker.z) || 0), 0);
+}
+
+function studioCanvasPoint(event) {
+  const canvas = el.gearbornStudioBetaCanvas;
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * canvas.width,
+    y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * canvas.height
+  };
+}
+
+function studioEnsureCanvasSize(width, height) {
+  const canvas = el.gearbornStudioBetaCanvas;
+  if (!canvas) return;
+  const nextWidth = Math.max(1, Math.floor(width || 1280));
+  const nextHeight = Math.max(1, Math.floor(height || 720));
+  const oldWidth = canvas.width || nextWidth;
+  const oldHeight = canvas.height || nextHeight;
+  const resized = canvas.width !== nextWidth || canvas.height !== nextHeight;
+  if (canvas.width !== nextWidth) canvas.width = nextWidth;
+  if (canvas.height !== nextHeight) canvas.height = nextHeight;
+  if (resized && oldWidth && oldHeight && studioState.stickers.length) {
+    const scaleX = nextWidth / oldWidth;
+    const scaleY = nextHeight / oldHeight;
+    const scaleAvg = (scaleX + scaleY) / 2;
+    studioState.stickers.forEach((sticker) => {
+      sticker.x *= scaleX;
+      sticker.y *= scaleY;
+      sticker.scale *= scaleAvg;
+    });
+  }
+}
+
+function studioStickerBounds(sticker) {
+  const img = sticker?.img;
+  const width = (img?.naturalWidth || 1) * (sticker?.scale || 1);
+  const height = (img?.naturalHeight || 1) * (sticker?.scale || 1);
+  return { width, height };
+}
+
+function studioDrawSticker(ctx, sticker, selected = false) {
+  const img = sticker.img;
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const { width, height } = studioStickerBounds(sticker);
+  ctx.save();
+  if (sticker.shadow !== false) {
+    ctx.translate(sticker.x, sticker.y);
+    ctx.rotate(sticker.rotation || 0);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+    ctx.beginPath();
+    ctx.ellipse(0, height * 0.34, width * 0.45, Math.max(8, height * 0.09), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+  }
+  ctx.translate(sticker.x, sticker.y);
+  ctx.rotate(sticker.rotation || 0);
+  ctx.scale(sticker.flip ? -1 : 1, 1);
+  ctx.globalAlpha = Math.max(0.1, Math.min(1, Number(sticker.opacity) || 1));
+  ctx.drawImage(img, -width / 2, -height / 2, width, height);
+  ctx.globalAlpha = 1;
+  if (selected) {
+    ctx.strokeStyle = "rgba(255, 200, 87, 0.92)";
+    ctx.lineWidth = Math.max(3, Math.min(width, height) * 0.025);
+    ctx.setLineDash([12, 8]);
+    ctx.strokeRect(-width / 2, -height / 2, width, height);
+  }
+  ctx.restore();
+}
+
+function studioDraw(background = null) {
+  const canvas = el.gearbornStudioBetaCanvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  if (background === "video") {
+    const video = el.gearbornStudioBetaVideo;
+    const width = video?.videoWidth || canvas.width || 1280;
+    const height = video?.videoHeight || canvas.height || 720;
+    studioEnsureCanvasSize(width, height);
+    if (video?.videoWidth) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    else {
+      ctx.fillStyle = "#101826";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  } else if (studioState.frame) {
+    studioEnsureCanvasSize(studioState.frame.naturalWidth || studioState.frame.width, studioState.frame.naturalHeight || studioState.frame.height);
+    ctx.drawImage(studioState.frame, 0, 0, canvas.width, canvas.height);
+  } else {
+    studioEnsureCanvasSize(canvas.width || 1280, canvas.height || 720);
+    ctx.fillStyle = "#101826";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  if (studioState.detectionBox) {
+    const box = studioState.detectionBox.box || studioState.detectionBox;
+    ctx.save();
+    ctx.strokeStyle = "rgba(82, 199, 255, 0.72)";
+    ctx.lineWidth = Math.max(3, Math.min(canvas.width, canvas.height) * 0.004);
+    ctx.setLineDash([16, 10]);
+    ctx.strokeRect(
+      box.xmin * canvas.width,
+      box.ymin * canvas.height,
+      (box.xmax - box.xmin) * canvas.width,
+      (box.ymax - box.ymin) * canvas.height
+    );
+    ctx.restore();
+  }
+  studioState.stickers
+    .slice()
+    .sort((a, b) => (a.z || 0) - (b.z || 0))
+    .forEach((sticker) => studioDrawSticker(ctx, sticker, sticker.id === studioState.selectedId));
+}
+
+function studioLoop() {
+  if (!studioState.active || !studioIsActive()) return;
+  if (studioState.stage === "live") studioDraw("video");
+  studioState.rafId = requestAnimationFrame(studioLoop);
+}
+
+function studioHitTest(point) {
+  const ordered = studioState.stickers.slice().sort((a, b) => (b.z || 0) - (a.z || 0));
+  return ordered.find((sticker) => {
+    const { width, height } = studioStickerBounds(sticker);
+    const dx = point.x - sticker.x;
+    const dy = point.y - sticker.y;
+    const angle = -(sticker.rotation || 0);
+    const localX = (dx * Math.cos(angle) - dy * Math.sin(angle)) * (sticker.flip ? -1 : 1);
+    const localY = dx * Math.sin(angle) + dy * Math.cos(angle);
+    return Math.abs(localX) <= width / 2 && Math.abs(localY) <= height / 2;
+  }) || null;
+}
+
+function studioLoadStickerImage(sticker, role = sticker.role || "race") {
+  const requestedRole = role === "topdown" ? "topdown" : (role === "display" ? "display" : "race");
+  const src = studioImageSrc(sticker.carId, sticker.formIndex, requestedRole);
+  const fallbackSrc = requestedRole === "race" ? src : studioImageSrc(sticker.carId, sticker.formIndex, "race");
+  const img = new Image();
+  img.onload = () => {
+    sticker.img = img;
+    sticker.role = requestedRole;
+    studioRenderControls();
+    studioDraw(studioState.stage === "live" ? "video" : null);
+  };
+  img.onerror = () => {
+    if (requestedRole !== "race" && fallbackSrc && fallbackSrc !== src) {
+      studioLoadStickerImage(sticker, "race");
+      return;
+    }
+    studioRenderControls();
+  };
+  img.src = src || fallbackSrc;
+}
+
+async function studioSetStickerRole(sticker, role) {
+  if (!sticker) return;
+  if (role === "topdown" && !(await studioTopdownAvailable(sticker.carId, sticker.formIndex))) {
+    if (typeof showToast === "function") showToast("Studio", "Topdown art is not available for that form yet.");
+    role = "race";
+  }
+  studioLoadStickerImage(sticker, role);
+}
+
+function studioCreateSticker(carId, formIndex = 0) {
+  const car = cars.find((item) => item.id === carId) || cars[0];
+  const form = car?.evolutions?.[formIndex] || car?.evolutions?.[0];
+  const img = new Image();
+  const canvas = el.gearbornStudioBetaCanvas;
+  const sticker = {
+    id: studioState.nextId++,
+    carId: car?.id || carId,
+    formIndex,
+    img,
+    role: "race",
+    x: (canvas?.width || 1280) / 2,
+    y: (canvas?.height || 720) / 2,
+    scale: 1,
+    rotation: 0,
+    flip: false,
+    shadow: true,
+    opacity: 1,
+    z: studioMaxZ() + 1
+  };
+  img.onload = () => {
+    const targetWidth = (el.gearbornStudioBetaCanvas?.width || 1280) * 0.34;
+    sticker.scale = Math.max(0.05, Math.min(3, targetWidth / Math.max(1, img.naturalWidth)));
+    studioDraw(studioState.stage === "live" ? "video" : null);
+    studioRenderControls();
+  };
+  img.onerror = () => studioRenderControls();
+  img.src = form ? imageFor(form, "race") || imageFor(form, "display") : "";
+  if (studioState.stage === "live") studioState.stickers = [sticker];
+  else studioState.stickers.push(sticker);
+  studioState.selectedId = sticker.id;
+  studioRenderPicker();
+  studioRenderControls();
+  studioDraw(studioState.stage === "live" ? "video" : null);
+}
+
+function studioDuplicateSelected() {
+  const selected = studioSelectedSticker();
+  if (!selected) return;
+  const clone = {
+    ...selected,
+    id: studioState.nextId++,
+    x: selected.x + 32,
+    y: selected.y + 32,
+    z: studioMaxZ() + 1
+  };
+  studioState.stickers.push(clone);
+  studioState.selectedId = clone.id;
+  studioRenderControls();
+  studioDraw();
+}
+
+function studioDeleteSelected() {
+  const selected = studioSelectedSticker();
+  if (!selected) return;
+  studioState.stickers = studioState.stickers.filter((sticker) => sticker.id !== selected.id);
+  studioState.selectedId = studioState.stickers[studioState.stickers.length - 1]?.id || null;
+  studioRenderControls();
+  studioDraw();
+}
+
+function studioAdjustZ(direction) {
+  const selected = studioSelectedSticker();
+  if (!selected) return;
+  selected.z += direction > 0 ? 1.5 : -1.5;
+  studioState.stickers
+    .slice()
+    .sort((a, b) => (a.z || 0) - (b.z || 0))
+    .forEach((sticker, index) => {
+      sticker.z = index + 1;
+    });
+  if (direction > 0) selected.z = studioMaxZ() + 1;
+  else selected.z = 0;
+  studioRenderControls();
+  studioDraw();
+}
+
+function studioFrameFromCanvas(canvas) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.src = canvas.toDataURL("image/png");
+  });
+}
+
+function studioBackgroundCanvas(maxWidth = 640) {
+  const sourceCanvas = document.createElement("canvas");
+  const sourceCtx = sourceCanvas.getContext("2d");
+  const video = el.gearbornStudioBetaVideo;
+  const frame = studioState.frame;
+  const nativeWidth = studioState.stage === "live" ? (video?.videoWidth || 0) : (frame?.naturalWidth || frame?.width || 0);
+  const nativeHeight = studioState.stage === "live" ? (video?.videoHeight || 0) : (frame?.naturalHeight || frame?.height || 0);
+  if (!sourceCtx || !nativeWidth || !nativeHeight) return null;
+  const ratio = Math.min(1, maxWidth / nativeWidth);
+  sourceCanvas.width = Math.max(1, Math.floor(nativeWidth * ratio));
+  sourceCanvas.height = Math.max(1, Math.floor(nativeHeight * ratio));
+  const source = studioState.stage === "live" ? video : frame;
+  sourceCtx.drawImage(source, 0, 0, sourceCanvas.width, sourceCanvas.height);
+  return sourceCanvas;
+}
+
+function studioApplyVehicleBox(result) {
+  const selected = studioSelectedSticker();
+  if (!selected || !result?.box) return false;
+  const canvas = el.gearbornStudioBetaCanvas;
+  const img = selected.img;
+  if (!canvas || !img?.naturalWidth) return false;
+  const box = result.box;
+  const boxWidth = Math.max(1, (box.xmax - box.xmin) * canvas.width);
+  const boxHeight = Math.max(1, (box.ymax - box.ymin) * canvas.height);
+  selected.x = ((box.xmin + box.xmax) / 2) * canvas.width;
+  selected.y = ((box.ymin + box.ymax) / 2) * canvas.height;
+  selected.scale = Math.max(0.05, Math.min(4, boxWidth / Math.max(1, img.naturalWidth)));
+  if ((img.naturalHeight * selected.scale) > boxHeight * 1.8) {
+    selected.scale = Math.max(0.05, Math.min(selected.scale, (boxHeight * 1.45) / Math.max(1, img.naturalHeight)));
+  }
+  studioState.detectionBox = result;
+  studioRenderControls();
+  studioDraw(studioState.stage === "live" ? "video" : null);
+  return true;
+}
+
+async function studioAutoPlaceSelected({ silent = false } = {}) {
+  if (!studioSelectedSticker()) {
+    if (!silent && typeof showToast === "function") showToast("Studio", "Pick a GearBorn first.");
+    return false;
+  }
+  const detector = await studioLoadDetector((progress) => {
+    if (progress?.status) {
+      studioState.detectorMessage = `Auto-place: ${progress.status}`;
+      studioRenderControls();
+    }
+  });
+  if (!detector) return false;
+  const canvas = studioBackgroundCanvas(640);
+  if (!canvas) {
+    if (!silent && typeof showToast === "function") showToast("Studio", "No frame available yet.");
+    return false;
+  }
+  const results = await studioDetectVehicles(canvas);
+  if (!results.length) {
+    studioState.detectionBox = null;
+    studioDraw(studioState.stage === "live" ? "video" : null);
+    if (!silent && typeof showToast === "function") showToast("Studio", "No vehicle spotted — place it yourself.");
+    return false;
+  }
+  studioApplyVehicleBox(results[0]);
+  return true;
+}
+
+function studioScheduleLiveTrack() {
+  window.clearTimeout(studioLiveTrackTimer);
+  if (!studioState.active || !studioState.liveTrack || studioState.stage !== "live") return;
+  studioLiveTrackTimer = window.setTimeout(async () => {
+    if (!studioState.active || !studioState.liveTrack || studioState.stage !== "live") return;
+    if (!studioLiveTrackBusy) {
+      studioLiveTrackBusy = true;
+      await studioAutoPlaceSelected({ silent: true });
+      studioLiveTrackBusy = false;
+    }
+    studioScheduleLiveTrack();
+  }, STUDIO_DETECT_INTERVAL_MS);
+}
+
+async function studioCaptureFrame() {
+  const canvas = el.gearbornStudioBetaCanvas;
+  const video = el.gearbornStudioBetaVideo;
+  if (!canvas || !video?.videoWidth) return;
+  const captureCanvas = document.createElement("canvas");
+  captureCanvas.width = video.videoWidth;
+  captureCanvas.height = video.videoHeight;
+  captureCanvas.getContext("2d")?.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+  studioState.frame = await studioFrameFromCanvas(captureCanvas);
+  studioState.stage = "edit";
+  studioState.liveTrack = false;
+  studioState.detectionBox = null;
+  window.clearTimeout(studioLiveTrackTimer);
+  stopGearbornStudioCamera();
+  studioRenderPicker();
+  studioRenderControls();
+  studioDraw();
+}
+
+function studioLoadFrameFile(file) {
+  if (!file) return;
+  const image = new Image();
+  const objectUrl = URL.createObjectURL(file);
+  image.onload = () => {
+    URL.revokeObjectURL(objectUrl);
+    studioState.frame = image;
+    studioState.stage = "edit";
+    studioState.liveTrack = false;
+    studioState.detectionBox = null;
+    window.clearTimeout(studioLiveTrackTimer);
+    stopGearbornStudioCamera();
+    studioRenderPicker();
+    studioRenderControls();
+    studioDraw();
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl);
+    studioState.cameraError = "That photo could not be loaded.";
+    studioRenderControls();
+  };
+  image.src = objectUrl;
+}
+
+function studioNewCapture() {
+  studioState.stage = "live";
+  studioState.frame = null;
+  studioState.stickers = [];
+  studioState.selectedId = null;
+  studioState.detectionBox = null;
+  studioState.liveTrack = false;
+  studioPointers.clear();
+  studioGestureStart = null;
+  studioRenderPicker();
+  studioRenderControls();
+  studioStartCamera();
+  studioLoop();
+}
+
+function studioRenderPicker() {
+  if (!el.gearbornStudioBetaPicker) return;
+  el.gearbornStudioBetaPicker.innerHTML = `
+    <div class="studio-beta-picker">
+      ${studioCarOptions().map((option) => `
+        <button class="studio-beta-thumb ${studioSelectedSticker()?.carId === option.carId && studioSelectedSticker()?.formIndex === option.formIndex ? "active" : ""}" type="button" data-studio-car="${escapeHtml(option.carId)}" data-studio-form="${option.formIndex}">
+          <img src="${option.src}" alt="${escapeHtml(option.name)}" loading="lazy" decoding="async">
+          <span>${escapeHtml(option.name)}</span>
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function studioRenderControls() {
+  if (!el.gearbornStudioBetaControls) return;
+  const selected = studioSelectedSticker();
+  if (selected) {
+    const topdownSrc = studioImageSrc(selected.carId, selected.formIndex, "topdown");
+    if (topdownSrc && !STUDIO_TOPDOWN_PROBE_CACHE.has(topdownSrc)) {
+      STUDIO_TOPDOWN_PROBE_CACHE.set(topdownSrc, null);
+      studioProbeImage(topdownSrc).then(() => {
+        if (studioIsActive() && studioSelectedSticker()?.id === selected.id) studioRenderControls();
+      });
+    }
+  }
+  const topdownSrc = selected ? studioImageSrc(selected.carId, selected.formIndex, "topdown") : "";
+  const topdownAvailable = topdownSrc && STUDIO_TOPDOWN_PROBE_CACHE.get(topdownSrc) === true;
+  const selectedControls = selected ? `
+    <label class="studio-beta-control">Angle
+      <select data-studio-transform="role">
+        <option value="race" ${selected.role === "race" ? "selected" : ""}>Side</option>
+        <option value="display" ${selected.role === "display" ? "selected" : ""}>Front 3/4</option>
+        <option value="topdown" ${selected.role === "topdown" ? "selected" : ""} ${topdownAvailable ? "" : "disabled"}>Topdown</option>
+      </select>
+    </label>
+    <label class="studio-beta-control">Size
+      <input type="range" min="5" max="300" step="1" value="${Math.round((selected.scale || 1) * 100)}" data-studio-transform="scale">
+    </label>
+    <label class="studio-beta-control">Rotate
+      <input type="range" min="-180" max="180" step="1" value="${Math.round(((selected.rotation || 0) * 180) / Math.PI)}" data-studio-transform="rotation">
+    </label>
+    <label class="studio-beta-control">Opacity
+      <input type="range" min="10" max="100" step="1" value="${Math.round((selected.opacity ?? 1) * 100)}" data-studio-transform="opacity">
+    </label>
+    <label class="studio-beta-check">
+      <input type="checkbox" data-studio-transform="shadow" ${selected.shadow !== false ? "checked" : ""}>
+      Shadow
+    </label>
+    <button class="ghost" type="button" data-studio-action="flip">${selected.flip ? "Unflip" : "Flip"}</button>
+  ` : `<span class="studio-beta-help">Pick a GearBorn to place a sticker.</span>`;
+  const editControls = studioState.stage === "edit" ? `
+    <button class="ghost" type="button" data-studio-action="duplicate" ${selected ? "" : "disabled"}>Duplicate</button>
+    <button class="ghost" type="button" data-studio-action="forward" ${selected ? "" : "disabled"}>Bring Forward</button>
+    <button class="ghost" type="button" data-studio-action="backward" ${selected ? "" : "disabled"}>Send Back</button>
+    <button class="danger-button" type="button" data-studio-action="delete" ${selected ? "" : "disabled"}>Delete</button>
+    <button class="primary" type="button" data-studio-action="download">Download PNG</button>
+    <button class="ghost" type="button" data-studio-action="share">Share</button>
+    <button class="ghost" type="button" data-studio-action="new">Retake / New</button>
+  ` : `
+    <button class="ghost" type="button" data-studio-action="auto-place" ${selected && studioDetectorState !== "failed" ? "" : "disabled"}>Auto-place</button>
+    <label class="studio-beta-check">
+      <input type="checkbox" data-studio-transform="liveTrack" ${studioState.liveTrack ? "checked" : ""} ${selected && studioDetectorState !== "failed" ? "" : "disabled"}>
+      Live Track
+    </label>
+    <button class="primary" type="button" data-studio-action="capture" ${studioState.stream ? "" : "disabled"}>Capture</button>
+    <label class="ghost studio-beta-file">Use Photo
+      <input type="file" accept="image/*" capture="environment" data-studio-file>
+    </label>
+  `;
+  el.gearbornStudioBetaControls.innerHTML = `
+    <div class="studio-beta-controls">
+      <strong>${studioState.stage === "live" ? "Live filter view" : "Edit composite"}</strong>
+      ${studioState.cameraError ? `<p>${escapeHtml(studioState.cameraError)}</p>` : ""}
+      ${studioState.detectorMessage ? `<p>${escapeHtml(studioState.detectorMessage)}${studioState.liveTrack ? " Live tracking uses extra battery." : ""}</p>` : ""}
+      ${selectedControls}
+      ${editControls}
+    </div>
+  `;
+}
+
+function studioRenderExportCanvas() {
+  const exportCanvas = document.createElement("canvas");
+  const frame = studioState.frame;
+  exportCanvas.width = frame?.naturalWidth || frame?.width || el.gearbornStudioBetaCanvas?.width || 1280;
+  exportCanvas.height = frame?.naturalHeight || frame?.height || el.gearbornStudioBetaCanvas?.height || 720;
+  const ctx = exportCanvas.getContext("2d");
+  if (!ctx) return exportCanvas;
+  if (frame) ctx.drawImage(frame, 0, 0, exportCanvas.width, exportCanvas.height);
+  studioState.stickers
+    .slice()
+    .sort((a, b) => (a.z || 0) - (b.z || 0))
+    .forEach((sticker) => studioDrawSticker(ctx, sticker, false));
+  return exportCanvas;
+}
+
+function studioExportBlob() {
+  return new Promise((resolve) => {
+    studioRenderExportCanvas().toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+async function studioDownload() {
+  const blob = await studioExportBlob();
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "gearborn-studio.png";
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+async function studioShare() {
+  const blob = await studioExportBlob();
+  if (!blob) return studioDownload();
+  if (typeof File === "undefined") return studioDownload();
+  const file = new File([blob], "gearborn-studio.png", { type: "image/png" });
+  if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+    try {
+      await navigator.share({ files: [file], title: "GearBorn Studio" });
+      return;
+    } catch (err) {
+      console.warn("GearBorn Studio share failed:", err);
+    }
+  }
+  studioDownload();
+}
+
+function stopGearbornStudioCamera() {
+  if (studioState.stream) {
+    studioState.stream.getTracks().forEach((track) => track.stop());
+    studioState.stream = null;
+  }
+  if (el.gearbornStudioBetaVideo) {
+    el.gearbornStudioBetaVideo.pause();
+    el.gearbornStudioBetaVideo.srcObject = null;
+  }
+}
+
+async function studioStartCamera() {
+  studioState.cameraError = "";
+  stopGearbornStudioCamera();
+  studioEnsureCanvasSize(1280, 720);
+  if (!navigator.mediaDevices?.getUserMedia || !el.gearbornStudioBetaVideo) {
+    studioState.cameraError = "Camera unavailable. Load a photo to keep editing.";
+    studioRenderControls();
+    studioDraw();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+    if (!studioState.active) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    studioState.stream = stream;
+    el.gearbornStudioBetaVideo.srcObject = stream;
+    await el.gearbornStudioBetaVideo.play().catch(() => {});
+    studioRenderControls();
+  } catch (err) {
+    console.warn("GearBorn Studio camera unavailable:", err);
+    studioState.cameraError = "Camera permission denied or unavailable. Load a photo instead.";
+    studioRenderControls();
+    studioDraw();
+  }
+}
+
+function studioOpen() {
+  studioState.active = true;
+  studioState.stage = "live";
+  studioState.frame = null;
+  studioState.stickers = [];
+  studioState.selectedId = null;
+  studioState.nextId = 1;
+  studioState.cameraError = "";
+  studioState.detectorMessage = "";
+  studioState.detectionBox = null;
+  studioState.liveTrack = false;
+  studioPointers.clear();
+  studioGestureStart = null;
+  showView("gearborn-studio-beta");
+  studioEnsureCanvasSize(1280, 720);
+  studioRenderPicker();
+  studioRenderControls();
+  studioStartCamera();
+  studioLoop();
+}
+
+function studioClose() {
+  stopGearbornStudioBeta();
+  betaRaceContext = { source: "prototype" };
+  showView("beta");
+  openBetaPrototypeIntro();
+}
+
+function stopGearbornStudioBeta() {
+  studioState.active = false;
+  if (studioState.rafId) cancelAnimationFrame(studioState.rafId);
+  studioState.rafId = 0;
+  studioState.dragging = false;
+  studioState.liveTrack = false;
+  studioState.detectionBox = null;
+  studioPointers.clear();
+  studioGestureStart = null;
+  window.clearTimeout(studioLiveTrackTimer);
+  stopGearbornStudioCamera();
+}
+
+function studioPointerList() {
+  return Array.from(studioPointers.values());
+}
+
+function studioGestureDistance(a, b) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+function studioGestureAngle(a, b) {
+  return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
+function studioGestureMidpoint(a, b) {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
+function studioBaselineGesture() {
+  const selected = studioSelectedSticker();
+  const points = studioPointerList();
+  if (!selected || !points.length) {
+    studioGestureStart = null;
+    return;
+  }
+  if (points.length >= 2) {
+    const [a, b] = points;
+    studioGestureStart = {
+      mode: "multi",
+      stickerX: selected.x,
+      stickerY: selected.y,
+      stickerScale: selected.scale || 1,
+      stickerRotation: selected.rotation || 0,
+      distance: Math.max(1, studioGestureDistance(a, b)),
+      angle: studioGestureAngle(a, b),
+      midpoint: studioGestureMidpoint(a, b)
+    };
+  } else {
+    const [point] = points;
+    studioGestureStart = {
+      mode: "single",
+      stickerX: selected.x,
+      stickerY: selected.y,
+      pointerX: point.x,
+      pointerY: point.y
+    };
+  }
+}
+
+function studioApplyGesture() {
+  const selected = studioSelectedSticker();
+  const points = studioPointerList();
+  if (!selected || !studioGestureStart || !points.length) return;
+  if (points.length >= 2 && studioGestureStart.mode === "multi") {
+    const [a, b] = points;
+    const midpoint = studioGestureMidpoint(a, b);
+    selected.x = studioGestureStart.stickerX + (midpoint.x - studioGestureStart.midpoint.x);
+    selected.y = studioGestureStart.stickerY + (midpoint.y - studioGestureStart.midpoint.y);
+    selected.scale = Math.max(0.05, Math.min(4, studioGestureStart.stickerScale * (studioGestureDistance(a, b) / studioGestureStart.distance)));
+    selected.rotation = studioGestureStart.stickerRotation + (studioGestureAngle(a, b) - studioGestureStart.angle);
+  } else if (points.length === 1 && studioGestureStart.mode === "single") {
+    const [point] = points;
+    selected.x = studioGestureStart.stickerX + (point.x - studioGestureStart.pointerX);
+    selected.y = studioGestureStart.stickerY + (point.y - studioGestureStart.pointerY);
+  } else {
+    studioBaselineGesture();
+  }
+  studioDraw(studioState.stage === "live" ? "video" : null);
+}
+
+el.gearbornStudioBetaStart?.addEventListener("click", studioOpen);
+el.gearbornStudioBetaBack?.addEventListener("click", studioClose);
+el.gearbornStudioBetaPicker?.addEventListener("click", (event) => {
+  if (!studioIsActive()) return;
+  const button = event.target.closest("[data-studio-car]");
+  if (!button) return;
+  studioCreateSticker(button.dataset.studioCar, Number(button.dataset.studioForm) || 0);
+});
+el.gearbornStudioBetaControls?.addEventListener("click", (event) => {
+  if (!studioIsActive()) return;
+  const action = event.target.closest("[data-studio-action]")?.dataset.studioAction;
+  if (action === "capture") studioCaptureFrame();
+  else if (action === "flip" && studioSelectedSticker()) {
+    studioSelectedSticker().flip = !studioSelectedSticker().flip;
+    studioRenderControls();
+    studioDraw(studioState.stage === "live" ? "video" : null);
+  } else if (action === "duplicate") studioDuplicateSelected();
+  else if (action === "delete") studioDeleteSelected();
+  else if (action === "forward") studioAdjustZ(1);
+  else if (action === "backward") studioAdjustZ(-1);
+  else if (action === "download") studioDownload();
+  else if (action === "share") studioShare();
+  else if (action === "new") studioNewCapture();
+  else if (action === "auto-place") studioAutoPlaceSelected();
+});
+el.gearbornStudioBetaControls?.addEventListener("input", (event) => {
+  if (!studioIsActive()) return;
+  const selected = studioSelectedSticker();
+  const transform = event.target.dataset.studioTransform;
+  if (!selected || !transform) return;
+  if (transform === "scale") selected.scale = Math.max(0.05, Number(event.target.value) / 100);
+  if (transform === "rotation") selected.rotation = (Number(event.target.value) * Math.PI) / 180;
+  if (transform === "opacity") selected.opacity = Math.max(0.1, Math.min(1, Number(event.target.value) / 100));
+  studioDraw(studioState.stage === "live" ? "video" : null);
+});
+el.gearbornStudioBetaControls?.addEventListener("change", (event) => {
+  if (!studioIsActive()) return;
+  const selected = studioSelectedSticker();
+  const transform = event.target.dataset.studioTransform;
+  if (event.target.matches("[data-studio-file]")) {
+    studioLoadFrameFile(event.target.files?.[0]);
+    return;
+  }
+  if (transform === "role" && selected) {
+    studioSetStickerRole(selected, event.target.value);
+    return;
+  }
+  if (transform === "shadow" && selected) {
+    selected.shadow = Boolean(event.target.checked);
+    studioDraw(studioState.stage === "live" ? "video" : null);
+    return;
+  }
+  if (transform === "liveTrack") {
+    studioState.liveTrack = Boolean(event.target.checked);
+    if (studioState.liveTrack) {
+      studioAutoPlaceSelected({ silent: true }).then(() => studioScheduleLiveTrack());
+    } else {
+      window.clearTimeout(studioLiveTrackTimer);
+      studioState.detectionBox = null;
+      studioDraw("video");
+    }
+    studioRenderControls();
+  }
+});
+el.gearbornStudioBetaCanvas?.addEventListener("pointerdown", (event) => {
+  if (!studioIsActive()) return;
+  const point = studioCanvasPoint(event);
+  studioPointers.set(event.pointerId, point);
+  if (studioPointers.size === 1) {
+    const hit = studioHitTest(point);
+    if (!hit) {
+      studioPointers.delete(event.pointerId);
+      return;
+    }
+    studioState.selectedId = hit.id;
+  }
+  studioState.dragging = true;
+  studioBaselineGesture();
+  el.gearbornStudioBetaCanvas.setPointerCapture?.(event.pointerId);
+  studioRenderPicker();
+  studioRenderControls();
+  studioDraw(studioState.stage === "live" ? "video" : null);
+});
+el.gearbornStudioBetaCanvas?.addEventListener("pointermove", (event) => {
+  if (!studioIsActive() || !studioState.dragging || !studioPointers.has(event.pointerId)) return;
+  studioPointers.set(event.pointerId, studioCanvasPoint(event));
+  studioApplyGesture();
+});
+["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+  el.gearbornStudioBetaCanvas?.addEventListener(eventName, (event) => {
+    studioPointers.delete(event.pointerId);
+    studioState.dragging = studioPointers.size > 0;
+    studioBaselineGesture();
+    studioRenderControls();
+  });
+});
+window.addEventListener("pagehide", () => stopGearbornStudioBeta());
+
 // ─── FORGE EVENT LISTENERS ───────────────────────────────────────────────────
