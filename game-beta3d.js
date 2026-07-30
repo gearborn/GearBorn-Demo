@@ -1556,6 +1556,7 @@ let studioLiveTrackTimer = 0;
 let studioLiveTrackBusy = false;
 const STUDIO_VEHICLE_LABELS = ["car", "truck", "bus", "motorcycle"];
 const STUDIO_DETECT_INTERVAL_MS = 550;
+const STUDIO_CANVAS_MAX = 1920;
 const STUDIO_TOPDOWN_PROBE_CACHE = new Map();
 const studioPointers = new Map();
 let studioGestureStart = null;
@@ -1686,8 +1687,8 @@ function studioEnsureCanvasSize(width, height) {
   let nextWidth = Math.max(1, Math.floor(width || 1280));
   let nextHeight = Math.max(1, Math.floor(height || 720));
   const longEdge = Math.max(nextWidth, nextHeight);
-  if (longEdge > 1280) {
-    const ratio = 1280 / longEdge;
+  if (longEdge > STUDIO_CANVAS_MAX) {
+    const ratio = STUDIO_CANVAS_MAX / longEdge;
     nextWidth = Math.max(1, Math.floor(nextWidth * ratio));
     nextHeight = Math.max(1, Math.floor(nextHeight * ratio));
   }
@@ -1750,6 +1751,8 @@ function studioDraw(background = null) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   if (background === "video") {
     const video = el.gearbornStudioBetaVideo;
     const width = video?.videoWidth || canvas.width || 1280;
@@ -2187,23 +2190,20 @@ function studioRenderControls() {
 }
 
 function studioRenderExportCanvas() {
+  const previewCanvas = el.gearbornStudioBetaCanvas;
   const exportCanvas = document.createElement("canvas");
-  const frame = studioState.frame;
-  exportCanvas.width = frame?.naturalWidth || frame?.width || el.gearbornStudioBetaCanvas?.width || 1280;
-  exportCanvas.height = frame?.naturalHeight || frame?.height || el.gearbornStudioBetaCanvas?.height || 720;
+  exportCanvas.width = previewCanvas?.width || 1280;
+  exportCanvas.height = previewCanvas?.height || 720;
   const ctx = exportCanvas.getContext("2d");
   if (!ctx) return exportCanvas;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  const frame = studioState.frame;
   if (frame) ctx.drawImage(frame, 0, 0, exportCanvas.width, exportCanvas.height);
-  const previewCanvas = el.gearbornStudioBetaCanvas;
-  const scaleX = exportCanvas.width / Math.max(1, previewCanvas?.width || exportCanvas.width);
-  const scaleY = exportCanvas.height / Math.max(1, previewCanvas?.height || exportCanvas.height);
-  ctx.save();
-  ctx.scale(scaleX, scaleY);
   studioState.stickers
     .slice()
     .sort((a, b) => (a.z || 0) - (b.z || 0))
     .forEach((sticker) => studioDrawSticker(ctx, sticker, false));
-  ctx.restore();
   return exportCanvas;
 }
 
