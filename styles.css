@@ -16430,6 +16430,10 @@ body {
   background: rgba(0, 0, 0, 0.62);
 }
 
+.studio-beta-modal[hidden] {
+  display: none;
+}
+
 .studio-beta-modal-card {
   width: min(760px, 94vw);
   max-height: min(78svh, 720px);
