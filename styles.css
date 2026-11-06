@@ -16259,7 +16259,6 @@ body {
   color: var(--gold);
   box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.14);
 }
-<<<<<<< HEAD
 /* -- Last Gear: Charge Ram meter ------------------------------------------- */
 .last-gear-ram-meter .last-gear-nitro-track {
   position: relative;
@@ -16587,5 +16586,3 @@ body {
 .last-gear-crew-select-actions .story-primary { min-width: 200px; }
 @media (max-width: 900px) { .last-gear-crew-select-slots[data-size="5"] { --crew-cols: 3; } }
 @media (max-width: 600px) { .last-gear-crew-select-slots[data-size="3"],.last-gear-crew-select-slots[data-size="5"] { --crew-cols: 2; } .last-gear-crew-select-card .convoy-stage-stats { display: none; } .last-gear-crew-select-actions { position: sticky; bottom: max(8px,env(safe-area-inset-bottom)); z-index: 5; } .last-gear-crew-select-actions > * { flex: 1 1 0; } .last-gear-crew-select-actions .story-primary { min-width: 0; } }
-=======
->>>>>>> d9e7f23996107562e808c4b04698cd60ac054a7a
