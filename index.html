@@ -940,17 +940,9 @@
               <h1 id="beta-title">Test Track</h1>
               <h2>Choose a prototype.</h2>
               <p>Early experiments from the GearBorn lab. Expect rough edges.</p>
-              <button class="beta-option-card beta-3d-start" id="beta-3d-start" type="button">
-                <strong>Pseudo-3D Baybee Run</strong>
-                <span>Behind-the-car test on a longer prototype track.</span>
-              </button>
               <button class="beta-option-card" id="hub-map-beta-start" type="button">
                 <strong>Hub Map (Beta)</strong>
                 <span>Walk a tiny tile-map prototype.</span>
-              </button>
-              <button class="beta-option-card" id="photo-catch-beta-start" type="button">
-                <strong>Photo Catch (Beta)</strong>
-                <span>Snap a real car. Match it to a GearBorn.</span>
               </button>
               <button class="beta-option-card" id="gearborn-studio-beta-start" type="button">
                 <strong>GearBorn Studio (Beta)</strong>
@@ -962,14 +954,21 @@
               </button>
               <div class="last-gear-setup-panel" id="last-gear-setup-panel" hidden>
                 <div class="last-gear-setup-grid">
-                  <label>Lives
+                  <label>Crew Size
                     <select id="last-gear-setup-lives">
-                      <option value="1">1</option>
-                      <option value="3" selected>3</option>
-                      <option value="5">5</option>
+                      <option value="1">1 car</option>
+                      <option value="3" selected>3 cars</option>
+                      <option value="5">5 cars</option>
                     </select>
                   </label>
-                  <label>Opponents
+                  <label>Format
+                    <select id="last-gear-setup-format">
+                      <option value="duel">Duel (1v1)</option>
+                      <option value="rally">Rally (2v2)</option>
+                      <option value="chaos" selected>Chaos (8 cars)</option>
+                    </select>
+                  </label>
+                  <label class="last-gear-setup-legacy" hidden>Opponents
                     <select id="last-gear-setup-opponents">
                       <option value="1">1</option>
                       <option value="2">2</option>
@@ -1006,9 +1005,15 @@
                       <option value="aggro">Aggro</option>
                     </select>
                   </label>
+                  <label>Touch Controls
+                    <select id="last-gear-setup-controls">
+                      <option value="stick" selected>Drive Stick</option>
+                      <option value="classic">Classic Buttons</option>
+                    </select>
+                  </label>
                 </div>
                 <div class="last-gear-setup-actions">
-                  <button class="story-primary" id="last-gear-setup-start" type="button">Choose Racer</button>
+                  <button class="story-primary" id="last-gear-setup-start" type="button">Choose Crew</button>
                 </div>
                 <p class="last-gear-setup-note">AI lineup uses rotating archetypes: Aggro, Tank, Coward, Trickster, Speedster, Opportunist, Defender.</p>
               </div>
@@ -1087,56 +1092,6 @@
                 </div>
               </div>
             </div>
-            <div class="beta-3d-race" id="beta-3d-race" hidden>
-              <div class="beta-3d-hud">
-                <div class="beta-3d-speed">
-                  <img src="assets/beta3d/ui_speedometer.png" alt="">
-                  <strong id="beta-3d-speed">0 MPH</strong>
-                </div>
-                <div>
-                  <span>Time</span>
-                  <strong id="beta-3d-time">0.00</strong>
-                </div>
-                <div class="beta-3d-progress">
-                  <span>Progress</span>
-                  <div class="beta-3d-progress-frame">
-                    <img src="assets/beta3d/ui_progress_bar.png" alt="">
-                    <div class="beta-3d-progress-fill" id="beta-3d-progress-fill"></div>
-                    <img class="beta-3d-marker" id="beta-3d-marker" src="assets/beta3d/ui_player_marker.png" alt="">
-                  </div>
-                </div>
-                <button class="danger-button" id="beta-3d-exit" type="button">Exit</button>
-              </div>
-              <div class="beta-3d-stage">
-                <canvas id="beta-3d-canvas" width="960" height="620" aria-label="Pseudo-3D racing prototype"></canvas>
-                <div class="beta-results" id="beta-3d-results" hidden>
-                  <h2>Finished!</h2>
-                  <p id="beta-3d-final-time">Final time: 0.00 s</p>
-                  <div class="modal-actions">
-                    <button class="success-button" id="beta-3d-restart" type="button">Restart</button>
-                    <button class="ghost" id="beta-3d-finish-exit" type="button">Back</button>
-                  </div>
-                </div>
-              </div>
-              <div class="touch-controls beta-touch-controls beta-3d-touch-controls" aria-label="Pseudo-3D driving controls">
-                <button class="steer-button arrow-control left-control" data-beta3d-control="left" type="button" aria-label="Steer left">←</button>
-                <button class="control-wheel horn-wheel" data-honk-button type="button" aria-label="Honk">
-                  <img class="wheel-neutral" src="assets/icons/wheel-neutral.png" alt="">
-                  <img class="wheel-horn" src="assets/icons/wheel-horn.png" alt="">
-                </button>
-                <button class="steer-button arrow-control right-control" data-beta3d-control="right" type="button" aria-label="Steer right">→</button>
-                <button class="steer-button pedal-control brake-control" data-beta3d-control="down" type="button" aria-label="Brake">
-                  <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
-                  <span>Brake</span>
-                </button>
-                <button class="steer-button pedal-control gas-control" data-beta3d-control="up" type="button" aria-label="Gas">
-                  <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
-                  <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
-                  <span>Gas</span>
-                </button>
-              </div>
-            </div>
             <div class="beta-race" id="beta-race" hidden>
               <div class="beta-hud-exit-row">
                 <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
@@ -1204,11 +1159,28 @@
               </div>
               <p class="beta-note">WASD or Arrow Keys. Press T to toggle the debug grid.</p>
             </div>
+          </div>
+        </section>
+
+        <section class="view" id="last-gear-view" aria-label="Last Gear">
+            <div class="last-gear-crew-select" id="last-gear-crew-select" hidden>
+              <button class="back-link" id="last-gear-crew-back" type="button">Back</button>
+              <div class="section-heading"><p>Last Gear</p><h1>Build Your Crew</h1></div>
+              <p class="last-gear-crew-select-intro">Your first car starts. The rest wait on the bench: park on a SWAP pad to tag one in, and every ring-out brings in the next. Empty slots fill themselves with your closest match, or a loaner if you're short.</p>
+              <div class="last-gear-crew-select-bar">
+                <div class="last-gear-crew-size-toggle" role="group" aria-label="Crew size">
+                  <button type="button" data-last-gear-crew-size="1">Solo</button><button type="button" data-last-gear-crew-size="3">3 cars</button><button type="button" data-last-gear-crew-size="5">5 cars</button>
+                </div>
+                <span id="last-gear-crew-select-summary"></span>
+              </div>
+              <div class="last-gear-crew-select-slots" id="last-gear-crew-select-slots"></div>
+              <div class="last-gear-crew-select-actions"><button class="ghost" id="last-gear-crew-autofill" type="button">Auto-fill</button><button class="story-primary" id="last-gear-crew-start" type="button">Start Match</button></div>
+            </div>
             <div class="last-gear-beta beta-screen" id="last-gear-beta" hidden>
               <div class="last-gear-topbar">
                 <button class="back-link" id="last-gear-beta-back" type="button">Back</button>
-                <div class="last-gear-nitro">
-                  <span>Nitrous</span>
+                <div class="last-gear-nitro last-gear-ram-meter" id="last-gear-ram-meter" data-ram-state="ready">
+                  <span id="last-gear-ram-label">Charge Ram</span>
                   <div class="last-gear-nitro-track">
                     <div id="last-gear-nitro-fill"></div>
                   </div>
@@ -1240,12 +1212,27 @@
                   <div id="last-gear-result-copy"></div>
                   <div class="modal-actions">
                     <button class="success-button" id="last-gear-restart" type="button">Restart</button>
+                    <button class="ghost" id="last-gear-edit-crew" type="button">Edit Crew</button>
                     <button class="ghost" id="last-gear-finish-exit" type="button">Back</button>
                   </div>
                 </div>
               </div>
+              <div class="last-gear-crew-bar" id="last-gear-crew-bar" aria-label="Your crew: tap a car to send it in next" hidden></div>
               <div class="last-gear-status-grid" id="last-gear-status-grid" aria-label="Last Gear racer status"></div>
-              <div class="touch-controls beta-touch-controls last-gear-touch-controls" aria-label="Last Gear driving controls">
+              <div class="touch-controls beta-touch-controls last-gear-touch-controls" data-layout="stick" aria-label="Last Gear driving controls">
+                <div class="last-gear-stick-controls">
+                  <div class="last-gear-drive-pad" data-last-gear-drive-pad role="application" aria-label="Drive stick: drag toward where you want to go">
+                    <div class="last-gear-drive-ring"></div>
+                    <div class="last-gear-drive-knob"></div>
+                  </div>
+                  <div class="last-gear-action-cluster">
+                    <button class="steer-button last-gear-nitro-button last-gear-ram-button last-gear-action-ram" data-last-gear-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
+                      <span>Ram</span>
+                    </button>
+                    <button class="steer-button last-gear-special-button last-gear-action-special" data-last-gear-special type="button" aria-label="Special move">Special</button>
+                    <button class="steer-button last-gear-action-item" data-last-gear-item-button type="button" aria-label="Use item">Item</button>
+                  </div>
+                </div>
                 <div class="last-gear-control-row">
                   <button class="steer-button arrow-control left-control" data-last-gear-control="left" type="button" aria-label="Steer left">←</button>
                   <button class="steer-button pedal-control brake-control" data-last-gear-control="down" type="button" aria-label="Brake">
@@ -1259,17 +1246,16 @@
                     <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                     <span>Gas</span>
                   </button>
-                  <button class="steer-button last-gear-nitro-button" data-last-gear-nitro type="button" aria-label="Nitrous">
-                    <img src="assets/items/token-nitrous.png" alt="">
-                    <span>Nitro</span>
+                  <button class="steer-button last-gear-nitro-button last-gear-ram-button" data-last-gear-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
+                    <span>Ram</span>
                   </button>
                   <button class="steer-button last-gear-special-button" data-last-gear-special type="button" aria-label="Special move">Special</button>
                 </div>
                 <button class="steer-button beta-item-control last-gear-space-button" data-last-gear-item-button type="button" aria-label="Use item">Space</button>
+                <button class="last-gear-layout-toggle" data-last-gear-layout-toggle type="button">Switch to classic</button>
               </div>
-              <p class="beta-note">Prototype only: WASD to drive, Shift for nitrous, Space/E for items.</p>
+              <p class="beta-note">WASD to drive. Hold Shift to charge a Ram, release in the gold to land a PERFECT. Tap Shift + steer to dodge. Q fires your Type special, Space/E items. Park on a SWAP pad to tag in your next crew car (1-5 or tap your crew to pick who). Gamepad: left stick drives, A ram, B special, X item, Y next crew car.</p>
             </div>
-          </div>
         </section>
 
         <section class="view" id="hub-map-beta-view" aria-labelledby="hub-map-beta-title">
@@ -1284,18 +1270,6 @@
           </div>
         </section>
 
-        <section class="view" id="photo-catch-beta-view" aria-labelledby="photo-catch-beta-title">
-          <button class="back-link" id="photo-catch-beta-back" type="button">Back</button>
-          <div class="section-heading">
-            <p>Beta Mode</p>
-            <h1 id="photo-catch-beta-title">Photo Catch (Beta)</h1>
-          </div>
-          <div class="photo-catch-beta-shell">
-            <video id="photo-catch-beta-video" playsinline muted autoplay></video>
-            <div id="photo-catch-beta-stage"><!-- JS renders viewfinder / body-type / reveal here --></div>
-          </div>
-        </section>
-
         <section class="view" id="gearborn-studio-beta-view" aria-labelledby="gearborn-studio-beta-title">
           <button class="back-link" id="gearborn-studio-beta-back" type="button">Back</button>
           <div class="section-heading">
@@ -1305,8 +1279,10 @@
           <div class="studio-beta-stage">
             <video id="gearborn-studio-beta-video" playsinline muted autoplay hidden></video>
             <canvas id="gearborn-studio-beta-canvas"></canvas>
+            <button id="gearborn-studio-beta-capture-fab" class="studio-beta-fab" type="button" hidden>Capture</button>
+            <button id="gearborn-studio-beta-add" class="studio-beta-add" type="button">+ GearBorn</button>
           </div>
-          <div id="gearborn-studio-beta-picker"></div>
+          <div id="gearborn-studio-beta-layers"></div>
           <div id="gearborn-studio-beta-controls"></div>
         </section>
 
@@ -1467,6 +1443,16 @@
           </div>
         </section>
       </main>
+
+      <div id="gearborn-studio-beta-picker-modal" class="studio-beta-modal" hidden>
+        <div class="studio-beta-modal-card">
+          <div class="studio-beta-modal-head">
+            <strong>Pick a GearBorn</strong>
+            <button id="gearborn-studio-beta-picker-close" class="ghost" type="button">Close</button>
+          </div>
+          <div id="gearborn-studio-beta-picker"></div>
+        </div>
+      </div>
     </div>
 
     <div class="modal-overlay" id="boss-modal" aria-hidden="true">
@@ -1876,8 +1862,10 @@
     <script src="game-state.js"></script>
     <script src="game-logic.js"></script>
     <script src="game-dom.js"></script>
+    <script src="game-sprites.js"></script>
     <script src="game-race2d.js"></script>
     <script src="game-beta3d.js"></script>
+    <script src="game-lastgear.js"></script>
     <script src="game-events.js"></script>
     <script src="game-init.js"></script>
 

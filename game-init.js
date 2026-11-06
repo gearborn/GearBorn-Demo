@@ -389,6 +389,10 @@ function sanitizeState() {
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
+  if (state.lastGearSelectedCar && (!cars.some((car) => car.id === state.lastGearSelectedCar) || !isCarUnlocked(state.lastGearSelectedCar))) state.lastGearSelectedCar = null;
+  state.lastGearCrew = Array.isArray(state.lastGearCrew)
+    ? state.lastGearCrew.slice(0, 5).map((carId) => (carId && cars.some((car) => car.id === carId) && isCarUnlocked(carId) ? carId : null))
+    : [];
   cars.forEach((car) => {
     const bond = state.bond[car.id] || {};
     state.bond[car.id] = {

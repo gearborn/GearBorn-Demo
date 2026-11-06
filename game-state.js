@@ -583,6 +583,8 @@ const defaultState = {
   selectedBattleBoss: bosses[0].id,
   selectedStoryCar: cars[0].id,
   selectedTimeCar: cars[0].id,
+  lastGearSelectedCar: null,
+  lastGearCrew: [],
   selectedTimeTrack: storyTracks[0].id,
   selectedVindex: vindexEntries[0].number,
   vindexFilter: "all",

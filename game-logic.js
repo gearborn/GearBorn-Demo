@@ -959,10 +959,6 @@ function honkCurrentRaceCar() {
     playGearbornHonk(betaCurrentCarId());
     return true;
   }
-  if (document.querySelector("#beta-view")?.classList.contains("active") && !el.beta3dRace?.hidden) {
-    playGearbornHonk(selectedCarIdForMode("beta"));
-    return true;
-  }
   return false;
 }
 
@@ -2540,6 +2536,7 @@ function renderVerticalSelects() {
 }
 
 function pickerTargetCarId(target) {
+  if (target === "lastgear-crew") return carPickerState.highlighted;
   if (target === "lastgear") return state.lastGearSelectedCar || state.selectedCar;
   if (target === "drag") return state.selectedCar;
   if (target === "time") return state.selectedTimeCar;
@@ -6271,7 +6268,10 @@ function setRacerImage(container, image, src, alt) {
   container.classList.remove("has-image");
   image.removeAttribute("src");
   image.alt = alt;
-  image.onload = () => container.classList.add("has-image");
+  image.onload = () => {
+    container.classList.add("has-image");
+    if (typeof gearbornGroundSideViewImage === "function") gearbornGroundSideViewImage(image);
+  };
   image.onerror = () => container.classList.remove("has-image");
   if (src) image.src = src;
 }
@@ -7540,7 +7540,6 @@ function showRaceResult(trackNode, result) {
 function clearRaceResultPopups() {
   document.querySelectorAll(".race-result-popup").forEach((node) => node.remove());
   if (el.betaResults) el.betaResults.hidden = true;
-  if (el.beta3dResults) el.beta3dResults.hidden = true;
   window.setTimeout(playQueuedBondScene, 80);
 }
 
@@ -8948,7 +8947,7 @@ function drawRace() {
         <div class="lane drag-lane generated-lane" style="top:${dragLaneTop(laneValue)}">
           <span class="lane-label">${opponent.name}</span>
           <div class="car rival-car has-image ${opponent.nitroActive ? "nitro-active" : ""}" style="--car-color:#f25f5c; transform:translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px)">
-            <img class="car-image" src="${opponent.image}" alt="${opponent.name}" onerror="this.closest('.car')?.classList.remove('has-image')" onload="this.closest('.car')?.classList.add('has-image')">
+            <img class="car-image" src="${opponent.image}" alt="${opponent.name}" style="${typeof gearbornSideViewGroundStyle === "function" ? gearbornSideViewGroundStyle(opponent.image, el.playerRacerImage?.clientWidth || 140, el.playerRacerImage?.clientHeight || 72) : ""}" onerror="this.closest('.car')?.classList.remove('has-image')" onload="this.closest('.car')?.classList.add('has-image')">
             <span class="car-glow"></span>
             <span class="car-body"></span>
             <span class="wheel front"></span>
@@ -9396,9 +9395,7 @@ function deleteSelectedTrack() {
 function showView(view) {
   if (view !== "builder" && !builderAllowLeave && viewIsActive("builder") && !requestBuilderExit(view)) return;
   if (view !== "beta") stopBetaDemo(false);
-  if (view !== "beta") stopBeta3d(false);
-  if (view !== "beta" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
-  if (view !== "photo-catch-beta" && typeof stopPhotoCatchBeta === "function") stopPhotoCatchBeta(false);
+  if (view !== "last-gear" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
   if (view !== "gearborn-studio-beta" && typeof stopGearbornStudioBeta === "function") stopGearbornStudioBeta();
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
   if (view !== "crankvaults") stopCrankVaultResetTimer();
@@ -9431,7 +9428,7 @@ function showView(view) {
   document.body.classList.toggle("mode-active", view !== "menu");
   if (view === "menu" || view === "story") playMusic("menu-theme");
   else if (view === "garage") playMusic("garage-theme");
-  else if (view === "play" || view === "time-trial" || view === "beta" || view === "hub-map-beta") playMusic("race-theme");
+  else if (view === "play" || view === "time-trial" || view === "beta" || view === "last-gear" || view === "hub-map-beta") playMusic("race-theme");
   else if (view === "battle" || view === "boss") playMusic("battle-theme");
   if (view === "story") {
     storyReplayOpen = false;
