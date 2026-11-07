@@ -266,6 +266,8 @@ function lastGearShape() {
 }
 
 function lastGearShapeBoundary(x, y, now = lastGearLocalNow()) {
+  const sdfBoundary = lastGearSdfBoundary(x, y, now);
+  if (sdfBoundary) return sdfBoundary;
   const shape = lastGearShape();
   const radius = lastGearActiveRadius(now);
   const dx = x - lastGearArena.cx;
@@ -336,6 +338,8 @@ function lastGearDistanceFromCenter(car) {
 }
 
 function lastGearSafePoint(index = Math.random() * 8) {
+  const sdfSpawn = lastGearSdfSafePoint(index);
+  if (sdfSpawn) return sdfSpawn;
   const angle = (Math.PI * 2 * index) / 8 - Math.PI / 2;
   const shape = lastGearShape();
   const radius = lastGearActiveRadius() * 0.58;
@@ -475,7 +479,7 @@ function readLastGearSetupConfig() {
     lives: Number(el.lastGearSetupLives?.value || 3),
     format: lastGearFormats[document.getElementById("last-gear-setup-format")?.value] ? document.getElementById("last-gear-setup-format").value : "chaos",
     opponents: (lastGearFormats[document.getElementById("last-gear-setup-format")?.value] || lastGearFormats.chaos).opponents,
-    arena: el.lastGearSetupArena?.value || "circle",
+    ...lastGearCityArenaSettings(el.lastGearSetupArena?.value),
     suddenDeathSeconds: Number.isFinite(suddenSeconds) && suddenSeconds > 0 ? suddenSeconds : 0,
     items: el.lastGearSetupItems?.value || "normal",
     aiDifficulty: el.lastGearSetupAi?.value || "normal"
@@ -495,14 +499,20 @@ function toggleLastGearSetupPanel(show = true) {
 
 function startLastGearBeta() {
   if (!el.lastGearCanvas) return;
-  const settings = { ...readLastGearSetupConfig() };
+  const evoCarId = typeof lastGearEvoPendingCarId !== "undefined" ? lastGearEvoPendingCarId : null;
+  if (evoCarId) lastGearEvoPendingCarId = null;
+  const settings = evoCarId ? lastGearEvoSettings() : { ...readLastGearSetupConfig() };
   stopBetaDemo(false);
   if (typeof viewIsActive === "function" && !viewIsActive("last-gear")) showView("last-gear");
   if (el.lastGearBeta) el.lastGearBeta.hidden = false;
   const crewSelectScreen = document.getElementById("last-gear-crew-select");
   if (crewSelectScreen) crewSelectScreen.hidden = true;
+  const evoPickScreen = document.getElementById("evo-rush-pick");
+  if (evoPickScreen) evoPickScreen.hidden = true;
+  const evoHud = document.getElementById("last-gear-evo-hud");
+  if (evoHud) evoHud.hidden = !evoCarId;
   if (el.lastGearResults) el.lastGearResults.hidden = true;
-  const roster = lastGearBuildRoster();
+  const roster = evoCarId ? lastGearBuildEvoRoster(evoCarId) : lastGearBuildRoster();
   const cars = roster.map((entry, index) => lastGearMakeCar(entry, index, roster.length));
   cars.forEach((car) => {
     if (!car.image) return;
@@ -551,7 +561,8 @@ function startLastGearBeta() {
     statusRenderAt: 0,
     itemSpawnAt: 2500
   };
-  lastGearAttachCrews(cars, lastGearClamp(Number(settings.lives || 3), 1, 5));
+  if (evoCarId) lastGearEvoInit(cars);
+  else lastGearAttachCrews(cars, lastGearClamp(Number(settings.lives || 3), 1, 5));
   lastGearApplyFormat(cars);
   lastGearState.itemBoxes = lastGearInitialItemBoxes();
   lastGearCamera.x = lastGearArena.cx;
@@ -560,7 +571,7 @@ function startLastGearBeta() {
   resizeLastGearBeta();
   updateLastGearTouchVisuals();
   updateLastGearHud(true);
-  lastGearAnnounce(lastGearFormat().startEvent || "matchStart", { force: true, major: true });
+  lastGearAnnounce(evoCarId ? "evoStart" : (lastGearFormat().startEvent || "matchStart"), { force: true, major: true });
   lastGearState.raf = requestAnimationFrame(updateLastGearBeta);
 }
 
@@ -675,6 +686,7 @@ function lastGearChooseLine(lines = []) {
 
 function lastGearAnnounce(eventKey, options = {}) {
   if (!lastGearState) return;
+  lastGearCrowdOnEvent(eventKey);
   const now = lastGearLocalNow();
   const priority = lastGearAnnouncerPriorities[eventKey] || 1;
   const currentPriority = lastGearState.announcer?.priority || 0;
@@ -1145,8 +1157,13 @@ function lastGearLoseLife(car, now) {
   const nx = (car.x - lastGearArena.cx) / distance;
   const ny = (car.y - lastGearArena.cy) / distance;
   lastGearState.ringFlashes.push({ x: car.x, y: car.y, radius: lastGearActiveRadius(now), ttl: 720, life: 720 });
+  lastGearCrowdPulse(car.x, car.y, car.player ? 1 : 0.75);
   if (car.player) lastGearTriggerImpactFeedback(185, car.x, car.y, nx, ny, "ringout", { forceVisual: true });
   if (car.player) lastGearState.stats.playerRingOuts += 1;
+  if (lastGearIsEvoRush()) {
+    lastGearEvoRingOut(car, now);
+    return;
+  }
   if (car.crew?.[car.crewIndex]) {
     car.crew[car.crewIndex].out = true;
     car.crew[car.crewIndex].damage = car.damage;
@@ -1657,6 +1674,7 @@ function updateLastGearBeta(now) {
   lastGearResolveCollisions(localNow);
   lastGearUpdateItems(dt, localNow);
   lastGearUpdateSwapPads(dt, localNow);
+  lastGearCrowdUpdate(dt, localNow);
   lastGearUpdateCamera();
   const survivors = lastGearLiveCars();
   if (survivors.length === 2 && !lastGearState.finalTwoCalled) {
@@ -1665,6 +1683,7 @@ function updateLastGearBeta(now) {
   }
   const outcome = lastGearMatchOutcome();
   if (outcome.done && !lastGearState.finished) finishLastGearBeta(outcome.playerWon);
+  if (lastGearIsEvoRush() && !lastGearState.finished) lastGearEvoTick(localNow);
   drawLastGearFrame();
   if (lastGearState.goUntil && now < lastGearState.goUntil) drawLastGearCountdown(now);
   updateLastGearHud();
@@ -1689,6 +1708,8 @@ function finishLastGearBeta(playerWon) {
   if (el.lastGearResultTitle) el.lastGearResultTitle.textContent = resultTitle;
   if (el.lastGearResultCopy) el.lastGearResultCopy.innerHTML = lastGearResultsMarkup(finalCall);
   if (el.lastGearResults) el.lastGearResults.hidden = false;
+  lastGearEvoSyncResultButtons(lastGearIsEvoRush());
+  if (lastGearIsEvoRush()) lastGearEvoFinish(playerWon);
 }
 
 function lastGearResultsMarkup(finalCall) {
@@ -1747,6 +1768,7 @@ function drawLastGearFrame() {
   if (shake > 0.1) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
   ctx.scale(lastGearArena.zoom, lastGearArena.zoom);
   ctx.translate(-lastGearCamera.x, -lastGearCamera.y);
+  drawLastGearCrowd(ctx);
   drawLastGearArena(ctx);
   drawLastGearObjects(ctx);
   lastGearState.cars.forEach((car) => drawLastGearCar(ctx, car));
@@ -1809,65 +1831,42 @@ function drawLastGearArena(ctx) {
   const now = lastGearLocalNow();
   const radius = lastGearActiveRadius(now);
   const shape = lastGearShape();
-  const platformImg = shape === "circle" && lastGearImages.platform?.complete && lastGearImages.platform.naturalWidth > 0
+  const theme = lastGearArenaTheme();
+  if (theme.art && !lastGearArenaArtImages[theme.id]) lastGearArenaArtImages[theme.id] = betaMakeImage(theme.art);
+  const cityArt = theme.art ? lastGearArenaArtImages[theme.id] : null;
+  const shapeArt = shape === "circle" && lastGearImages.platform?.complete && lastGearImages.platform.naturalWidth > 0
     ? lastGearImages.platform
     : lastGearImages.arenas?.[shape];
+  const platformImg = cityArt?.complete && cityArt.naturalWidth > 0 ? cityArt : shapeArt;
   if (platformImg?.complete && platformImg.naturalWidth > 0) {
     const size = lastGearArena.radius * 2.2;
     ctx.drawImage(platformImg, cx - size / 2, cy - size / 2, size, size);
   } else {
     drawLastGearProceduralArena(ctx, shape, radius);
   }
+  lastGearDrawArenaDecal(ctx, theme, shape, radius);
 }
 
 function drawLastGearProceduralArena(ctx, shape, radius) {
-  const { cx, cy } = lastGearArena;
-  // Future Last Gear arena art can replace these procedural paths per shape.
+  // City art can replace this per city via lastGearArenaCities[city].art.
+  const theme = lastGearArenaTheme();
+  const paths = lastGearShapePaths(shape, radius);
+  const fillRule = shape === "donut" ? "evenodd" : "nonzero";
   ctx.save();
-  ctx.shadowColor = "rgba(82,199,255,0.48)";
+  ctx.shadowColor = theme.glow;
   ctx.shadowBlur = 26;
-  ctx.fillStyle = "rgba(23, 32, 46, 0.96)";
-  ctx.strokeStyle = "rgba(255,200,87,0.68)";
+  ctx.strokeStyle = theme.rim;
   ctx.lineWidth = 14;
-  ctx.beginPath();
-  if (shape === "square") {
-    const half = radius * 0.82;
-    ctx.roundRect(cx - half, cy - half, half * 2, half * 2, 34);
-  } else if (shape === "donut") {
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.moveTo(cx + radius * 0.18, cy);
-    ctx.arc(cx, cy, radius * 0.18, 0, Math.PI * 2, true);
-  } else if (shape === "bridge") {
-    const halfLength = radius * 0.86;
-    const halfWidth = radius * 0.24;
-    ctx.roundRect(cx - halfLength, cy - halfWidth, halfLength * 2, halfWidth * 2, halfWidth);
-  } else {
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  }
-  ctx.fill("evenodd");
-  ctx.stroke();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "rgba(82,199,255,0.58)";
-  ctx.stroke();
+  paths.forEach((path) => ctx.stroke(path));
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = theme.floor;
+  paths.forEach((path) => ctx.fill(path, fillRule));
   ctx.restore();
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  ctx.lineWidth = 3;
-  if (shape === "bridge") {
-    for (let x = cx - radius * 0.7; x <= cx + radius * 0.7; x += 120) {
-      ctx.beginPath();
-      ctx.moveTo(x, cy - radius * 0.2);
-      ctx.lineTo(x, cy + radius * 0.2);
-      ctx.stroke();
-    }
-  } else {
-    for (let r = 90; r < radius; r += 90) {
-      if (shape === "donut" && r < radius * 0.38) continue;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
+  const clip = new Path2D();
+  paths.forEach((path) => clip.addPath(path));
+  ctx.clip(clip, fillRule);
+  lastGearDrawArenaPattern(ctx, theme, shape, radius);
   ctx.restore();
 }
 
@@ -2116,7 +2115,7 @@ function updateLastGearHud(force = false) {
   if (player) lastGearRenderRamMeter(player);
   if (el.lastGearItemName && player) {
     const statuses = [];
-    const now = lastGearLocalNow();
+    const now = Math.max(0, lastGearLocalNow());
     if (player.bubbleUntil > now) statuses.push("Bubble");
     if (player.anchorUntil > now) statuses.push("Anchor");
     if (player.overhaulUntil > now) statuses.push("Overhaul");
@@ -2242,7 +2241,7 @@ el.lastGearSetupStart?.addEventListener("click", () => {
 });
 el.lastGearBetaBack?.addEventListener("click", () => stopLastGearBeta(true));
 el.lastGearFinishExit?.addEventListener("click", () => stopLastGearBeta(true));
-el.lastGearRestart?.addEventListener("click", startLastGearBeta);
+el.lastGearRestart?.addEventListener("click", () => (lastGearIsEvoRush() ? openEvoRushPick(true) : startLastGearBeta()));
 
 document.addEventListener("keydown", (event) => {
   if (!lastGearState || lastGearState.finished) return;
@@ -2860,6 +2859,8 @@ function lastGearPlacedPickupSlots() {
 }
 
 function lastGearPlacedPickupPoint(slotId, now = lastGearLocalNow()) {
+  const sdfPickup = lastGearSdfPickupPoint(slotId, now);
+  if (sdfPickup) return sdfPickup;
   const r = lastGearActiveRadius(now);
   const cx = lastGearArena.cx;
   const cy = lastGearArena.cy;
@@ -3013,5 +3014,807 @@ function lastGearDrawTeamMarker(ctx, car) {
     ctx.textBaseline = "middle";
     ctx.fillText("ALLY", car.x, car.y - 52);
   }
+  ctx.restore();
+}
+
+// -- Evo Rush: 60-second quick mode where KOs evolve your car ------------------------
+const lastGearEvoTuning = {
+  durationMs: 60000, evolveAt: [2, 5], koWindowMs: 4500, respawnMs: 900,
+  evolveInvulnerableMs: 1200, evolveHitPauseMs: 160, final10Ms: 10000,
+  suddenDeathSeconds: 40, picks: 3, arenas: ["indianapolis", "berlin", "dubai", "rio", "los-angeles", "seoul", "bangalore", "space"]
+};
+let lastGearEvoPickIds = [];
+let lastGearEvoPendingCarId = null;
+
+Object.assign(lastGearAnnouncerPriorities, { evoStart: 3, evolve: 5, evoFinal: 4, evoEnd: 7 });
+Object.assign(lastGearAnnouncerLabels, { evoStart: "Evo Rush", evolve: "Evolution", evoFinal: "Final 10", evoEnd: "Time!" });
+Object.assign(lastGearAnnouncerLines, {
+  evoStart: ["SIXTY SECONDS! Knock 'em out, power UP!", "EVO RUSH! Every KO makes you STRONGER!", "Clock's running, baby! EVOLVE OR GET LEFT BEHIND!"],
+  evolve: ["IT'S EVOLVING!", "A WHOLE NEW MACHINE!", "LOOK AT THAT TRANSFORMATION!"],
+  evoFinal: ["TEN SECONDS! Make it COUNT!", "FINAL TEN! Who wants it MORE?", "Ten seconds left, baby!"],
+  evoEnd: ["TIME! What a RUSH!", "That's the BUZZER, baby!", "SIXTY SECONDS OF MAYHEM!"]
+});
+
+function lastGearIsEvoRush() {
+  return lastGearCurrentSettings().mode === "evoRush";
+}
+
+function lastGearEvoPool() {
+  return cars.filter((car) => !car.tutorialOnly
+    && !lastGearCrewExcludedIds.includes(car.id)
+    && !(typeof isFusionLine === "function" && isFusionLine(car.id))
+    && (car.evolutions || []).length >= 3
+    && car.evolutions.slice(0, 3).every((form) => imageFor(form, "topdown") && imageFor(form, "display")));
+}
+
+function lastGearEvoRollPicks() {
+  const pool = lastGearEvoPool().sort(() => Math.random() - 0.5);
+  const owned = pool.filter((car) => isSelectablePlayerCar(car.id));
+  const unowned = pool.filter((car) => !isSelectablePlayerCar(car.id));
+  const picks = [];
+  if (owned.length) picks.push(owned[0]);
+  if (unowned.length) picks.push(unowned[0]);
+  pool.forEach((car) => {
+    if (picks.length < lastGearEvoTuning.picks && !picks.includes(car)) picks.push(car);
+  });
+  lastGearEvoPickIds = picks.slice(0, lastGearEvoTuning.picks).sort(() => Math.random() - 0.5).map((car) => car.id);
+  return lastGearEvoPickIds;
+}
+
+function lastGearEvoSettings() {
+  const arenas = lastGearEvoTuning.arenas;
+  return {
+    mode: "evoRush", format: "chaos", lives: 1, opponents: 7,
+    ...lastGearCityArenaSettings(arenas[Math.floor(Math.random() * arenas.length)]),
+    suddenDeathSeconds: lastGearEvoTuning.suddenDeathSeconds,
+    items: "normal", aiDifficulty: el.lastGearSetupAi?.value || "normal"
+  };
+}
+
+function lastGearBuildEvoRoster(carId) {
+  const pool = lastGearEvoPool();
+  const playerLine = cars.find((car) => car.id === carId) || pool[0];
+  const others = pool.filter((car) => car.id !== playerLine.id).sort(() => Math.random() - 0.5).slice(0, 7);
+  return [playerLine, ...others].map((car, index) => ({ car, form: car.evolutions[0], topdown: imageFor(car.evolutions[0], "topdown"), player: index === 0 }));
+}
+
+function lastGearEvoSetForm(car, formIndex) {
+  const line = cars.find((item) => item.id === car.carId);
+  if (!line) return false;
+  const index = Math.max(0, Math.min(Math.min(2, line.evolutions.length - 1), formIndex));
+  const form = line.evolutions[index];
+  car.evoForm = index;
+  car.name = form.name;
+  car.image = car.evoImages?.[index] || betaMakeImage(imageFor(form, "topdown"), { measure: true });
+  car.displayImage = imageFor(form, "display") || car.displayImage;
+  car.ratings = betaRatingsForCar(car.carId, 1, index, false);
+  car.physics = lastGearPhysics(car.ratings);
+  return true;
+}
+
+function lastGearEvoInit(racers) {
+  racers.forEach((car) => {
+    const line = cars.find((item) => item.id === car.carId);
+    car.crew = null;
+    car.lives = 1;
+    car.evoKOs = 0;
+    car.evoRingOuts = 0;
+    car.evoImages = (line?.evolutions || []).slice(0, 3).map((form, index) => index === 0 ? car.image : betaMakeImage(imageFor(form, "topdown"), { measure: true }));
+    lastGearEvoSetForm(car, 0);
+  });
+  lastGearState.evo = { final10Called: false };
+  lastGearState.stats.evolutions = 0;
+  lastGearEvoRenderHud(0);
+}
+
+function lastGearEvoRingOut(car, now) {
+  const attacker = car.lastHitBy && now - (car.lastHitAt || 0) < lastGearEvoTuning.koWindowMs
+    ? lastGearState.cars.find((entry) => entry.id === car.lastHitBy) : null;
+  Object.assign(car, {
+    damage: 0, item: null, shieldHits: 0, bubbleUntil: 0, anchorUntil: 0, antiMagnetUntil: 0, overhaulUntil: 0,
+    reverseUntil: 0, oilSlideUntil: 0, ramJammedUntil: 0, ironWallUntil: 0, overdriveUntil: 0, handlingWeakUntil: 0,
+    grapple: null, lastHitBy: null, lastHitAt: 0
+  });
+  car.ram = lastGearMakeRamState();
+  car.evoRingOuts = (car.evoRingOuts || 0) + 1;
+  car.respawnAt = now + lastGearEvoTuning.respawnMs;
+  if (attacker && attacker.id !== car.id) lastGearEvoCreditKO(attacker, now);
+}
+
+function lastGearEvoCreditKO(attacker, now) {
+  attacker.evoKOs = (attacker.evoKOs || 0) + 1;
+  if (attacker.player) {
+    lastGearState.stats.playerKOs += 1;
+    lastGearState.effects.push({ kind: "impactWord", x: attacker.x, y: attacker.y - 70, vx: 0, vy: -30, ttl: 650, life: 650, text: "+1 KO", size: 26, tint: "#ffc857", angle: 0, spin: 0 });
+    lastGearAnnounce(lastGearState.stats.playerKOs >= 3 ? "koStreak" : "gearOut", { cooldown: 1200 });
+  }
+  const targetForm = lastGearEvoTuning.evolveAt.filter((needed) => attacker.evoKOs >= needed).length;
+  if (targetForm > (attacker.evoForm || 0)) lastGearEvoEvolve(attacker, targetForm, now);
+}
+
+function lastGearEvoEvolve(car, formIndex, now) {
+  const before = car.name;
+  const previousForm = car.evoForm || 0;
+  lastGearEvoSetForm(car, formIndex);
+  if (car.evoForm === previousForm) return;
+  car.damage = 0;
+  car.invulnerableUntil = Math.max(car.invulnerableUntil || 0, now + lastGearEvoTuning.evolveInvulnerableMs);
+  car.ram = lastGearMakeRamState();
+  lastGearState.effects.push({ kind: "ring", x: car.x, y: car.y, vx: 0, vy: 0, angle: 0, spin: 0, ttl: 700, life: 700, size: 170, tint: "#ffc857" });
+  for (let i = 0; i < 16; i += 1) lastGearSpawnParticle("spark", car.x, car.y, (Math.PI * 2 * i) / 16, 200 + Math.random() * 120, 420, 10 + Math.random() * 8, i % 2 ? "#ffc857" : "#ffffff");
+  lastGearState.effects.push({ kind: "impactWord", x: car.x, y: car.y - 84, vx: 0, vy: -22, ttl: 1100, life: 1100, text: `${car.name.toUpperCase()}!`, size: 32, tint: "#ffc857", angle: 0, spin: 0 });
+  if (car.player) {
+    lastGearState.stats.evolutions = (lastGearState.stats.evolutions || 0) + 1;
+    lastGearState.hitPauseUntil = now + lastGearEvoTuning.evolveHitPauseMs;
+    lastGearState.shake = Math.max(lastGearState.shake || 0, 10);
+    lastGearAnnounce("evolve", { force: true, major: true, line: `${before.toUpperCase()} EVOLVED INTO ${car.name.toUpperCase()}!`, duration: 2600 });
+  } else {
+    lastGearAnnounce("evolve", { cooldown: 3500, line: `${before} just became ${car.name}!` });
+  }
+}
+
+function lastGearEvoTick(now) {
+  const left = lastGearEvoTuning.durationMs - now;
+  lastGearEvoRenderHud(now);
+  if (!lastGearState.evo.final10Called && left <= lastGearEvoTuning.final10Ms) {
+    lastGearState.evo.final10Called = true;
+    lastGearAnnounce("evoFinal", { force: true, major: true });
+  }
+  if (left <= 0 && !lastGearState.finished) {
+    const player = lastGearPlayer();
+    const best = Math.max(...lastGearState.cars.map((car) => car.evoKOs || 0));
+    finishLastGearBeta((player?.evoKOs || 0) >= best && best > 0);
+  }
+}
+
+function lastGearEvoRenderHud(now) {
+  const hud = document.getElementById("last-gear-evo-hud");
+  const player = lastGearPlayer();
+  if (!hud || !player) return;
+  const left = Math.max(0, Math.ceil((lastGearEvoTuning.durationMs - Math.max(0, now)) / 1000));
+  const kos = player.evoKOs || 0;
+  const form = player.evoForm || 0;
+  const next = lastGearEvoTuning.evolveAt[form];
+  const signature = `${left}|${kos}|${form}`;
+  if (hud.dataset.signature === signature) return;
+  hud.dataset.signature = signature;
+  hud.classList.toggle("final", left <= 10);
+  hud.innerHTML = `<strong>${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}</strong><span>KOs ${kos}</span><span class="last-gear-evo-pips" aria-label="Form ${form + 1} of 3">${[0, 1, 2].map((index) => `<i class="${index <= form ? "on" : ""}"></i>`).join("")}</span><em>${next ? `Evolve at ${next}` : "Final form!"}</em>`;
+}
+
+function lastGearEvoSyncResultButtons(isEvo) {
+  if (el.lastGearRestart) el.lastGearRestart.textContent = isEvo ? "Play Again" : "Restart";
+  const editCrew = document.getElementById("last-gear-edit-crew");
+  if (editCrew) editCrew.hidden = isEvo;
+  const share = document.getElementById("last-gear-evo-share");
+  if (share) share.hidden = !isEvo;
+}
+
+function lastGearEvoFinish(playerWon) {
+  const player = lastGearPlayer();
+  if (!player) return;
+  const board = [...lastGearState.cars].sort((a, b) => (b.evoKOs || 0) - (a.evoKOs || 0) || (a.evoRingOuts || 0) - (b.evoRingOuts || 0));
+  const rank = board.indexOf(player) + 1;
+  const previousBest = Number(state.evoRushBest?.kos) || 0;
+  const isBest = (player.evoKOs || 0) > previousBest;
+  if (isBest) {
+    state.evoRushBest = { kos: player.evoKOs, carId: player.carId, form: player.evoForm || 0 };
+    if (typeof saveState === "function") saveState();
+  }
+  const owned = isSelectablePlayerCar(player.carId);
+  const family = cars.find((car) => car.id === player.carId)?.family || player.name;
+  const finalCall = lastGearChooseLine(lastGearAnnouncerLines.evoEnd);
+  lastGearAnnounce("evoEnd", { force: true, major: true, line: finalCall, duration: 5200, legendary: true });
+  if (el.lastGearResultTitle) el.lastGearResultTitle.textContent = playerWon ? "Evo Rush Champion!" : `#${rank} in Evo Rush`;
+  if (el.lastGearResultCopy) el.lastGearResultCopy.innerHTML = `<div class="last-gear-result-card evo-rush-result"><div class="evo-rush-result-hero"><img src="${player.displayImage}" alt="${escapeHtml(player.name)}"><div><strong>${escapeHtml(player.name)}</strong><span>Form ${(player.evoForm || 0) + 1} of 3 · ${player.evoKOs || 0} KOs</span>${isBest ? `<b class="evo-rush-best-badge">New personal best!</b>` : `<small>Best: ${previousBest} KOs</small>`}${owned ? "" : `<small class="evo-rush-not-owned">${escapeHtml(family)} isn't in your garage yet.</small>`}</div></div><ol class="evo-rush-board">${board.slice(0, 3).map((car) => `<li class="${car.player ? "player" : ""}"><img src="${car.displayImage}" alt=""><span>${escapeHtml(car.name)}</span><strong>${car.evoKOs || 0} KOs</strong></li>`).join("")}</ol><div class="last-gear-result-stats evo-rush-result-stats"><p><span>Ring-Outs Taken</span><strong>${player.evoRingOuts || 0}</strong></p><p><span>Perfect Rams</span><strong>${lastGearState.stats.perfectRams || 0}</strong></p><p><span>Biggest Hit</span><strong>${Math.round(lastGearState.stats.biggestHit)}</strong></p></div></div>`;
+}
+
+async function lastGearEvoShare() {
+  const player = lastGearPlayer();
+  if (!player) return;
+  const kos = player.evoKOs || 0;
+  const pageUrl = /^https?:/.test(location.protocol) ? `${location.origin}${location.pathname}` : "";
+  const text = `I got ${kos} KO${kos === 1 ? "" : "s"} and evolved into ${player.name} in GearBorn Evo Rush!${pageUrl ? ` ${pageUrl}` : ""}`;
+  let blob = null;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1350;
+    const ctx = canvas.getContext("2d");
+    const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, "#101a2b"); bg.addColorStop(1, "#05070c");
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.textAlign = "center"; ctx.fillStyle = "#ffc857"; ctx.font = "64px 'Bowlby One', sans-serif"; ctx.fillText("EVO RUSH", 540, 140);
+    const art = new Image(); art.src = player.displayImage; await art.decode();
+    const scale = Math.min(900 / art.naturalWidth, 620 / art.naturalHeight), w = art.naturalWidth * scale, h = art.naturalHeight * scale;
+    ctx.drawImage(art, 540 - w / 2, 230 + (620 - h) / 2, w, h);
+    ctx.fillStyle = "#ffffff"; ctx.font = "72px 'Bowlby One', sans-serif"; ctx.fillText(player.name.toUpperCase(), 540, 970);
+    ctx.fillStyle = "#52c7ff"; ctx.font = "700 44px 'Space Grotesk', sans-serif"; ctx.fillText(`${kos} KOs  ·  FORM ${(player.evoForm || 0) + 1} OF 3  ·  60 SECONDS`, 540, 1050);
+    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.font = "600 36px 'Space Grotesk', sans-serif"; ctx.fillText("GearBorn: Engines Evolved", 540, 1250);
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  } catch (error) { blob = null; }
+  try {
+    const file = blob ? new File([blob], "gearborn-evo-rush.png", { type: "image/png" }) : null;
+    if (file && navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+    if (!blob && navigator.share) { await navigator.share({ text }); return; }
+  } catch (error) { if (error?.name === "AbortError") return; }
+  if (blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob); link.download = "gearborn-evo-rush.png"; link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+    return;
+  }
+  try { await navigator.clipboard?.writeText(text); } catch (error) { /* Nothing else to try. */ }
+}
+
+function openEvoRushPick(reroll = true) {
+  if (lastGearState) stopLastGearBeta(false);
+  if (typeof viewIsActive === "function" && !viewIsActive("last-gear")) showView("last-gear");
+  if (el.lastGearBeta) el.lastGearBeta.hidden = true;
+  const crewScreen = document.getElementById("last-gear-crew-select");
+  if (crewScreen) crewScreen.hidden = true;
+  const screen = document.getElementById("evo-rush-pick");
+  if (screen) screen.hidden = false;
+  if (reroll || !lastGearEvoPickIds.length) lastGearEvoRollPicks();
+  renderEvoRushPick();
+  window.scrollTo?.({ top: 0 });
+}
+
+function closeEvoRushPick() {
+  const screen = document.getElementById("evo-rush-pick");
+  if (screen) screen.hidden = true;
+  showView("beta");
+  if (typeof openBetaPrototypeIntro === "function") openBetaPrototypeIntro();
+}
+
+function renderEvoRushPick() {
+  const grid = document.getElementById("evo-rush-picks");
+  if (!grid) return;
+  const best = document.getElementById("evo-rush-best");
+  if (best) {
+    const record = state.evoRushBest;
+    const bestCar = record?.carId ? cars.find((car) => car.id === record.carId) : null;
+    best.textContent = record?.kos ? `Personal best: ${record.kos} KOs${bestCar ? ` with ${bestCar.evolutions[record.form || 0]?.name || bestCar.family}` : ""}` : "No personal best yet. Set one.";
+  }
+  grid.innerHTML = lastGearEvoPickIds.map((carId) => {
+    const line = cars.find((car) => car.id === carId);
+    if (!line) return "";
+    const owned = isSelectablePlayerCar(carId), special = lastGearSpecialFor({ carId }), type = lastGearTypeFor(carId), forms = line.evolutions.slice(0, 3);
+    return `<article class="convoy-stage-side convoy-stage-side-player last-gear-crew-select-card evo-rush-card"><span class="convoy-stage-side-kicker">${owned ? "In your garage" : "New to you"}</span><button class="convoy-stage-car-display convoy-stage-car-picker-button filled" type="button" data-evo-rush-pick="${carId}" aria-label="Start Evo Rush with ${escapeHtml(forms[0].name)}"><img src="${imageFor(forms[0], "display")}" alt="${escapeHtml(forms[0].name)}"></button><strong class="convoy-stage-car-name">${escapeHtml(forms[0].name)}</strong><span class="last-gear-crew-select-meta">${type} · ${escapeHtml(special.name)}</span><div class="evo-rush-strip" aria-label="Evolution line">${forms.map((form, index) => `<span class="${index === 0 ? "known" : "hidden-form"}"><img src="${imageFor(form, "display")}" alt=""><em>${index === 0 ? "Start" : `${lastGearEvoTuning.evolveAt[index - 1]} KOs`}</em></span>`).join("")}</div><button class="story-primary evo-rush-go" type="button" data-evo-rush-pick="${carId}">Race</button></article>`;
+  }).join("");
+}
+
+function startEvoRush(carId) {
+  if (!cars.some((car) => car.id === carId)) return;
+  lastGearEvoPendingCarId = carId;
+  startLastGearBeta();
+}
+
+document.getElementById("evo-rush-picks")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-evo-rush-pick]");
+  if (button) startEvoRush(button.dataset.evoRushPick);
+});
+document.getElementById("evo-rush-back")?.addEventListener("click", closeEvoRushPick);
+document.getElementById("evo-rush-reroll")?.addEventListener("click", () => { lastGearEvoRollPicks(); renderEvoRushPick(); });
+document.getElementById("evo-rush-start")?.addEventListener("click", () => openEvoRushPick(true));
+document.getElementById("last-gear-evo-share")?.addEventListener("click", lastGearEvoShare);
+
+// -- Animated crowd: tiered stands ringing the arena --------------------------------
+// Procedural, top-down fans in world space just outside the platform. They bob with
+// the crowd's excitement, erupt around ring-outs, fire camera flashes, hold up signs,
+// and run a stadium wave when things are calm. Only on-screen fans are drawn.
+const lastGearCrowdTuning = {
+  innerRadius: 1.2,
+  rows: 8,
+  rowGap: 46,
+  seatGap: 36,
+  aisleEvery: Math.PI / 6,
+  baseExcitement: 0.15,
+  decayPerSecond: 0.18,
+  flashesPerSecond: 34,
+  pulseMs: 1800,
+  waveEveryMs: 24000,
+  waveSpeed: 1.6,
+  boardText: ["LAST GEAR", "GEARBORN", "ENGINES EVOLVED", "SPINDELL LABS"]
+};
+const lastGearCrowdEventBumps = {
+  gearOut: 0.5, koStreak: 0.6, perfectRam: 0.35, evolve: 0.6, finalTwo: 0.5, suddenDeath: 0.4,
+  evoFinal: 0.5, winner: 1, evoEnd: 1, swap: 0.15, burnout: 0.2, lastLife: 0.3, matchStart: 0.5,
+  duelStart: 0.5, rallyStart: 0.5, evoStart: 0.6
+};
+const lastGearCrowdPalettes = {
+  mixed: ["#3f86b3", "#b8944a", "#b5654d", "#36937f", "#aeb6c2", "#7d64a8", "#a94d6a", "#2b6588", "#5b6475"],
+  blue: ["#3f86b3", "#2b6588", "#6fa9cf", "#1d4d6e", "#aeb6c2"],
+  red: ["#b54a4a", "#8f3434", "#cf7373", "#b5654d", "#aeb6c2"]
+};
+const lastGearCrowdSkins = ["#d9b08f", "#c08f6b", "#9c6a48", "#7a4f35", "#523525", "#e0c0a3"];
+
+function lastGearCrowdReducedMotion() {
+  if (typeof reduceMotionEnabled === "function") return reduceMotionEnabled();
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
+}
+
+function lastGearCrowdBuild() {
+  const T = lastGearCrowdTuning;
+  const { cx, cy } = lastGearArena;
+  const inner = lastGearArena.radius * T.innerRadius;
+  const rally = typeof lastGearFormat === "function" && lastGearFormat().teams;
+  const fans = [];
+  for (let row = 0; row < T.rows; row += 1) {
+    const radius = inner + row * T.rowGap;
+    const count = Math.floor((Math.PI * 2 * radius) / T.seatGap);
+    for (let i = 0; i < count; i += 1) {
+      const angle = (Math.PI * 2 * i) / count + (row % 2 ? Math.PI / count : 0);
+      const aisleOffset = ((angle % T.aisleEvery) + T.aisleEvery) % T.aisleEvery;
+      if (aisleOffset < (T.seatGap * 0.9) / radius || Math.random() < 0.06) continue;
+      const x = cx + Math.cos(angle) * radius;
+      const palette = rally ? (x < cx ? lastGearCrowdPalettes.blue : lastGearCrowdPalettes.red) : lastGearCrowdPalettes.mixed;
+      fans.push({
+        x,
+        y: cy + Math.sin(angle) * radius,
+        angle,
+        row,
+        phase: Math.random() * Math.PI * 2,
+        speed: 5 + Math.random() * 4,
+        shirt: palette[Math.floor(Math.random() * palette.length)],
+        skin: lastGearCrowdSkins[Math.floor(Math.random() * lastGearCrowdSkins.length)],
+        sign: Math.random() < 0.05 ? (Math.random() < 0.5 ? "#ffc857" : "#f4f7fb") : null,
+        hype: 0.6 + Math.random() * 0.6
+      });
+    }
+  }
+  return { fans, inner, excitement: 0.4, pulses: [], flashes: [], waveAt: -Infinity, nextWaveAt: 6000 + Math.random() * 6000 };
+}
+
+function lastGearCrowd() {
+  if (!lastGearState) return null;
+  if (!lastGearState.crowd) lastGearState.crowd = lastGearCrowdBuild();
+  return lastGearState.crowd;
+}
+
+function lastGearCrowdOnEvent(eventKey) {
+  const crowd = lastGearCrowd();
+  const bump = lastGearCrowdEventBumps[eventKey];
+  if (!crowd || !bump) return;
+  crowd.excitement = Math.min(1, crowd.excitement + bump);
+}
+
+function lastGearCrowdPulse(x, y, strength = 1) {
+  const crowd = lastGearCrowd();
+  if (!crowd) return;
+  const angle = Math.atan2(y - lastGearArena.cy, x - lastGearArena.cx);
+  crowd.pulses.push({ angle, t0: lastGearLocalNow(), strength });
+  crowd.excitement = Math.min(1, crowd.excitement + 0.25 * strength);
+  for (let i = 0; i < Math.round(26 * strength); i += 1) {
+    const flashAngle = angle + (Math.random() - 0.5) * 0.9;
+    const radius = crowd.inner + Math.random() * lastGearCrowdTuning.rows * lastGearCrowdTuning.rowGap;
+    crowd.flashes.push({ x: lastGearArena.cx + Math.cos(flashAngle) * radius, y: lastGearArena.cy + Math.sin(flashAngle) * radius, ttl: 140 + Math.random() * 120, delay: Math.random() * 500 });
+  }
+}
+
+function lastGearCrowdUpdate(dt, now) {
+  const crowd = lastGearCrowd();
+  if (!crowd) return;
+  const T = lastGearCrowdTuning;
+  let floor = T.baseExcitement;
+  if (lastGearState.suddenDeath) floor = 0.35;
+  if (lastGearState.evo?.final10Called) floor = 0.55;
+  if (lastGearState.finished) floor = 0.9;
+  crowd.excitement = Math.max(floor, crowd.excitement - T.decayPerSecond * dt);
+  crowd.pulses = crowd.pulses.filter((pulse) => now - pulse.t0 < T.pulseMs);
+  if (now >= crowd.nextWaveAt && crowd.excitement < 0.45 && !lastGearState.finished) {
+    crowd.waveAt = now;
+    crowd.nextWaveAt = now + T.waveEveryMs + Math.random() * 8000;
+  }
+  if (lastGearCrowdReducedMotion()) {
+    crowd.flashes.length = 0;
+    return;
+  }
+  crowd.flashes.forEach((flash) => {
+    if (flash.delay > 0) flash.delay -= dt * 1000;
+    else flash.ttl -= dt * 1000;
+  });
+  crowd.flashes = crowd.flashes.filter((flash) => flash.ttl > 0);
+  const spawn = T.flashesPerSecond * crowd.excitement * crowd.excitement * dt;
+  for (let i = 0; i < Math.floor(spawn) + (Math.random() < spawn % 1 ? 1 : 0); i += 1) {
+    const fan = crowd.fans[Math.floor(Math.random() * crowd.fans.length)];
+    if (fan) crowd.flashes.push({ x: fan.x, y: fan.y, ttl: 120 + Math.random() * 100, delay: 0 });
+  }
+}
+
+function lastGearAngleGap(a, b) {
+  return Math.abs(((a - b) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI);
+}
+
+function drawLastGearCrowd(ctx) {
+  const crowd = lastGearCrowd();
+  if (!crowd) return;
+  const T = lastGearCrowdTuning;
+  const { cx, cy } = lastGearArena;
+  const now = lastGearLocalNow();
+  const t = performance.now() / 1000;
+  const still = lastGearCrowdReducedMotion();
+  const ratio = window.devicePixelRatio || 1;
+  const zoom = lastGearArena.zoom || 1;
+  const halfW = ((el.lastGearCanvas?.width || 960) / ratio / 2) / zoom + 60;
+  const halfH = ((el.lastGearCanvas?.height || 620) / ratio / 2) / zoom + 60;
+  const camX = lastGearCamera.x;
+  const camY = lastGearCamera.y;
+  const outer = crowd.inner + T.rows * T.rowGap;
+  const nearest = Math.hypot(Math.max(0, Math.abs(camX - cx) - halfW), Math.max(0, Math.abs(camY - cy) - halfH));
+  const farthest = Math.hypot(Math.abs(camX - cx) + halfW, Math.abs(camY - cy) + halfH);
+  if (farthest < crowd.inner - 60 || nearest > outer + 60) return;
+
+  ctx.save();
+  for (let row = 0; row < T.rows; row += 1) {
+    ctx.strokeStyle = row % 2 ? "#121a27" : "#0e1520";
+    ctx.lineWidth = T.rowGap;
+    ctx.beginPath();
+    ctx.arc(cx, cy, crowd.inner + row * T.rowGap, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
+  ctx.lineWidth = T.seatGap * 0.8;
+  for (let angle = 0; angle < Math.PI * 2; angle += T.aisleEvery) {
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * (crowd.inner - T.rowGap / 2), cy + Math.sin(angle) * (crowd.inner - T.rowGap / 2));
+    ctx.lineTo(cx + Math.cos(angle) * (outer - T.rowGap / 2), cy + Math.sin(angle) * (outer - T.rowGap / 2));
+    ctx.stroke();
+  }
+  const railR = crowd.inner - T.rowGap / 2 - 14;
+  ctx.strokeStyle = "#070a10";
+  ctx.lineWidth = 22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, railR, 0, Math.PI * 2);
+  ctx.stroke();
+  const heat = crowd.excitement;
+  ctx.strokeStyle = heat > 0.6 ? `rgba(255, 200, 87, ${0.55 + heat * 0.4})` : `rgba(82, 199, 255, ${0.45 + heat * 0.4})`;
+  ctx.lineWidth = 4;
+  ctx.shadowColor = ctx.strokeStyle;
+  ctx.shadowBlur = 10 + heat * 16;
+  ctx.beginPath();
+  ctx.arc(cx, cy, railR - 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  const boardText = lastGearArenaTheme().boards || T.boardText;
+  ctx.font = "900 15px 'Space Grotesk', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let i = 0; i < 20; i += 1) {
+    const angle = (Math.PI * 2 * i) / 20 + Math.PI / 20;
+    const bx = cx + Math.cos(angle) * (railR + 2);
+    const by = cy + Math.sin(angle) * (railR + 2);
+    if (Math.abs(bx - camX) > halfW + 120 || Math.abs(by - camY) > halfH + 120) continue;
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.fillStyle = "#0b111c";
+    ctx.fillRect(-90, -11, 180, 22);
+    ctx.fillStyle = i % 2 ? "#ffc857" : "#52c7ff";
+    ctx.fillText(boardText[i % boardText.length], 0, 1);
+    ctx.restore();
+  }
+
+  const waveAngle = Number.isFinite(crowd.waveAt) ? -Math.PI / 2 + ((now - crowd.waveAt) / 1000) * T.waveSpeed : null;
+  const waveLive = waveAngle !== null && waveAngle < Math.PI * 1.5 + 0.4;
+  const amp = 0.12 + crowd.excitement * 0.88;
+  crowd.fans.forEach((fan) => {
+    if (Math.abs(fan.x - camX) > halfW || Math.abs(fan.y - camY) > halfH) return;
+    let lift = still ? 0 : Math.max(0, Math.sin(t * fan.speed + fan.phase)) * amp * fan.hype;
+    crowd.pulses.forEach((pulse) => {
+      const gap = lastGearAngleGap(fan.angle, pulse.angle);
+      if (gap > 0.9) return;
+      const fade = 1 - (now - pulse.t0) / T.pulseMs;
+      lift += pulse.strength * Math.exp(-(gap * gap) / 0.18) * fade * (still ? 0.6 : 0.6 + 0.4 * Math.abs(Math.sin(t * 9 + fan.phase)));
+    });
+    if (waveLive) {
+      const gap = lastGearAngleGap(fan.angle, waveAngle);
+      if (gap < 0.5) lift += 0.9 * Math.exp(-(gap * gap) / 0.04);
+    }
+    lift = Math.min(1.4, lift);
+    const scale = 0.8 + lift * 0.2;
+    const toX = -Math.cos(fan.angle);
+    const toY = -Math.sin(fan.angle);
+    const px = -toY;
+    const py = toX;
+    const hx = fan.x + toX * (2 + lift * 3);
+    const hy = fan.y + toY * (2 + lift * 3);
+    ctx.fillStyle = fan.shirt;
+    ctx.beginPath();
+    ctx.ellipse(fan.x, fan.y, 11 * scale, 7 * scale, fan.angle + Math.PI / 2, 0, Math.PI * 2);
+    ctx.fill();
+    if (lift > 0.45) {
+      ctx.fillStyle = fan.skin;
+      ctx.beginPath();
+      ctx.arc(hx + px * 10 * scale + toX * 6, hy + py * 10 * scale + toY * 6, 3 * scale, 0, Math.PI * 2);
+      ctx.arc(hx - px * 10 * scale + toX * 6, hy - py * 10 * scale + toY * 6, 3 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = fan.skin;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 5.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    if (fan.sign && crowd.excitement + lift > 0.55) {
+      ctx.save();
+      ctx.translate(hx + toX * 10, hy + toY * 10);
+      ctx.rotate(fan.angle + Math.PI / 2);
+      ctx.fillStyle = fan.sign;
+      ctx.fillRect(-11, -6, 22, 12);
+      ctx.restore();
+    }
+  });
+  for (let row = 1; row < T.rows; row += 1) {
+    ctx.strokeStyle = `rgba(4, 7, 12, ${Math.min(0.6, row * 0.075)})`;
+    ctx.lineWidth = T.rowGap;
+    ctx.beginPath();
+    ctx.arc(cx, cy, crowd.inner + row * T.rowGap, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  crowd.flashes.forEach((flash) => {
+    if (flash.delay > 0 || Math.abs(flash.x - camX) > halfW || Math.abs(flash.y - camY) > halfH) return;
+    const alpha = Math.min(1, flash.ttl / 120);
+    const glow = ctx.createRadialGradient(flash.x, flash.y, 0, flash.x, flash.y, 22);
+    glow.addColorStop(0, `rgba(255,255,255,${alpha})`);
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(flash.x - 22, flash.y - 22, 44, 44);
+  });
+  ctx.restore();
+}
+
+// -- City arenas: one shape and look per story city ----------------------------------
+// New shapes (oval, hex, twin, cross, diamond) use a signed-distance model in units
+// of the active radius R: negative inside, 0 on the edge. The original four shapes
+// (circle, square, donut, bridge) keep their existing code paths.
+// art: drop a platform image path here (e.g. "assets/lastgear/lg-arena-berlin.png")
+// and it replaces the procedural floor for that city. Null = procedural.
+const lastGearArenaCities = {
+  indianapolis: { name: "Indianapolis", label: "Indianapolis Speedway", shape: "oval", floor: "#1b2230", rim: "#ffc857", glow: "rgba(255, 200, 87, 0.5)", pattern: "checker", boards: ["INDIANAPOLIS", "LAST GEAR", "GEARBORN", "BRICKYARD"], art: null },
+  berlin: { name: "Berlin", label: "Berlin Werk Hex", shape: "hex", floor: "#191c23", rim: "#e5e7eb", glow: "rgba(143, 211, 255, 0.45)", pattern: "grid", boards: ["BERLIN", "LAST GEAR", "GEARBORN", "PRECISION"], art: null },
+  dubai: { name: "Dubai", label: "Dubai Tower Ring", shape: "donut", floor: "#272116", rim: "#ffd27a", glow: "rgba(255, 210, 122, 0.5)", pattern: "rings", boards: ["DUBAI", "LAST GEAR", "GEARBORN", "GOLD RUSH"], art: null },
+  rio: { name: "Rio de Janeiro", label: "Rio Carnival Bowl", shape: "circle", floor: "#12272a", rim: "#3ee6c1", glow: "rgba(62, 230, 193, 0.45)", pattern: "waves", boards: ["RIO", "CARNAVAL", "LAST GEAR", "GEARBORN"], art: null },
+  "los-angeles": { name: "Los Angeles", label: "Los Angeles Block", shape: "square", floor: "#1e192a", rim: "#ff5c8a", glow: "rgba(255, 92, 138, 0.45)", pattern: "grid", boards: ["LOS ANGELES", "LAST GEAR", "GEARBORN", "HOLLYWOOD"], art: null },
+  seoul: { name: "Seoul", label: "Seoul Twin Rings", shape: "twin", floor: "#17172a", rim: "#c084fc", glow: "rgba(192, 132, 252, 0.5)", pattern: "rings", boards: ["SEOUL", "LAST GEAR", "GEARBORN", "NEON NIGHTS"], art: null },
+  "cape-town": { name: "Cape Town", label: "Cape Town Narrow Cape", shape: "bridge", floor: "#182521", rim: "#8fd3ff", glow: "rgba(143, 211, 255, 0.45)", pattern: "stripes", boards: ["CAPE TOWN", "LAST GEAR", "GEARBORN", "TABLE TOP"], art: null },
+  bangalore: { name: "Bengaluru", label: "Bengaluru Crossroads", shape: "cross", floor: "#1b2819", rim: "#6ee7a8", glow: "rgba(110, 231, 168, 0.45)", pattern: "grid", boards: ["BENGALURU", "LAST GEAR", "GEARBORN", "GARDEN CITY"], art: null },
+  space: { name: "Space", label: "Space Diamond", shape: "diamond", floor: "#0c0f22", rim: "#b9a8ff", glow: "rgba(185, 168, 255, 0.55)", pattern: "stars", boards: ["SPACE", "LAST GEAR", "GEARBORN", "ZERO G"], art: null }
+};
+const lastGearArenaDefaultTheme = { name: "", label: "Arena", shape: "circle", floor: "rgba(23, 32, 46, 0.96)", rim: "rgba(255, 200, 87, 0.68)", glow: "rgba(82, 199, 255, 0.48)", pattern: "rings", boards: null, art: null };
+const lastGearSdfShapes = {
+  oval: { halfLength: 0.32, radius: 0.68, pickups: { rare: [0, -0.34], chaos: [0.84, 0.12] } },
+  hex: { apothem: 0.84, pickups: { rare: [0, -0.5], chaos: [0, 0.7] } },
+  twin: { offset: 0.42, radius: 0.58, pickups: { rare: [0, 0], chaos: [-0.86, 0] } },
+  cross: { long: 0.9, wide: 0.34, pickups: { rare: [0, -0.5], chaos: [0, 0.74] } },
+  diamond: { reach: 0.92, pickups: { rare: [0, -0.5], chaos: [0, 0.74] } }
+};
+const lastGearArenaArtImages = {};
+const lastGearArenaIconImages = {};
+
+function lastGearCityArenaSettings(value) {
+  const city = lastGearArenaCities[value];
+  if (city) return { city: value, arena: city.shape };
+  return { city: null, arena: value || "circle" };
+}
+
+function lastGearArenaTheme() {
+  const cityId = lastGearCurrentSettings().city;
+  return lastGearArenaCities[cityId] ? { id: cityId, ...lastGearArenaCities[cityId] } : lastGearArenaDefaultTheme;
+}
+
+// Signed distance in R units for the new shapes; null for the original four.
+function lastGearShapeSdf(shape, ux, uy) {
+  const def = lastGearSdfShapes[shape];
+  if (!def) return null;
+  if (shape === "oval") {
+    const qx = Math.max(Math.abs(ux) - def.halfLength, 0);
+    return Math.hypot(qx, uy) - def.radius;
+  }
+  if (shape === "hex") {
+    let worst = -Infinity;
+    for (let i = 0; i < 3; i += 1) {
+      const angle = (Math.PI / 3) * i;
+      worst = Math.max(worst, Math.abs(ux * Math.cos(angle) + uy * Math.sin(angle)) - def.apothem);
+    }
+    return worst;
+  }
+  if (shape === "twin") return Math.min(Math.hypot(ux - def.offset, uy), Math.hypot(ux + def.offset, uy)) - def.radius;
+  if (shape === "cross") {
+    const box = (hx, hy) => {
+      const qx = Math.abs(ux) - hx;
+      const qy = Math.abs(uy) - hy;
+      return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0);
+    };
+    return Math.min(box(def.long, def.wide), box(def.wide, def.long));
+  }
+  if (shape === "diamond") return (Math.abs(ux) + Math.abs(uy) - def.reach) / Math.SQRT2;
+  return null;
+}
+
+function lastGearSdfBoundary(x, y, now) {
+  const shape = lastGearShape();
+  if (!lastGearSdfShapes[shape]) return null;
+  const radius = lastGearActiveRadius(now);
+  const ux = (x - lastGearArena.cx) / radius;
+  const uy = (y - lastGearArena.cy) / radius;
+  const d = lastGearShapeSdf(shape, ux, uy);
+  const h = 0.01;
+  let nx = lastGearShapeSdf(shape, ux + h, uy) - lastGearShapeSdf(shape, ux - h, uy);
+  let ny = lastGearShapeSdf(shape, ux, uy + h) - lastGearShapeSdf(shape, ux, uy - h);
+  const length = Math.hypot(nx, ny) || 1;
+  nx /= length;
+  ny /= length;
+  return { safe: d <= 0, edge: Math.max(0, 1 + d / 0.5), nx, ny, radius, sdf: d };
+}
+
+function lastGearSdfSafePoint(index) {
+  const shape = lastGearShape();
+  if (!lastGearSdfShapes[shape]) return null;
+  const radius = lastGearActiveRadius();
+  const angle = (Math.PI * 2 * index) / 8 - Math.PI / 2;
+  let reach = 0.62;
+  while (reach > 0.12 && lastGearShapeSdf(shape, Math.cos(angle) * reach, Math.sin(angle) * reach) > -0.12) reach -= 0.03;
+  const x = lastGearArena.cx + Math.cos(angle) * radius * reach;
+  const y = lastGearArena.cy + Math.sin(angle) * radius * reach;
+  return { x, y, angle: Math.atan2(lastGearArena.cy - y, lastGearArena.cx - x) };
+}
+
+function lastGearSdfPickupPoint(slotId, now) {
+  const def = lastGearSdfShapes[lastGearShape()];
+  if (!def) return null;
+  const radius = lastGearActiveRadius(now);
+  const [ux, uy] = def.pickups[slotId] || def.pickups.rare;
+  return { x: lastGearArena.cx + ux * radius, y: lastGearArena.cy + uy * radius };
+}
+
+// The platform as a list of Path2D pieces (unions are drawn piece by piece).
+function lastGearShapePaths(shape, radius) {
+  const { cx, cy } = lastGearArena;
+  const path = () => new Path2D();
+  if (shape === "square") {
+    const half = radius * 0.82;
+    const p = path();
+    p.roundRect(cx - half, cy - half, half * 2, half * 2, 34);
+    return [p];
+  }
+  if (shape === "donut") {
+    const p = path();
+    p.arc(cx, cy, radius, 0, Math.PI * 2);
+    p.moveTo(cx + radius * 0.18, cy);
+    p.arc(cx, cy, radius * 0.18, 0, Math.PI * 2, true);
+    return [p];
+  }
+  if (shape === "bridge") {
+    const halfLength = radius * 0.86;
+    const halfWidth = radius * 0.24;
+    const p = path();
+    p.roundRect(cx - halfLength, cy - halfWidth, halfLength * 2, halfWidth * 2, halfWidth);
+    return [p];
+  }
+  if (shape === "oval") {
+    const def = lastGearSdfShapes.oval;
+    const width = (def.halfLength + def.radius) * radius;
+    const height = def.radius * radius;
+    const p = path();
+    p.roundRect(cx - width, cy - height, width * 2, height * 2, height);
+    return [p];
+  }
+  if (shape === "hex") {
+    const vertex = (lastGearSdfShapes.hex.apothem / Math.cos(Math.PI / 6)) * radius;
+    const p = path();
+    for (let i = 0; i < 6; i += 1) {
+      const angle = (Math.PI / 3) * i + Math.PI / 6;
+      if (i === 0) p.moveTo(cx + Math.cos(angle) * vertex, cy + Math.sin(angle) * vertex);
+      else p.lineTo(cx + Math.cos(angle) * vertex, cy + Math.sin(angle) * vertex);
+    }
+    p.closePath();
+    return [p];
+  }
+  if (shape === "twin") {
+    const def = lastGearSdfShapes.twin;
+    return [-1, 1].map((side) => {
+      const p = path();
+      p.arc(cx + side * def.offset * radius, cy, def.radius * radius, 0, Math.PI * 2);
+      return p;
+    });
+  }
+  if (shape === "cross") {
+    const def = lastGearSdfShapes.cross;
+    const horizontal = path();
+    horizontal.roundRect(cx - def.long * radius, cy - def.wide * radius, def.long * radius * 2, def.wide * radius * 2, 40);
+    const vertical = path();
+    vertical.roundRect(cx - def.wide * radius, cy - def.long * radius, def.wide * radius * 2, def.long * radius * 2, 40);
+    return [horizontal, vertical];
+  }
+  if (shape === "diamond") {
+    const reach = lastGearSdfShapes.diamond.reach * radius;
+    const p = path();
+    p.moveTo(cx, cy - reach);
+    p.lineTo(cx + reach, cy);
+    p.lineTo(cx, cy + reach);
+    p.lineTo(cx - reach, cy);
+    p.closePath();
+    return [p];
+  }
+  const p = path();
+  p.arc(cx, cy, radius, 0, Math.PI * 2);
+  return [p];
+}
+
+function lastGearDrawArenaPattern(ctx, theme, shape, radius) {
+  const { cx, cy } = lastGearArena;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.lineWidth = 3;
+  if (theme.pattern === "grid") {
+    for (let offset = -radius; offset <= radius; offset += 120) {
+      ctx.beginPath();
+      ctx.moveTo(cx + offset, cy - radius);
+      ctx.lineTo(cx + offset, cy + radius);
+      ctx.moveTo(cx - radius, cy + offset);
+      ctx.lineTo(cx + radius, cy + offset);
+      ctx.stroke();
+    }
+  } else if (theme.pattern === "stripes") {
+    for (let offset = -radius * 2; offset <= radius * 2; offset += 110) {
+      ctx.beginPath();
+      ctx.moveTo(cx + offset - radius, cy - radius);
+      ctx.lineTo(cx + offset + radius, cy + radius);
+      ctx.stroke();
+    }
+  } else if (theme.pattern === "waves") {
+    for (let row = -radius; row <= radius; row += 90) {
+      ctx.beginPath();
+      for (let x = -radius; x <= radius; x += 20) {
+        const y = cy + row + Math.sin(x / 70) * 18;
+        if (x === -radius) ctx.moveTo(cx + x, y);
+        else ctx.lineTo(cx + x, y);
+      }
+      ctx.stroke();
+    }
+  } else if (theme.pattern === "checker") {
+    const size = 40;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+    for (let y = -radius; y < radius; y += size) {
+      for (let col = 0; col < 2; col += 1) {
+        if ((Math.round(y / size) + col) % 2) ctx.fillRect(cx - size + col * size, cy + y, size, size);
+      }
+    }
+    for (let ring = 120; ring < radius; ring += 120) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, ring, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } else if (theme.pattern === "stars") {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    for (let i = 0; i < 140; i += 1) {
+      const angle = (i * 2.399963) % (Math.PI * 2);
+      const distance = Math.sqrt(((i * 7919) % 1000) / 1000) * radius;
+      const size = i % 5 ? 2 : 3;
+      ctx.fillRect(cx + Math.cos(angle) * distance, cy + Math.sin(angle) * distance, size, size);
+    }
+  } else {
+    for (let ring = 90; ring < radius; ring += 90) {
+      if (shape === "donut" && ring < radius * 0.38) continue;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ring, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+}
+
+function lastGearDrawArenaDecal(ctx, theme, shape, radius) {
+  if (!theme.id) return;
+  const city = storyCities?.find?.((entry) => entry.id === theme.id);
+  const iconSrc = city?.cityIcon || city?.icon;
+  if (!iconSrc) return;
+  if (!lastGearArenaIconImages[theme.id]) lastGearArenaIconImages[theme.id] = betaMakeImage(iconSrc);
+  const icon = lastGearArenaIconImages[theme.id];
+  if (!icon.complete || !icon.naturalWidth) return;
+  const size = radius * (shape === "donut" || shape === "bridge" ? 0.26 : 0.42);
+  const x = lastGearArena.cx;
+  const y = lastGearArena.cy + (shape === "donut" ? -radius * 0.58 : 0);
+  const scale = Math.min(size / icon.naturalWidth, size / icon.naturalHeight);
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.drawImage(icon, x - (icon.naturalWidth * scale) / 2, y - (icon.naturalHeight * scale) / 2, icon.naturalWidth * scale, icon.naturalHeight * scale);
   ctx.restore();
 }

@@ -16561,6 +16561,79 @@ body {
   box-shadow: inset 0 3px 0 rgba(255, 92, 92, 0.85);
 }
 
+/* -- Evo Rush ------------------------------------------------------------------ */
+/* Results can be taller than the arena (Evo Rush leaderboard): scroll instead of clipping. */
+.last-gear-results {
+  overflow-y: auto;
+  align-content: safe center;
+}
+
+.last-gear-evo-hud {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 200, 87, 0.45);
+  border-radius: 999px;
+  background: rgba(8, 12, 20, 0.8);
+  font-family: var(--font-ui);
+  white-space: nowrap;
+}
+
+.last-gear-evo-hud[hidden] { display: none; }
+.last-gear-evo-hud strong { color: #ffc857; font-family: var(--font-display); font-size: 1.15rem; font-weight: 400; }
+.last-gear-evo-hud.final strong { color: #ff5c5c; animation: evo-rush-pulse 0.6s ease-in-out infinite alternate; }
+.last-gear-evo-hud span { color: #f4f7fb; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.last-gear-evo-hud em { color: rgba(244, 247, 251, 0.6); font-size: 0.7rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase; }
+.last-gear-evo-pips { display: inline-flex; gap: 4px; }
+.last-gear-evo-pips i { width: 10px; height: 10px; border: 1.5px solid rgba(255, 200, 87, 0.7); border-radius: 50%; }
+.last-gear-evo-pips i.on { background: #ffc857; box-shadow: 0 0 8px rgba(255, 200, 87, 0.7); }
+
+@keyframes evo-rush-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+.evo-rush-best { color: #ffc857; font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.evo-rush-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.evo-rush-strip span { display: grid; justify-items: center; gap: 2px; padding: 4px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
+.evo-rush-strip img { width: 100%; height: 44px; object-fit: contain; }
+.evo-rush-strip .hidden-form img { filter: brightness(0) drop-shadow(0 0 3px rgba(255, 200, 87, 0.5)); opacity: 0.75; }
+.evo-rush-strip em { color: rgba(244, 247, 251, 0.6); font-family: var(--font-ui); font-size: 0.62rem; font-style: normal; letter-spacing: 0.05em; text-transform: uppercase; }
+.evo-rush-go { width: 100%; }
+.evo-rush-result-hero { display: grid; grid-template-columns: minmax(120px, 200px) 1fr; align-items: center; gap: 14px; }
+.evo-rush-result-hero img { width: 100%; max-height: 140px; object-fit: contain; }
+.evo-rush-result-hero div { display: grid; gap: 4px; }
+.evo-rush-result-hero strong { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; text-transform: uppercase; }
+.evo-rush-result-hero span { color: #52c7ff; font-family: var(--font-ui); font-weight: 700; }
+.evo-rush-best-badge { justify-self: start; padding: 2px 10px; border-radius: 999px; background: #ffc857; color: #101820; font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.evo-rush-not-owned { color: rgba(62, 230, 193, 0.9); }
+.evo-rush-result-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.evo-rush-board { display: grid; gap: 4px; margin: 10px 0; padding: 0; list-style: none; counter-reset: evo-rank; }
+.evo-rush-board li { display: grid; grid-template-columns: 22px 40px 1fr auto; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); counter-increment: evo-rank; }
+.evo-rush-board li::before { content: counter(evo-rank); color: rgba(244, 247, 251, 0.6); font-family: var(--font-ui); font-weight: 700; }
+.evo-rush-board li.player { box-shadow: inset 0 0 0 1.5px rgba(82, 199, 255, 0.7); }
+.evo-rush-board img { width: 40px; height: 28px; object-fit: contain; }
+.evo-rush-board strong { color: #ffc857; font-family: var(--font-ui); }
+
+@media (max-width: 720px) {
+  .last-gear-evo-hud { top: auto; bottom: 8px; right: 8px; gap: 6px; padding: 4px 10px; }
+  .last-gear-evo-hud em { display: none; }
+  .evo-rush-picks[data-size="3"] { --crew-cols: 1; }
+  .evo-rush-card .convoy-stage-car-display { aspect-ratio: 16 / 7; }
+  .evo-rush-strip img { height: 32px; }
+  .evo-rush-pick .last-gear-crew-select-actions { position: static; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .last-gear-evo-hud.final strong { animation: none; }
+}
+
 /* -- Last Gear: Build Your Crew screen (reuses the Convoy slot cards) ------- */
 .last-gear-crew-select { display: grid; gap: 16px; }
 .last-gear-crew-select[hidden] { display: none; }

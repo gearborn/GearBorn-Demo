@@ -952,6 +952,10 @@
                 <strong>Last Gear</strong>
                 <span>8 GearBorn enter. One leaves the platform.</span>
               </button>
+              <button class="beta-option-card evo-rush-card-entry" id="evo-rush-start" type="button">
+                <strong>Evo Rush</strong>
+                <span>60 seconds. Every KO evolves your car.</span>
+              </button>
               <div class="last-gear-setup-panel" id="last-gear-setup-panel" hidden>
                 <div class="last-gear-setup-grid">
                   <label>Crew Size
@@ -981,10 +985,15 @@
                   </label>
                   <label>Arena
                     <select id="last-gear-setup-arena">
-                      <option value="circle" selected>Classic Circle</option>
-                      <option value="square">Square</option>
-                      <option value="donut">Donut</option>
-                      <option value="bridge">Narrow Bridge</option>
+                      <option value="indianapolis" selected>Indianapolis Speedway (Oval)</option>
+                      <option value="berlin">Berlin Werk (Hex)</option>
+                      <option value="dubai">Dubai Tower Ring (Donut)</option>
+                      <option value="rio">Rio Carnival Bowl (Circle)</option>
+                      <option value="los-angeles">Los Angeles Block (Square)</option>
+                      <option value="seoul">Seoul Twin Rings</option>
+                      <option value="cape-town">Cape Town Narrow Cape (Bridge)</option>
+                      <option value="bangalore">Bengaluru Crossroads (Cross)</option>
+                      <option value="space">Space Diamond</option>
                     </select>
                   </label>
                   <label>Sudden Death
@@ -1163,6 +1172,19 @@
         </section>
 
         <section class="view" id="last-gear-view" aria-label="Last Gear">
+            <div class="last-gear-crew-select evo-rush-pick" id="evo-rush-pick" hidden>
+              <button class="back-link" id="evo-rush-back" type="button">Back</button>
+              <div class="section-heading">
+                <p>Evo Rush</p>
+                <h1>Pick Your Starter</h1>
+              </div>
+              <p class="last-gear-crew-select-intro">Sixty seconds, eight cars. Every KO powers you up: two KOs to evolve, five to hit final form. Pick any starter, even ones you don't own yet.</p>
+              <p class="evo-rush-best" id="evo-rush-best"></p>
+              <div class="last-gear-crew-select-slots evo-rush-picks" id="evo-rush-picks" data-size="3"></div>
+              <div class="last-gear-crew-select-actions">
+                <button class="ghost" id="evo-rush-reroll" type="button">New Picks</button>
+              </div>
+            </div>
             <div class="last-gear-crew-select" id="last-gear-crew-select" hidden>
               <button class="back-link" id="last-gear-crew-back" type="button">Back</button>
               <div class="section-heading"><p>Last Gear</p><h1>Build Your Crew</h1></div>
@@ -1189,6 +1211,7 @@
               </div>
               <div class="last-gear-stage">
                 <canvas id="last-gear-canvas" width="960" height="620" aria-label="Last Gear demolition derby arena"></canvas>
+                <div class="last-gear-evo-hud" id="last-gear-evo-hud" aria-live="polite" hidden></div>
                 <div class="last-gear-item-slot beta-item-slot" id="last-gear-item-slot">
                   <span>Item</span>
                   <div class="beta-item-readout">
@@ -1213,6 +1236,7 @@
                   <div class="modal-actions">
                     <button class="success-button" id="last-gear-restart" type="button">Restart</button>
                     <button class="ghost" id="last-gear-edit-crew" type="button">Edit Crew</button>
+                    <button class="success-button" id="last-gear-evo-share" type="button" hidden>Share</button>
                     <button class="ghost" id="last-gear-finish-exit" type="button">Back</button>
                   </div>
                 </div>

@@ -30,6 +30,7 @@ function mergeState(base, saved) {
     microObjectiveProgress: { ...base.microObjectiveProgress, ...saved.microObjectiveProgress },
     visitedStoryCities: { ...base.visitedStoryCities, ...saved.visitedStoryCities },
     dailyCrankVault: { ...base.dailyCrankVault, ...saved.dailyCrankVault },
+    evoRushBest: { ...base.evoRushBest, ...(saved.evoRushBest || {}) },
     cityProgress: { ...base.cityProgress, ...saved.cityProgress },
     crankVaultInventory: Array.isArray(saved.crankVaultInventory) ? saved.crankVaultInventory : base.crankVaultInventory,
     tunerStats: { ...base.tunerStats, ...saved.tunerStats },
@@ -393,6 +394,11 @@ function sanitizeState() {
   state.lastGearCrew = Array.isArray(state.lastGearCrew)
     ? state.lastGearCrew.slice(0, 5).map((carId) => (carId && cars.some((car) => car.id === carId) && isCarUnlocked(carId) ? carId : null))
     : [];
+  state.evoRushBest = {
+    kos: Math.max(0, Math.floor(Number(state.evoRushBest?.kos) || 0)),
+    carId: cars.some((car) => car.id === state.evoRushBest?.carId) ? state.evoRushBest.carId : null,
+    form: Math.max(0, Math.min(2, Math.floor(Number(state.evoRushBest?.form) || 0)))
+  };
   cars.forEach((car) => {
     const bond = state.bond[car.id] || {};
     state.bond[car.id] = {
