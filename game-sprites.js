@@ -1,6 +1,6 @@
 // ─── SPRITE METRICS: true-shape drawing for GearBorn car art ───────────────
 // Measures each car image once (lazily, on first use) and caches the result
-// by image src. Used by Last Gear and the 2D race (top-down sprites) and by the
+// by image src. Used by Crashout and the 2D race (top-down sprites) and by the
 // drag race (side-view grounding). Never draws a sprite stretched.
 //
 // Metrics (all in the image's natural pixel units):

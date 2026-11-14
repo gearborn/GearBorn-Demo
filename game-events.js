@@ -207,12 +207,6 @@ document.addEventListener("click", (event) => {
     playGearbornHonk(race?.carId || selectedCarIdForMode("drag"));
     return;
   }
-  const battleHonk = event.target.closest("[data-battle-honk]");
-  if (battleHonk) {
-    event.preventDefault();
-    playGearbornHonk(battleState?.carId || selectedCarIdForMode("battle"));
-    return;
-  }
   const honkEmotion = event.target.closest("[data-honk-emotion]");
   if (honkEmotion) {
     event.preventDefault();
@@ -427,35 +421,6 @@ el.storyCityGrid?.addEventListener("click", (event) => {
   selectStoryCity(Number(button.dataset.storyCity));
 });
 el.startStory?.addEventListener("click", () => openBossIntro());
-el.startBattle?.addEventListener("click", () => {
-  if (tutorialActive() && currentTutorialScene().id === "battle") {
-    setTutorialScene("battle");
-    setupTutorialScene();
-    saveState();
-    return;
-  }
-  requestRaceEntry({ kind: "battle" }, () => beginBattle("battle"));
-});
-el.battleList?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-battle-boss]");
-  if (!button || button.disabled) return;
-  if (tutorialActive() && button.dataset.battleBoss === "tutorial-tutorque") return;
-  state.selectedBattleBoss = button.dataset.battleBoss;
-  saveState();
-  render();
-});
-el.battleActions?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-battle-move]");
-  if (!button || button.disabled) return;
-  handleBattleMove(button.dataset.battleMove);
-});
-el.battleActions?.addEventListener("touchstart", (event) => {
-  const button = event.target.closest("[data-battle-move]");
-  if (!button || button.disabled) return;
-  event.preventDefault();
-  handleBattleMove(button.dataset.battleMove);
-}, { passive: false });
-bindActionButton(el.battleNextTurn, nextBattleTurn);
 bindActionButton(el.rotationTipDismiss, () => hideBetaRotationTip(true));
 el.continueBoss?.addEventListener("click", () => {
   closeBossIntro();
@@ -1132,3 +1097,112 @@ function startLoadingExperience() {
   window.setTimeout(complete, 3600);
   return { complete };
 }
+
+// ─── Garage Showcase + Upgrade from results (3C) ─────────────────────────────
+// The Showcase detail card carries the same buttons as a lineup card; route them to the same actions.
+document.getElementById("garage-showcase")?.addEventListener("click", (event) => {
+  const step = event.target.closest("[data-evolution-step]");
+  if (step) {
+    const [carId, direction] = step.dataset.evolutionStep.split(":");
+    changeGarageEvolution(carId, direction);
+    return;
+  }
+  const upgrade = event.target.closest("[data-upgrade-car]");
+  if (upgrade) {
+    openUpgradeModal(upgrade.dataset.upgradeCar);
+    return;
+  }
+  const evolve = event.target.closest("[data-evolve-car]");
+  if (evolve) {
+    showPendingEvolution(evolve.dataset.evolveCar);
+    return;
+  }
+  const collapse = event.target.closest("[data-collapse-garage-card]");
+  if (collapse) {
+    garageShowcaseFocusId = "";
+    renderGarage();
+    return;
+  }
+  const swap = event.target.closest("[data-showcase-swap]");
+  if (swap) {
+    openGarageShowcasePicker(Number(swap.dataset.showcaseSwap));
+    return;
+  }
+  const clear = event.target.closest("[data-showcase-clear]");
+  if (clear) {
+    clearGarageShowcaseSlot(Number(clear.dataset.showcaseClear));
+    return;
+  }
+  const focus = event.target.closest("[data-showcase-focus]");
+  if (!focus) return;
+  const carId = focus.dataset.showcaseFocus;
+  garageShowcaseFocusId = garageShowcaseFocusId === carId ? "" : carId;
+  renderGarage();
+  if (garageShowcaseFocusId) {
+    requestAnimationFrame(() => document.querySelector("#garage-showcase-detail .showcase-detail-card")?.scrollIntoView({ block: "nearest", behavior: reduceMotionEnabled() ? "auto" : "smooth" }));
+  }
+});
+
+document.getElementById("crashout-upgrade")?.addEventListener("click", () => {
+  const playerCar = crashoutState?.cars?.find((car) => car.player);
+  const carId = playerCar && cars.some((car) => car.id === playerCar.carId) ? playerCar.carId : (state.crashoutSelectedCar || "");
+  openGarageFromResult(carId);
+});
+
+// ─── Drag: hold SHIFT for the burnout (3H) ──────────────────────────────────
+document.addEventListener("keydown", (event) => {
+  if (!race?.active || typeof normalizeKey !== "function") return;
+  if (normalizeKey(event) === state.settings.shiftKey) setDragShiftHeld(true);
+});
+document.addEventListener("keyup", (event) => {
+  if (!race || typeof normalizeKey !== "function") return;
+  if (normalizeKey(event) === state.settings.shiftKey) setDragShiftHeld(false);
+});
+el.shiftButton?.addEventListener("pointerdown", () => setDragShiftHeld(true));
+["pointerup", "pointercancel", "pointerleave"].forEach((type) => el.shiftButton?.addEventListener(type, () => setDragShiftHeld(false)));
+
+// ─── 3J: phones give a live race the whole screen ───────────────────────────
+// While a Drag, Gear Prix or Crashout/Evo Rush race is running on a phone (narrow
+// portrait or short landscape), body gets .gb-racing: the top bar and menu
+// hide, the race scrolls to the top, and the race canvas grows to fill the screen.
+// Polled (5x a second) so no race start/finish path needs to change.
+const gbPhoneLayoutQuery = typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 560px), (max-height: 500px)") : null;
+let gbRacingLive = false;
+let gbRacingPhone = false;
+
+function gbPhoneLayout() {
+  return Boolean(gbPhoneLayoutQuery?.matches);
+}
+
+function gbRaceIsLive() {
+  const view = document.querySelector(".view.active")?.id;
+  if (view === "play-view") return Boolean(typeof race !== "undefined" && race?.active);
+  // Gear Prix counts from the loading countdown, so the layout doesn't jump at the green light.
+  if (view === "beta-view") return Boolean(typeof betaState !== "undefined" && betaState && !betaState.finished && document.getElementById("beta-race")?.hidden === false);
+  if (view === "crashout-arena-view") return Boolean(typeof crashoutState !== "undefined" && crashoutState?.active && !crashoutState.finished);
+  return false;
+}
+
+function gbScrollRaceIntoView() {
+  const view = document.querySelector(".view.active");
+  const target = view?.id === "play-view" ? view.querySelector(".track-shell") : view?.id === "crashout-arena-view" ? view.querySelector("#crashout-beta") : view;
+  if (!target) return;
+  window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - 4), behavior: "auto" });
+}
+
+function gbSyncRacingLayout() {
+  const live = gbRaceIsLive();
+  const phone = gbPhoneLayout();
+  if (live === gbRacingLive && phone === gbRacingPhone) return;
+  const started = live && !gbRacingLive;
+  gbRacingLive = live;
+  gbRacingPhone = phone;
+  document.body.classList.toggle("gb-racing", live);
+  requestAnimationFrame(() => {
+    if (live && phone && started) gbScrollRaceIntoView();
+    if (typeof resizeBetaCanvas === "function") resizeBetaCanvas();
+  });
+}
+
+setInterval(gbSyncRacingLayout, 200);
+window.addEventListener("resize", () => requestAnimationFrame(gbSyncRacingLayout));

@@ -2,6 +2,17 @@
 function migrateSave(saved) {
   if (!saved || typeof saved !== "object") return saved;
   const version = Number(saved.saveVersion) || 1;
+  // 3L: Crashout's save keys used to be named "lastGear…". Move them over once;
+  // a key already saved under the new name wins.
+  const renameKey = (obj, from, to) => {
+    if (!obj || typeof obj !== "object" || !(from in obj)) return;
+    if (!(to in obj)) obj[to] = obj[from];
+    delete obj[from];
+  };
+  renameKey(saved, "lastGearSelectedCar", "crashoutSelectedCar");
+  renameKey(saved, "lastGearCrew", "crashoutCrew");
+  renameKey(saved.tunerStats, "lastGearMatchesWon", "crashoutMatchesWon");
+  renameKey(saved.tunerStats, "lastGearMatchesLost", "crashoutMatchesLost");
   // v1 -> v2: no shape changes; version field introduced.
   // Future migrations go here, e.g.: if (version < 3) { ...transform... }
   saved.saveVersion = defaultState.saveVersion;
@@ -390,9 +401,9 @@ function sanitizeState() {
   state.storyCarChosen = Boolean(state.storyCarChosen);
   if (!cars.some((car) => car.id === state.selectedStoryCar) || !isCarUnlocked(state.selectedStoryCar)) state.selectedStoryCar = cars[0].id;
   if (!cars.some((car) => car.id === state.selectedTimeCar) || !isCarUnlocked(state.selectedTimeCar)) state.selectedTimeCar = cars[0].id;
-  if (state.lastGearSelectedCar && (!cars.some((car) => car.id === state.lastGearSelectedCar) || !isCarUnlocked(state.lastGearSelectedCar))) state.lastGearSelectedCar = null;
-  state.lastGearCrew = Array.isArray(state.lastGearCrew)
-    ? state.lastGearCrew.slice(0, 5).map((carId) => (carId && cars.some((car) => car.id === carId) && isCarUnlocked(carId) ? carId : null))
+  if (state.crashoutSelectedCar && (!cars.some((car) => car.id === state.crashoutSelectedCar) || !isCarUnlocked(state.crashoutSelectedCar))) state.crashoutSelectedCar = null;
+  state.crashoutCrew = Array.isArray(state.crashoutCrew)
+    ? state.crashoutCrew.slice(0, 5).map((carId) => (carId && cars.some((car) => car.id === carId) && isCarUnlocked(carId) ? carId : null))
     : [];
   state.evoRushBest = {
     kos: Math.max(0, Math.floor(Number(state.evoRushBest?.kos) || 0)),

@@ -23,7 +23,7 @@ function openBetaVsIntro() {
   el.betaMode?.classList.add("vs-only");
   setBetaIntroCopy({
     kicker: "Training Academy",
-    title: "Vs. Race",
+    title: "Gear Prix",
     subtitle: "Choose a race format.",
     copy: "Run full circuit races with the new racing engine."
   });

@@ -510,7 +510,7 @@ function dailyRotatingGoalType() {
 }
 
 function dailyRotatingGoalLabel() {
-  const labels = { drag: "Win 3 Drag Races", vs: "Win 3 Vs Races", battle: "Win 3 Battles" };
+  const labels = { drag: "Win 3 Drag Races", vs: "Win 3 Gear Prix races", battle: "Win 3 Crashouts" };
   return labels[dailyRotatingGoalType()] || labels.drag;
 }
 
@@ -1725,13 +1725,13 @@ function tunerStatTotalRaces() {
     + (s.dragRacesWon || 0) + (s.dragRacesLost || 0)
     + (s.battlesWon || 0) + (s.battlesLost || 0)
     + (s.headToHeadWon || 0) + (s.headToHeadLost || 0)
-    + (s.lastGearMatchesWon || 0) + (s.lastGearMatchesLost || 0);
+    + (s.crashoutMatchesWon || 0) + (s.crashoutMatchesLost || 0);
 }
 
 function tunerStatTotalWins() {
   const s = state.tunerStats || {};
   return (s.storyRacesWon || 0) + (s.dragRacesWon || 0) + (s.battlesWon || 0)
-    + (s.headToHeadWon || 0) + (s.lastGearMatchesWon || 0);
+    + (s.headToHeadWon || 0) + (s.crashoutMatchesWon || 0);
 }
 
 function tunerStatWinRate() {
@@ -2021,7 +2021,6 @@ function selectedCarIdForMode(mode) {
   if (mode === "drag") return isSelectablePlayerCar(state.selectedCar) ? state.selectedCar : fallback;
   if (mode === "time") return isSelectablePlayerCar(state.selectedTimeCar) ? state.selectedTimeCar : fallback;
   if (mode === "beta") return isSelectablePlayerCar(state.selectedCar) ? state.selectedCar : fallback;
-  if (mode === "battle") return isSelectablePlayerCar(state.selectedStoryCar) ? state.selectedStoryCar : fallback;
   return isSelectablePlayerCar(state.selectedStoryCar) ? state.selectedStoryCar : fallback;
 }
 
@@ -2044,7 +2043,6 @@ function renderFlowScreens() {
   document.querySelector("#play-view")?.classList.toggle("race-step", modeFlow.drag === "race");
   document.querySelector("#time-trial-view")?.classList.toggle("race-step", modeFlow.time === "race");
   document.querySelector("#boss-view")?.classList.toggle("race-step", modeFlow.boss === "race");
-  document.querySelector("#battle-view")?.classList.toggle("race-step", modeFlow.battle === "race");
   document.querySelector("#story-view")?.classList.toggle("story-race-step", modeFlow.story === "race");
   el.campaignList?.classList.toggle("story-hidden", !storyReplayOpen);
 }
@@ -2087,7 +2085,6 @@ function backFromMode(mode) {
   if (step === "race") {
     if (mode === "drag" && race) race.active = false;
   if ((mode === "time" || mode === "boss") && verticalRace) verticalRace.active = false;
-  if (mode === "battle") battleState = null;
     setFlowStep(mode, "match");
     return;
   }
@@ -2170,13 +2167,11 @@ function renderCarTiles() {
   if (el.dragCarGrid) el.dragCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "drag")).join("");
   if (el.timeCarGrid) el.timeCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "time")).join("");
   if (el.bossCarGrid) el.bossCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "boss")).join("");
-  if (el.battleCarGrid) el.battleCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "battle")).join("");
   if (el.storyCarGrid) el.storyCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "story")).join("");
   if (el.betaCarGrid) el.betaCarGrid.innerHTML = available.map((car) => carTileMarkup(car, "beta")).join("");
   renderCarSelectPreview("drag", el.dragCarSelectPreview);
   renderCarSelectPreview("time", el.timeCarSelectPreview);
   renderCarSelectPreview("boss", el.bossCarSelectPreview);
-  renderCarSelectPreview("battle", el.battleCarSelectPreview);
   renderCarSelectPreview("story", el.storyCarSelectPreview);
   renderCarSelectPreview("beta", el.betaCarSelectPreview);
 }
@@ -2456,15 +2451,16 @@ function render() {
   const needsDrag = activeView === "play-view" || embeddedViewIs("play");
   const needsTime = activeView === "time-trial-view" || embeddedViewIs("time-trial");
   const needsBoss = activeView === "boss-view" || embeddedViewIs("boss");
-  const needsBattle = activeView === "battle-view" || embeddedViewIs("battle");
   const needsStory = activeView === "story-view";
-  const needsCarSelect = needsDrag || needsTime || needsBoss || needsBattle || needsStory || tutorialActive();
+  const needsCarSelect = needsDrag || needsTime || needsBoss || needsStory || tutorialActive();
   renderSproxWallet();
   updateTunerHeadshot();
   if (activeView === "menu-view") {
     renderMenuGoal();
     renderUnlockMarkers();
+    if (typeof renderEvoRushMenuTile === "function") renderEvoRushMenuTile();
   }
+  if (activeView === "crashout-view" && typeof renderCrashoutRingPicker === "function") renderCrashoutRingPicker();
   renderTutorial();
   renderFlowScreens();
   if (needsCarSelect) {
@@ -2474,7 +2470,6 @@ function render() {
   }
   if (needsStory) renderCampaign();
   if (needsBoss) renderBosses();
-  if (needsBattle) renderBattles();
   if (needsTime) {
     renderTimeTargets();
     renderTimeTrackGrid();
@@ -2536,8 +2531,8 @@ function renderVerticalSelects() {
 }
 
 function pickerTargetCarId(target) {
-  if (target === "lastgear-crew") return carPickerState.highlighted;
-  if (target === "lastgear") return state.lastGearSelectedCar || state.selectedCar;
+  if (target === "crashout-crew" || target === "showcase") return carPickerState.highlighted;
+  if (target === "crashout") return state.crashoutSelectedCar || state.selectedCar;
   if (target === "drag") return state.selectedCar;
   if (target === "time") return state.selectedTimeCar;
   return state.selectedStoryCar;
@@ -2545,7 +2540,7 @@ function pickerTargetCarId(target) {
 
 function setPickerTargetCarId(target, carId) {
   if (!isSelectablePlayerCar(carId)) return;
-  if (target === "lastgear") state.lastGearSelectedCar = carId;
+  if (target === "crashout") state.crashoutSelectedCar = carId;
   else if (target === "drag") state.selectedCar = carId;
   else if (target === "time") state.selectedTimeCar = carId;
   else state.selectedStoryCar = carId;
@@ -2588,11 +2583,11 @@ function openCarPicker(targetOrOptions) {
   carPickerState.customFilter = typeof options.filter === "function" ? options.filter : null;
   carPickerState.onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
   carPickerState.search = "";
-  carPickerState.filters = { favorites: false, recent: false, ready: false, types: [] };
+  carPickerState.filters = { favorites: false, recent: false, ready: false, showcase: showcasePickerFilterDefault(target), types: [] };
   carPickerState.sort = "level-desc";
   carPickerState.highlighted = options.selectedCarId || pickerTargetCarId(target) || filteredPickerCars()[0]?.id || "";
   const title = document.querySelector("#car-picker-title");
-  if (title) title.textContent = options.title || (target === "lastgear" ? "Choose your Last Gear racer" : "Choose GearBorn");
+  if (title) title.textContent = options.title || (target === "crashout" ? "Choose your Crashout racer" : "Choose GearBorn");
   if (el.carPickerSearch) el.carPickerSearch.value = "";
   if (el.carPickerSort) el.carPickerSort.value = "level-desc";
   renderCarPicker();
@@ -2612,7 +2607,7 @@ function closeCarPicker(confirm = false) {
   el.carPickerModal?.setAttribute("aria-hidden", "true");
   carPickerState.customFilter = null;
   carPickerState.onConfirm = null;
-  if (confirm && target === "lastgear" && typeof startLastGearBeta === "function") startLastGearBeta();
+  if (confirm && target === "crashout" && typeof startCrashoutBeta === "function") startCrashoutBeta();
 }
 
 function carPickerTypes() {
@@ -2630,6 +2625,7 @@ function filteredPickerCars() {
     if (carPickerState.filters.favorites && !state.favoriteCarIds.includes(car.id)) return false;
     if (carPickerState.filters.recent && !recentIds.includes(car.id)) return false;
     if (carPickerState.filters.ready && !progress.pendingEvolution) return false;
+    if (carPickerState.filters.showcase && !garageShowcaseIds().includes(car.id)) return false;
     if (carPickerState.filters.types.length && !carPickerState.filters.types.includes(type)) return false;
     if (carPickerState.customFilter && !carPickerState.customFilter(car.id)) return false;
     return true;
@@ -2651,7 +2647,11 @@ function filteredPickerCars() {
 function renderCarPicker() {
   if (!el.carPickerGrid) return;
   const typeChips = carPickerTypes().map((type) => `<button type="button" data-car-picker-type="${type}" class="${carPickerState.filters.types.includes(type) ? "active" : ""}">Type: ${type}</button>`).join("");
+  const showcaseChip = carPickerState.target !== "showcase" && garageShowcaseIds().length
+    ? `<button type="button" data-car-picker-filter="showcase" class="car-picker-showcase-chip ${carPickerState.filters.showcase ? "active" : ""}">★ Showcase</button>`
+    : "";
   el.carPickerFilters.innerHTML = `
+    ${showcaseChip}
     <button type="button" data-car-picker-filter="favorites" class="${carPickerState.filters.favorites ? "active" : ""}">Favorites</button>
     <button type="button" data-car-picker-filter="recent" class="${carPickerState.filters.recent ? "active" : ""}">Recently Used</button>
     <button type="button" data-car-picker-filter="ready" class="${carPickerState.filters.ready ? "active" : ""}">Ready to Evolve</button>
@@ -3248,7 +3248,7 @@ function cityStoryRaceLabel(plan, index) {
   if (plan.type === "trial") return "Time Trial";
   if (plan.type === "circuit") return "4-Car Circuit";
   if (plan.type === "rival") return "Rival Race";
-  if (plan.type === "battle") return "Battle";
+  if (plan.type === "battle") return "Crashout";
   return `Story ${index + 1}`;
 }
 
@@ -4158,7 +4158,7 @@ function convoyStageModeIconHtml(stageType, convoy) {
     return `<img class="convoy-mode-icon" src="assets/items/icon-drag-race.png" alt="Drag Race" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'DRAG'}))">`;
   }
   if (stageType === "battle") {
-    return `<img class="convoy-mode-icon" src="assets/items/icon-battle.png" alt="Battle" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'BATTLE'}))">`;
+    return `<img class="convoy-mode-icon" src="assets/items/icon-battle.png" alt="Crashout" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'CRASHOUT'}))">`;
   }
   if (stageType === "h2h") {
     return `<span class="convoy-mode-icon-stack">
@@ -4354,7 +4354,7 @@ function storyPreviewArtMarkup(level, locked) {
     return displayMarkup(image, level.drag.name, "#ffc857");
   }
   if (level.type === "battle") {
-    return `<div class="story-map-preview" style="background-image:url('assets/maps/map-battle-arena.png')"><span>Arena Battle</span></div>`;
+    return `<div class="story-map-preview" style="background-image:url('assets/maps/map-battle-arena.png')"><span>Arena Crashout</span></div>`;
   }
   if (is2dStoryLevel(level)) {
     return `<canvas class="story-beta-track-preview" data-story-beta-track="${betaTrackIdForStoryTrack(level.track || (level.final ? finalBoss.track : bosses[level.bossIndex]?.track))}" width="420" height="300" aria-label="Circuit race track preview"></canvas>`;
@@ -4458,7 +4458,7 @@ function campaignTypeLabel(level) {
   if (level.type === "pink-slip") return "Pink Slip Race";
   if (level.type === "trial") return "Time Trial";
   if (level.type === "circuit") return level.circuitMode === "race6" ? "6-Car Race" : "4-Car Race";
-  if (level.type === "battle") return "Battle";
+  if (level.type === "battle") return "Crashout";
   if (level.type === "rival") return "Rival Race";
   return "Boss Battle";
 }
@@ -4571,7 +4571,7 @@ function campaignLevelMeta(level, locked) {
   }
   if (level.type === "rival") {
     const rival = rivalTuner();
-    const mechanic = { drag: "Drag Race", bossVertical: "City Sprint", circuitDuel: "Head-to-Head Race", battle: "Battle Mode" }[level.mechanic] || "Rival Race";
+    const mechanic = { drag: "Drag Race", bossVertical: "City Sprint", circuitDuel: "Head-to-Head Race", battle: "Tuner Crashout" }[level.mechanic] || "Rival Race";
     return `${rival.name} · ${mechanic}`;
   }
   return "";
@@ -4632,43 +4632,6 @@ function bossCarDisplayImage(boss) {
   return byCar[boss.car] || "";
 }
 
-function renderBattles() {
-  if (!el.battleList) return;
-  if (tutorialActive() && currentTutorialScene().id === "battle") {
-    el.battleList.innerHTML = `
-      <button class="boss-button active" type="button" data-battle-boss="tutorial-tutorque">
-        <strong>Tutorque</strong>
-        <small>Training Car · Tutorial</small>
-      </button>
-    `;
-    el.battlePreview.innerHTML = `
-      <div class="selection-preview-art">${carMarkupForEvolution(tutorialOpponentCarId, 0, "display")}</div>
-      <div>
-        <strong>Tutorque</strong>
-        <small>Training Car</small>
-      </div>
-    `;
-    return;
-  }
-  el.battleList.innerHTML = bossChallengeBosses.map((boss, index) => {
-    const active = boss.id === state.selectedBattleBoss;
-    const locked = index > state.highestBossIndex;
-    return `
-      <button class="boss-button ${active ? "active" : ""} ${locked ? "locked" : ""}" type="button" data-battle-boss="${boss.id}" ${locked ? "disabled" : ""}>
-        <strong>${index + 1}. ${boss.name}</strong>
-        <small>${locked ? "Locked" : `${boss.car} · ${boss.xp} Sprox`}</small>
-      </button>
-    `;
-  }).join("");
-  const boss = bossChallengeBosses.find((item) => item.id === state.selectedBattleBoss) || bossChallengeBosses[0];
-  el.battlePreview.innerHTML = `
-    <div class="selection-preview-art">${characterMarkup({ name: boss.name, image: boss.headshot || boss.portrait })}</div>
-    <div>
-      <strong>${boss.name}</strong>
-      <small>${boss.car}</small>
-    </div>
-  `;
-}
 
 function bossBattleStats(boss) {
   const raw = bossStatProfiles[slugify(boss.car)] || bossStatProfiles.hornula1;
@@ -4686,62 +4649,30 @@ function battleStrongestStat(stats = {}) {
   return order.reduce((best, key) => (Number(stats[key] || 0) > Number(stats[best] || 0) ? key : best), order[0]);
 }
 
-function battleMovesetFor(stats = {}, type = "Neutral") {
-  const normalizedType = String(type || "Neutral").toLowerCase();
-  let middle = ["defend", "rev"];
-  if (["endurance", "transmission"].includes(normalizedType)) {
-    middle = ["defend", "rev"];
-  } else if (["agility", "grip"].includes(normalizedType)) {
-    middle = ["dodge", "sneak"];
-  } else if ((Number(stats.acceleration || 0) + Number(stats.handling || 0)) > (Number(stats.torque || 0) + Number(stats.body || 0))) {
-    middle = ["dodge", "sneak"];
-  }
-  return ["attack", ...middle, "special"];
-}
-
 function battleUnitFromStats(name, image, stats, isPlayer = false, carId = "", type = "Neutral") {
   const hpMax = Math.round(165 + stats.body * 3.2);
-  return {
-    name,
-    image,
-    stats,
-    hp: hpMax,
-    hpMax,
-    sp: 0,
-    shield: 0,
-    shieldTurns: 0,
-    dodgeBuffTurns: 0,
-    stunned: false,
-    revState: null,
-    isPlayer,
-    carId,
-    type,
-    moveset: battleMovesetFor(stats, type)
-  };
+  return { name, image, stats, hp: hpMax, hpMax, isPlayer, carId, type };
 }
 
 function beginBattle(mode = "battle", options = {}) {
   clearRaceResultPopups();
   const boss = options.boss || bossChallengeBosses.find((item) => item.id === state.selectedBattleBoss) || bossChallengeBosses[0];
-  playMusic(mode === "boss" || options.campaignLevelIndex !== null ? "boss-theme" : "battle-theme");
-  const carId = options.carId || state.selectedStoryCar;
+  const carId = options.carId || state.selectedStoryCar || state.selectedCar;
   const playerForm = currentEvolution(carId);
-  const playerProfile = battleProfileForCarId(carId, playerForm.name);
-  const player = battleUnitFromStats(playerForm.name, imageFor(playerForm, "race"), displayedGearbornStats(carId), true, carId, playerProfile.type);
+  const player = battleUnitFromStats(playerForm.name, imageFor(playerForm, "race"), displayedGearbornStats(carId), true, carId, battleProfileForCarId(carId).type);
+  const opponentCarId = options.tutorial ? tutorialOpponentCarId : options.opponentCarId || cars.find((car) => slugify(car.id) === slugify(boss.car) || car.evolutions.some((form) => slugify(form.name) === slugify(boss.car)))?.id || "";
+  const opponentProfile = battleProfileForCarId(opponentCarId, boss.car);
   const opponentStats = options.tutorial
     ? displayedGearbornStatsAtLevel(tutorialOpponentCarId, 1)
     : options.opponentStats || bossBattleStats(boss);
   const opponentImage = options.tutorial ? "assets/cars/tutorque-race.png" : options.opponentImage || battleCarImageForBoss(boss);
   const opponentName = options.tutorial ? "Tutorque" : options.opponentName || boss.car;
-  const opponentCarId = options.opponentCarId || (options.tutorial ? tutorialOpponentCarId : "");
-  const opponentProfile = battleProfileForCarId(opponentCarId, opponentName || boss.car);
   battleState = {
     mode,
     boss,
     carId,
     player,
     opponent: battleUnitFromStats(opponentName, opponentImage, opponentStats, false, opponentCarId, opponentProfile.type),
-    waitingNext: false,
     finished: false,
     campaignLevelIndex: options.campaignLevelIndex ?? null,
     reward: options.reward ?? null,
@@ -4750,230 +4681,14 @@ function beginBattle(mode = "battle", options = {}) {
     tutorialPaused: Boolean(options.tutorialPaused),
     restartOptions: options
   };
-  setFlowStep("battle", "race");
-  renderBattle();
-}
-
-function battleAttackDamage(attacker) {
-  return 26 + attacker.stats.speed * 0.16 + attacker.stats.acceleration * 0.2;
-}
-
-function battleMoveChance(unit, move) {
-  if (move === "dodge") {
-    const acc = Number(unit.stats.acceleration || 0) + (unit.dodgeBuffTurns > 0 ? 20 : 0);
-    return Math.max(0.1, Math.min(0.9, 0.5 + (acc - 80) * 0.01));
-  }
-  if (move === "sneak") {
-    return Math.max(0.05, Math.min(0.8, 0.35 + (Number(unit.stats.handling || 0) - 80) * 0.01));
-  }
-  return 0;
-}
-
-function battleShieldAbsorb(unit, damage) {
-  if (!unit.shield || unit.shield <= 0 || damage <= 0) return damage;
-  const absorbed = Math.min(unit.shield, damage);
-  unit.shield = Math.max(0, unit.shield - absorbed);
-  return Math.max(0, damage - absorbed);
-}
-
-function battleSpecialDamage(attacker) {
-  return Math.max(8, Math.round(battleAttackDamage(attacker) * 1.8));
-}
-
-function battleResolveAttack(attacker, defender, attackMove, defendMove, logLines) {
-  if (["defend", "dodge"].includes(attackMove)) return 0;
-  if (attackMove === "sneak") {
-    const success = Math.random() < battleMoveChance(attacker, "sneak");
-    if (!success) {
-      logLines.push(`${attacker.name} used SNEAK. Failed sneak.`);
-      return 0;
-    }
-    logLines.push(`${attacker.name} used SNEAK. Successful sneak.`);
-  }
-  if (attackMove === "rev") {
-    const mod = 0.85 + (Number(attacker.stats.torque || 0) - 80) * 0.005;
-    logLines.push(`${attacker.name} REV fired!`);
-    return Math.max(8, Math.round(2.5 * battleAttackDamage(attacker) * mod));
-  }
-  if (attackMove === "special") {
-    return battleSpecialDamage(attacker);
-  }
-  return Math.max(8, Math.round(battleAttackDamage(attacker)));
-}
-
-function battleApplyDefense(defender, attacker, incomingMove, defenderMove, rawDamage, logLines) {
-  if (rawDamage <= 0) return 0;
-  if (defenderMove === "dodge") {
-    if (Math.random() < battleMoveChance(defender, "dodge")) {
-      logLines.push(`Successful dodge — ${defender.name} took no damage.`);
-      return 0;
-    }
-    logLines.push(`Failed dodge — ${defender.name} took full damage.`);
-  }
-  if (defenderMove === "sneak") {
-    if (Math.random() < battleMoveChance(defender, "sneak")) {
-      const counter = Math.round(battleAttackDamage(defender) * 0.4);
-      attacker.hp = Math.max(0, attacker.hp - counter);
-      logLines.push(`Successful sneak — ${defender.name} avoided damage and countered for ${counter}.`);
-      return 0;
-    }
-    logLines.push(`Failed sneak — ${defender.name} took full damage.`);
-  }
-  if (defenderMove === "defend" && (incomingMove === "attack" || incomingMove === "sneak")) {
-    const reduced = rawDamage * (0.34 - normalizedGearbornStat(defender.stats.body) * 0.14);
-    attacker.stunned = true;
-    defender.sp = Math.min(4, defender.sp + 1);
-    logLines.push(`Successful defense — ${attacker.name} is stunned.`);
-    return Math.max(3, Math.round(reduced));
-  }
-  return Math.max(0, Math.round(rawDamage));
-}
-
-function chooseOpponentBattleMove() {
-  const opponent = battleState.opponent;
-  const player = battleState.player;
-  if (opponent.stunned) return "stunned";
-  if (opponent.revState === "loading") return "rev";
-  const moves = opponent.moveset || ["attack", "defend", "special"];
-  if (opponent.sp >= 4 && Math.random() < 0.7) return "special";
-  if (moves.includes("rev") && opponent.hp > opponent.hpMax * 0.45 && 2.5 * battleAttackDamage(opponent) >= player.hp * 0.75 && Math.random() < 0.55) return "rev";
-  if (moves.includes("dodge") && (opponent.hp < opponent.hpMax * 0.35 || player.sp >= 4) && Math.random() < 0.58) return "dodge";
-  if (moves.includes("sneak") && opponent.hp < opponent.hpMax * 0.8 && Math.random() < 0.28) return "sneak";
-  if (moves.includes("defend") && opponent.hp < opponent.hpMax * 0.4 && Math.random() < 0.4) return "defend";
-  return Math.random() < 0.72 ? "attack" : (moves.includes("sneak") ? "sneak" : moves.includes("rev") ? "rev" : "defend");
-}
-
-function battleMoveLabel(move) {
-  return {
-    attack: "ATTACK",
-    defend: "DEFEND",
-    dodge: "DODGE",
-    sneak: "SNEAK",
-    rev: "REV",
-    special: "SPECIAL",
-    stunned: "STUNNED"
-  }[move] || move;
-}
-
-function battleMoveIcon(move) {
-  return {
-    attack: "assets/items/battle-attack.png",
-    defend: "assets/items/battle-defend.png",
-    dodge: "assets/items/battle-dodge.png",
-    sneak: "assets/items/battle-sneak.png",
-    rev: "assets/items/battle-rev.png",
-    special: "assets/items/battle-special.png"
-  }[move] || "";
-}
-
-function handleBattleMove(playerMove) {
-  if (!battleState || battleState.finished || battleState.waitingNext) return;
-  if (battleState.tutorialPaused) return;
-  const player = battleState.player;
-  const opponent = battleState.opponent;
-  const playerWasStunned = player.stunned;
-  const forcedRevFire = player.revState === "loading" && playerMove === "rev";
-  if (!playerWasStunned && !forcedRevFire && !(player.moveset || []).includes(playerMove)) return;
-  if (!playerWasStunned && playerMove === "special" && player.sp < 4) return;
-  const playerAction = playerWasStunned ? "stunned" : player.revState === "loading" ? "rev" : playerMove;
-  const opponentMove = chooseOpponentBattleMove();
-  const opponentWasStunned = opponentMove === "stunned";
-  const logLines = [];
-  const playerRevWasLoading = player.revState === "loading";
-  const opponentRevWasLoading = opponent.revState === "loading";
-
-  player.stunned = false;
-  opponent.stunned = false;
-
-  if (playerAction === "rev" && player.revState !== "loading") {
-    player.revState = "loading";
-    logLines.push(`${player.name} is revving up...`);
-  }
-  if (opponentMove === "rev" && opponent.revState !== "loading") {
-    opponent.revState = "loading";
-    logLines.push(`${opponent.name} is revving up...`);
-  }
-
-  const playerFires = playerAction !== "stunned" && (playerAction !== "rev" || playerRevWasLoading);
-  const opponentFires = opponentMove !== "stunned" && (opponentMove !== "rev" || opponentRevWasLoading);
-  const playerAttackMove = playerAction;
-  const opponentAttackMove = opponentMove;
-
-  let opponentDamage = playerFires ? battleResolveAttack(player, opponent, playerAttackMove, opponentMove, logLines) : 0;
-  let playerDamage = opponentFires ? battleResolveAttack(opponent, player, opponentAttackMove, playerAction, logLines) : 0;
-
-  opponentDamage = battleApplyDefense(opponent, player, playerAttackMove, opponentMove, opponentDamage, logLines);
-  playerDamage = battleApplyDefense(player, opponent, opponentAttackMove, playerAction, playerDamage, logLines);
-  playerDamage = battleShieldAbsorb(player, playerDamage);
-  opponentDamage = battleShieldAbsorb(opponent, opponentDamage);
-  if (playerAction === "special") logLines.push(`You used SPECIAL, ${opponent.name} took ${opponentDamage} damage.`);
-  if (opponentMove === "special") logLines.push(`${opponent.name} used SPECIAL, you took ${playerDamage} damage.`);
-  if (playerAction === "special" || opponentMove === "special") playSound("battle-special");
-  if (opponentDamage > 0 || playerDamage > 0) playSound("battle-hit");
-  if (logLines.some((line) => line.includes("Successful dodge") || line.includes("Successful sneak"))) playSound("battle-dodge");
-  if (logLines.some((line) => line.includes("is stunned"))) playSound("battle-stun");
-
-  player.hp = Math.max(0, player.hp - playerDamage);
-  opponent.hp = Math.max(0, opponent.hp - opponentDamage);
-  if (playerAction === "special") player.sp = 0;
-  if (opponentMove === "special") opponent.sp = 0;
-  if (["attack", "sneak", "rev"].includes(playerAttackMove) && opponentDamage > 0) player.sp = Math.min(4, player.sp + 1);
-  if (["attack", "sneak", "rev"].includes(opponentAttackMove) && playerDamage > 0) opponent.sp = Math.min(4, opponent.sp + 1);
-  if (playerRevWasLoading && playerAction === "rev" && playerFires) player.revState = null;
-  if (opponentRevWasLoading && opponentMove === "rev" && opponentFires) opponent.revState = null;
-  [player, opponent].forEach((unit) => {
-    if (unit.dodgeBuffTurns > 0) unit.dodgeBuffTurns -= 1;
-    if (unit.shieldTurns > 0) unit.shieldTurns -= 1;
-    if (unit.shieldTurns <= 0) unit.shield = 0;
-  });
-  if (player.hp <= 0 || opponent.hp <= 0) {
-    battleState.waitingNext = false;
-    el.battleArena.classList.remove("resolving");
-    finishBattle();
-    return;
-  }
-  battleState.waitingNext = true;
-  el.battleArena.classList.add("resolving");
-  const moveSucceeded = (unit, move, revWasLoading) => {
-    if (move === "stunned") return false;
-    if (move === "rev") return revWasLoading;
-    if (move === "dodge") return logLines.some((line) => line.includes(`Successful dodge`) && line.includes(unit.name));
-    if (move === "sneak") return logLines.some((line) => line.includes(`Successful sneak`) && line.includes(unit.name));
-    return true;
-  };
-  const showPlayerMove = moveSucceeded(player, playerAction, playerRevWasLoading);
-  const showOpponentMove = moveSucceeded(opponent, opponentMove, opponentRevWasLoading);
-  el.battlePlayerMove.style.backgroundImage = showPlayerMove ? `url("${battleMoveIcon(playerAction)}")` : "";
-  el.battleOpponentMove.style.backgroundImage = showOpponentMove ? `url("${battleMoveIcon(opponentMove)}")` : "";
-  el.battlePlayerMove.classList.toggle("active", showPlayerMove);
-  el.battleOpponentMove.classList.toggle("active", showOpponentMove);
-  if (playerWasStunned) {
-    el.battleLog.textContent = `${player.name} is stunned and can't attack.`;
-  } else if (opponentWasStunned) {
-    el.battleLog.textContent = `${opponent.name} is stunned and can't attack.`;
-  } else {
-    el.battleLog.textContent = logLines.length
-      ? logLines.join(" ")
-      : `${player.name} used ${battleMoveLabel(playerAction)}. ${opponent.name} used ${battleMoveLabel(opponentMove)}.`;
-  }
-  renderBattle();
-}
-
-function nextBattleTurn() {
-  if (!battleState || battleState.finished) return;
-  battleState.waitingNext = false;
-  el.battleArena.classList.remove("resolving");
-  el.battlePlayerMove.classList.remove("active");
-  el.battleOpponentMove.classList.remove("active");
-  el.battleLog.textContent = "Choose a move.";
-  renderBattle();
-  if (battleState.player?.revState === "loading") {
-    el.battleLog.textContent = "REV firing...";
-    setTimeout(() => handleBattleMove("rev"), 360);
-  }
+  if (typeof startCrashoutBattle === "function" && startCrashoutBattle(battleState)) return;
+  // Crashout couldn't start (no arena canvas). The old turn-based screen is gone, so drop the match.
+  console.warn("Crashout match could not start.");
+  battleState = null;
 }
 
 function finishBattle() {
+  if (!battleState || battleState.finished) return;
   battleState.finished = true;
   const won = battleState.opponent.hp <= 0 && battleState.player.hp > 0;
   playSound(won ? "win-jingle" : "lose-jingle");
@@ -4986,18 +4701,14 @@ function finishBattle() {
   const partReward = won && !isGauntlet && battleState.campaignLevelIndex !== null ? rollStoryPartReward() : null;
   recordStoryRaceOutcome(won, battleState.campaignLevelIndex !== null);
   let unlockedBossName = "";
-  if (won && battleState.mode === "battle") {
-    unlockedBossName = unlockNextTrainingBossFromBoss(battleState.boss.id);
-  }
+  if (won && battleState.mode === "battle") unlockedBossName = unlockNextTrainingBossFromBoss(battleState.boss.id);
   if (tutorialActive() && won) setTutorialScene("battle-win");
   const level = battleState.campaignLevelIndex !== null ? campaignLevels[battleState.campaignLevelIndex] : null;
-  const rankChange = won && !tutorialActive() && !isGauntlet && level?.type === "boss"
-    ? advanceTunerRankForBossWin(battleState.boss.id)
-    : null;
+  if (won && !tutorialActive() && !isGauntlet && level?.type === "boss") advanceTunerRankForBossWin(battleState.boss.id);
   if (won && battleState.campaignLevelIndex !== null) completeCampaignLevel(battleState.campaignLevelIndex);
   saveState();
   if (tutorialActive() && won) renderTutorial();
-  showRaceResult(el.battleArena, {
+  showRaceResult(battleState.resultHost || el.crashoutCanvas?.parentElement, {
     won,
     title: tutorialActive() && !won ? "RACE LOST" : undefined,
     sprox: earned,
@@ -5005,9 +4716,9 @@ function finishBattle() {
     hideRaceAgain: tutorialActive() && !won,
     hideSprox: tutorialActive() && !won,
     disableActions: tutorialActive() && won,
-    primaryLabel: isGauntlet ? "Next" : tutorialActive() && !won ? "Try Again" : tutorialActive() ? "Next" : battleState.campaignLevelIndex !== null ? "Next" : "Select Opponent",
+    primaryLabel: isGauntlet ? "Next" : tutorialActive() && !won ? "Try Again" : tutorialActive() ? "Next" : battleState.campaignLevelIndex !== null ? "Next" : "Back to Crashout",
     primaryTone: tutorialActive() && won ? "success" : "",
-    raceAgainLabel: "Battle Again",
+    raceAgainLabel: "Crashout Again",
     onPrimary: () => {
       if (tutorialActive() && !won) {
         beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
@@ -5023,109 +4734,43 @@ function finishBattle() {
         return;
       }
       if (battleState.campaignLevelIndex !== null) {
-        const finishBattleStory = () => {
-          if (won && level?.cityStructureEvent?.type === "story") {
-            finishRuntimeStoryWithPost(level, finishStoryRaceScreen);
-            return;
-          }
-          if (won && level?.type === "rival") {
-            openRivalDialogue(level, "post", finishStoryRaceScreen);
-            return;
-          }
-          finishStoryRaceScreen();
-        };
-        if (rankChange) {
-          showTunerRankRisePopup(rankChange, finishBattleStory);
+        const resultLevel = campaignLevels[battleState.campaignLevelIndex];
+        if (won && resultLevel?.type === "rival") {
+          openRivalDialogue(resultLevel, "post", finishStoryRaceScreen);
           return;
         }
-        finishBattleStory();
+        finishStoryRaceScreen();
       } else {
         battleState = null;
-        setFlowStep("battle", "match");
+        showView("crashout");
       }
     },
-    onRaceAgain: () => {
-      const restartOptions = battleState.restartOptions || { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex };
-      if (battleState.campaignLevelIndex !== null) {
-        startCampaignRace(battleState.campaignLevelIndex, campaignLevels[battleState.campaignLevelIndex]);
-        return;
-      }
-      if (battleState.mode === "gauntlet-battle") {
-        beginBattle(battleState.mode, restartOptions);
-        return;
-      }
-      requestRaceEntry({ kind: "battle" }, () => beginBattle(battleState.mode, restartOptions));
-    }
+    onRaceAgain: () => beginBattle(battleState.mode, battleState.restartOptions || { boss: battleState.boss, campaignLevelIndex: battleState.campaignLevelIndex })
   });
-}
-
-function renderBattle() {
-  if (!battleState || !el.battleArena) return;
-  const { player, opponent } = battleState;
-  el.battlePlayerName.textContent = player.name;
-  el.battleOpponentName.textContent = opponent.name;
-  el.battlePlayerHp.textContent = `${player.hp}/${player.hpMax}`;
-  el.battleOpponentHp.textContent = `${opponent.hp}/${opponent.hpMax}`;
-  el.battlePlayerHpFill.style.width = `${Math.max(0, player.hp / player.hpMax) * 100}%`;
-  el.battleOpponentHpFill.style.width = `${Math.max(0, opponent.hp / opponent.hpMax) * 100}%`;
-  el.battlePlayerSp.textContent = `${player.sp}/4${player.shield ? ` · Shield ${player.shield}` : ""}`;
-  el.battleOpponentSp.textContent = `${opponent.sp}/4${opponent.shield ? ` · Shield ${opponent.shield}` : ""}`;
-  el.battlePlayerSpFill.style.width = `${player.sp / 4 * 100}%`;
-  el.battleOpponentSpFill.style.width = `${opponent.sp / 4 * 100}%`;
-  el.battlePlayerCar.style.backgroundImage = `url("${player.image}")`;
-  el.battleOpponentCar.style.backgroundImage = `url("${opponent.image}")`;
-  el.battleNextTurn.hidden = !battleState.waitingNext || battleState.finished;
-  const locked = Boolean(player.stunned || player.revState === "loading");
-  const moves = player.moveset || ["attack", "defend", "special"];
-  el.battleActions.innerHTML = moves.map((move) => {
-    const disabled = battleState.tutorialPaused || battleState.waitingNext || battleState.finished || locked || (move === "special" && player.sp < 4);
-    const label = locked && player.revState === "loading" ? "REV LOADING" : battleMoveLabel(move);
-    return `
-      <button class="battle-action ${move} ${locked ? "locked-turn" : ""}" data-battle-move="${move}" type="button" ${disabled ? "disabled" : ""} title="${battleMoveLabel(move)}">
-        <img src="${battleMoveIcon(move)}" alt="" onerror="this.style.display='none'">
-        ${label}
-      </button>
-    `;
-  }).join("");
 }
 
 function renderTimeTargets() {
   if (tutorialActive() && currentTutorialScene().id === "head2head") {
     el.timeLocation.textContent = `${tutorialTrack.city}, ${tutorialTrack.country}`;
     applyTrackMap(el.timeTrialTrack, tutorialTrack);
-    el.timeTargets.innerHTML = tutorialMedals.map((medal) => `
-      <div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${medal.base.toFixed(2)} s · ${medal.xp} Sprox</strong></div>
-    `).join("");
+    el.timeTargets.innerHTML = tutorialMedals.map((medal) => `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${medal.base.toFixed(2)} s · ${medal.xp} Sprox</strong></div>`).join("");
     return;
   }
   const trackIndex = storyTracks.findIndex((track) => track.id === state.selectedTimeTrack);
   const best = state.timeTrials[state.selectedTimeTrack]?.bestTime;
   el.timeLocation.textContent = trackLabel(state.selectedTimeTrack);
   applyTrackMap(el.timeTrialTrack, storyTracks.find((track) => track.id === state.selectedTimeTrack));
-  el.timeTargets.innerHTML = timeMedals.map((medal) => {
-    const target = timeTarget(medal, trackIndex);
-    return `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${target.toFixed(2)} s · ${medal.xp} Sprox</strong></div>`;
-  }).join("") + `<div><span>Phantaxi Time</span><strong>${best ? `${best.toFixed(2)} s` : "No Phantaxi Time"}</strong></div>`;
+  el.timeTargets.innerHTML = timeMedals.map((medal) => `<div><span><span class="medal-text ${medal.key}">${medal.label}</span> · ${medal.difficulty}</span><strong>${timeTarget(medal, trackIndex).toFixed(2)} s · ${medal.xp} Sprox</strong></div>`).join("") + `<div><span>Phantaxi Time</span><strong>${best ? `${best.toFixed(2)} s` : "No Phantaxi Time"}</strong></div>`;
 }
 
 function renderTimeTrackGrid() {
   if (!el.timeTrackGrid) return;
   if (tutorialActive() && currentTutorialScene().id === "head2head") {
-    el.timeTrackGrid.innerHTML = `
-      <button class="map-button active" type="button" data-time-track="${tutorialTrack.id}">
-        ${tutorialTrack.city}
-      </button>
-    `;
-    if (el.timeTrackPreview) {
-      el.timeTrackPreview.style.backgroundImage = `linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.16) 8% 8.5%, transparent 8.5% 91.5%, rgba(255, 255, 255, 0.16) 91.5% 92%, transparent 92%), url("${tutorialTrack.map}")`;
-    }
+    el.timeTrackGrid.innerHTML = `<button class="map-button active" type="button" data-time-track="${tutorialTrack.id}">${tutorialTrack.city}</button>`;
+    if (el.timeTrackPreview) el.timeTrackPreview.style.backgroundImage = `linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.16) 8% 8.5%, transparent 8.5% 91.5%, rgba(255, 255, 255, 0.16) 91.5% 92%, transparent 92%), url("${tutorialTrack.map}")`;
     return;
   }
-  el.timeTrackGrid.innerHTML = storyTracks.map((track) => `
-    <button class="map-button ${track.id === state.selectedTimeTrack ? "active" : ""}" type="button" data-time-track="${track.id}">
-      ${track.city}
-    </button>
-  `).join("");
+  el.timeTrackGrid.innerHTML = storyTracks.map((track) => `<button class="map-button ${track.id === state.selectedTimeTrack ? "active" : ""}" type="button" data-time-track="${track.id}">${track.city}</button>`).join("");
   const track = storyTracks.find((item) => item.id === state.selectedTimeTrack);
   if (el.timeTrackPreview) {
     el.timeTrackPreview.style.backgroundImage = track?.map
@@ -5396,36 +5041,6 @@ const oneOffTypeMeta = {
 };
 
 function isVindexDiscovered(entry) {
-  if (state.unlimitedSprox) return true;
-  if (entry?.name === "RitzCarloadin") return true;
-  const playable = playableEntryMeta(entry);
-  if (playable) {
-    if ([tutorialCarId, tutorialOpponentCarId].includes(playable.car.id)) {
-      return state.tutorialComplete || tutorialActive();
-    }
-    if (playable.car.id === "art-van") {
-      return isCarUnlocked("art-van") && (state.unlockedArtVanForms || []).includes(playable.index);
-    }
-    return isCarUnlocked(playable.car.id) && unlockedEvolutionIndex(playable.car.id) >= playable.index;
-  }
-  const rankIndex = ranks.findIndex((rank) => rank.name === entry.name);
-  if (rankIndex >= 0) return state.highestRankIndex >= rankIndex;
-  const bossIndex = bossChallengeBosses.findIndex((boss) => boss.car === entry.name);
-  if (bossIndex >= 0) return state.highestBossIndex >= bossIndex;
-  if (entry.name === "Phantaxi") return Object.keys(state.timeTrials || {}).length > 0;
-  return false;
-}
-
-function silhouetteMarkup() {
-  return `
-    <div class="silhouette-card">
-      <div class="silhouette-car">?</div>
-    </div>
-  `;
-}
-
-function evolutionLineMarkup(entry) {
-  const playable = playableEntryMeta(entry);
   let items = [];
   if (playable) {
     if (playable.car.id === tutorialCarId) {
@@ -5726,6 +5341,7 @@ function garageCompactCardMarkup(car) {
 }
 
 function renderGarage() {
+  renderGarageShowcase();
   if (tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene().id)) {
     renderTutorialGarage();
     return;
@@ -5740,7 +5356,8 @@ function renderGarage() {
   document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
   if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
   renderUnlockHubCard();
-  const garageCars = orderedCarList(cars.filter((car) => isPlayerCollectionCar(car) && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
+  const showcaseIds = garageShowcaseIds();
+  const garageCars = orderedCarList(cars.filter((car) => isPlayerCollectionCar(car) && !showcaseIds.includes(car.id) && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
   el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
   el.garageGrid.innerHTML = garageCars.map((car) => {
     if (state.garageViewMode !== "compact") return isCarUnlocked(car.id) ? garageDetailedCardMarkup(car) : lockedGarageCard(car);
@@ -6126,7 +5743,7 @@ function renderEquipPartModal() {
   const availableParts = partVariants.filter((part) => availablePartCount(part.key, carId, slotIndex) > 0);
   el.equipPartsGrid.innerHTML = availableParts.length
     ? availableParts.map((part) => partTileMarkup(part, { selected: selectedKey, availableOnly: true, ignoreCarId: carId, ignoreSlot: slotIndex })).join("")
-    : `<p class="empty-detail">No available parts yet. Win Story Mode races to find parts.</p>`;
+    : `<p class="empty-detail">No available parts yet. Win races in The Adventure to find parts.</p>`;
   const selected = partByKey(selectedKey) || equipped;
   const available = selected ? availablePartCount(selected.key, carId, slotIndex) : 0;
   el.equipPartDetail.innerHTML = partDetailMarkup(selected, selected ? `Available: x${available}` : "");
@@ -6390,7 +6007,7 @@ function setLaunchPhase(phase, step = 1) {
   el.dragLaunchLights?.classList.toggle("staging", ["red", "yellow", "green"].includes(phase));
   el.dragLaunchLights?.classList.toggle("high-vis-cues", state.settings.highVisCues !== false);
   if (el.launchPhaseLabel) {
-    el.launchPhaseLabel.textContent = phase === "green" ? "GO" : phase === "yellow" ? "SET" : "STAGE";
+    el.launchPhaseLabel.textContent = phase === "green" ? "GO" : phase === "yellow" ? "SET" : phase === "burnout" ? "BURNOUT" : "STAGE";
   }
   el.dragLaunchLights?.querySelectorAll(".launch-tree-row").forEach((row) => {
     row.classList.toggle("active", row.dataset.launchStep === String(step));
@@ -6425,6 +6042,10 @@ function launchDragPlayer() {
     race.launchBonus = 1;
   }
   race.launchBonusUntil = now + 2000;
+  const tires = dragTireGrip();
+  race.launchBonus *= tires.grip;
+  race.tireGrade = tires.label;
+  if (tires.label) setTimeout(() => { if (race?.active) showDragShiftCallout(tires.label); }, 700);
   race.launchPhase = "launched";
   race.launchGrade = message;
   el.dragLaunchLights?.classList.remove("staging");
@@ -6434,6 +6055,8 @@ function launchDragPlayer() {
   race.gear = 1;
   race.rpm = 0.2;
   el.shiftReadout.textContent = message;
+  dragPitchKick(message);
+  showDragShiftCallout(message);
   el.dragLaunchLights?.querySelectorAll(".launch-light, .launch-tree-row").forEach((light) => light.classList.remove("active"));
   el.dragCountdown.classList.remove("active");
   updateGearshiftIndicator(true);
@@ -6466,7 +6089,7 @@ function updateGearshiftIndicator(animate = false) {
 }
 
 function moveDragLane(delta) {
-  if (!race?.active || race.finished || race.gear === 0 || race.laneTransition) return;
+  if (!race?.active || race.finished || race.gear === 0 || race.laneTransition || race.shutdown) return;
   const lanes = race.visibleLanes || [1, 2, 3, 4];
   const current = race.playerLane || 3;
   const next = current + delta;
@@ -6624,10 +6247,8 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   el.raceMessage.textContent = `Launch on green, then press ${readableKey(state.settings.shiftKey)} when the shift meter hits the bright band.`;
   updateNitroHud();
   updateGearshiftIndicator(false);
-  setLaunchPhase("red", 1);
-  setTimeout(() => setLaunchPhase("red", 2), 1000);
-  setTimeout(() => setLaunchPhase("yellow", 3), 2000);
-  setTimeout(() => setLaunchPhase("green", 4), 3000);
+  race.strip = buildDragStrip(race);
+  startDragStaging(race);
   requestAnimationFrame(updateRace);
 }
 
@@ -6636,7 +6257,8 @@ function updateRace(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
 
-  if (race.launchPhase === "red" || race.launchPhase === "yellow") {
+  if (race.launchPhase === "burnout" || race.launchPhase === "red" || race.launchPhase === "yellow") {
+    updateDragBurnout(dt);
     drawRace();
     requestAnimationFrame(updateRace);
     return;
@@ -6644,6 +6266,11 @@ function updateRace(now) {
   if (race.hitStopUntil && now < race.hitStopUntil) {
     drawRace();
     requestAnimationFrame(updateRace);
+    return;
+  }
+  if (race.shutdown) {
+    updateLaneTransition(now);
+    updateDragShutdown(dt, now);
     return;
   }
 
@@ -6679,13 +6306,13 @@ function updateRace(now) {
     const draftBoost = dragDraftBonus(opponent, others);
     opponent.speed += opponent.acceleration * (0.78 + Math.random() * 0.08) * draftBoost * dt;
     const nitroScale = opponent.nitroActive ? dragNitroMultiplier : 1;
-    opponent.speed = Math.min(opponent.speed, opponent.maxSpeed * nitroScale);
+    opponent.speed = Math.min(opponent.speed, opponent.maxSpeed * nitroScale * dragGateCapScale(opponent));
     opponent.distance += mphToMetersPerSecond(opponent.speed) * dt;
   });
 
   const playerNitroScale = race.nitroActive ? (race.nitroMultiplier || dragNitroMultiplier) : 1;
   const playerCap = (race.gear >= 6 ? race.playerMaxSpeed : race.gear > 0 ? race.playerMaxSpeed * (0.58 + race.gear * 0.15) : 0) * playerNitroScale;
-  race.playerSpeed = Math.min(race.playerSpeed, playerCap);
+  race.playerSpeed = Math.min(race.playerSpeed, playerCap * dragGateCapScale(race));
 
   race.playerDistance += mphToMetersPerSecond(race.playerSpeed) * dt;
   syncPrimaryRivalFields();
@@ -6698,7 +6325,8 @@ function updateRace(now) {
       race.overheatLatched = true;
       race.perfectStreak = 0;
       race.accelPenalty = Math.max(0.34, race.accelPenalty - 0.18);
-      if (race.overheatCount >= 3) {
+      race.engineTemp = Math.min(1, (race.engineTemp || 0) + dragTempTuning.limiterHit);
+      if (race.engineTemp >= 1) {
         failDragRace("Engine Overheated");
         return;
       }
@@ -6707,11 +6335,18 @@ function updateRace(now) {
     race.rpm = 1;
   }
 
+  if (updateDragStripEvents(dt, now)) return;
   drawRace();
 
   const bestOpponentDistance = Math.max(0, ...(race.opponents || []).map((opponent) => opponent.distance));
   if (race.playerDistance >= race.target || bestOpponentDistance >= race.target) {
-    finishRace(race.playerDistance >= bestOpponentDistance);
+    const playerWon = race.playerDistance >= bestOpponentDistance;
+    if (playerWon && dragChuteEnabled()) {
+      startDragShutdown();
+      requestAnimationFrame(updateRace);
+      return;
+    }
+    finishRace(playerWon);
     return;
   }
 
@@ -6720,6 +6355,11 @@ function updateRace(now) {
 
 function shift() {
   if (!race?.active || race.finished) return;
+  if (race.shutdown) {
+    deployDragChute();
+    return;
+  }
+  if (race.launchPhase === "burnout" || race.burnoutLatch) return;
   if (race.gear === 0) {
     launchDragPlayer();
     return;
@@ -6774,6 +6414,9 @@ function shift() {
   playSound("engine-shift");
   race.rpm = race.gear === 6 ? 0.74 : Math.max(0.22, 0.34 - race.gear * 0.015);
   el.shiftReadout.textContent = label;
+  dragPitchKick(label);
+  showDragShiftCallout(label);
+  dragShiftHeat(label);
   updateNitroHud();
   beep(label);
 }
@@ -6834,7 +6477,7 @@ function updateOpponentNitro(opponent, dt) {
 }
 
 function useNitro() {
-  if (!race?.active || race.finished || race.gear === 0 || race.nitroCharge < 4 || race.nitroActive) return;
+  if (!race?.active || race.finished || race.gear === 0 || race.nitroCharge < 4 || race.nitroActive || race.shutdown) return;
   race.nitroCharge = 0;
   race.nitroActive = true;
   race.nitroTimer = dragNitroDuration;
@@ -6850,9 +6493,26 @@ function useNitro() {
   updateNitroHud();
 }
 
+function setWalletAmountText(node, text) {
+  // "128 Sprox" -> <b>128</b><small> Sprox</small>, so phones can hide the unit word.
+  if (!node) return;
+  const value = String(text ?? "");
+  const split = value.lastIndexOf(" ");
+  const amount = document.createElement("b");
+  amount.className = "wallet-amount";
+  amount.textContent = split > 0 ? value.slice(0, split) : value;
+  node.replaceChildren(amount);
+  if (split > 0) {
+    const unit = document.createElement("small");
+    unit.className = "wallet-unit";
+    unit.textContent = value.slice(split);
+    node.appendChild(unit);
+  }
+}
+
 function renderSproxWallet() {
-  if (el.sproxTotal) el.sproxTotal.textContent = formatSprox();
-  if (el.spinTotal) el.spinTotal.textContent = formatSpins();
+  setWalletAmountText(el.sproxTotal, formatSprox());
+  setWalletAmountText(el.spinTotal, formatSpins());
   renderGasBar();
   renderCrankVaultBadge();
 }
@@ -7231,7 +6891,7 @@ function updateNitroHud() {
   if (el.nitroFill) el.nitroFill.style.width = `${percent}%`;
   if (el.nitroReadout) el.nitroReadout.textContent = race?.nitroActive ? "BOOST" : `${percent}%`;
   if (el.nitroButton) {
-    const ready = Boolean(race?.active && !race.finished && charge >= 4 && !race.nitroActive);
+    const ready = Boolean(race?.active && !race.finished && charge >= 4 && !race.nitroActive && !race.shutdown);
     const bonusWindow = ready && nitroContextForRace().length > 0;
     el.nitroButton.disabled = !ready;
     el.nitroButton.classList.toggle("ready", ready);
@@ -7308,6 +6968,11 @@ function finishRace(playerWon) {
   if (masteryBonus) {
     addSprox(masteryBonus);
     earned += masteryBonus;
+  }
+  const chuteBonus = playerWon && !isGauntlet ? (finishedRace.chuteBonus || 0) : 0;
+  if (chuteBonus) {
+    addSprox(chuteBonus);
+    earned += chuteBonus;
   }
 
   recordRaceUsage(finishedRace.carId);
@@ -7478,7 +7143,14 @@ function dragRaceSummary(finishedRace, masteryBonus = 0) {
     counts,
     longestPerfectStreak: finishedRace?.longestPerfectStreak || 0,
     nitroUsed: Boolean(finishedRace?.nitroUsed),
-    masteryBonus
+    masteryBonus,
+    tireGrade: finishedRace?.tireGrade || "",
+    chuteResult: finishedRace?.chuteResult || "",
+    chuteBonus: finishedRace?.chuteBonus || 0,
+    gatesHit: finishedRace?.strip?.gatesHit || 0,
+    gatesSeen: finishedRace?.strip?.gatesSeen || 0,
+    blocks: finishedRace?.strip?.blocks || 0,
+    engineTemp: Math.round((finishedRace?.engineTemp || 0) * 100)
   };
 }
 
@@ -7491,11 +7163,15 @@ function dragRaceSummaryMarkup(summary) {
       <span>Shifts: ${summary.counts.Perfect} Perfect · ${summary.counts.Good} Good · ${summary.counts.Late} Late · ${summary.counts.Early} Early</span>
       <span>Longest Perfect streak: ${summary.longestPerfectStreak}</span>
       <span>Nitro: ${summary.nitroUsed ? "Used" : "Not used"}${summary.masteryBonus ? ` · Mastery bonus +${formatSprox(summary.masteryBonus)}` : ""}</span>
+      ${summary.tireGrade ? `<span>Burnout: ${escapeHtml(summary.tireGrade.toLowerCase().replace(/^./, (c) => c.toUpperCase()))}</span>` : ""}
+      ${summary.gatesSeen ? `<span>Boost gates: ${summary.gatesHit}/${summary.gatesSeen}${summary.blocks ? ` · Blocks: ${summary.blocks}` : ""}</span>` : ""}
+      ${summary.chuteResult ? `<span>Chute: ${escapeHtml(summary.chuteResult)}${summary.chuteBonus ? ` · +${formatSprox(summary.chuteBonus)}` : ""}</span>` : ""}
     </div>
   `;
 }
 
 function showRaceResult(trackNode, result) {
+  resultUpgradePending = false;
   if (!trackNode) {
     result.onPrimary?.();
     return;
@@ -7514,6 +7190,7 @@ function showRaceResult(trackNode, result) {
       <div class="race-result-actions">
         <button class="primary ${result.primaryTone === "success" ? "success-result" : ""}" type="button" data-result-action="primary" ${result.disableActions ? "disabled" : ""}>${result.primaryLabel || "Continue"}</button>
         ${result.hideRaceAgain ? "" : `<button class="ghost" type="button" data-result-action="again" ${result.disableActions ? "disabled" : ""}>${result.raceAgainLabel || "Race Again"}</button>`}
+        ${resultUpgradeAllowed(result) ? `<button class="ghost result-upgrade" type="button" data-result-action="upgrade">Upgrade</button>` : ""}
       </div>
     </div>
   `;
@@ -7525,6 +7202,10 @@ function showRaceResult(trackNode, result) {
     popup.remove();
     if (action === "again") {
       result.onRaceAgain?.();
+      return;
+    }
+    if (action === "upgrade") {
+      openGarageAfterResult(result);
       return;
     }
     result.onPrimary?.();
@@ -7567,7 +7248,7 @@ function animateCountUpNumbers(root) {
 function finishStoryRaceScreen() {
   if (race) race.active = false;
   if (verticalRace) verticalRace.active = false;
-  if (viewIsActive("beta")) showView("story");
+  if (viewIsActive("beta") || viewIsActive("crashout-arena")) showView("story");
   restoreEmbeddedCampaignRace();
   storyReplayOpen = false;
   closeStoryPreview();
@@ -7578,6 +7259,7 @@ function finishStoryRaceScreen() {
     pendingCityUnlock = null;
     openCityUnlockModal(city);
   }
+  if (resultUpgradePending) openGarageFromResult(resultUpgradeCarId);
 }
 
 function showPendingEvolution(carId) {
@@ -8679,7 +8361,6 @@ function resetRacingData() {
   modeFlow.drag = "car";
   modeFlow.time = "car";
   modeFlow.boss = "car";
-  modeFlow.battle = "car";
   modeFlow.story = "car";
   saveState();
   closeResetModal();
@@ -8923,14 +8604,14 @@ function drawRace() {
     }
   }
   el.playerDragLane.style.top = playerY;
-  el.playerRacer.style.transform = `translateX(${playerX}px)`;
+  el.playerRacer.style.transform = `translateX(${playerX}px) rotate(var(--drag-pitch, 0deg))`;
   el.playerRacer.classList.toggle("drafting", race.draftBonus > 1.01);
   if (primaryOpponent) {
     const laneValue = renderedLaneValue(primaryOpponent);
     const x = baseX + (primaryOpponent.distance - race.playerDistance) * metersToPx;
     el.rivalDragLane.style.top = dragLaneTop(laneValue);
     el.rivalDragLane.querySelector(".lane-label").textContent = primaryOpponent.name;
-    el.rivalRacer.style.transform = `translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px)`;
+    el.rivalRacer.style.transform = `translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px) rotate(${dragOpponentPitch(primaryOpponent)})`;
     if (el.rivalRacerImage.getAttribute("src") !== primaryOpponent.image) {
       setRacerImage(el.rivalRacer, el.rivalRacerImage, primaryOpponent.image, primaryOpponent.name);
     }
@@ -8946,7 +8627,7 @@ function drawRace() {
       return `
         <div class="lane drag-lane generated-lane" style="top:${dragLaneTop(laneValue)}">
           <span class="lane-label">${opponent.name}</span>
-          <div class="car rival-car has-image ${opponent.nitroActive ? "nitro-active" : ""}" style="--car-color:#f25f5c; transform:translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px)">
+          <div class="car rival-car has-image ${opponent.nitroActive ? "nitro-active" : ""}" style="--car-color:#f25f5c; transform:translateX(${Math.max(-120, Math.min(trackWidth - 115, x))}px) rotate(${dragOpponentPitch(opponent)})">
             <img class="car-image" src="${opponent.image}" alt="${opponent.name}" style="${typeof gearbornSideViewGroundStyle === "function" ? gearbornSideViewGroundStyle(opponent.image, el.playerRacerImage?.clientWidth || 140, el.playerRacerImage?.clientHeight || 72) : ""}" onerror="this.closest('.car')?.classList.remove('has-image')" onload="this.closest('.car')?.classList.add('has-image')">
             <span class="car-glow"></span>
             <span class="car-body"></span>
@@ -8963,6 +8644,7 @@ function drawRace() {
   el.distance.textContent = `${Math.floor(Math.min(race.playerDistance, race.target))} m`;
   el.tachFill.style.width = `${Math.round(race.rpm * 100)}%`;
   updateGearshiftIndicator(false);
+  renderDragOverlay();
 
   if (race.gear === 0) {
     el.shiftButton.classList.remove("pulse");
@@ -9395,7 +9077,7 @@ function deleteSelectedTrack() {
 function showView(view) {
   if (view !== "builder" && !builderAllowLeave && viewIsActive("builder") && !requestBuilderExit(view)) return;
   if (view !== "beta") stopBetaDemo(false);
-  if (view !== "last-gear" && typeof stopLastGearBeta === "function") stopLastGearBeta(false);
+  if (view !== "crashout-arena" && typeof stopCrashoutBeta === "function") stopCrashoutBeta(false);
   if (view !== "gearborn-studio-beta" && typeof stopGearbornStudioBeta === "function") stopGearbornStudioBeta();
   if (view !== "story" || embeddedCampaignView) restoreEmbeddedCampaignRace();
   if (view !== "crankvaults") stopCrankVaultResetTimer();
@@ -9421,15 +9103,15 @@ function showView(view) {
     window.setTimeout(() => activePanel.classList.remove("view-transition-enter"), VIEW_TRANSITION_MS);
   }
   if (view === "story" && embeddedCampaignView) embeddedCampaignView.node.classList.add("active");
-  const activeNavView = view === "beta" && betaRaceContext?.source === "training"
+  const activeNavView = view === "crashout" || (view === "beta" && betaRaceContext?.source === "training")
     ? "solo"
     : (view === "beta" && ["story", "tutorial"].includes(betaRaceContext?.source) ? "story" : view);
   document.querySelectorAll(".nav-button").forEach((nav) => nav.classList.toggle("active", nav.dataset.view === activeNavView));
   document.body.classList.toggle("mode-active", view !== "menu");
   if (view === "menu" || view === "story") playMusic("menu-theme");
   else if (view === "garage") playMusic("garage-theme");
-  else if (view === "play" || view === "time-trial" || view === "beta" || view === "last-gear" || view === "hub-map-beta") playMusic("race-theme");
-  else if (view === "battle" || view === "boss") playMusic("battle-theme");
+  else if (view === "play" || view === "time-trial" || view === "beta" || view === "crashout-arena" || view === "hub-map-beta") playMusic("race-theme");
+  else if (view === "boss") playMusic("battle-theme");
   if (view === "story") {
     storyReplayOpen = false;
     modeFlow.story = state.storyCarChosen ? "next" : "car";
@@ -9453,10 +9135,6 @@ function showView(view) {
     setFlowStep("time", scene?.view === "time-trial" && scene.flow ? scene.flow : "car");
   }
   if (view === "boss") setFlowStep("boss", "car");
-  if (view === "battle") {
-    const scene = tutorialActive() ? currentTutorialScene() : null;
-    setFlowStep("battle", scene?.view === "battle" && scene.flow ? scene.flow : "car");
-  }
   if (view === "beta" && !betaRaceContext) openBetaPrototypeIntro();
   if (view === "builder" && builderState.mode === "menu") renderBuilder();
   if (view === "tuner-page") renderTunerPage();
@@ -9705,7 +9383,6 @@ function setupTutorialScene() {
   if (scene.flow) {
     if (scene.view === "play")        setFlowStep("drag", scene.flow);
     if (scene.view === "time-trial")  setFlowStep("time", scene.flow);
-    if (scene.view === "battle")      setFlowStep("battle", scene.flow);
   }
 
   // Scene-specific setup
@@ -9758,12 +9435,9 @@ function setupTutorialScene() {
       break;
 
     case "battle":
+      // The rules talk plays over the map; the match starts when the player hits Continue.
       state.selectedStoryCar = tutorialCarId;
       state.selectedBattleBoss = bosses[0].id;
-      showView("battle");
-      if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
-        beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0], tutorialPaused: true });
-      }
       break;
 
     case "garage":
@@ -10406,15 +10080,10 @@ function advanceTutorial() {
       break;
 
     case "battle":
-      // Continue → set up and start battle.
+      // Continue → start the Crashout tutorial battle.
       state.selectedStoryCar = tutorialCarId;
       state.selectedBattleBoss = bosses[0].id;
-      if (!battleState || battleState.finished || battleState.mode !== "tutorial-battle") {
-        beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
-      } else {
-        battleState.tutorialPaused = false;
-        renderBattle();
-      }
+      beginBattle("tutorial-battle", { tutorial: true, boss: bosses[0] });
       setTutorialScene("battle-win");
       saveState();
       renderTutorial();
@@ -11851,4 +11520,800 @@ function updateVerticalControlVisuals() {
       button.classList.toggle("pressed", verticalKeyActive(keys, button.dataset.steer));
     });
   });
+}
+
+// ─── Garage Showcase + Upgrade from results (3C) ─────────────────────────────
+// Eight GearBorn under the garage spotlights. The rest remain in the lineup, while
+// normal car pickers start with the Showcase whenever those cars are eligible.
+const GARAGE_SHOWCASE_SIZE = 8;
+let garageShowcaseFocusId = "";
+let resultUpgradePending = false;
+let resultUpgradeCarId = "";
+
+function garageShowcaseSeed() {
+  const picks = [];
+  const add = (carId) => {
+    if (picks.length < GARAGE_SHOWCASE_SIZE && carId && !picks.includes(carId) && isSelectablePlayerCar(carId)) picks.push(carId);
+  };
+  (state.favoriteCarIds || []).forEach(add);
+  (state.recentCarUses || []).forEach((use) => add(use.carId));
+  [...selectablePlayerCars()]
+    .sort((a, b) => (state.garage[b.id]?.level || 1) - (state.garage[a.id]?.level || 1))
+    .forEach((car) => add(car.id));
+  return picks;
+}
+
+function garageShowcaseSlots() {
+  if (!Array.isArray(state.garageShowcase)) {
+    state.garageShowcase = garageShowcaseSeed();
+    saveState();
+  }
+  const seen = new Set();
+  const slots = state.garageShowcase.slice(0, GARAGE_SHOWCASE_SIZE).map((carId) => {
+    if (!carId || seen.has(carId) || !isSelectablePlayerCar(carId)) return null;
+    seen.add(carId);
+    return carId;
+  });
+  while (slots.length < GARAGE_SHOWCASE_SIZE) slots.push(null);
+  return slots;
+}
+
+function garageShowcaseIds() {
+  return garageShowcaseSlots().filter(Boolean);
+}
+
+function setGarageShowcaseSlot(index, carId) {
+  const slots = garageShowcaseSlots();
+  if (index < 0 || index >= GARAGE_SHOWCASE_SIZE || !isSelectablePlayerCar(carId)) return;
+  const from = slots.indexOf(carId);
+  if (from >= 0) slots[from] = slots[index];
+  slots[index] = carId;
+  state.garageShowcase = slots;
+  garageShowcaseFocusId = carId;
+  saveState();
+  renderGarage();
+}
+
+function clearGarageShowcaseSlot(index) {
+  const slots = garageShowcaseSlots();
+  if (garageShowcaseFocusId === slots[index]) garageShowcaseFocusId = "";
+  slots[index] = null;
+  state.garageShowcase = slots;
+  saveState();
+  renderGarage();
+}
+
+function openGarageShowcasePicker(index) {
+  const slots = garageShowcaseSlots();
+  openCarPicker({
+    target: "showcase",
+    title: `Showcase · Spotlight ${index + 1}`,
+    selectedCarId: slots[index] || "",
+    onConfirm: (carId) => setGarageShowcaseSlot(index, carId)
+  });
+}
+
+function garageShowcaseSlotMarkup(carId, index) {
+  if (!carId) {
+    return `
+      <div class="showcase-slot empty">
+        <button class="showcase-spot" type="button" data-showcase-swap="${index}" aria-label="Add a GearBorn to spotlight ${index + 1}">
+          <span class="showcase-light" aria-hidden="true"></span>
+          <span class="showcase-plus" aria-hidden="true">+</span>
+          <small>Add a GearBorn</small>
+        </button>
+      </div>`;
+  }
+  const progress = state.garage[carId] || { level: 1, evolution: 0 };
+  const form = currentEvolution(carId);
+  const focused = garageShowcaseFocusId === carId;
+  return `
+    <div class="showcase-slot ${focused ? "focused" : ""}">
+      <button class="showcase-spot" type="button" data-showcase-focus="${carId}" aria-pressed="${focused}" aria-label="${escapeHtml(form.name)}: show details">
+        <span class="showcase-light" aria-hidden="true"></span>
+        <span class="showcase-art">${carMarkupForEvolution(carId, progress.evolution || 0, "display")}</span>
+        <strong>${escapeHtml(form.name)}</strong>
+        <small>Lv ${progress.level || 1}</small>
+        ${progress.pendingEvolution ? "<em>Ready</em>" : ""}
+      </button>
+      <div class="showcase-slot-actions">
+        <button type="button" data-showcase-swap="${index}">Swap</button>
+        <button type="button" data-showcase-clear="${index}" aria-label="Empty spotlight ${index + 1}">×</button>
+      </div>
+    </div>`;
+}
+
+function renderGarageShowcase() {
+  const section = document.getElementById("garage-showcase");
+  const grid = document.getElementById("garage-showcase-grid");
+  const lineupHeading = document.getElementById("garage-lineup-heading");
+  const tutorialGarage = tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene()?.id);
+  if (section) section.hidden = tutorialGarage;
+  if (lineupHeading) lineupHeading.hidden = tutorialGarage;
+  if (!grid || tutorialGarage) return;
+  const slots = garageShowcaseSlots();
+  if (garageShowcaseFocusId && !slots.includes(garageShowcaseFocusId)) garageShowcaseFocusId = "";
+  grid.innerHTML = slots.map(garageShowcaseSlotMarkup).join("");
+  const detail = document.getElementById("garage-showcase-detail");
+  if (detail) {
+    detail.innerHTML = garageShowcaseFocusMarkup();
+    detail.hidden = !detail.innerHTML;
+  }
+}
+
+function garageShowcaseFocusMarkup() {
+  const carId = garageShowcaseFocusId;
+  const car = carId && cars.find((item) => item.id === carId);
+  if (!car || !isCarUnlocked(car.id)) return "";
+  return garageDetailedCardMarkup(car, "garage-expanded-card showcase-detail-card");
+}
+
+function showcasePickerFilterDefault(target) {
+  if (target === "showcase") return false;
+  const ids = garageShowcaseIds();
+  if (!ids.length) return false;
+  return !carPickerState.customFilter || ids.some((carId) => carPickerState.customFilter(carId));
+}
+
+function resultUpgradeAllowed(result) {
+  if (result.hideUpgrade || result.disableActions) return false;
+  if (tutorialActive()) return false;
+  if (state.activeGauntlet) return false;
+  return true;
+}
+
+function openGarageAfterResult(result) {
+  const carId = state.recentCarUses?.[0]?.carId || "";
+  if (result.primaryLabel === "Next") {
+    resultUpgradePending = true;
+    resultUpgradeCarId = carId;
+    result.onPrimary?.();
+    return;
+  }
+  result.onPrimary?.();
+  openGarageFromResult(carId);
+}
+
+function openGarageFromResult(carId = "") {
+  resultUpgradePending = false;
+  resultUpgradeCarId = "";
+  showView("garage");
+  renderGarage();
+  focusGarageCar(carId);
+}
+
+function focusGarageCar(carId) {
+  if (!carId || !isCarUnlocked(carId) || !isSelectablePlayerCar(carId)) {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    return;
+  }
+  if (garageShowcaseIds().includes(carId)) garageShowcaseFocusId = carId;
+  else expandedGarageCardIds.add(carId);
+  renderGarage();
+  requestAnimationFrame(() => {
+    const card = document.querySelector(`#garage-view [data-upgrade-car="${carId}"]`)?.closest(".garage-card");
+    if (!card) return;
+    card.scrollIntoView({ block: "center", behavior: reduceMotionEnabled() ? "auto" : "smooth" });
+    card.classList.add("garage-card-flash");
+    window.setTimeout(() => card.classList.remove("garage-card-flash"), 1400);
+  });
+}
+
+// ─── Drag: full-screen HUD, dial gauge, progress line, wheelie tilt (3G) ────
+function dragClamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+const DRAG_DIAL = { cx: 100, cy: 104, r: 76, start: 135, sweep: 270 };
+const dragPitchTuning = {
+  kickDeg: [0, 8, 6, 4.6, 3.4, 2.4, 1.6],
+  quality: { "Perfect Launch": 1.25, "Clean Launch": 1, "Jumped Start": 0.55, Perfect: 1.2, Good: 1, Early: 0.6, Late: 0.75 },
+  riseMs: 160,
+  holdMs: 260,
+  fallMs: 900,
+  dropDeg: -1.2,
+  dropMs: 120,
+  spring: 0.22,
+  opponentMaxDeg: 4,
+  opponentAccelRef: 140
+};
+
+function dragDialAngle(t) {
+  return DRAG_DIAL.start + DRAG_DIAL.sweep * dragClamp(t, 0, 1);
+}
+
+function dragDialPoint(t, r = DRAG_DIAL.r) {
+  const a = (dragDialAngle(t) * Math.PI) / 180;
+  return [DRAG_DIAL.cx + Math.cos(a) * r, DRAG_DIAL.cy + Math.sin(a) * r];
+}
+
+function dragDialArc(from, to, r = DRAG_DIAL.r) {
+  if (to <= from) return "";
+  const [x1, y1] = dragDialPoint(from, r);
+  const [x2, y2] = dragDialPoint(to, r);
+  const large = DRAG_DIAL.sweep * (to - from) > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
+
+// The zones are the same numbers shift() grades with, so the dial never lies.
+function dragShiftZones() {
+  const ideal = race?.idealShiftRpm ?? 0.73;
+  const window = race?.shiftWindow ?? 0.12;
+  const perfectHalf = window * 0.38;
+  return {
+    goodFrom: Math.max(0, ideal - window),
+    perfectFrom: Math.max(0, ideal - perfectHalf),
+    perfectTo: Math.min(1, ideal + perfectHalf),
+    goodTo: Math.min(1, ideal + window)
+  };
+}
+
+function dragDialMarkup() {
+  const z = dragShiftZones();
+  const ticks = Array.from({ length: 11 }, (_, i) => {
+    const t = i / 10;
+    const [x1, y1] = dragDialPoint(t, DRAG_DIAL.r - 14);
+    const [x2, y2] = dragDialPoint(t, DRAG_DIAL.r - (i % 5 ? 19 : 23));
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 200 200" aria-hidden="true">
+    <circle class="drag-dial-face" cx="${DRAG_DIAL.cx}" cy="${DRAG_DIAL.cy}" r="${DRAG_DIAL.r + 14}"/>
+    <path class="drag-dial-track" d="${dragDialArc(0, 1)}"/>
+    <path class="drag-dial-zone ok" d="${dragDialArc(z.goodFrom, z.perfectFrom)}"/>
+    <path class="drag-dial-zone perfect" d="${dragDialArc(z.perfectFrom, z.perfectTo)}"/>
+    <path class="drag-dial-zone ok" d="${dragDialArc(z.perfectTo, z.goodTo)}"/>
+    <path class="drag-dial-zone over" d="${dragDialArc(z.goodTo, 1)}"/>
+    <g class="drag-dial-ticks">${ticks}</g>
+    <g class="drag-dial-needle"><line x1="${DRAG_DIAL.cx}" y1="${DRAG_DIAL.cy - 30}" x2="${DRAG_DIAL.cx}" y2="${DRAG_DIAL.cy - DRAG_DIAL.r + 4}"/></g>
+    <circle class="drag-dial-ready" cx="${DRAG_DIAL.cx + 46}" cy="${DRAG_DIAL.cy - 52}" r="7"/>
+    <text class="drag-dial-gear" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 14}">P</text>
+    <text class="drag-dial-gear-label" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy - 26}">GEAR</text>
+    <text class="drag-dial-speed" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 42}">0</text>
+    <text class="drag-dial-unit" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 56}">MPH</text>
+    <g class="drag-dial-nitro">${[0, 1, 2, 3].map((i) => `<rect x="${DRAG_DIAL.cx - 31 + i * 16}" y="${DRAG_DIAL.cy + 70}" width="12" height="6" rx="2"/>`).join("")}</g>
+    <path class="drag-dial-temp-track" d="${dragTempArc(0, 1)}"/>
+    <path class="drag-dial-temp-hot" d="${dragTempArc(dragTempTuning.hotFrom, dragTempTuning.hotTo)}"/>
+    <path class="drag-dial-temp-red" d="${dragTempArc(dragTempTuning.hotTo, 1)}"/>
+    <g class="drag-dial-temp-needle"><line x1="${DRAG_DIAL.cx - 36}" y1="${DRAG_DIAL.cy}" x2="${DRAG_DIAL.cx - 52}" y2="${DRAG_DIAL.cy}"/></g>
+    <text class="drag-dial-temp-label" x="${DRAG_DIAL.cx - 44}" y="${DRAG_DIAL.cy + 34}">TEMP</text>
+  </svg>`;
+}
+
+function ensureDragOverlay() {
+  if (!el.dragTrack) return null;
+  let overlay = el.dragTrack.querySelector(".drag-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "drag-overlay";
+    overlay.innerHTML = `
+      <div class="drag-progress" aria-hidden="true">
+        <div class="drag-progress-line"><span class="drag-progress-finish"></span></div>
+        <div class="drag-progress-cars"></div>
+        <span class="drag-progress-left"></span>
+      </div>
+      <div class="drag-shift-callout" aria-live="polite"></div>
+      <div class="drag-streak" hidden></div>
+      <div class="drag-dial"></div>`;
+    el.dragTrack.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function renderDragOverlay() {
+  if (!race) return;
+  const overlay = ensureDragOverlay();
+  if (!overlay) return;
+  overlay.classList.toggle("finished", Boolean(race.finished));
+  overlay.classList.toggle("reduced-motion", typeof reduceMotionEnabled === "function" && reduceMotionEnabled());
+  const dial = overlay.querySelector(".drag-dial");
+  const zoneKey = `${race.idealShiftRpm}|${race.shiftWindow}`;
+  if (dial.dataset.zones !== zoneKey) {
+    dial.dataset.zones = zoneKey;
+    dial.innerHTML = dragDialMarkup();
+  }
+  const gear = race.gear || 0;
+  const top = gear >= 6;
+  const rpm = top ? 0.74 : gear === 0 ? 0 : dragClamp(race.rpm || 0, 0, 1);
+  const z = dragShiftZones();
+  const inWindow = !top && gear > 0 && rpm >= z.goodFrom && rpm <= z.goodTo;
+  const perfect = inWindow && rpm >= z.perfectFrom && rpm <= z.perfectTo;
+  const over = !top && gear > 0 && rpm > z.goodTo;
+  dial.classList.toggle("top-gear", top);
+  dial.classList.toggle("in-window", inWindow);
+  dial.classList.toggle("perfect", perfect);
+  dial.classList.toggle("over", over);
+  const needle = dial.querySelector(".drag-dial-needle");
+  if (needle) needle.setAttribute("transform", `rotate(${(dragDialAngle(rpm) + 90).toFixed(2)} ${DRAG_DIAL.cx} ${DRAG_DIAL.cy})`);
+  const gearText = dial.querySelector(".drag-dial-gear");
+  if (gearText) gearText.textContent = gear > 0 ? String(gear) : "P";
+  const speedText = dial.querySelector(".drag-dial-speed");
+  if (speedText) speedText.textContent = String(Math.round(race.playerSpeed || 0));
+  const charge = race.nitroCharge || 0;
+  dial.querySelectorAll(".drag-dial-nitro rect").forEach((pip, i) => pip.classList.toggle("on", race.nitroActive || i < charge));
+  dial.classList.toggle("nitro-ready", charge >= 4 && !race.nitroActive);
+  const temp = dragClamp(race.engineTemp || 0, 0, 1);
+  const tempNeedle = dial.querySelector(".drag-dial-temp-needle");
+  if (tempNeedle) tempNeedle.setAttribute("transform", `rotate(${(dragTempAngle(temp) - 180).toFixed(2)} ${DRAG_DIAL.cx} ${DRAG_DIAL.cy})`);
+  dial.classList.toggle("temp-hot", temp >= dragTempTuning.hotFrom && temp < dragTempTuning.hotTo);
+  dial.classList.toggle("temp-critical", temp >= dragTempTuning.hotTo);
+  dial.classList.toggle("nitro-active", Boolean(race.nitroActive));
+  const streak = race.perfectStreak || 0;
+  const streakEl = overlay.querySelector(".drag-streak");
+  if (streakEl) {
+    streakEl.hidden = streak < 2;
+    if (streak >= 2) streakEl.textContent = `PERFECT ×${streak}`;
+  }
+  renderDragProgress(overlay);
+  renderDragStrip(overlay);
+  updateDragPitch();
+}
+
+function renderDragProgress(overlay) {
+  const holder = overlay.querySelector(".drag-progress-cars");
+  if (!holder) return;
+  const target = race.target || 1;
+  const racers = [
+    { id: "player", image: el.playerRacerImage?.getAttribute("src") || "", distance: race.playerDistance || 0, player: true },
+    ...(race.opponents || []).map((opponent, i) => ({ id: `opp-${i}`, image: opponent.image, distance: opponent.distance || 0, player: false }))
+  ];
+  if (holder.dataset.count !== String(racers.length)) {
+    holder.dataset.count = String(racers.length);
+    holder.innerHTML = racers.map((r) => `<span class="drag-progress-car ${r.player ? "you" : ""}" data-drag-progress="${r.id}"><img alt="" src="${r.image}" onerror="this.style.visibility='hidden'"></span>`).join("");
+  }
+  racers.forEach((r) => {
+    const node = holder.querySelector(`[data-drag-progress="${r.id}"]`);
+    if (!node) return;
+    node.style.left = `${(dragClamp(r.distance / target, 0, 1) * 100).toFixed(2)}%`;
+    const img = node.querySelector("img");
+    if (img && r.image && img.getAttribute("src") !== r.image) img.setAttribute("src", r.image);
+  });
+  const left = overlay.querySelector(".drag-progress-left");
+  if (left) left.textContent = race.finished ? "" : `${Math.max(0, Math.ceil(target - (race.playerDistance || 0)))} m`;
+}
+
+// ─── Wheelie tilt ───────────────────────────────────────────────────────────
+function dragPitchKick(label) {
+  if (!race) return;
+  const T = dragPitchTuning;
+  const gear = Math.max(1, Math.min(6, race.gear || 1));
+  race.pitchKick = { at: performance.now(), deg: (T.kickDeg[gear] || 0) * (T.quality[label] ?? 1) };
+}
+
+function dragPitchTarget(now) {
+  const T = dragPitchTuning;
+  const kick = race.pitchKick;
+  if (!kick || race.finished) return 0;
+  const t = now - kick.at;
+  if (t < T.dropMs) return T.dropDeg;
+  const k = t - T.dropMs;
+  if (k < T.riseMs) return kick.deg * (k / T.riseMs);
+  if (k < T.riseMs + T.holdMs) return kick.deg;
+  const fall = (k - T.riseMs - T.holdMs) / T.fallMs;
+  return fall >= 1 ? 0 : kick.deg * (1 - fall * fall);
+}
+
+function updateDragPitch() {
+  const T = dragPitchTuning;
+  const now = performance.now();
+  const reduce = typeof effectsAllowed === "function" && !effectsAllowed();
+  race.pitch = reduce ? 0 : (race.pitch || 0) + (dragPitchTarget(now) - (race.pitch || 0)) * T.spring;
+  if (el.playerRacer) el.playerRacer.style.setProperty("--drag-pitch", `${(-race.pitch).toFixed(2)}deg`);
+  const dt = Math.max(0.001, (now - (race.pitchLastAt || now)) / 1000) || 0.016;
+  race.pitchLastAt = now;
+  (race.opponents || []).forEach((opponent) => {
+    const speed = Number(opponent.speed || 0);
+    const accel = (speed - (opponent.pitchLastSpeed ?? speed)) / dt;
+    opponent.pitchLastSpeed = speed;
+    const target = reduce || race.finished ? 0 : dragClamp(accel / T.opponentAccelRef, 0, 1) * T.opponentMaxDeg;
+    opponent.pitch = (opponent.pitch || 0) + (target - (opponent.pitch || 0)) * 0.12;
+  });
+}
+
+function dragOpponentPitch(opponent) {
+  return `${(-(opponent?.pitch || 0)).toFixed(2)}deg`;
+}
+
+function showDragShiftCallout(label) {
+  const overlay = ensureDragOverlay();
+  const callout = overlay?.querySelector(".drag-shift-callout");
+  if (!callout) return;
+  const key = String(label || "").toLowerCase().split(" ")[0];
+  callout.textContent = String(label || "").toUpperCase();
+  callout.className = `drag-shift-callout ${key}`;
+  void callout.offsetWidth;
+  callout.classList.add("show");
+}
+
+// ─── Drag mechanics: burnout, strip events, lane block, engine temp, parachute (3H) ──
+const dragBurnoutTuning = { phaseMs: 2600, heatPerSec: 0.55, coolPerSec: 0.03, sweetFrom: 0.55, sweetTo: 0.85, sweetGrip: 1.1, smokedGrip: 0.86 };
+const dragStripTuning = {
+  firstAt: 70, lastBefore: 40, minGap: 32,
+  hazardsPer400: 2, gatesPer400: 3, windChance: 0.5,
+  oilSlow: 0.86, puddleSlow: 0.94, slickLength: 14,
+  gateBurst: 0.07, gateChainStep: 0.5, gateChainMax: 3, gateCapMs: 1400, gateCapBonus: 0.1,
+  aiLookAhead: 48, aiAvoidChance: 0.75, aiGateChance: 0.45
+};
+const dragBlockTuning = { gap: 9, slack: 2, aiBlockRange: [2, 24], aiBlockChance: 0.35, aiThinkMs: 600, calloutCooldownMs: 3000 };
+const dragTempTuning = { redPerSec: 0.32, nitroPerSec: 0.16, limiterHit: 0.25, late: 0.06, early: 0.02, coolPerSec: 0.05, hotFrom: 0.55, hotTo: 0.95, hotPull: 0.08 };
+const dragChuteTuning = { chuteDecel: 24, coastDecel: 2.5, sandDecel: 45, openMs: 250, boxLead: 18, boxBase: 32, boxPerMs: 0.25, sandGap: 30, stopMph: 2, bonusPer400: 25, settleMs: 700 };
+
+function dragRacerRand() { return Math.random(); }
+function dragIsTutorialRace(r = race) { return Boolean(r?.dragStage?.tutorial) || (typeof tutorialActive === "function" && tutorialActive()); }
+function dragChuteEnabled(r = race) { return !dragIsTutorialRace(r); }
+
+// ─── Staging + burnout ──────────────────────────────────────────────────────
+function startDragStaging(r = race) {
+  const thisRace = r;
+  const at = (ms, fn) => setTimeout(() => { if (race === thisRace && race.active) fn(); }, ms);
+  r.tireTemp = 0;
+  r.engineTemp = 0;
+  const offset = dragIsTutorialRace(r) ? 0 : dragBurnoutTuning.phaseMs;
+  if (offset) setLaunchPhase("burnout", 0);
+  else setLaunchPhase("red", 1);
+  if (offset) at(offset, () => {
+    if (race.shiftHeld) race.burnoutLatch = true;
+    setLaunchPhase("red", 1);
+  });
+  at(offset + 1000, () => setLaunchPhase("red", 2));
+  at(offset + 2000, () => setLaunchPhase("yellow", 3));
+  at(offset + 3000, () => setLaunchPhase("green", 4));
+}
+
+function updateDragBurnout(dt) {
+  const T = dragBurnoutTuning;
+  const heating = race.launchPhase === "burnout" && race.shiftHeld;
+  race.tireTemp = dragClamp((race.tireTemp || 0) + (heating ? T.heatPerSec : -T.coolPerSec) * dt, 0, 1);
+  if (race.tireTemp >= 1) race.tiresSmoked = true;
+  race.burningOut = heating;
+}
+
+function dragTireGrip() {
+  const T = dragBurnoutTuning;
+  const t = race.tireTemp || 0;
+  if (race.tiresSmoked) return { grip: T.smokedGrip, label: "SMOKED TIRES" };
+  if (t >= T.sweetFrom && t <= T.sweetTo) return { grip: T.sweetGrip, label: "HOT TIRES" };
+  return { grip: 1, label: "" };
+}
+
+function setDragShiftHeld(held) {
+  if (!race) return;
+  race.shiftHeld = held;
+  if (!held && race.burnoutLatch) setTimeout(() => { if (race && !race.shiftHeld) race.burnoutLatch = false; }, 60);
+}
+
+// ─── The strip: hazards, wind, gates ────────────────────────────────────────
+function buildDragStrip(r = race) {
+  const T = dragStripTuning;
+  const strip = { events: [], gateChain: 0, gatesHit: 0, gatesSeen: 0, blocks: 0 };
+  if (dragIsTutorialRace(r)) return strip;
+  const lanes = r.visibleLanes || [1, 2, 3, 4];
+  const scale = r.target / 400;
+  const span = [T.firstAt, r.target - T.lastBefore];
+  const spots = [];
+  const place = () => {
+    for (let tries = 0; tries < 40; tries += 1) {
+      const d = span[0] + dragRacerRand() * (span[1] - span[0]);
+      if (spots.every((s) => Math.abs(s - d) >= T.minGap)) { spots.push(d); return d; }
+    }
+    return null;
+  };
+  const hazards = Math.max(1, Math.round(T.hazardsPer400 * scale));
+  for (let i = 0; i < hazards; i += 1) {
+    const d = place();
+    if (d !== null) strip.events.push({ type: dragRacerRand() < 0.6 ? "oil" : "puddle", d, lane: lanes[Math.floor(dragRacerRand() * lanes.length)] });
+  }
+  if (lanes.length >= 3 && dragRacerRand() < T.windChance * Math.min(1, scale)) {
+    const d = place();
+    if (d !== null) strip.events.push({ type: "wind", d, dir: dragRacerRand() < 0.5 ? -1 : 1 });
+  }
+  const gates = Math.max(1, Math.round(T.gatesPer400 * scale));
+  for (let i = 0; i < gates; i += 1) {
+    const d = place();
+    if (d !== null) strip.events.push({ type: "gate", d, lane: lanes[Math.floor(dragRacerRand() * lanes.length)] });
+  }
+  strip.events.sort((a, b) => a.d - b.d);
+  strip.events.forEach((event, i) => { event.id = i; event.passed = new Set(); });
+  return strip;
+}
+
+function dragRacers() {
+  return [{ ref: race, player: true, lane: () => race.playerLane, setLane: (lane) => dragForceLane(race, lane, true), distance: () => race.playerDistance, speed: () => race.playerSpeed, scaleSpeed: (k) => { race.playerSpeed *= k; } }]
+    .concat((race.opponents || []).map((o) => ({ ref: o, player: false, lane: () => o.lane, setLane: (lane) => dragForceLane(o, lane, false), distance: () => o.distance, speed: () => o.speed, scaleSpeed: (k) => { o.speed *= k; } })));
+}
+
+function dragForceLane(unit, lane, isPlayer) {
+  const lanes = race.visibleLanes || [1, 2, 3, 4];
+  if (!lanes.includes(lane)) return;
+  const from = isPlayer ? race.playerLane : unit.lane;
+  if (from === lane) return;
+  if (isPlayer) {
+    race.laneTransition = { from, to: lane, startTime: performance.now() };
+    race.playerLane = lane;
+  } else {
+    unit.laneTransition = { from, to: lane, startTime: performance.now() };
+    unit.lane = lane;
+  }
+}
+
+function dragGateCapScale(unit) {
+  return (unit?.gateCapUntil || 0) > performance.now() ? 1 + dragStripTuning.gateCapBonus : 1;
+}
+
+function dragHitGate(racer) {
+  const T = dragStripTuning;
+  const unit = racer.ref;
+  if (racer.player) {
+    race.strip.gateChain = Math.min(T.gateChainMax, race.strip.gateChain + 1);
+    race.strip.gatesHit += 1;
+  }
+  const chain = racer.player ? race.strip.gateChain : 1;
+  const burst = 1 + T.gateBurst * (1 + T.gateChainStep * (chain - 1));
+  unit.gateCapUntil = performance.now() + T.gateCapMs;
+  racer.scaleSpeed(burst);
+  if (racer.player) {
+    showDragShiftCallout(chain > 1 ? `Boost ×${chain}` : "Boost");
+    if (typeof haptic === "function") haptic(16);
+  }
+}
+
+function dragHitHazard(racer, event) {
+  racer.scaleSpeed(event.type === "oil" ? dragStripTuning.oilSlow : dragStripTuning.puddleSlow);
+  if (racer.player) {
+    showDragShiftCallout(event.type === "oil" ? "Oil" : "Splash");
+    if (typeof screenShake === "function") screenShake(4, 180);
+  }
+}
+
+function updateDragStripEvents(dt, now) {
+  if (!race?.strip) return false;
+  const T = dragStripTuning;
+  const racers = dragRacers();
+  race.strip.events.forEach((event) => {
+    racers.forEach((racer) => {
+      if (event.passed.has(racer.ref) || racer.distance() < event.d) return;
+      const inLane = Math.round(racer.lane()) === event.lane;
+      if (event.type === "wind") {
+        event.passed.add(racer.ref);
+        racer.setLane(Math.round(racer.lane()) + event.dir);
+        if (racer.player) showDragShiftCallout("Crosswind");
+        return;
+      }
+      if (event.type === "gate") {
+        event.passed.add(racer.ref);
+        if (racer.player) race.strip.gatesSeen += 1;
+        if (inLane) {
+          event.hitBy = event.hitBy || {};
+          event.hitBy[racer.player ? "player" : "ai"] = true;
+          dragHitGate(racer);
+        } else if (racer.player) race.strip.gateChain = 0;
+        return;
+      }
+      if (racer.distance() > event.d + T.slickLength) {
+        event.passed.add(racer.ref);
+        return;
+      }
+      if (!inLane) return;
+      event.passed.add(racer.ref);
+      event.hitBy = event.hitBy || {};
+      event.hitBy[racer.player ? "player" : "ai"] = true;
+      dragHitHazard(racer, event);
+    });
+  });
+  updateDragBlocks(now);
+  updateDragAiStrip(now);
+  return updateDragEngineTemp(dt);
+}
+
+// AI reads the strip: dodge hazards, grab gates, and block the player.
+function updateDragAiStrip(now) {
+  const T = dragStripTuning;
+  const B = dragBlockTuning;
+  const lanes = race.visibleLanes || [1, 2, 3, 4];
+  (race.opponents || []).forEach((o) => {
+    if (o.laneTransition || (o.stripThinkAt || 0) > now) return;
+    o.stripThinkAt = now + B.aiThinkMs;
+    const lane = Math.round(o.lane);
+    const ahead = (race.strip?.events || []).filter((e) => e.d > o.distance && e.d - o.distance < T.aiLookAhead);
+    const hazardIn = (l) => ahead.some((e) => (e.type === "oil" || e.type === "puddle") && e.lane === l);
+    const options = lanes.filter((l) => Math.abs(l - lane) === 1 && !hazardIn(l));
+    if (hazardIn(lane) && options.length && Math.random() < T.aiAvoidChance) {
+      dragForceLane(o, options[Math.floor(Math.random() * options.length)], false);
+      return;
+    }
+    const gateLane = ahead.find((e) => e.type === "gate" && options.includes(e.lane))?.lane;
+    if (gateLane && Math.random() < T.aiGateChance) {
+      dragForceLane(o, gateLane, false);
+      return;
+    }
+    const lead = o.distance - race.playerDistance;
+    const playerLane = Math.round(race.playerLane);
+    if (lead >= B.aiBlockRange[0] && lead <= B.aiBlockRange[1] && Math.abs(playerLane - lane) === 1 && !hazardIn(playerLane) && Math.random() < B.aiBlockChance) dragForceLane(o, playerLane, false);
+  });
+}
+
+// Right behind someone in the same lane = boxed in: you cannot go faster than them.
+function updateDragBlocks(now) {
+  const B = dragBlockTuning;
+  const units = [{ unit: race, player: true, lane: Math.round(race.playerLane), d: race.playerDistance, speed: race.playerSpeed }]
+    .concat((race.opponents || []).map((o) => ({ unit: o, player: false, lane: Math.round(o.lane), d: o.distance, speed: o.speed })));
+  race.playerBlocked = false;
+  units.forEach((follower) => {
+    const leader = units.find((other) => other !== follower && other.lane === follower.lane && other.d > follower.d && other.d - follower.d < B.gap);
+    if (!leader || follower.speed <= leader.speed + B.slack) return;
+    const capped = leader.speed + B.slack;
+    if (follower.player) {
+      race.playerSpeed = capped;
+      race.playerBlocked = true;
+    } else {
+      follower.unit.speed = capped;
+      if (leader.player && now - (race.lastBlockCalloutAt || 0) > B.calloutCooldownMs) {
+        race.lastBlockCalloutAt = now;
+        race.strip.blocks += 1;
+        showDragShiftCallout("Blocked");
+      }
+    }
+  });
+}
+
+// ─── Engine temp ────────────────────────────────────────────────────────────
+function updateDragEngineTemp(dt) {
+  const T = dragTempTuning;
+  if (race.gear <= 0) return false;
+  const z = dragShiftZones();
+  let heat = -T.coolPerSec;
+  if (race.gear < 6 && race.rpm > z.goodTo) heat += T.redPerSec;
+  if (race.nitroActive) heat += T.nitroPerSec;
+  race.engineTemp = dragClamp((race.engineTemp || 0) + heat * dt, 0, 1);
+  if (race.engineTemp >= T.hotFrom && race.engineTemp < T.hotTo && race.gear > 0) race.playerSpeed += race.playerAcceleration * race.playerPower * T.hotPull * dt;
+  if (race.engineTemp >= 1) {
+    failDragRace("Engine Overheated");
+    return true;
+  }
+  return false;
+}
+
+function dragShiftHeat(label) {
+  const add = label === "Late" ? dragTempTuning.late : label === "Early" ? dragTempTuning.early : 0;
+  if (add) race.engineTemp = dragClamp((race.engineTemp || 0) + add, 0, 1);
+}
+
+// ─── Parachute + shutdown ───────────────────────────────────────────────────
+function startDragShutdown() {
+  const C = dragChuteTuning;
+  const v = mphToMetersPerSecond(race.playerSpeed);
+  const stop = (v * v) / (2 * C.chuteDecel);
+  const boxStart = race.target + stop + C.boxLead;
+  const boxEnd = boxStart + C.boxBase + v * C.boxPerMs;
+  race.shutdown = { startedAt: performance.now(), snapshot: { player: race.playerDistance, opponents: (race.opponents || []).map((o) => o.distance) }, deployedAt: 0, boxStart, boxEnd, sandAt: boxEnd + C.sandGap, inSand: false, stoppedAt: 0, result: "" };
+  race.nitroActive = false;
+  if (el.shiftButton) el.shiftButton.textContent = "Chute";
+  showDragShiftCallout("Deploy the chute");
+}
+
+function deployDragChute() {
+  const s = race?.shutdown;
+  if (!s || s.deployedAt || s.stoppedAt) return;
+  s.deployedAt = performance.now();
+  if (typeof haptic === "function") haptic(22);
+  if (typeof playSound === "function") playSound("engine-shift");
+}
+
+function updateDragShutdown(dt, now) {
+  const C = dragChuteTuning;
+  const s = race.shutdown;
+  if (!s.stoppedAt) {
+    const open = s.deployedAt ? dragClamp((now - s.deployedAt) / C.openMs, 0, 1) : 0;
+    let decel = C.coastDecel + C.chuteDecel * open;
+    if (race.playerDistance >= s.sandAt) {
+      s.inSand = true;
+      decel += C.sandDecel;
+    }
+    const v = Math.max(0, mphToMetersPerSecond(race.playerSpeed) - decel * dt);
+    race.playerSpeed = v / 0.44704;
+    race.playerDistance += v * dt;
+    race.roadScroll = (race.roadScroll || 0) - race.playerSpeed * dt * 10;
+    race.bgScroll = (race.bgScroll || 0) - race.playerSpeed * dt * 3;
+    (race.opponents || []).forEach((o) => { o.speed = Math.max(0, o.speed - 30 * dt); o.distance += mphToMetersPerSecond(o.speed) * dt; });
+    if (race.playerSpeed <= C.stopMph) {
+      race.playerSpeed = 0;
+      s.stoppedAt = now;
+      const d = race.playerDistance;
+      s.result = s.inSand ? "Sand Trap" : d < s.boxStart ? "Short Stop" : d <= s.boxEnd ? "Clean Stop" : "Overshot";
+      race.chuteResult = s.result;
+      race.chuteBonus = s.result === "Clean Stop" ? Math.round(C.bonusPer400 * Math.max(1, race.target / 400)) : 0;
+      showDragShiftCallout(s.result === "Clean Stop" ? `Clean Stop +${race.chuteBonus}` : s.result);
+    }
+  }
+  drawRace();
+  if (s.stoppedAt && now - s.stoppedAt >= C.settleMs) {
+    race.playerDistance = s.snapshot.player;
+    (race.opponents || []).forEach((o, i) => { o.distance = s.snapshot.opponents[i] ?? o.distance; });
+    race.shutdown = null;
+    if (el.shiftButton) el.shiftButton.textContent = "Shift";
+    finishRace(true);
+    return;
+  }
+  requestAnimationFrame(updateRace);
+}
+
+// ─── Drawing (inside the 3G overlay) ───────────────────────────────────────
+function renderDragStrip(overlay) {
+  let layer = overlay.querySelector(".drag-strip-layer");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "drag-strip-layer";
+    overlay.prepend(layer);
+  }
+  const trackWidth = Math.max(420, el.dragTrack?.clientWidth || 720);
+  const baseX = Math.round(trackWidth * 0.3);
+  const metersToPx = Math.max(2.4, trackWidth / 120);
+  const xFor = (d) => baseX + (d - race.playerDistance) * metersToPx;
+  const items = [];
+  (race.strip?.events || []).forEach((event) => {
+    const x = xFor(event.d);
+    if (x < -260 || x > trackWidth + 60) return;
+    if (event.type === "wind") {
+      items.push(`<div class="drag-wind ${event.dir < 0 ? "up" : "down"}" style="left:${x.toFixed(0)}px"><span>${event.dir < 0 ? "↑" : "↓"} WIND</span></div>`);
+      return;
+    }
+    const width = (event.type === "gate" ? 4 : dragStripTuning.slickLength) * metersToPx;
+    const hit = event.hitBy?.player ? " hit" : "";
+    items.push(`<div class="drag-strip-${event.type}${hit}" style="left:${x.toFixed(0)}px;top:${dragLaneTop(event.lane)};width:${Math.max(18, width).toFixed(0)}px"></div>`);
+  });
+  const s = race.shutdown;
+  if (s) {
+    const x1 = xFor(s.boxStart);
+    const x2 = xFor(s.boxEnd);
+    const xs = xFor(s.sandAt);
+    items.push(`<div class="drag-shutdown-box" style="left:${x1.toFixed(0)}px;width:${Math.max(10, x2 - x1).toFixed(0)}px;top:${dragLaneTop(race.playerLane)}"><span>STOP</span></div>`);
+    items.push(`<div class="drag-sand" style="left:${xs.toFixed(0)}px;top:${dragLaneTop(race.playerLane)}"></div>`);
+  }
+  layer.innerHTML = items.join("");
+  const showTires = ["burnout", "red", "yellow", "green"].includes(race.launchPhase) && race.gear === 0 && !dragIsTutorialRace();
+  let tires = el.playerRacer?.querySelector(".drag-tire-meter");
+  if (!tires && el.playerRacer) {
+    tires = document.createElement("div");
+    tires.className = "drag-tire-meter";
+    tires.innerHTML = `<span class="drag-tire-sweet"></span><span class="drag-tire-fill"></span><em>TIRES</em>`;
+    el.playerRacer.appendChild(tires);
+  }
+  if (tires) {
+    tires.hidden = !showTires;
+    const T = dragBurnoutTuning;
+    tires.style.setProperty("--tire", `${((race.tireTemp || 0) * 100).toFixed(1)}%`);
+    tires.style.setProperty("--sweet-from", `${(T.sweetFrom * 100).toFixed(1)}%`);
+    tires.style.setProperty("--sweet-to", `${(T.sweetTo * 100).toFixed(1)}%`);
+    tires.classList.toggle("sweet", (race.tireTemp || 0) >= T.sweetFrom && (race.tireTemp || 0) <= T.sweetTo);
+    tires.classList.toggle("smoked", Boolean(race.tiresSmoked));
+  }
+  el.playerRacer?.classList.toggle("burning-out", Boolean(race.burningOut));
+  let chute = el.playerRacer?.querySelector(".drag-chute");
+  if (!chute && el.playerRacer) {
+    chute = document.createElement("div");
+    chute.className = "drag-chute";
+    el.playerRacer.appendChild(chute);
+  }
+  if (chute) chute.classList.toggle("open", Boolean(race.shutdown?.deployedAt || (race.finished && race.chuteResult)));
+  overlay.classList.toggle("blocked", Boolean(race.playerBlocked) && !race.shutdown);
+  overlay.classList.toggle("shutdown", Boolean(race.shutdown));
+  let prompt = overlay.querySelector(".drag-chute-prompt");
+  if (!prompt) { prompt = document.createElement("div"); prompt.className = "drag-chute-prompt"; overlay.appendChild(prompt); }
+  prompt.textContent = race.shutdown && !race.shutdown.deployedAt ? `CHUTE · ${typeof readableKey === "function" ? readableKey(state.settings.shiftKey) : "Space"}` : "";
+  let phase = overlay.querySelector(".drag-burnout-prompt");
+  if (!phase) { phase = document.createElement("div"); phase.className = "drag-burnout-prompt"; overlay.appendChild(phase); }
+  phase.textContent = race.launchPhase === "burnout" ? `HOLD ${typeof readableKey === "function" ? readableKey(state.settings.shiftKey).toUpperCase() : "SPACE"} TO BURN OUT` : "";
+}
+
+// Engine temp mini gauge: an arc on the inside left of the dial.
+function dragTempAngle(t) { return 145 + 70 * dragClamp(t, 0, 1); }
+
+function dragTempArc(from, to, r = 44) {
+  if (to <= from) return "";
+  const point = (t) => {
+    const a = (dragTempAngle(t) * Math.PI) / 180;
+    return [DRAG_DIAL.cx + Math.cos(a) * r, DRAG_DIAL.cy + Math.sin(a) * r];
+  };
+  const [x1, y1] = point(from);
+  const [x2, y2] = point(to);
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
 }

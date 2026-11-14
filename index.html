@@ -61,7 +61,7 @@
           </button>
         </div>
         <nav class="nav" aria-label="Main navigation">
-          <button class="nav-button story-nav" data-view="story" type="button">Story Mode</button>
+          <button class="nav-button story-nav" data-view="story" type="button">The Adventure</button>
           <button class="nav-button" data-view="solo" type="button">Training Academy</button>
           <button class="nav-button" data-view="garage" type="button">Garage</button>
           <button class="nav-button" data-view="vindex" type="button">VINdex</button>
@@ -91,10 +91,20 @@
             </div>
             <div class="menu-dashboard" aria-label="Menu choices">
               <button class="menu-card hero-menu-card" data-view="story" type="button">
-                <strong>Story Mode</strong>
+                <strong>The Adventure</strong>
                 <small>Race. Evolve. Prove yourself.</small>
-                <span class="menu-card-cta">Start Story</span>
+                <span class="menu-card-cta">Start Adventure</span>
               </button>
+              <section class="menu-evo-rush" id="menu-evo-rush" aria-labelledby="menu-evo-rush-title">
+                <span class="menu-evo-kicker">Daily Quick Play</span>
+                <h2 id="menu-evo-rush-title">Evo Rush</h2>
+                <p class="menu-evo-tagline">60 seconds. Every KO evolves you.</p>
+                <div class="evo-forms menu-evo-today" id="menu-evo-today"></div>
+                <span class="menu-evo-car" id="menu-evo-car"></span>
+                <button class="menu-evo-play" id="menu-evo-play" type="button">Play Now</button>
+                <button class="menu-evo-pick" id="menu-evo-pick" type="button">Choose another car</button>
+                <small class="menu-evo-best" id="menu-evo-best"></small>
+              </section>
               <aside class="next-goal-panel" data-view="story">
                 <div class="next-race-thumb-wrapper">
                   <img class="next-race-city-thumb" id="menu-next-race-thumb" src="" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;">
@@ -166,23 +176,106 @@
             </button>
             <button class="solo-card primary-card" data-training-2d="vs" type="button">
               <span class="solo-card-icon"></span>
-              <strong>Vs. Race</strong>
+              <strong>Gear Prix</strong>
               <span>Choose a 4-car, 6-car, or head-to-head race.</span>
               <em>Start</em>
             </button>
-            <button class="solo-card primary-card" data-view="battle" type="button">
+            <button class="solo-card primary-card" data-view="crashout" type="button">
               <span class="solo-card-icon"></span>
-              <strong>Battle Mode</strong>
-              <span>Trade attacks, defend, and use specials in arena battles.</span>
+              <strong>Tuner Crashout</strong>
+              <span>Ram rivals off the platform. Last car on wins.</span>
               <em>Start</em>
             </button>
+          </div>
+        </section>
+
+        <section class="view" id="crashout-view" aria-labelledby="crashout-title">
+          <button class="back-link" data-view="solo" type="button">Back</button>
+          <div class="section-heading crashout-heading">
+            <p>Training Academy</p>
+            <h1 id="crashout-title">Tuner Crashout</h1>
+          </div>
+          <p class="crashout-intro">Ram rivals off the platform. Charge your ram, time the release, and be the last GearBorn standing.</p>
+          <section class="crashout-ring-picker" aria-labelledby="crashout-ring-title">
+            <h2 id="crashout-ring-title">Choose Your Ring</h2>
+            <div class="crashout-ring-grid" id="crashout-ring-grid"></div>
+          </section>
+          <div class="crashout-setup-panel" id="crashout-setup-panel">
+            <div class="crashout-setup-grid">
+              <label>Crew Size
+                <select id="crashout-setup-lives">
+                  <option value="1">1 car</option>
+                  <option value="3" selected>3 cars</option>
+                  <option value="5">5 cars</option>
+                </select>
+              </label>
+              <label>Format
+                <select id="crashout-setup-format">
+                  <option value="duel">Duel (1v1)</option>
+                  <option value="rally">Rally (2v2)</option>
+                  <option value="chaos" selected>Chaos (8 cars)</option>
+                </select>
+              </label>
+              <label class="crashout-setup-legacy" hidden>Opponents
+                <select id="crashout-setup-opponents">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7" selected>7</option>
+                </select>
+              </label>
+              <label class="crashout-setup-arena-field" hidden>Arena
+                <select id="crashout-setup-arena">
+                  <option value="indianapolis" selected>Indianapolis Speedway (Oval)</option>
+                  <option value="berlin">Berlin Werk (Hex)</option>
+                  <option value="dubai">Dubai Tower Ring (Donut)</option>
+                  <option value="rio">Rio Carnival Bowl (Circle)</option>
+                  <option value="los-angeles">Los Angeles Block (Square)</option>
+                  <option value="seoul">Seoul Twin Rings</option>
+                  <option value="cape-town">Cape Town Narrow Cape (Bridge)</option>
+                  <option value="bangalore">Bengaluru Crossroads (Cross)</option>
+                  <option value="space">Space Diamond</option>
+                </select>
+              </label>
+              <label>Sudden Death
+                <input id="crashout-setup-sudden" type="number" min="0" step="15" value="180">
+              </label>
+              <label>Items
+                <select id="crashout-setup-items">
+                  <option value="off">Off</option>
+                  <option value="low">Low</option>
+                  <option value="normal" selected>Normal</option>
+                  <option value="chaos">Chaos</option>
+                </select>
+              </label>
+              <label>AI Difficulty
+                <select id="crashout-setup-ai">
+                  <option value="chill">Chill</option>
+                  <option value="normal" selected>Normal</option>
+                  <option value="aggro">Aggro</option>
+                </select>
+              </label>
+              <label>Touch Controls
+                <select id="crashout-setup-controls">
+                  <option value="stick" selected>Drive Stick</option>
+                  <option value="classic">Classic Buttons</option>
+                </select>
+              </label>
+            </div>
+            <div class="crashout-setup-actions">
+              <button class="story-primary" id="crashout-setup-start" type="button">Choose Crew</button>
+            </div>
+            <p class="crashout-setup-note">AI lineup uses rotating archetypes: Aggro, Tank, Coward, Trickster, Speedster, Opportunist, Defender.</p>
           </div>
         </section>
 
         <section class="view" id="story-view" aria-labelledby="story-title">
           <button class="back-link" data-mode-back="story" type="button">Back</button>
           <div class="section-heading">
-            <p>Story Mode</p>
+            <p>The Adventure</p>
             <h1 id="story-title">The road is calling.</h1>
           </div>
           <div class="flow-step active" data-flow="story" data-step="car">
@@ -357,52 +450,6 @@
           <div class="convoy-loadout-slots-v2" id="convoy-loadout-slots"></div>
         </section>
 
-        <section class="view" id="battle-view" aria-labelledby="battle-title">
-          <button class="back-link" data-mode-back="battle" type="button">Back</button>
-          <div class="battle-mode">
-            <div class="setup">
-              <div class="section-heading flow-step active" data-flow="battle" data-step="car">
-                <p>Battle Mode</p>
-                <h1 id="battle-title">Pick your warrior.</h1>
-                <div class="car-select-layout">
-                  <div class="icon-grid compact-car-grid" id="battle-car-grid"></div>
-                  <div class="car-select-preview" id="battle-car-select-preview"></div>
-                </div>
-                <button class="primary flow-next" data-flow-next="battle:match" type="button">Next</button>
-              </div>
-              <div class="flow-step" data-flow="battle" data-step="match">
-                <div class="field">
-                  <label>Opponent</label>
-                  <div class="boss-list" id="battle-list"></div>
-                </div>
-                <div class="selection-preview boss-preview" id="battle-preview"></div>
-                <button class="primary battle-start-button" id="start-battle" type="button">Start Battle</button>
-              </div>
-            </div>
-            <div class="battle-shell flow-step" data-flow="battle" data-step="race">
-              <div class="battle-arena" id="battle-arena">
-                <div class="battle-status player">
-                  <strong id="battle-player-name"></strong>
-                  <div class="hp-bar"><span id="battle-player-hp-fill"></span><b id="battle-player-hp"></b></div>
-                  <div class="sp-bar"><span id="battle-player-sp-fill"></span><b id="battle-player-sp"></b></div>
-                </div>
-                <div class="battle-status opponent">
-                  <strong id="battle-opponent-name"></strong>
-                  <div class="hp-bar"><span id="battle-opponent-hp-fill"></span><b id="battle-opponent-hp"></b></div>
-                  <div class="sp-bar"><span id="battle-opponent-sp-fill"></span><b id="battle-opponent-sp"></b></div>
-                </div>
-                <div class="battle-car player" id="battle-player-car"></div>
-                <div class="battle-car opponent" id="battle-opponent-car"></div>
-                <div class="battle-move player" id="battle-player-move"></div>
-                <div class="battle-move opponent" id="battle-opponent-move"></div>
-                <div class="battle-actions" id="battle-actions"></div>
-                <button class="battle-honk-button" data-battle-honk type="button">Honk</button>
-                <button class="battle-next" id="battle-next-turn" type="button" hidden>Next Turn</button>
-                <div class="battle-log" id="battle-log">Choose a move.</div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section class="view" id="time-trial-view" aria-labelledby="time-title">
           <button class="back-link" data-mode-back="time" type="button">Back</button>
@@ -748,6 +795,14 @@
               <button type="button" data-garage-view="detailed">Detailed</button>
             </div>
             <div class="garage-status" id="garage-status" hidden></div>
+            <section class="garage-showcase" id="garage-showcase" aria-labelledby="garage-showcase-title">
+              <header class="garage-showcase-header">
+                <h2 id="garage-showcase-title">Showcase</h2>
+                <small>Your 8 under the lights. They come up first whenever you pick a car.</small>
+              </header>
+              <div class="garage-showcase-stage" id="garage-showcase-grid"></div>
+              <div class="garage-showcase-detail" id="garage-showcase-detail" hidden></div>
+            </section>
             <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
               <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
               <img class="forge-menu-card-vat" src="assets/forge/forge_vat.png" alt="" aria-hidden="true">
@@ -755,6 +810,7 @@
               <strong id="forge-card-title">The Forge</strong>
               <small id="forge-card-subtitle">Unlock GearBorn with your Medallions.</small>
             </button>
+            <h2 class="garage-lineup-heading" id="garage-lineup-heading">Full Lineup</h2>
             <div class="garage-grid" id="garage-grid"></div>
           </div>
 
@@ -948,84 +1004,6 @@
                 <strong>GearBorn Studio (Beta)</strong>
                 <span>Drop GearBorns into real photos. Pose, stack, save.</span>
               </button>
-              <button class="beta-option-card" id="last-gear-beta-start" type="button">
-                <strong>Last Gear</strong>
-                <span>8 GearBorn enter. One leaves the platform.</span>
-              </button>
-              <button class="beta-option-card evo-rush-card-entry" id="evo-rush-start" type="button">
-                <strong>Evo Rush</strong>
-                <span>60 seconds. Every KO evolves your car.</span>
-              </button>
-              <div class="last-gear-setup-panel" id="last-gear-setup-panel" hidden>
-                <div class="last-gear-setup-grid">
-                  <label>Crew Size
-                    <select id="last-gear-setup-lives">
-                      <option value="1">1 car</option>
-                      <option value="3" selected>3 cars</option>
-                      <option value="5">5 cars</option>
-                    </select>
-                  </label>
-                  <label>Format
-                    <select id="last-gear-setup-format">
-                      <option value="duel">Duel (1v1)</option>
-                      <option value="rally">Rally (2v2)</option>
-                      <option value="chaos" selected>Chaos (8 cars)</option>
-                    </select>
-                  </label>
-                  <label class="last-gear-setup-legacy" hidden>Opponents
-                    <select id="last-gear-setup-opponents">
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                      <option value="6">6</option>
-                      <option value="7" selected>7</option>
-                    </select>
-                  </label>
-                  <label>Arena
-                    <select id="last-gear-setup-arena">
-                      <option value="indianapolis" selected>Indianapolis Speedway (Oval)</option>
-                      <option value="berlin">Berlin Werk (Hex)</option>
-                      <option value="dubai">Dubai Tower Ring (Donut)</option>
-                      <option value="rio">Rio Carnival Bowl (Circle)</option>
-                      <option value="los-angeles">Los Angeles Block (Square)</option>
-                      <option value="seoul">Seoul Twin Rings</option>
-                      <option value="cape-town">Cape Town Narrow Cape (Bridge)</option>
-                      <option value="bangalore">Bengaluru Crossroads (Cross)</option>
-                      <option value="space">Space Diamond</option>
-                    </select>
-                  </label>
-                  <label>Sudden Death
-                    <input id="last-gear-setup-sudden" type="number" min="0" step="15" value="180">
-                  </label>
-                  <label>Items
-                    <select id="last-gear-setup-items">
-                      <option value="off">Off</option>
-                      <option value="low">Low</option>
-                      <option value="normal" selected>Normal</option>
-                      <option value="chaos">Chaos</option>
-                    </select>
-                  </label>
-                  <label>AI Difficulty
-                    <select id="last-gear-setup-ai">
-                      <option value="chill">Chill</option>
-                      <option value="normal" selected>Normal</option>
-                      <option value="aggro">Aggro</option>
-                    </select>
-                  </label>
-                  <label>Touch Controls
-                    <select id="last-gear-setup-controls">
-                      <option value="stick" selected>Drive Stick</option>
-                      <option value="classic">Classic Buttons</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="last-gear-setup-actions">
-                  <button class="story-primary" id="last-gear-setup-start" type="button">Choose Crew</button>
-                </div>
-                <p class="last-gear-setup-note">AI lineup uses rotating archetypes: Aggro, Tank, Coward, Trickster, Speedster, Opportunist, Defender.</p>
-              </div>
               <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
                   <strong>Solo Time Trial</strong>
@@ -1171,114 +1149,126 @@
           </div>
         </section>
 
-        <section class="view" id="last-gear-view" aria-label="Last Gear">
-            <div class="last-gear-crew-select evo-rush-pick" id="evo-rush-pick" hidden>
+        <section class="view" id="crashout-arena-view" aria-label="Tuner Crashout">
+            <div class="crashout-crew-select evo-rush-pick" id="evo-rush-pick" hidden>
               <button class="back-link" id="evo-rush-back" type="button">Back</button>
               <div class="section-heading">
                 <p>Evo Rush</p>
                 <h1>Pick Your Starter</h1>
               </div>
-              <p class="last-gear-crew-select-intro">Sixty seconds, eight cars. Every KO powers you up: two KOs to evolve, five to hit final form. Pick any starter, even ones you don't own yet.</p>
+              <p class="crashout-crew-select-intro">Sixty seconds, eight cars. Every KO powers you up: two KOs to evolve, five to hit final form. Pick any starter, even ones you don't own yet.</p>
               <p class="evo-rush-best" id="evo-rush-best"></p>
-              <div class="last-gear-crew-select-slots evo-rush-picks" id="evo-rush-picks" data-size="3"></div>
-              <div class="last-gear-crew-select-actions">
+              <div class="crashout-crew-select-slots evo-rush-picks" id="evo-rush-picks" data-size="3"></div>
+              <div class="crashout-crew-select-actions">
                 <button class="ghost" id="evo-rush-reroll" type="button">New Picks</button>
               </div>
             </div>
-            <div class="last-gear-crew-select" id="last-gear-crew-select" hidden>
-              <button class="back-link" id="last-gear-crew-back" type="button">Back</button>
-              <div class="section-heading"><p>Last Gear</p><h1>Build Your Crew</h1></div>
-              <p class="last-gear-crew-select-intro">Your first car starts. The rest wait on the bench: park on a SWAP pad to tag one in, and every ring-out brings in the next. Empty slots fill themselves with your closest match, or a loaner if you're short.</p>
-              <div class="last-gear-crew-select-bar">
-                <div class="last-gear-crew-size-toggle" role="group" aria-label="Crew size">
-                  <button type="button" data-last-gear-crew-size="1">Solo</button><button type="button" data-last-gear-crew-size="3">3 cars</button><button type="button" data-last-gear-crew-size="5">5 cars</button>
+            <div class="crashout-crew-select" id="crashout-crew-select" hidden>
+              <button class="back-link" id="crashout-crew-back" type="button">Back</button>
+              <div class="section-heading"><p>Tuner Crashout</p><h1>Build Your Crew</h1></div>
+              <p class="crashout-crew-select-intro">Your first car starts. The rest wait on the bench: drive onto a SWAP pad and hit SWAP to tag one in, and every ring-out brings in the next. Empty slots fill themselves with your closest match, or a loaner if you're short.</p>
+              <div class="crashout-crew-select-bar">
+                <div class="crashout-crew-size-toggle" role="group" aria-label="Crew size">
+                  <button type="button" data-crashout-crew-size="1">Solo</button><button type="button" data-crashout-crew-size="3">3 cars</button><button type="button" data-crashout-crew-size="5">5 cars</button>
                 </div>
-                <span id="last-gear-crew-select-summary"></span>
+                <span id="crashout-crew-select-summary"></span>
               </div>
-              <div class="last-gear-crew-select-slots" id="last-gear-crew-select-slots"></div>
-              <div class="last-gear-crew-select-actions"><button class="ghost" id="last-gear-crew-autofill" type="button">Auto-fill</button><button class="story-primary" id="last-gear-crew-start" type="button">Start Match</button></div>
+              <div class="crashout-crew-select-slots" id="crashout-crew-select-slots"></div>
+              <div class="crashout-crew-select-actions"><button class="ghost" id="crashout-crew-autofill" type="button">Auto-fill</button><button class="story-primary" id="crashout-crew-start" type="button">Start Match</button></div>
             </div>
-            <div class="last-gear-beta beta-screen" id="last-gear-beta" hidden>
-              <div class="last-gear-topbar">
-                <button class="back-link" id="last-gear-beta-back" type="button">Back</button>
-                <div class="last-gear-nitro last-gear-ram-meter" id="last-gear-ram-meter" data-ram-state="ready">
-                  <span id="last-gear-ram-label">Charge Ram</span>
-                  <div class="last-gear-nitro-track">
-                    <div id="last-gear-nitro-fill"></div>
+            <div class="crashout-beta beta-screen" id="crashout-beta" hidden>
+              <div class="crashout-topbar">
+                <button class="back-link" id="crashout-beta-back" type="button">Back</button>
+                <button class="crashout-pause-button" id="crashout-pause" type="button" aria-label="Pause" aria-pressed="false"><span aria-hidden="true">❚❚</span></button>
+                <div class="crashout-nitro crashout-ram-meter" id="crashout-ram-meter" data-ram-state="ready">
+                  <span id="crashout-ram-label">Charge Ram</span>
+                  <div class="crashout-nitro-track">
+                    <div id="crashout-nitro-fill"></div>
                   </div>
                 </div>
-                <div class="last-gear-speed" id="last-gear-speed">0 MPH</div>
+                <div class="crashout-speed" id="crashout-speed">0 MPH</div>
               </div>
-              <div class="last-gear-stage">
-                <canvas id="last-gear-canvas" width="960" height="620" aria-label="Last Gear demolition derby arena"></canvas>
-                <div class="last-gear-evo-hud" id="last-gear-evo-hud" aria-live="polite" hidden></div>
-                <div class="last-gear-item-slot beta-item-slot" id="last-gear-item-slot">
+              <div class="crashout-stage">
+                <canvas id="crashout-canvas" width="960" height="620" aria-label="Tuner Crashout arena"></canvas>
+                <div class="crashout-pause-overlay" id="crashout-pause-overlay" role="dialog" aria-modal="true" aria-labelledby="crashout-pause-title" hidden>
+                  <div class="crashout-pause-card">
+                    <h2 id="crashout-pause-title">Paused</h2>
+                    <button class="story-primary" id="crashout-resume" type="button">Resume</button>
+                    <button class="ghost" id="crashout-pause-restart" type="button">Restart</button>
+                    <button class="ghost" id="crashout-pause-quit" type="button">Quit</button>
+                    <p>P / Esc / Start to resume</p>
+                  </div>
+                </div>
+                <div class="crashout-evo-hud" id="crashout-evo-hud" aria-live="polite" hidden></div>
+                <div class="crashout-item-slot beta-item-slot" id="crashout-item-slot">
                   <span>Item</span>
                   <div class="beta-item-readout">
-                    <b id="last-gear-item-icon" class="beta-item-icon-cell">?</b>
-                    <strong id="last-gear-item-name">Empty</strong>
+                    <b id="crashout-item-icon" class="beta-item-icon-cell">?</b>
+                    <strong id="crashout-item-name">Empty</strong>
                   </div>
                   <em>Space / E</em>
                 </div>
-                <div class="last-gear-announcer" id="last-gear-announcer" hidden>
-                  <div class="last-gear-announcer-portrait">
-                    <img class="last-gear-announcer-frame" src="assets/lastgear/lg-announcer-frame.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.style.display='none';">
-                    <img class="last-gear-announcer-headshot" src="assets/characters/headshots/headshot-roberto-yucca.png" alt="Roberto Yucca" loading="lazy" decoding="async">
+                <div class="crashout-announcer" id="crashout-announcer" hidden>
+                  <div class="crashout-announcer-portrait">
+                    <img class="crashout-announcer-frame" src="assets/lastgear/lg-announcer-frame.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.style.display='none';">
+                    <img class="crashout-announcer-headshot" src="assets/characters/headshots/headshot-roberto-yucca.png" alt="Roberto Yucca" loading="lazy" decoding="async">
                   </div>
-                  <div class="last-gear-announcer-copy">
-                    <span id="last-gear-announcer-event">Last Gear</span>
-                    <strong id="last-gear-announcer-line">Welcome to Last Gear!</strong>
+                  <div class="crashout-announcer-copy">
+                    <span id="crashout-announcer-event">Tuner Crashout</span>
+                    <strong id="crashout-announcer-line">Welcome to Tuner Crashout!</strong>
                   </div>
                 </div>
-                <div class="last-gear-results" id="last-gear-results" hidden>
-                  <h2 id="last-gear-result-title">Last Gear</h2>
-                  <div id="last-gear-result-copy"></div>
+                <div class="crashout-results" id="crashout-results" hidden>
+                  <h2 id="crashout-result-title">Tuner Crashout</h2>
+                  <div id="crashout-result-copy"></div>
                   <div class="modal-actions">
-                    <button class="success-button" id="last-gear-restart" type="button">Restart</button>
-                    <button class="ghost" id="last-gear-edit-crew" type="button">Edit Crew</button>
-                    <button class="success-button" id="last-gear-evo-share" type="button" hidden>Share</button>
-                    <button class="ghost" id="last-gear-finish-exit" type="button">Back</button>
+                    <button class="success-button" id="crashout-restart" type="button">Restart</button>
+                    <button class="ghost" id="crashout-edit-crew" type="button">Edit Crew</button>
+                    <button class="ghost result-upgrade" id="crashout-upgrade" type="button">Upgrade</button>
+                    <button class="success-button" id="crashout-evo-share" type="button" hidden>Share</button>
+                    <button class="ghost" id="crashout-finish-exit" type="button">Back</button>
                   </div>
                 </div>
               </div>
-              <div class="last-gear-crew-bar" id="last-gear-crew-bar" aria-label="Your crew: tap a car to send it in next" hidden></div>
-              <div class="last-gear-status-grid" id="last-gear-status-grid" aria-label="Last Gear racer status"></div>
-              <div class="touch-controls beta-touch-controls last-gear-touch-controls" data-layout="stick" aria-label="Last Gear driving controls">
-                <div class="last-gear-stick-controls">
-                  <div class="last-gear-drive-pad" data-last-gear-drive-pad role="application" aria-label="Drive stick: drag toward where you want to go">
-                    <div class="last-gear-drive-ring"></div>
-                    <div class="last-gear-drive-knob"></div>
+              <div class="crashout-crew-bar" id="crashout-crew-bar" aria-label="Your crew: tap a car to send it in next" hidden></div>
+              <div class="crashout-status-grid" id="crashout-status-grid" aria-label="Tuner Crashout racer status"></div>
+              <div class="touch-controls beta-touch-controls crashout-touch-controls" data-layout="stick" aria-label="Tuner Crashout driving controls">
+                <div class="crashout-stick-controls">
+                  <div class="crashout-drive-pad" data-crashout-drive-pad role="application" aria-label="Drive stick: drag toward where you want to go">
+                    <div class="crashout-drive-ring"></div>
+                    <div class="crashout-drive-knob"></div>
                   </div>
-                  <div class="last-gear-action-cluster">
-                    <button class="steer-button last-gear-nitro-button last-gear-ram-button last-gear-action-ram" data-last-gear-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
+                  <div class="crashout-action-cluster">
+                    <button class="steer-button crashout-nitro-button crashout-ram-button crashout-action-ram" data-crashout-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
                       <span>Ram</span>
                     </button>
-                    <button class="steer-button last-gear-special-button last-gear-action-special" data-last-gear-special type="button" aria-label="Special move">Special</button>
-                    <button class="steer-button last-gear-action-item" data-last-gear-item-button type="button" aria-label="Use item">Item</button>
+                    <button class="steer-button crashout-special-button crashout-action-special" data-crashout-special type="button" aria-label="Special move">Special</button>
+                    <button class="steer-button crashout-action-item" data-crashout-item-button type="button" aria-label="Use item">Item</button>
+                    <button class="steer-button crashout-action-swap" id="crashout-swap-button" type="button" aria-label="Swap in your next crew car" hidden>Swap</button>
                   </div>
                 </div>
-                <div class="last-gear-control-row">
-                  <button class="steer-button arrow-control left-control" data-last-gear-control="left" type="button" aria-label="Steer left">←</button>
-                  <button class="steer-button pedal-control brake-control" data-last-gear-control="down" type="button" aria-label="Brake">
+                <div class="crashout-control-row">
+                  <button class="steer-button arrow-control left-control" data-crashout-control="left" type="button" aria-label="Steer left">←</button>
+                  <button class="steer-button pedal-control brake-control" data-crashout-control="down" type="button" aria-label="Brake">
                     <img class="pedal-off" src="assets/icons/brakepedal-off.png" alt="">
                     <img class="pedal-on" src="assets/icons/brakepedal-on.png" alt="">
                     <span>Brake</span>
                   </button>
-                  <button class="steer-button arrow-control right-control" data-last-gear-control="right" type="button" aria-label="Steer right">→</button>
-                  <button class="steer-button pedal-control gas-control" data-last-gear-control="up" type="button" aria-label="Gas">
+                  <button class="steer-button arrow-control right-control" data-crashout-control="right" type="button" aria-label="Steer right">→</button>
+                  <button class="steer-button pedal-control gas-control" data-crashout-control="up" type="button" aria-label="Gas">
                     <img class="pedal-off" src="assets/icons/gaspedal-off.png" alt="">
                     <img class="pedal-on" src="assets/icons/gaspedal-on.png" alt="">
                     <span>Gas</span>
                   </button>
-                  <button class="steer-button last-gear-nitro-button last-gear-ram-button" data-last-gear-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
+                  <button class="steer-button crashout-nitro-button crashout-ram-button" data-crashout-ram type="button" aria-label="Charge Ram: hold to charge, release to ram, tap to dodge">
                     <span>Ram</span>
                   </button>
-                  <button class="steer-button last-gear-special-button" data-last-gear-special type="button" aria-label="Special move">Special</button>
+                  <button class="steer-button crashout-special-button" data-crashout-special type="button" aria-label="Special move">Special</button>
                 </div>
-                <button class="steer-button beta-item-control last-gear-space-button" data-last-gear-item-button type="button" aria-label="Use item">Space</button>
-                <button class="last-gear-layout-toggle" data-last-gear-layout-toggle type="button">Switch to classic</button>
+                <button class="steer-button beta-item-control crashout-space-button" data-crashout-item-button type="button" aria-label="Use item">Space</button>
+                <button class="crashout-layout-toggle" data-crashout-layout-toggle type="button">Switch to classic</button>
               </div>
-              <p class="beta-note">WASD to drive. Hold Shift to charge a Ram, release in the gold to land a PERFECT. Tap Shift + steer to dodge. Q fires your Type special, Space/E items. Park on a SWAP pad to tag in your next crew car (1-5 or tap your crew to pick who). Gamepad: left stick drives, A ram, B special, X item, Y next crew car.</p>
+              <p class="beta-note">WASD to drive. Hold Shift to charge a Ram, release in the gold to land a PERFECT. Tap Shift + steer to dodge. Q fires your Type special, Space/E items. On a SWAP pad, press R to hot-swap in your next crew car (1-5 or tap your crew to pick who). P or Esc pauses. Gamepad: left stick drives, A ram, B special, X item, Y swap on a pad (next crew car elsewhere), Start pauses.</p>
             </div>
         </section>
 
@@ -1545,7 +1535,7 @@
       <div class="confirm-modal tutorial-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-skip-title">
         <p class="modal-kicker">Tutorial</p>
         <h2 id="tutorial-skip-title">Skip Tutorial?</h2>
-        <p>Are you sure you want to exit the tutorial? You can continue learning through Story Mode, but this intro will be skipped.</p>
+        <p>Are you sure you want to exit the tutorial? You can continue learning through The Adventure, but this intro will be skipped.</p>
         <div class="modal-actions">
           <button class="ghost" id="cancel-tutorial-skip" type="button">Cancel</button>
           <button class="danger-button" id="confirm-tutorial-skip" type="button">Skip Tutorial</button>
@@ -1887,9 +1877,9 @@
     <script src="game-logic.js"></script>
     <script src="game-dom.js"></script>
     <script src="game-sprites.js"></script>
-    <script src="game-race2d.js"></script>
+    <script src="game-gearprix.js"></script>
     <script src="game-beta3d.js"></script>
-    <script src="game-lastgear.js"></script>
+    <script src="game-crashout.js"></script>
     <script src="game-events.js"></script>
     <script src="game-init.js"></script>
 
