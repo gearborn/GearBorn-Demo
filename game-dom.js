@@ -34,6 +34,7 @@ const carPickerState = {
     showcase: false,
     types: []
   },
+  showcaseOnly: false,
   sort: "level-desc"
 };
 let pendingBondSceneQueue = [];
@@ -163,18 +164,6 @@ const el = {
   hubMapBetaBack: queryEl("hubMapBetaBack", "#hub-map-beta-back"),
   hubMapBetaCanvas: queryEl("hubMapBetaCanvas", "#hub-map-beta-canvas"),
   hubMapBetaCoords: queryEl("hubMapBetaCoords", "#hub-map-beta-coords"),
-  gearbornStudioBetaStart: queryEl("gearbornStudioBetaStart", "#gearborn-studio-beta-start"),
-  gearbornStudioBetaBack: queryEl("gearbornStudioBetaBack", "#gearborn-studio-beta-back"),
-  gearbornStudioBetaView: queryEl("gearbornStudioBetaView", "#gearborn-studio-beta-view"),
-  gearbornStudioBetaVideo: queryEl("gearbornStudioBetaVideo", "#gearborn-studio-beta-video"),
-  gearbornStudioBetaCanvas: queryEl("gearbornStudioBetaCanvas", "#gearborn-studio-beta-canvas"),
-  gearbornStudioBetaPicker: queryEl("gearbornStudioBetaPicker", "#gearborn-studio-beta-picker"),
-  gearbornStudioBetaPickerModal: queryEl("gearbornStudioBetaPickerModal", "#gearborn-studio-beta-picker-modal"),
-  gearbornStudioBetaPickerClose: queryEl("gearbornStudioBetaPickerClose", "#gearborn-studio-beta-picker-close"),
-  gearbornStudioBetaAdd: queryEl("gearbornStudioBetaAdd", "#gearborn-studio-beta-add"),
-  gearbornStudioBetaCaptureFab: queryEl("gearbornStudioBetaCaptureFab", "#gearborn-studio-beta-capture-fab"),
-  gearbornStudioBetaLayers: queryEl("gearbornStudioBetaLayers", "#gearborn-studio-beta-layers"),
-  gearbornStudioBetaControls: queryEl("gearbornStudioBetaControls", "#gearborn-studio-beta-controls"),
   crashoutSetupPanel: queryEl("crashoutSetupPanel", "#crashout-setup-panel"),
   crashoutSetupLives: queryEl("crashoutSetupLives", "#crashout-setup-lives"),
   crashoutSetupOpponents: queryEl("crashoutSetupOpponents", "#crashout-setup-opponents"),

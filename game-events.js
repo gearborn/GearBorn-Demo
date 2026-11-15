@@ -1025,7 +1025,7 @@ document.addEventListener("keydown", (event) => {
   if (isKeySettingFocused()) return;
   if (key === state.settings.shiftKey) {
     event.preventDefault();
-    shift();
+    if (!event.repeat) shift();
     return;
   }
   if (race?.active && !race.finished && (key === "W" || key === "ARROWUP")) {
@@ -1149,7 +1149,7 @@ document.getElementById("crashout-upgrade")?.addEventListener("click", () => {
   openGarageFromResult(carId);
 });
 
-// ─── Drag: hold SHIFT for the burnout (3H) ──────────────────────────────────
+// ─── Drag: hold SHIFT to rev during staging (4A) ────────────────────────────
 document.addEventListener("keydown", (event) => {
   if (!race?.active || typeof normalizeKey !== "function") return;
   if (normalizeKey(event) === state.settings.shiftKey) setDragShiftHeld(true);

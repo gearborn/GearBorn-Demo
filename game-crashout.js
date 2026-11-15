@@ -46,7 +46,10 @@ const crashoutImages = {
 // ── Crashout: isolated Beta Mode arena prototype ───────────────────────────
 let crashoutState = null;
 const crashoutKeys = {};
-const CRASHOUT_SPRITE_BODY_LENGTH = 58; // drawn car-body length in arena px (collision radius is 27)
+const CRASHOUT_SPRITE_BODY_LENGTH = 58; // BASE car-body length in arena px; drawn at x CRASHOUT_CAR_SCALE
+// 4C: cars (and everything drawn around them) are 1.5x. Overlays are authored at
+// base size and drawn inside crashoutScaleAboutCar(); collision radius scales too.
+const CRASHOUT_CAR_SCALE = 1.5;
 const crashoutKeyMap = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right", Shift: "charge" };
 const crashoutArena = {
   width: 2400,
@@ -163,10 +166,12 @@ const crashoutImpactTuning = {
   hitstopMax: 58,
   shakeDivisor: 10
 };
+// 4C: Roberto keeps it short so the screen stays clean.
 const crashoutAnnouncerDurations = {
-  default: 1900,
-  major: 2700,
-  quick: 1400
+  default: 1100,
+  major: 1600,
+  quick: 900,
+  gapMs: 900
 };
 const crashoutAnnouncerPriorities = {
   matchStart: 3,
@@ -444,7 +449,7 @@ function crashoutMakeCar(entry, index, total) {
     vx: Math.cos(point.angle) * 4,
     vy: Math.sin(point.angle) * 4,
     angle: point.angle,
-    radius: 27,
+    radius: Math.round(27 * CRASHOUT_CAR_SCALE),
     lives: 3,
     damage: 0,
     item: null,
@@ -706,6 +711,8 @@ function crashoutAnnounce(eventKey, options = {}) {
   const randomDelay = 0.85 + Math.random() * 0.35;
   if (!options.force && now - lastAt < (options.cooldown || 2400) * randomDelay) return;
   if (!options.force && crashoutState.announcer?.until > now && priority < currentPriority) return;
+  // 4C: minor calls wait a beat after the last one clears instead of chaining back to back.
+  if (!options.force && priority < 4 && now < (crashoutState.announcer?.until || -Infinity) + crashoutAnnouncerDurations.gapMs) return;
   let pool = crashoutAnnouncerLines[eventKey] || [];
   const previousLine = crashoutState.announcerLastLine?.[eventKey];
   if (pool.length > 1) pool = pool.filter((line) => line !== previousLine);
@@ -718,7 +725,7 @@ function crashoutAnnounce(eventKey, options = {}) {
     priority,
     major: Boolean(options.major || priority >= 4),
     legendary: Boolean(options.legendary || priority >= 5),
-    until: now + (options.duration || (priority >= 4 ? crashoutAnnouncerDurations.major : crashoutAnnouncerDurations.default)) + Math.random() * 260
+    until: now + (options.duration || (priority >= 4 ? crashoutAnnouncerDurations.major : crashoutAnnouncerDurations.default)) + Math.random() * 150
   };
   crashoutState.announcerLastAt[eventKey] = now;
   crashoutState.announcerLastLine[eventKey] = line;
@@ -857,8 +864,33 @@ function crashoutStatT(value) {
   return crashoutClamp(((value || 70) - 60) / 40, 0, 1);
 }
 
+// 4C: active reload. While the ram recovers, tap it inside the early window for an
+// instant full bar. Tap anywhere else and it jams: back to 0 and a longer reset.
+// One try per recovery. Player-controlled cars only (AI never taps during recovery).
+const crashoutReloadTuning = { from: 0.15, to: 0.35, missPenalty: 1.5 };
+
 function crashoutMakeRamState() {
-  return { phase: "ready", held: false, heldMs: 0, charge: 0, perfect: false, timerMs: 0, recoverMs: 0, recoverTotalMs: 1, dashSpeed: 0, hitMultiplier: 1, dashStartedAt: 0, dodgeUntil: 0, lockUntilRelease: false };
+  return { phase: "ready", held: false, heldMs: 0, charge: 0, perfect: false, timerMs: 0, recoverMs: 0, recoverTotalMs: 1, dashSpeed: 0, hitMultiplier: 1, dashStartedAt: 0, dodgeUntil: 0, lockUntilRelease: false, reloadTried: false, reloadMissed: false };
+}
+
+function crashoutTryActiveReload(car) {
+  const ram = car.ram;
+  const R = crashoutReloadTuning;
+  ram.reloadTried = true;
+  const progress = 1 - ram.recoverMs / ram.recoverTotalMs;
+  if (progress >= R.from && progress <= R.to) {
+    ram.phase = "ready";
+    ram.recoverMs = 0;
+    ram.lockUntilRelease = true;
+    crashoutState.effects.push({ kind: "impactWord", x: car.x, y: car.y - 70 * CRASHOUT_CAR_SCALE, vx: 0, vy: -30, ttl: 600, life: 600, text: "RELOADED!", size: 24, tint: "#9cf8ff", angle: 0, spin: 0 });
+    return true;
+  }
+  const total = ram.recoverTotalMs * R.missPenalty;
+  ram.recoverMs = total;
+  ram.recoverTotalMs = total;
+  ram.reloadMissed = true;
+  crashoutState.effects.push({ kind: "impactWord", x: car.x, y: car.y - 70 * CRASHOUT_CAR_SCALE, vx: 0, vy: -24, ttl: 600, life: 600, text: "JAMMED", size: 22, tint: "#ff805f", angle: 0, spin: 0 });
+  return false;
 }
 
 function crashoutRamZone(car) {
@@ -876,6 +908,8 @@ function crashoutStartRamRecovery(car, ms) {
   ram.phase = "recovering";
   ram.recoverMs = Math.max(1, ms);
   ram.recoverTotalMs = ram.recoverMs;
+  ram.reloadTried = false;
+  ram.reloadMissed = false;
   ram.heldMs = 0;
   ram.charge = 0;
   ram.perfect = false;
@@ -953,10 +987,13 @@ function crashoutUpdateRam(car, controls, dt, now) {
   const ms = dt * 1000;
   const wantsCharge = Boolean(controls.charge);
   const released = !wantsCharge && ram.held;
+  const pressed = wantsCharge && !ram.held;
   ram.held = wantsCharge;
   if (!wantsCharge) ram.lockUntilRelease = false;
   const jammed = car.ramJammedUntil > now;
-  if (ram.phase === "recovering") {
+  if (ram.phase === "recovering" && pressed && !ram.reloadTried && !car.ai && crashoutTryActiveReload(car)) {
+    // Reloaded: ready now; the held press is locked until release so it can't start a charge or a dodge.
+  } else if (ram.phase === "recovering") {
     ram.recoverMs -= ms;
     if (ram.recoverMs <= 0) { ram.phase = "ready"; ram.recoverMs = 0; }
   } else if (ram.phase === "burnout") {
@@ -1056,23 +1093,18 @@ function crashoutDrawRamAura(ctx, car) {
   const zone = crashoutRamZone(car);
   const t = performance.now();
   ctx.save();
-  ctx.globalCompositeOperation = "screen";
   if (zone === "building") {
-    ctx.globalAlpha = 0.25 + ram.charge * 0.5;
-    ctx.strokeStyle = car.player ? "#52c7ff" : "#ff805f";
-    ctx.lineWidth = 3 + ram.charge * 3;
-    ctx.beginPath(); ctx.arc(car.x, car.y, 48 - ram.charge * 12, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.4 + ram.charge * 0.6;
+    crashoutInkRing(ctx, car.x, car.y, 48 - ram.charge * 12, car.player ? "#52c7ff" : "#ff805f", 3 + ram.charge * 3);
   } else if (zone === "perfect") {
     ctx.globalAlpha = 0.75 + Math.sin(t / 40) * 0.25;
-    ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 7;
-    ctx.beginPath(); ctx.arc(car.x, car.y, 36, 0, Math.PI * 2); ctx.stroke();
+    crashoutInkRing(ctx, car.x, car.y, 36, "#ffc857", 7);
   } else if (zone === "overheat") {
-    ctx.globalAlpha = 0.45 + Math.random() * 0.4;
-    ctx.strokeStyle = "#ff4a3d"; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.arc(car.x, car.y, 36 + Math.random() * 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.55 + Math.random() * 0.4;
+    crashoutInkRing(ctx, car.x, car.y, 36 + Math.random() * 4, "#ff4a3d", 5);
   } else if (zone === "dashing" && ram.perfect) {
-    ctx.globalAlpha = 0.55; ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(car.x, car.y, 40, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.75;
+    crashoutInkRing(ctx, car.x, car.y, 40, "#ffc857", 4);
   }
   ctx.restore();
 }
@@ -1556,7 +1588,7 @@ function crashoutUpdateItems(dt, now) {
     if (!box.active) return;
     crashoutLiveCars().forEach((car) => {
       if (!box.active || car.respawnAt || car.item) return;
-      if (Math.hypot(car.x - box.x, car.y - box.y) > 42) return;
+      if (Math.hypot(car.x - box.x, car.y - box.y) > car.radius + 15) return;
       car.item = box.placed ? box.item : crashoutRandomItem();
       if (!car.item) return;
       box.active = false;
@@ -1662,7 +1694,7 @@ function crashoutUpdateSuddenDeath(now) {
   crashoutState.suddenDeathStartedAt = now;
   crashoutState.ringFlashes.push({ x: crashoutArena.cx, y: crashoutArena.cy, radius: crashoutArena.radius, ttl: 1200, life: 1200 });
   crashoutState.shake = Math.max(crashoutState.shake || 0, 12);
-  crashoutAnnounce("suddenDeath", { major: true, force: true, duration: 4300 });
+  crashoutAnnounce("suddenDeath", { major: true, force: true, duration: 2400 });
   crashoutPlaySound("battle-special");
 }
 
@@ -1878,43 +1910,130 @@ function drawCrashoutArena(ctx) {
     drawCrashoutProceduralArena(ctx, shape, radius);
   }
   crashoutDrawArenaDecal(ctx, theme, shape, radius);
+  crashoutRecordSkids();
+  crashoutDrawSkids(ctx, shape, radius);
 }
 
 function drawCrashoutProceduralArena(ctx, shape, radius) {
-  // City art can replace this per city via crashoutArenaCities[city].art.
   const theme = crashoutArenaTheme();
+  const T = crashoutLookTuning;
+  const { cx, cy } = crashoutArena;
   const paths = crashoutShapePaths(shape, radius);
   const fillRule = shape === "donut" ? "evenodd" : "nonzero";
   ctx.save();
-  ctx.shadowColor = theme.glow;
-  ctx.shadowBlur = 26;
-  ctx.strokeStyle = theme.rim;
-  ctx.lineWidth = 14;
-  paths.forEach((path) => ctx.stroke(path));
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = theme.floor;
+  ctx.translate(T.platformShadow[0], T.platformShadow[1]);
+  ctx.fillStyle = `rgba(0, 0, 0, ${T.platformShadow[2]})`;
   paths.forEach((path) => ctx.fill(path, fillRule));
   ctx.restore();
   ctx.save();
   const clip = new Path2D();
   paths.forEach((path) => clip.addPath(path));
   ctx.clip(clip, fillRule);
-  crashoutDrawArenaPattern(ctx, theme, shape, radius);
+  ctx.fillStyle = crashoutMixColor(theme.rim, T.floorBase, T.floorTint);
+  ctx.fillRect(cx - radius * 1.4, cy - radius * 1.4, radius * 2.8, radius * 2.8);
+  ctx.strokeStyle = "rgba(40, 46, 56, 0.16)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let offset = -radius * 1.3; offset <= radius * 1.3; offset += T.slabSize) {
+    ctx.moveTo(cx + offset, cy - radius * 1.3); ctx.lineTo(cx + offset, cy + radius * 1.3);
+    ctx.moveTo(cx - radius * 1.3, cy + offset); ctx.lineTo(cx + radius * 1.3, cy + offset);
+  }
+  ctx.stroke();
+  ctx.lineWidth = T.edgeBand;
+  ctx.strokeStyle = crashoutColorAlpha(theme.rim, 0.38);
+  crashoutStrokeOuterEdges(ctx, paths);
+  ctx.setLineDash([50, 50]);
+  ctx.strokeStyle = "rgba(20, 22, 28, 0.28)";
+  crashoutStrokeOuterEdges(ctx, paths);
+  ctx.restore();
+  ctx.save();
+  ctx.lineJoin = "round";
+  ctx.lineWidth = T.rimWidth;
+  ctx.strokeStyle = T.outlineColor;
+  crashoutStrokeOuterEdges(ctx, paths);
+  ctx.lineWidth = T.rimStripe;
+  ctx.strokeStyle = theme.rim;
+  crashoutStrokeOuterEdges(ctx, paths);
+  ctx.restore();
+}
+
+function crashoutStrokeOuterEdges(ctx, paths) {
+  paths.forEach((path, i) => {
+    ctx.save();
+    if (paths.length > 1) {
+      const outside = new Path2D();
+      outside.rect(-100000, -100000, 200000, 200000);
+      paths.forEach((other, j) => { if (j !== i) outside.addPath(other); });
+      ctx.clip(outside, "evenodd");
+    }
+    ctx.stroke(path);
+    ctx.restore();
+  });
+}
+
+function crashoutParseHex(hex) {
+  const n = parseInt(String(hex || "#888888").replace("#", "").slice(0, 6), 16) || 0;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function crashoutMixColor(hex, toward, t) {
+  const a = crashoutParseHex(hex);
+  const b = crashoutParseHex(toward);
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+}
+
+function crashoutColorAlpha(hex, alpha) {
+  return `rgba(${crashoutParseHex(hex).join(",")},${alpha})`;
+}
+
+function crashoutRecordSkids() {
+  if (!crashoutState || crashoutState.paused || crashoutState.finished) return;
+  const T = crashoutLookTuning.skids;
+  const now = crashoutDrawNow();
+  if (!crashoutState.skids) crashoutState.skids = new Map();
+  crashoutState.cars.forEach((car) => {
+    if (car.eliminated || car.respawnAt) return;
+    const slip = Math.abs(-(car.vx || 0) * Math.sin(car.angle) + (car.vy || 0) * Math.cos(car.angle));
+    if (slip < T.slipFrom) return;
+    const trail = crashoutState.skids.get(car.id) || [];
+    crashoutState.skids.set(car.id, trail);
+    const point = { x: car.x - Math.cos(car.angle) * 30, y: car.y - Math.sin(car.angle) * 30, t: now, k: crashoutClamp((slip - T.slipFrom) / T.slipRange, 0, 1) };
+    const last = trail[trail.length - 1];
+    if (!last || Math.hypot(last.x - point.x, last.y - point.y) >= 6) trail.push(point);
+    while (trail.length && (trail.length > T.maxPoints || now - trail[0].t > T.fadeMs)) trail.shift();
+  });
+}
+
+function crashoutDrawSkids(ctx, shape, radius) {
+  if (!crashoutState?.skids) return;
+  const T = crashoutLookTuning.skids;
+  const now = crashoutDrawNow();
+  ctx.save();
+  const clip = new Path2D();
+  crashoutShapePaths(shape, radius).forEach((path) => clip.addPath(path));
+  ctx.clip(clip, shape === "donut" ? "evenodd" : "nonzero");
+  ctx.lineCap = "round";
+  ctx.lineWidth = T.width;
+  crashoutState.skids.forEach((trail) => {
+    for (let i = 1; i < trail.length; i += 1) {
+      const p = trail[i - 1]; const q = trail[i];
+      const alpha = Math.min(p.k, q.k) * (1 - (now - q.t) / T.fadeMs) * T.alpha;
+      if (alpha <= 0.02) continue;
+      ctx.strokeStyle = `rgba(28, 28, 34, ${alpha.toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    }
+  });
   ctx.restore();
 }
 
 function drawCrashoutObjects(ctx) {
-  const now = performance.now() - (crashoutState.startedAt || performance.now());
+  // 4C: clamp to 0 so "xxxUntil: 0" statuses don't read as active while the countdown clock is negative.
+  const now = crashoutDrawNow();
   crashoutState.ringFlashes.forEach((flash) => {
     const progress = 1 - flash.life / flash.ttl;
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = Math.max(0, 1 - progress) * 0.68;
-    ctx.lineWidth = 8 + progress * 18;
-    ctx.strokeStyle = "rgba(255, 200, 87, 0.9)";
-    ctx.beginPath();
-    ctx.arc(crashoutArena.cx, crashoutArena.cy, flash.radius + progress * 34, 0, Math.PI * 2);
-    ctx.stroke();
+    crashoutInkRing(ctx, crashoutArena.cx, crashoutArena.cy, flash.radius + progress * 34, "#ffc857", 8 + progress * 18);
     ctx.restore();
   });
   crashoutDrawSwapPads(ctx);
@@ -2022,6 +2141,8 @@ function drawCrashoutObjects(ctx) {
     ctx.restore();
   });
   crashoutState.cars.filter((car) => car.shieldHits > 0 || car.bubbleUntil > now || car.boostUntil > now || car.hitFlashUntil > now || car.anchorUntil > now || car.antiMagnetUntil > now || car.overhaulUntil > now || car.reverseUntil > now || car.grapple).forEach((car) => {
+    ctx.save();
+    crashoutScaleAboutCar(ctx, car);
     if (car.grapple?.state === "latched") {
       const target = crashoutState.cars.find((entry) => entry.id === car.grapple.targetId);
       if (target) {
@@ -2091,22 +2212,20 @@ function drawCrashoutObjects(ctx) {
       ctx.arc(car.x, car.y, 38, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
   });
 }
 
 function drawCrashoutCar(ctx, car) {
   if (car.eliminated || car.respawnAt) return;
-  const now = crashoutLocalNow();
+  const now = crashoutDrawNow();
   const finalTwo = crashoutLiveCars().length <= 2;
+  ctx.save();
+  crashoutScaleAboutCar(ctx, car);
   if (finalTwo) {
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.35 + Math.sin(performance.now() / 130) * 0.12;
-    ctx.strokeStyle = car.player ? "rgba(82,199,255,0.85)" : "rgba(255,200,87,0.82)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(car.x, car.y, 54, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.globalAlpha = 0.55 + Math.sin(performance.now() / 130) * 0.2;
+    crashoutInkRing(ctx, car.x, car.y, 54, car.player ? "#52c7ff" : "#ffc857", 4);
     ctx.restore();
   }
   crashoutDrawCarHalo(ctx, car, now);
@@ -2114,6 +2233,7 @@ function drawCrashoutCar(ctx, car) {
   crashoutDrawTeamMarker(ctx, car);
   crashoutDrawRamAura(ctx, car);
   crashoutDrawSpecialAura(ctx, car);
+  crashoutDrawHeadingArrow(ctx, car);
   ctx.save();
   ctx.translate(car.x, car.y);
   ctx.rotate(car.angle + Math.PI / 2);
@@ -2123,20 +2243,18 @@ function drawCrashoutCar(ctx, car) {
     ctx.scale(sink, sink);
     ctx.rotate(Math.sin(performance.now() / 55) * 0.07);
   }
-  ctx.globalAlpha = car.invulnerableUntil > now
-    ? 0.55 + Math.sin(performance.now() / 80) * 0.2
-    : 1;
-  ctx.shadowColor = crashoutReadability.rim;
-  ctx.shadowBlur = crashoutReadability.rimBlur;
-  if (gearbornDrawTopdownSprite(ctx, car.image, CRASHOUT_SPRITE_BODY_LENGTH)) {
-    ctx.shadowBlur = 0;
+  ctx.globalAlpha = car.invulnerableUntil > now ? (Math.floor(performance.now() / 90) % 2 ? 1 : 0.28) : 1;
+  if (crashoutDrawOutlinedSprite(ctx, car.image, CRASHOUT_SPRITE_BODY_LENGTH)) {
     if (crashoutState?.debug) gearbornDrawTopdownDebug(ctx, car.image, CRASHOUT_SPRITE_BODY_LENGTH);
   } else {
+    ctx.fillStyle = "#0b0d12";
+    ctx.fillRect(-25, -35, 50, 70);
     ctx.fillStyle = car.color;
     ctx.fillRect(-22, -32, 44, 64);
     ctx.fillStyle = "#101820";
     ctx.fillRect(-13, -23, 26, 18);
   }
+  ctx.restore();
   ctx.restore();
   if (crashoutState?.debug && car.ai) {
     ctx.save();
@@ -2149,6 +2267,35 @@ function drawCrashoutCar(ctx, car) {
     ctx.fillText(car.archetype || "AI", car.x, car.y - 54);
     ctx.restore();
   }
+}
+
+function crashoutDrawHeadingArrow(ctx, car) {
+  const ram = car.ram;
+  const zone = crashoutRamZone(car);
+  let color = crashoutCarHaloColor(car);
+  let stretch = 0;
+  if (zone === "building") stretch = ram.charge * 10;
+  else if (zone === "perfect" || zone === "dashing") { stretch = 12; color = "#ffc857"; }
+  else if (zone === "overheat") { stretch = 12; color = "#ff4a3d"; }
+  const size = car.player ? 9 : 7;
+  const base = crashoutReadability.haloRadius + 5;
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle);
+  ctx.globalAlpha = car.player ? 1 : 0.85;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(base, -size);
+  ctx.lineTo(base + size + 4 + stretch, 0);
+  ctx.lineTo(base, size);
+  ctx.lineTo(base + 3, 0);
+  ctx.closePath();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#0b0d12";
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
 }
 
 function updateCrashoutHud(force = false) {
@@ -2255,10 +2402,17 @@ function crashoutRenderRamMeter(player) {
     text = "Burnout";
   } else if (zone === "recovering") {
     width = (1 - ram.recoverMs / ram.recoverTotalMs) * 100;
-    text = "Recovering";
+    text = ram.reloadMissed ? "Reload jammed" : ram.reloadTried ? "Recovering" : "Tap in the white!";
   }
   fill.style.width = `${crashoutClamp(width, 0, 100)}%`;
-  const meterState = jammed && ram.phase !== "dashing" ? "jammed" : zone;
+  if (!meter.dataset.reloadWindow) {
+    meter.style.setProperty("--ram-reload-from", `${crashoutReloadTuning.from * 100}%`);
+    meter.style.setProperty("--ram-reload-width", `${(crashoutReloadTuning.to - crashoutReloadTuning.from) * 100}%`);
+    meter.dataset.reloadWindow = "1";
+  }
+  const meterState = jammed && ram.phase !== "dashing"
+    ? "jammed"
+    : zone === "recovering" ? (ram.reloadMissed ? "reload-jammed" : ram.reloadTried ? "recovering-done" : "recovering") : zone;
   if (meter.dataset.ramState !== meterState) meter.dataset.ramState = meterState;
   if (label && label.textContent !== text) label.textContent = text;
 }
@@ -2758,7 +2912,8 @@ function crashoutCrewFillPlan(picks, size) {
   const lead = picks[0] ? crashoutCrewCandidate(picks[0], { player: true }) : null, plan = Array.from({ length: size }, (_, slot) => slot === 0 ? lead : picks[slot] ? crashoutCrewCandidate(picks[slot], { player: true }) : null);
   if (!lead) return plan;
   const similarity = crashoutCrewSimilarity(lead), taken = new Set(picks.filter(Boolean));
-  const owned = selectablePlayerCars().filter((car) => !taken.has(car.id) && !crashoutCrewExcludedIds.includes(car.id)).map((car) => crashoutCrewCandidate(car.id, { player: true })).filter(Boolean).sort((a, b) => similarity(a) - similarity(b));
+  const showcase = typeof showcaseOnlyIds === "function" ? showcaseOnlyIds() : [];
+  const owned = selectablePlayerCars().filter((car) => !taken.has(car.id) && !crashoutCrewExcludedIds.includes(car.id) && (!showcase.length || showcase.includes(car.id))).map((car) => crashoutCrewCandidate(car.id, { player: true })).filter(Boolean).sort((a, b) => similarity(a) - similarity(b));
   let loaners = null;
   for (let slot = 1; slot < size; slot += 1) if (!plan[slot]) { let member = owned.find((candidate) => !taken.has(candidate.carId)); if (!member) { if (!loaners) { const progress = state.garage?.[lead.carId] || {}; loaners = cars.filter((car) => !crashoutCrewExcludedIds.includes(car.id) && !car.tutorialOnly && !(typeof isFusionLine === "function" && isFusionLine(car.id))).map((car) => crashoutCrewCandidate(car.id, { loaner: true, level: progress.level || 1, evolution: progress.evolution || 0 })).filter(Boolean).sort((a, b) => similarity(a) - similarity(b)); } member = loaners.find((candidate) => !taken.has(candidate.carId)); } if (member) { member.autoFilled = true; plan[slot] = member; taken.add(member.carId); } }
   return plan;
@@ -2860,11 +3015,9 @@ function crashoutAiShouldUseSpecial(car, target, nearEdge, aggression) {
 }
 
 function crashoutDrawSpecialAura(ctx, car) {
-  const now = crashoutLocalNow();
+  const now = crashoutDrawNow();
   if ((car.ironWallUntil || 0) > now) {
     ctx.save();
-    ctx.strokeStyle = "rgba(183, 193, 209, 0.9)";
-    ctx.lineWidth = 5;
     ctx.beginPath();
     for (let i = 0; i <= 6; i += 1) {
       const angle = (Math.PI / 3) * i + Math.PI / 6;
@@ -2873,19 +3026,19 @@ function crashoutDrawSpecialAura(ctx, car) {
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "rgba(11, 13, 18, 0.85)";
+    ctx.stroke();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(183, 193, 209, 0.95)";
     ctx.stroke();
     ctx.restore();
   }
   if ((car.overdriveUntil || 0) > now) {
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = 0.55 + Math.sin(performance.now() / 60) * 0.25;
-    ctx.strokeStyle = "#ffc857";
-    ctx.lineWidth = 3;
     ctx.setLineDash([8, 6]);
-    ctx.beginPath();
-    ctx.arc(car.x, car.y, 46, 0, Math.PI * 2);
-    ctx.stroke();
+    crashoutInkRing(ctx, car.x, car.y, 46, "#ffc857", 3);
     ctx.restore();
   }
 }
@@ -3217,7 +3370,7 @@ function crashoutEvoEvolve(car, formIndex, now) {
     crashoutState.stats.evolutions = (crashoutState.stats.evolutions || 0) + 1;
     crashoutState.hitPauseUntil = now + crashoutEvoTuning.evolveHitPauseMs;
     crashoutState.shake = Math.max(crashoutState.shake || 0, 10);
-    crashoutAnnounce("evolve", { force: true, major: true, line: `${before.toUpperCase()} EVOLVED INTO ${car.name.toUpperCase()}!`, duration: 2600 });
+    crashoutAnnounce("evolve", { force: true, major: true, line: `${before.toUpperCase()} EVOLVED INTO ${car.name.toUpperCase()}!`, duration: 1800 });
   } else {
     crashoutAnnounce("evolve", { cooldown: 3500, line: `${before} just became ${car.name}!` });
   }
@@ -4394,14 +4547,90 @@ const crashoutReadability = {
   viewWorldWidth: 990,
   viewWorldHeight: 510,
   maxZoom: 1.3,
-  crowdDim: 0.42,
+  crowdDim: 0.45,
   bgDim: 0.5,
   haloRadius: 36,
-  rim: "rgba(255, 255, 255, 0.55)",
-  rimBlur: 7,
+  rim: "rgba(0, 0, 0, 0.45)",
+  rimBlur: 10,
   useShapeArt: false,
   colors: { you: "#52c7ff", team: "#6ee7a8", rival: "#ff805f" }
 };
+
+// 4C: tabletop look - light painted-concrete floor, thick black outlines.
+const crashoutLookTuning = {
+  outlineColor: "#0b0d12",
+  outlineWidth: 2.7,
+  dropShadow: "rgba(0, 0, 0, 0.45)",
+  dropShadowBlur: 10,
+  discAlpha: 0.42,
+  floorTint: 0.9,
+  floorBase: "#eef0f2",
+  slabSize: 240,
+  edgeBand: 120,
+  rimWidth: 30,
+  rimStripe: 10,
+  platformShadow: [16, 26, 0.5],
+  skids: { slipFrom: 150, slipRange: 220, fadeMs: 5000, maxPoints: 300, alpha: 0.26, width: 8 }
+};
+
+function crashoutDrawNow() {
+  return Math.max(0, crashoutLocalNow());
+}
+
+function crashoutScaleAboutCar(ctx, car) {
+  ctx.translate(car.x, car.y);
+  ctx.scale(CRASHOUT_CAR_SCALE, CRASHOUT_CAR_SCALE);
+  ctx.translate(-car.x, -car.y);
+}
+
+function crashoutInkRing(ctx, x, y, radius, color, width) {
+  ctx.lineWidth = width + 4;
+  ctx.strokeStyle = "rgba(11, 13, 18, 0.85)";
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.lineWidth = width;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+const crashoutOutlineCache = new Map();
+function crashoutDrawOutlinedSprite(ctx, img, bodyLength) {
+  if (!img?.complete || !img.naturalWidth) return false;
+  const T = crashoutLookTuning;
+  const key = `${img.src}|${bodyLength}`;
+  let outline = crashoutOutlineCache.get(key);
+  if (!outline) {
+    const res = 3;
+    const size = Math.ceil(bodyLength * 2.4);
+    const sil = document.createElement("canvas");
+    sil.width = sil.height = size * res;
+    const sctx = sil.getContext("2d");
+    sctx.setTransform(res, 0, 0, res, (size * res) / 2, (size * res) / 2);
+    gearbornDrawTopdownSprite(sctx, img, bodyLength);
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.globalCompositeOperation = "source-in";
+    sctx.fillStyle = T.outlineColor;
+    sctx.fillRect(0, 0, sil.width, sil.height);
+    outline = document.createElement("canvas");
+    outline.width = outline.height = sil.width;
+    const octx = outline.getContext("2d");
+    const w = T.outlineWidth * res;
+    for (let i = 0; i < 16; i += 1) {
+      const a = (i / 16) * Math.PI * 2;
+      octx.drawImage(sil, Math.cos(a) * w, Math.sin(a) * w);
+    }
+    outline.drawSize = size;
+    crashoutOutlineCache.set(key, outline);
+  }
+  const s = outline.drawSize;
+  ctx.save();
+  ctx.shadowColor = T.dropShadow;
+  ctx.shadowBlur = T.dropShadowBlur;
+  ctx.drawImage(outline, -s / 2, -s / 2, s, s);
+  ctx.restore();
+  return gearbornDrawTopdownSprite(ctx, img, bodyLength);
+}
 
 function crashoutViewZoom(viewW, viewH) {
   const R = crashoutReadability;
@@ -4436,6 +4665,11 @@ function crashoutDrawCarHalo(ctx, car) {
   const color = crashoutCarHaloColor(car);
   ctx.save();
   ctx.translate(car.x, car.y);
+  ctx.globalAlpha = car.hang ? 0.15 : crashoutLookTuning.discAlpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(0, 0, R.haloRadius * 0.92, 0, Math.PI * 2);
+  ctx.fill();
   ctx.save();
   ctx.rotate(car.angle + Math.PI / 2);
   ctx.globalAlpha = car.hang ? 0.2 : 0.55;
@@ -4444,33 +4678,18 @@ function crashoutDrawCarHalo(ctx, car) {
   ctx.ellipse(3, 6, CRASHOUT_SPRITE_BODY_LENGTH * 0.34, CRASHOUT_SPRITE_BODY_LENGTH * 0.56, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  const glow = ctx.createRadialGradient(0, 0, R.haloRadius * 0.35, 0, 0, R.haloRadius * 1.15);
-  glow.addColorStop(0, `${color}00`);
-  glow.addColorStop(0.75, `${color}2e`);
-  glow.addColorStop(1, `${color}00`);
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(0, 0, R.haloRadius * 1.15, 0, Math.PI * 2);
-  ctx.fill();
   ctx.globalAlpha = car.player ? 0.95 : 0.7;
-  ctx.lineWidth = car.player ? 3.5 : 2.5;
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  ctx.arc(0, 0, R.haloRadius, 0, Math.PI * 2);
-  ctx.stroke();
+  crashoutInkRing(ctx, 0, 0, R.haloRadius, color, car.player ? 3.5 : 2.5);
   if (car.player) {
-    const bob = Math.sin(performance.now() / 260) * 3;
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.strokeStyle = "rgba(6, 10, 18, 0.9)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-9, -R.haloRadius - 20 + bob);
-    ctx.lineTo(9, -R.haloRadius - 20 + bob);
-    ctx.lineTo(0, -R.haloRadius - 8 + bob);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.font = "900 11px 'Bowlby One', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.strokeText("YOU", 0, R.haloRadius + 13);
+    ctx.fillText("YOU", 0, R.haloRadius + 13);
   }
   ctx.restore();
 }

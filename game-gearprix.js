@@ -33,8 +33,8 @@ const BETA_AI_TUNING = {
   slipstreamAccelMult: 1.18,
 
   // Rubber band (bounded, asymmetric)
-  rubberBandMaxBoost: 0.06,
-  rubberBandMaxDrag: 0.03,
+  rubberBandMaxBoost: 0,
+  rubberBandMaxDrag: 0.06,
   rubberBandRange: 900,
 
   // Grass recovery
@@ -578,6 +578,7 @@ function updateRotationTipForActiveRace() {
 }
 
 function stopBetaDemo(showIntro = true) {
+  gpHidePause();
   betaLoadToken += 1;
   if (betaState?.raf) cancelAnimationFrame(betaState.raf);
   betaState = null;
@@ -706,6 +707,13 @@ document.addEventListener("keydown", (event) => {
   if (!document.querySelector("#beta-view")?.classList.contains("active")) return;
   const key = normalizeKey(event);
   const map = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right" };
+  if ((key === "P" || key === "Escape") && (betaState?.paused || gpCanPause())) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    gpTogglePause();
+    return;
+  }
+  if (betaState?.paused) return;
   if (key === "T") {
     event.preventDefault();
     if (betaState) {
@@ -1370,8 +1378,8 @@ function betaPlacements() {
 }
 
 function betaCollisionCorners(racer) {
-  const halfLength = 37;
-  const halfWidth = 22;
+  const halfLength = GP_TUNING.car.halfLength;
+  const halfWidth = GP_TUNING.car.halfWidth;
   const forward = { x: Math.cos(racer.angle), y: Math.sin(racer.angle) };
   const right = { x: -Math.sin(racer.angle), y: Math.cos(racer.angle) };
   return [
@@ -1487,6 +1495,7 @@ function betaGhostPointAt(elapsed) {
 
 function finishBetaDemo() {
   if (!betaState || betaState.finished) return;
+  gpHidePause();
   betaState.finished = true;
   betaState.active = false;
   if (betaState.raf) cancelAnimationFrame(betaState.raf);
@@ -1945,47 +1954,75 @@ function betaUseItem(racer) {
 }
 
 // ── Teleport logic ────────────────────────────────────────────────────────────
+// 4B rules: trailing racers warp to the leader while the leader sends second back.
+// Circuit state is updated with position so laps and placements remain correct.
 function betaExecuteTeleport(racer, now) {
+  const circuit = gpCircuit();
+  const finishDist = betaLapsRequired * circuit.length;
   const placements = betaPlacements();
   const racerIdx = placements.findIndex((r) => r.id === racer.id);
-  const total = placements.length;
-  const PRE_DELAY = 1000;   // 1 s portal before teleport
-  const POST_DELAY = 1000;  // 1 s portal after teleport
-
+  const others = placements.filter((r) => r.id !== racer.id);
+  const nearFinish = finishDist - GP_TUNING.teleport.beforeFinish;
+  const g = gpRacer(racer);
+  if (others.length && others.every((r) => r.finished)) {
+    gpScheduleWarp(racer, () => Math.max(g.dist, nearFinish), 0, now);
+    return;
+  }
   if (racerIdx > 0) {
-    // Not in 1st → jump one position forward
-    const targetRacer = placements[racerIdx - 1];
-    racer.teleportPortal = { startMs: now, phase: "pre", attachedTo: racer.id };
-    window.setTimeout(() => {
-      if (!betaState) return;
-      // Place slightly behind the target
-      const behind = betaBehindPoint(targetRacer, 80);
-      racer.x = behind.x;
-      racer.y = behind.y;
-      racer.angle = targetRacer.angle;
-      racer.speed = Math.min(racer.speed, targetRacer.speed);
-      racer.teleportPortal = { startMs: betaNowMs(), phase: "post", attachedTo: racer.id };
-      window.setTimeout(() => { if (racer.teleportPortal?.phase === "post") racer.teleportPortal = null; }, POST_DELAY);
-    }, PRE_DELAY);
-  } else {
-    // In 1st → penalise 2nd place: send them to last (or 4th)
-    const victim = placements[1];
-    if (!victim) return;
-    const destIdx = Math.min(total - 1, 3);     // 4th or last
-    const destRacer = placements[destIdx] || placements[total - 1];
-    victim.teleportPortal = { startMs: now, phase: "pre", attachedTo: victim.id };
-    window.setTimeout(() => {
-      if (!betaState) return;
-      const behind = betaBehindPoint(destRacer, 90);
-      victim.x = behind.x;
-      victim.y = behind.y;
-      victim.angle = destRacer.angle;
-      victim.speed = Math.min(victim.speed, destRacer.speed * 0.7);
-      victim.teleportPortal = { startMs: betaNowMs(), phase: "post", attachedTo: victim.id };
-      window.setTimeout(() => { if (victim.teleportPortal?.phase === "post") victim.teleportPortal = null; }, POST_DELAY);
-    }, PRE_DELAY);
-    // Give player racer a brief boost reward for using it while leading
-    racer.boostUntil = Math.max(racer.boostUntil || 0, now + 600);
+    const leader = placements.slice(0, racerIdx).find((r) => !r.finished);
+    if (!leader) {
+      gpScheduleWarp(racer, () => Math.max(g.dist, nearFinish), 0, now);
+      return;
+    }
+    const leaderGp = gpRacer(leader);
+    const side = (leaderGp.lateral || 0) > 0 ? -1 : 1;
+    gpScheduleWarp(racer, () => Math.max(g.dist, leaderGp.dist - GP_TUNING.teleport.behindLeader), side * circuit.hw * 0.45, now, () => leader.speed);
+    return;
+  }
+  const victim = placements[1];
+  if (!victim || victim.finished) return;
+  const last = placements.filter((r) => !r.finished && r.id !== racer.id).slice(-1)[0] || victim;
+  const victimGp = gpRacer(victim);
+  const backDist = () => (last === victim
+    ? victimGp.dist - GP_TUNING.teleport.duelSendBack
+    : Math.min(victimGp.dist, gpRacer(last).dist - GP_TUNING.teleport.behindLast));
+  gpScheduleWarp(victim, backDist, 0, now, () => Math.min(victim.speed, last.speed * 0.7));
+  racer.boostUntil = Math.max(racer.boostUntil || 0, now + 600);
+}
+
+function gpScheduleWarp(target, distFn, lateral, now, speedFn = null) {
+  if (!betaState) return;
+  target.teleportPortal = { startMs: now, phase: "pre", attachedTo: target.id };
+  (betaState.pendingWarps = betaState.pendingWarps || []).push({ target, distFn, lateral, speedFn, at: now + GP_TUNING.teleport.portalMs });
+}
+
+function gpRunPendingWarps(now) {
+  const warps = betaState?.pendingWarps;
+  if (!warps?.length) return;
+  const circuit = gpCircuit();
+  for (let index = warps.length - 1; index >= 0; index -= 1) {
+    const warp = warps[index];
+    const target = warp.target;
+    if (warp.at && now >= warp.at) {
+      warps.splice(index, 1);
+      if (target.finished) { target.teleportPortal = null; continue; }
+      const distance = warp.distFn();
+      const point = gpPointAt(circuit, distance, warp.lateral);
+      const g = gpRacer(target);
+      target.x = point.x;
+      target.y = point.y;
+      target.angle = point.angle;
+      g.dist = distance;
+      g.index = point.index;
+      g.lateral = warp.lateral;
+      g.moveAngle = point.angle;
+      if (warp.speedFn) target.speed = Math.max(0, warp.speedFn());
+      target.teleportPortal = { startMs: now, phase: "post", attachedTo: target.id };
+      warps.push({ target, clearAt: now + GP_TUNING.teleport.portalMs });
+    } else if (warp.clearAt && now >= warp.clearAt) {
+      warps.splice(index, 1);
+      if (target.teleportPortal?.phase === "post") target.teleportPortal = null;
+    }
   }
 }
 
@@ -2047,10 +2084,11 @@ function betaCollectItemBoxes(now) {
     if (!box.active) return;
     betaState.racers.forEach((racer) => {
       if (!box.active) return;
-      if (racer.finished || racer.item || betaDistance(racer, box) > 48) return;
+      if (racer.finished || racer.item || betaDistance(racer, box) > GP_TUNING.car.pickup) return;
       racer.item = betaRandomItemForRacer(racer);
       box.active = false;
-      box.respawnAt = now + 5000 + Math.random() * 3000;
+      const [respawnMin, respawnMax] = GP_TUNING.items.respawnMs;
+      box.respawnAt = now + respawnMin + Math.random() * (respawnMax - respawnMin);
       if (racer.id === "player") betaNotify(`${racer.item.name} Ready!`);
     });
   });
@@ -2061,7 +2099,7 @@ function betaApplyBoostPads(now) {
   if (!objects) return;
   objects.boostPads.forEach((pad) => {
     betaState.racers.forEach((racer) => {
-      if (racer.finished || racer.lastPadAt > now - 900 || betaDistance(racer, pad) > 54) return;
+      if (racer.finished || racer.lastPadAt > now - 900 || betaDistance(racer, pad) > GP_TUNING.car.pad) return;
       const pwr = racer.physics.pwrMultiplier || 1.16;
       racer.boostUntil = Math.max(racer.boostUntil || 0, now + 820 * pwr);
       racer.speed = Math.min(racer.physics.maxSpeed * (1.08 + pwr * 0.1), racer.speed + 92 * pwr);
@@ -2467,114 +2505,6 @@ function betaWatchdogCheck(racer, now) {
   g.progressDist = g.dist;
 }
 
-function betaAiControlsLegacy(racer) {
-  const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
-  if (!line?.length) return { up: true, down: false, left: false, right: false };
-  const nearestIndex = betaNearestAiLineIndex(racer, line);
-  const currentWaypoint = Number.isFinite(racer.aiWaypoint) ? racer.aiWaypoint : nearestIndex;
-  const currentTarget = line[currentWaypoint] || line[nearestIndex];
-  const currentForward = currentTarget
-    ? Math.cos(racer.angle) * (currentTarget.x - racer.x) + Math.sin(racer.angle) * (currentTarget.y - racer.y)
-    : 0;
-  const currentDistance = currentTarget ? Math.hypot(currentTarget.x - racer.x, currentTarget.y - racer.y) : 0;
-  if (currentForward < -24 || currentDistance > betaTileSize * 1.35) {
-    racer.aiWaypoint = (nearestIndex + 2) % line.length;
-  }
-  while (Math.hypot((line[racer.aiWaypoint || 0]?.x || racer.x) - racer.x, (line[racer.aiWaypoint || 0]?.y || racer.y) - racer.y) < 92) {
-    racer.aiWaypoint = ((racer.aiWaypoint || 0) + 1) % line.length;
-    if (racer.aiWaypoint === currentWaypoint) break;
-  }
-  const surface = betaSurfaceAt(racer.x, racer.y);
-  const lookAhead = surface === "grass"
-    ? 1
-    : Math.max(1, Math.min(3, 1 + Math.floor(Math.abs(racer.speed || 0) / 150)));
-  const targetIndex = ((racer.aiWaypoint || 0) + lookAhead) % line.length;
-  const nextTarget = line[targetIndex] || line[0];
-  const lineAngle = betaLineDirection(line, targetIndex);
-  const prevAngle = betaLineDirection(line, (targetIndex - 1 + line.length) % line.length);
-  const nextAngle = betaLineDirection(line, (targetIndex + 1) % line.length);
-  const turnDelta = betaNormalizeAngle(nextAngle - prevAngle);
-  const handling = betaClamp((racer.ratings?.handling || 70) / 100, 0, 1);
-  let desiredOffset = -Math.sign(turnDelta) * BETA_AI_TUNING.apexBiasMax * handling;
-  const now = betaNowMs();
-  if (!racer.nextAiDecisionAt || now >= racer.nextAiDecisionAt) {
-    racer.nextAiDecisionAt = now + BETA_AI_TUNING.aiDecisionMinMs + Math.random() * Math.max(0, BETA_AI_TUNING.aiDecisionMaxMs - BETA_AI_TUNING.aiDecisionMinMs);
-    racer.aiIntentOffset = 0;
-    const traffic = (betaState?.racers || []).filter((other) => other !== racer && !other.finished);
-    const forwardTraffic = traffic
-      .map((other) => {
-        const dx = other.x - racer.x;
-        const dy = other.y - racer.y;
-        const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
-        const lateral = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
-        return { other, forward, lateral };
-      })
-      .filter((item) => item.forward > 0 && item.forward < BETA_AI_TUNING.overtakeProbeRange && Math.abs(item.lateral) < BETA_AI_TUNING.overtakeOffsetMax);
-    if (forwardTraffic.length) {
-      const target = forwardTraffic.sort((a, b) => a.forward - b.forward)[0];
-      const sideA = betaRoadSafeOffset(nextTarget, lineAngle, BETA_AI_TUNING.overtakeOffsetMax) ? 1 : 0;
-      const sideB = betaRoadSafeOffset(nextTarget, lineAngle, -BETA_AI_TUNING.overtakeOffsetMax) ? -1 : 0;
-      const side = sideA && sideB ? (target.lateral <= 0 ? 1 : -1) : (sideA || sideB);
-      racer.aiIntentOffset = side * BETA_AI_TUNING.overtakeOffsetMax * betaClamp(racer.aggression || 0.4, 0, 1);
-    }
-    const chasingTraffic = traffic
-      .map((other) => {
-        const dx = other.x - racer.x;
-        const dy = other.y - racer.y;
-        const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
-        const lateral = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
-        return { other, forward, lateral };
-      })
-      .filter((item) => item.forward < 0 && item.forward > -BETA_AI_TUNING.blockProbeRange);
-    if (chasingTraffic.length && Math.random() < betaClamp(racer.aggression || 0.4, 0, 1)) {
-      const rival = chasingTraffic.sort((a, b) => Math.abs(a.forward) - Math.abs(b.forward))[0];
-      racer.aiIntentOffset = betaClamp(rival.lateral, -BETA_AI_TUNING.blockOffsetMax, BETA_AI_TUNING.blockOffsetMax);
-    }
-  }
-  desiredOffset += racer.aiIntentOffset || 0;
-  const slipstreamTarget = (betaState?.racers || []).find((other) => {
-    if (other === racer || other.finished) return false;
-    const dx = other.x - racer.x;
-    const dy = other.y - racer.y;
-    const forward = Math.cos(lineAngle) * dx + Math.sin(lineAngle) * dy;
-    return forward > 0 && forward < BETA_AI_TUNING.slipstreamRange * BETA_AI_TUNING.slipstreamSeekRangeMult && (racer.speed || 0) <= (other.speed || 0) + BETA_AI_TUNING.slipstreamSeekSpeedTolerance;
-  });
-  if (slipstreamTarget) {
-    const dx = slipstreamTarget.x - racer.x;
-    const dy = slipstreamTarget.y - racer.y;
-    const lateralToWake = -Math.sin(lineAngle) * dx + Math.cos(lineAngle) * dy;
-    desiredOffset = betaClamp(lateralToWake, -BETA_AI_TUNING.overtakeOffsetMax, BETA_AI_TUNING.overtakeOffsetMax);
-  }
-  if (!betaRoadSafeOffset(nextTarget, lineAngle, desiredOffset)) desiredOffset = 0;
-  const offsetDt = racer.lastAiControlAt
-    ? Math.min(BETA_AI_TUNING.aiOffsetDtMax, Math.max(0, (now - racer.lastAiControlAt) / 1000))
-    : BETA_AI_TUNING.aiOffsetInitialDt;
-  racer.lastAiControlAt = now;
-  racer.lateralOffset += (desiredOffset - (racer.lateralOffset || 0)) * Math.min(1, BETA_AI_TUNING.offsetLerpRate * offsetDt);
-  if (!betaRoadSafeOffset(nextTarget, lineAngle, racer.lateralOffset || 0)) racer.lateralOffset *= 0.55;
-  const offsetTarget = betaOffsetPoint(nextTarget, lineAngle, racer.lateralOffset || 0);
-  const desired = Math.atan2(offsetTarget.y - racer.y, offsetTarget.x - racer.x);
-  const delta = Math.atan2(Math.sin(desired - racer.angle), Math.cos(desired - racer.angle));
-  const forwardDistance = surface === "grass" ? 48 : 86;
-  const aheadX = racer.x + Math.cos(racer.angle) * forwardDistance;
-  const aheadY = racer.y + Math.sin(racer.angle) * forwardDistance;
-  const aheadSurface = betaSurfaceAt(aheadX, aheadY);
-  const aimingX = racer.x + Math.cos(desired) * forwardDistance;
-  const aimingY = racer.y + Math.sin(desired) * forwardDistance;
-  const aimingSurface = betaSurfaceAt(aimingX, aimingY);
-  const aheadWall = aheadSurface === "wall";
-  const aheadBad = aheadSurface !== "road";
-  const sharpTurn = Math.abs(delta) > 0.78;
-  const needsRecovery = surface !== "road" || aheadBad || aimingSurface !== "road";
-  const steerThreshold = needsRecovery ? 0.025 : 0.065;
-  return {
-    up: (!aheadWall && (!sharpTurn || Math.abs(racer.speed || 0) < racer.physics.maxSpeed * 0.52)) || Math.abs(racer.speed || 0) < 48,
-    down: (aheadWall && racer.speed > 42) || (aheadBad && racer.speed > 68) || (sharpTurn && racer.speed > racer.physics.maxSpeed * 0.5),
-    left: delta < -steerThreshold,
-    right: delta > steerThreshold
-  };
-}
-
 async function startBetaDemo(mode = betaState?.config?.id || "time", options = {}) {
   if (!el.betaCanvas) return;
   clearRaceResultPopups();
@@ -2690,118 +2620,13 @@ function betaAiControls(racer) {
   return gpAiControls(racer);
 }
 
-function betaDriveRacerLegacy(racer, dt, controls = {}) {
-  const now = betaNowMs();
-  if (racer.respawnUntil && racer.respawnUntil > now) {
-    racer.speed = 0;
-    return;
-  }
-  if (racer.spinUntil > now) {
-    racer.angle += dt * 5.2;
-    racer.speed *= Math.max(0, 1 - dt * 1.8);
-    controls = {};
-  }
-  const currentClass = betaSurfaceAt(racer.x, racer.y);
-  const boosted = racer.boostUntil > now;
-  const slowed = racer.slowUntil > now;
-  const shielded = racer.shieldUntil > now;   // Big Bubba blocks grass penalty
-  const effectiveClass = shielded ? "road" : currentClass;
-  const grassFactor = effectiveClass === "grass"
-    ? (racer.ai ? Math.max(BETA_AI_TUNING.aiGrassMaxSpeedMin, Math.min(0.88, 0.62 + racer.physics.torque / 460)) : Math.min(0.48, 0.28 + racer.physics.torque / 520))
-    : 1;
-  let maxSpeed = racer.physics.maxSpeed * grassFactor;
-  let accel = racer.physics.acceleration * (effectiveClass === "grass"
-    ? (racer.ai ? Math.max(BETA_AI_TUNING.aiGrassAccelMin, Math.min(0.9, 0.54 + racer.physics.torque / 420)) : 0.32 + racer.physics.torque / 480)
-    : 1);
-  if (boosted) {
-    maxSpeed *= 1.22 + (racer.physics.powertrain || 70) / 620;
-    accel *= 1.25;
-  }
-  if (slowed) {
-    maxSpeed *= 0.58 + Math.min(0.18, (racer.physics.torque || 70) / 520);
-    accel *= 0.74 + Math.min(0.16, (racer.ratings.acceleration || 70) / 600);
-  }
-  if (racer.slipstreamActive) {
-    maxSpeed *= BETA_AI_TUNING.slipstreamMaxSpeedMult;
-    accel *= BETA_AI_TUNING.slipstreamAccelMult;
-  }
-  if (racer.ai && betaState?.player) {
-    const gap = Math.hypot(betaState.player.x - racer.x, betaState.player.y - racer.y);
-    const playerAhead = (betaState.player.lap > racer.lap)
-      || (betaState.player.lap === racer.lap && betaState.player.checkpoint > racer.checkpoint);
-    const t = Math.min(1, gap / BETA_AI_TUNING.rubberBandRange);
-    const band = playerAhead
-      ? 1 + BETA_AI_TUNING.rubberBandMaxBoost * t
-      : 1 - BETA_AI_TUNING.rubberBandMaxDrag * t;
-    maxSpeed *= band;
-    accel *= band;
-  }
-  if (controls.up) racer.speed += accel * dt;
-  if (controls.down) racer.speed -= racer.physics.brake * dt;
-  if (!controls.up && !controls.down) racer.speed *= Math.max(0, 1 - (1.35 - racer.physics.torque / 180) * dt);
-  racer.speed = Math.max(-maxSpeed * 0.34, Math.min(maxSpeed, racer.speed));
-  const turnRate = racer.physics.turnRate * Math.min(1, Math.max(0.25, Math.abs(racer.speed) / 190));
-  if (controls.left) racer.angle -= turnRate * dt * (racer.speed >= 0 ? 1 : -1);
-  if (controls.right) racer.angle += turnRate * dt * (racer.speed >= 0 ? 1 : -1);
-  const assistAngle = controls.up ? betaStraightAssistAngle(racer) : null;
-  if (assistAngle !== null && Math.abs(racer.speed) > 24) {
-    const correction = betaNormalizeAngle(assistAngle - racer.angle);
-    const playerSteering = controls.left || controls.right;
-    const assistStrength = playerSteering ? 1.55 : 3.2;
-    racer.angle += correction * Math.min(1, assistStrength * dt);
-  }
-  racer.prevX = racer.x;
-  racer.prevY = racer.y;
-  racer.x += Math.cos(racer.angle) * racer.speed * dt;
-  racer.y += Math.sin(racer.angle) * racer.speed * dt;
-  const nextClass = betaSurfaceAt(racer.x, racer.y);
-  if (nextClass === "wall") {
-    const wallSpeed = Math.abs(racer.speed);
-    const noseX = racer.prevX + Math.cos(racer.angle) * 36;
-    const noseY = racer.prevY + Math.sin(racer.angle) * 36;
-    // Wall collision: reverse both player and AI
-    racer.x = racer.prevX;
-    racer.y = racer.prevY;
-    racer.speed *= -(0.08 + Math.max(0, 100 - racer.physics.body) * 0.002);
-    if (racer.id === "player" && wallSpeed > 120 && betaState && (!betaState.lastWallFxAt || now - betaState.lastWallFxAt > 250)) {
-      if (juiceEnabled()) {
-        betaState.shake = Math.max(betaState.shake || 0, RACE_JUICE_TUNING.wallShake);
-        raceJuiceSpawnSparks(noseX, noseY, 4);
-      }
-      raceJuiceHaptic(15);
-      betaState.lastWallFxAt = now;
-    }
-    if (racer.ai) {
-      // Immediately re-aim toward next waypoint to escape the wall
-      const target = betaAiRacingLine[racer.aiWaypoint || 0] || betaAiRacingLine[0];
-      racer.angle = Math.atan2(target.y - racer.y, target.x - racer.x);
-    }
-  } else if (racer.ai && nextClass === "grass") {
-    const line = betaAiRacingLine?.length ? betaAiRacingLine : betaTrack.aiLine;
-    const nearest = betaNearestAiLineIndex(racer, line);
-    const target = line[(nearest + 3) % line.length] || line[(nearest + 1) % line.length] || line[nearest] || { x: racer.prevX, y: racer.prevY };
-    const desired = Math.atan2(target.y - racer.y, target.x - racer.x);
-    racer.lateralOffset *= 0.35;
-    racer.aiIntentOffset = 0;
-    if (currentClass === "road") {
-      racer.x = racer.prevX;
-      racer.y = racer.prevY;
-      racer.speed *= 0.72;
-    } else {
-      racer.speed *= 0.86;
-    }
-    racer.angle += betaNormalizeAngle(desired - racer.angle) * Math.min(1, 9.5 * dt);
-    racer.aiWaypoint = (nearest + 3) % line.length;
-  }
-}
-
 function betaDriveRacer(racer, dt, controls = {}) {
   gpDriveRacer(racer, dt, controls);
 }
 
 function updateBetaRace(now) {
   try {
-    if (!betaState || betaState.finished) return;
+    if (!betaState || betaState.finished || betaState.paused) return;
     if (juiceEnabled() && betaState.hitPauseUntil && now < betaState.hitPauseUntil) {
       betaState.last = now;
       drawBetaFrame();
@@ -2837,6 +2662,7 @@ function updateBetaRace(now) {
     betaApplyObstacles(itemNow);
     betaUpdateTraps(itemNow);
     betaUpdateProjectiles(dt, itemNow);
+    gpRunPendingWarps(itemNow);
     betaState.racers.filter((racer) => !racer.finished).forEach((racer) => betaUpdateOffTrackRecovery(racer, itemNow));
     betaState.racers.filter((racer) => !racer.finished).forEach(betaProgressRacer);
     betaRecordGhostSample(now);
@@ -2973,7 +2799,7 @@ function betaDrawOffTrackWarning(ctx, w, h) {
   ctx.restore();
 }
 
-const BETA_SPRITE_BODY_LENGTH = 63; // drawn car-body length in 2D race px
+const BETA_SPRITE_BODY_LENGTH = 95; // drawn car-body length in 2D race px (4B: 1.5x, was 63; keep in step with GP_TUNING.car)
 
 function drawBetaCar(ctx, racer = betaState.player) {
   ctx.save();
@@ -2986,11 +2812,11 @@ function drawBetaCar(ctx, racer = betaState.player) {
     ctx.strokeStyle = racer.color || "#52c7ff";
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
-    [-18, 0, 18].forEach((xOffset, index) => {
+    [-27, 0, 27].forEach((xOffset, index) => {
       const wobble = Math.sin((betaState?.elapsed || 0) * 18 + index) * 3;
       ctx.beginPath();
-      ctx.moveTo(xOffset + wobble, 42);
-      ctx.lineTo(xOffset - wobble * 0.5, 74 + index * 7);
+      ctx.moveTo(xOffset + wobble, 62);
+      ctx.lineTo(xOffset - wobble * 0.5, 108 + index * 9);
       ctx.stroke();
     });
     ctx.restore();
@@ -2999,9 +2825,9 @@ function drawBetaCar(ctx, racer = betaState.player) {
     // drawn at true shape, centered on the car body
   } else {
     ctx.fillStyle = racer.color || "#ffc857";
-    ctx.fillRect(-18, -34, 36, 68);
+    ctx.fillRect(-27, -51, 54, 102);
     ctx.fillStyle = "#101820";
-    ctx.fillRect(-12, -16, 24, 18);
+    ctx.fillRect(-18, -24, 36, 27);
   }
   ctx.restore();
 }
@@ -3032,7 +2858,7 @@ function drawBetaMiniMap() {
 document.addEventListener("keydown", (event) => {
   if (!document.querySelector("#beta-view")?.classList.contains("active")) return;
   const key = normalizeKey(event);
-  if ((key === "Space" || key === "E") && betaState?.active && !betaState.finished) {
+  if ((key === "Space" || key === "E") && betaState?.active && !betaState.finished && !betaState.paused) {
     event.preventDefault();
     flashBetaItemButton();
     betaUseItem(betaState.player);
@@ -3063,6 +2889,7 @@ document.querySelectorAll("[data-beta-control]").forEach((button) => {
 document.querySelectorAll("[data-beta-item-button]").forEach((button) => {
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    if (betaState?.paused) return;
     flashBetaItemButton();
     betaUseItem(betaState?.player);
   });
@@ -3086,8 +2913,8 @@ screen.orientation?.addEventListener?.("change", updateRotationTipForActiveRace)
 // built from its path the first time it's raced (cached).
 const GP_TUNING = {
   tile: 340,             // world px per old tile
-  halfWidth: 125,        // road is 250 px wide (old road ≈ 143)
-  customHalfWidth: 112,  // builder tracks can have roads one tile apart
+  halfWidth: 150,        // 4B: road is 300 px wide so the 1.5x cars still have room to race
+  customHalfWidth: 130,  // builder tracks can have roads one tile apart
   curb: 16,
   runoff: 140,
   cornerRadius: 230,
@@ -3100,7 +2927,10 @@ const GP_TUNING = {
   wall: { keepSpeed: 0.55, align: 0.55 },
   assist: 0.9,           // gentle pull toward the track direction when not steering
   camera: { anchorY: 0.7, angleLerp: 7, portraitZoom: 0.74 },
-  ai: { lookBase: 120, lookPerSpeed: 0.38, steerGain: 2.4, latG: [0.86, 1.0], brake: [520, 760], noise: [26, 6], overtakeRange: 170, overtakeOffset: 0.5, lineIterations: 220 }
+  ai: { lookBase: 120, lookPerSpeed: 0.38, steerGain: 2.4, latG: [0.86, 1.0], brake: [520, 760], noise: [26, 6], overtakeRange: 170, overtakeOffset: 0.5, lineIterations: 220, pace: 0.9, cornerScale: 0.82 },
+  items: { rows: [0.08, 0.24, 0.4, 0.56, 0.72, 0.88], lanes: [-0.55, 0, 0.55], respawnMs: [2500, 4000] },
+  teleport: { portalMs: 1000, beforeFinish: 260, behindLeader: 60, behindLast: 160, duelSendBack: 700 },
+  car: { halfLength: 52, halfWidth: 31, pickup: 62, pad: 68, gridGap: 150 }
 };
 
 const gpThemes = {
@@ -3416,8 +3246,8 @@ function gpDriveRacer(racer, dt, controls = {}) {
   const shielded = racer.shieldUntil > now;
   const surface = shielded && g.surface === "grass" ? "road" : g.surface;
   const p = racer.physics;
-  let maxSpeed = p.maxSpeed * T.speedScale;
-  let accel = p.acceleration * T.speedScale;
+  let maxSpeed = p.maxSpeed * T.speedScale * (racer.ai ? T.ai.pace : 1);
+  let accel = p.acceleration * T.speedScale * (racer.ai ? T.ai.pace : 1);
   if (surface === "curb") maxSpeed *= T.surface.curbSpeed;
   if (surface === "grass") {
     maxSpeed *= T.surface.grassSpeed + (racer.ai ? 0.12 : 0) + (p.torque - 70) / 900;
@@ -3547,7 +3377,7 @@ function gpAiControls(racer) {
   const error = betaNormalizeAngle(desired - racer.angle);
   const steer = betaClamp(error * T.steerGain, -1, 1);
   // Throttle/brake from the speed profile.
-  const latG = gpLatG(racer) * (T.latG[0] + (T.latG[1] - T.latG[0]) * skill);
+  const latG = gpLatG(racer) * (T.latG[0] + (T.latG[1] - T.latG[0]) * skill) * (racer.ai ? T.cornerScale : 1);
   const brake = T.brake[0] + (T.brake[1] - T.brake[0]) * skill;
   const cap = racer.physics.maxSpeed * GP_TUNING.speedScale;
   const targetSpeed = gpTargetSpeed(circuit, g.index, latG, brake, cap);
@@ -3598,7 +3428,7 @@ function gpStartPosition(index, totalRacers = 1) {
     row = Math.floor((index - 1) / 2);
     col = (index - 1) % 2;
   }
-  const p = gpPointAt(circuit, -(row + 1) * 120, (col - 0.5) * circuit.hw * 0.7);
+  const p = gpPointAt(circuit, -(row + 1) * GP_TUNING.car.gridGap, (col - 0.5) * circuit.hw * 0.7);
   return { x: p.x, y: p.y, angle: p.angle };
 }
 
@@ -3633,9 +3463,9 @@ function gpCreateObjects(config) {
   const hw = circuit.hw;
   const at = (s, lateral) => gpPointAt(circuit, s, lateral);
   const itemBoxes = [];
-  [0.14, 0.38, 0.62, 0.84].forEach((f, row) => {
+  GP_TUNING.items.rows.forEach((f, row) => {
     const s = gpStraightNear(circuit, f);
-    [-0.45, 0.45].forEach((lat, k) => itemBoxes.push({ id: `box-${row}-${k}`, ...at(s, lat * hw), active: true, respawnAt: 0 }));
+    GP_TUNING.items.lanes.forEach((lat, k) => itemBoxes.push({ id: `box-${row}-${k}`, ...at(s, lat * hw), active: true, respawnAt: 0 }));
   });
   const boostPads = [0.22, 0.52, 0.76].map((f, i) => {
     const s = gpStraightNear(circuit, f);
@@ -3768,24 +3598,110 @@ function gpDrawMiniMap(ctx, w, h, circuit) {
   return (x, y) => ({ x: ox + x * scale, y: oy + y * scale });
 }
 
-// ─── Speed + gear panel (bottom centre of the race canvas) ───────────────────
+// ─── Pause (4B) ─────────────────────────────────────────────────────────────
+function gpCanPause() {
+  return Boolean(betaState && betaState.active && !betaState.finished && !betaState.paused && !el.betaRace?.hidden);
+}
+
+function gpPause() {
+  if (!gpCanPause()) return;
+  betaState.paused = true;
+  betaState.pausedAt = performance.now();
+  if (betaState.raf) cancelAnimationFrame(betaState.raf);
+  Object.keys(betaKeys).forEach((key) => { betaKeys[key] = false; });
+  if (typeof updateBetaControlVisuals === "function") updateBetaControlVisuals();
+  document.getElementById("beta-pause-overlay")?.removeAttribute("hidden");
+  document.getElementById("beta-pause")?.setAttribute("aria-pressed", "true");
+  el.betaRace?.classList.add("is-paused");
+  document.getElementById("beta-resume")?.focus();
+}
+
+function gpResume() {
+  if (!betaState?.paused) return;
+  const now = performance.now();
+  const held = now - (betaState.pausedAt || now);
+  betaState.startTime += held;
+  if (betaState.slowmoUntil) betaState.slowmoUntil += held;
+  if (betaState.hitPauseUntil) betaState.hitPauseUntil += held;
+  betaState.last = now;
+  betaState.paused = false;
+  gpHidePause();
+  betaState.raf = requestAnimationFrame(updateBetaRace);
+}
+
+function gpTogglePause() {
+  if (betaState?.paused) gpResume();
+  else gpPause();
+}
+
+function gpHidePause() {
+  document.getElementById("beta-pause-overlay")?.setAttribute("hidden", "");
+  document.getElementById("beta-pause")?.setAttribute("aria-pressed", "false");
+  el.betaRace?.classList.remove("is-paused");
+}
+
+document.getElementById("beta-pause")?.addEventListener("click", gpTogglePause);
+document.getElementById("beta-resume")?.addEventListener("click", gpResume);
+document.getElementById("beta-pause-quit")?.addEventListener("click", () => {
+  gpHidePause();
+  el.betaExit?.click();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && gpCanPause()) gpPause();
+});
+
+// ─── Speed + gear dial (automatic) ──────────────────────────────────────────
 function gpRenderGearHud() {
   const g = betaState?.player?.gp;
   const hud = document.querySelector("#beta-race .beta-stage") || document.getElementById("beta-canvas")?.parentElement;
   if (!g || !hud) return;
   let panel = document.getElementById("gp-speed-panel");
+  if (panel && !panel.classList.contains("gp-dial")) {
+    panel.remove();
+    panel = null;
+  }
   if (!panel) {
     panel = document.createElement("div");
-    panel.className = "beta-canvas-hud-panel gp-speed-panel";
+    panel.className = "gp-speed-panel gp-dial drag-dial";
     panel.id = "gp-speed-panel";
-    panel.innerHTML = `<strong class="gp-speed"><b>0</b><small>MPH</small></strong><span class="gp-gear"><b>G1</b><i><em></em></i></span>`;
+    panel.innerHTML = gpDialMarkup();
     hud.appendChild(panel);
   }
   panel.hidden = !betaState.active || Boolean(betaState.finished);
   const reverse = (betaState.player.speed || 0) < -5;
-  panel.querySelector(".gp-speed b").textContent = String(Math.round(Math.abs(betaState.player.speed) / 5.2));
-  panel.querySelector(".gp-gear b").textContent = reverse ? "R" : `G${g.gear}`;
-  panel.querySelector(".gp-gear em").style.width = `${Math.round((g.rpm || 0) * 100)}%`;
-  panel.classList.toggle("shifting", g.shiftUntil > betaNowMs());
-  panel.classList.toggle("redline", (g.rpm || 0) > 0.92);
+  const rpm = betaClamp(g.rpm || 0, 0, 1);
+  const needle = panel.querySelector(".drag-dial-needle");
+  if (needle) needle.setAttribute("transform", `rotate(${(dragDialAngle(rpm) + 90).toFixed(2)} ${DRAG_DIAL.cx} ${DRAG_DIAL.cy})`);
+  const gearText = panel.querySelector(".drag-dial-gear");
+  if (gearText) gearText.textContent = reverse ? "R" : String(g.gear || 1);
+  const speedText = panel.querySelector(".drag-dial-speed");
+  if (speedText) speedText.textContent = String(Math.round(Math.abs(betaState.player.speed) / 5.2));
+  const shifting = g.shiftUntil > betaNowMs();
+  panel.classList.toggle("shifting", shifting);
+  panel.classList.toggle("in-window", shifting);
+  panel.classList.toggle("over", rpm > 0.95);
+}
+
+function gpDialMarkup() {
+  const ticks = Array.from({ length: 11 }, (_, index) => {
+    const t = index / 10;
+    const [x1, y1] = dragDialPoint(t, DRAG_DIAL.r - 14);
+    const [x2, y2] = dragDialPoint(t, DRAG_DIAL.r - (index % 5 ? 19 : 23));
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 200 200" aria-hidden="true">
+    <circle class="drag-dial-face" cx="${DRAG_DIAL.cx}" cy="${DRAG_DIAL.cy}" r="${DRAG_DIAL.r + 14}"/>
+    <path class="drag-dial-track" d="${dragDialArc(0, 1)}"/>
+    <path class="drag-dial-zone ok" d="${dragDialArc(0.8, 0.95)}"/>
+    <path class="drag-dial-zone over" d="${dragDialArc(0.95, 1)}"/>
+    <g class="drag-dial-ticks">${ticks}</g>
+    <g class="drag-dial-needle"><line x1="${DRAG_DIAL.cx}" y1="${DRAG_DIAL.cy - 30}" x2="${DRAG_DIAL.cx}" y2="${DRAG_DIAL.cy - DRAG_DIAL.r + 4}"/></g>
+    <circle class="drag-dial-ready" cx="${DRAG_DIAL.cx + 44}" cy="${DRAG_DIAL.cy + 16}" r="7"/>
+    <text class="drag-dial-ready-label" x="${DRAG_DIAL.cx + 44}" y="${DRAG_DIAL.cy + 34}">SHIFT</text>
+    <text class="drag-dial-gear" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 14}">1</text>
+    <text class="drag-dial-gear-label" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy - 26}">GEAR</text>
+    <text class="drag-dial-speed" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 42}">0</text>
+    <text class="drag-dial-unit" x="${DRAG_DIAL.cx}" y="${DRAG_DIAL.cy + 56}">MPH</text>
+    <text class="drag-dial-ready-label gp-dial-auto" x="${DRAG_DIAL.cx - 44}" y="${DRAG_DIAL.cy + 34}">AUTO</text>
+  </svg>`;
 }

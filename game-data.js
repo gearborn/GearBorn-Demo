@@ -350,9 +350,9 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     trait: "Guard dog juggernaut",
     unlockable: true,
     evolutions: [
-      { name: "Cruzdog", images: { display: "assets/cars/pt-cruzdog-race.png", race: "assets/cars/pt-cruzdog-race.png", topdown: "assets/cars/pt-cruzdog-topdown.png" } },
+      { name: "Cruzdog", images: { display: "assets/cars/pt-cruzdog-display.png", race: "assets/cars/pt-cruzdog-race.png", topdown: "assets/cars/pt-cruzdog-topdown.png" } },
       { name: "Bullwark", images: { display: "assets/cars/pt-bullwark-display.png", race: "assets/cars/pt-bullwark-race.png", topdown: "assets/cars/pt-bullwark-topdown.png" } },
-      { name: "Forterra", images: { display: "assets/cars/pt-forterra-display.png", race: "assets/cars/pt-forterra-display.png", topdown: "assets/cars/pt-forterra-topdown.png" } }
+      { name: "Forterra", images: { display: "assets/cars/pt-forterra-display.png", race: "assets/cars/pt-forterra-race.png", topdown: "assets/cars/pt-forterra-topdown.png" } }
     ]
   },
   {
@@ -364,7 +364,7 @@ cars.splice(cars.findIndex((car) => car.id === "rainbowlt"), 0,
     evolutions: [
       { name: "Manscape", images: { display: "assets/cars/armadillo-manscape-display.png", race: "assets/cars/armadillo-manscape-race.png", topdown: "assets/cars/armadillo-manscape-topdown.png" } },
       { name: "Mansplore", images: { display: "assets/cars/armadillo-mansplore-display.png", race: "assets/cars/armadillo-mansplore-race.png", topdown: "assets/cars/armadillo-mansplore-topdown.png" } },
-      { name: "Manstrocity", images: { display: "assets/cars/armadillo-manstrocity-display.png", race: "assets/cars/armadillo-manstrocity-race.png", topdown: "assets/cars/armadillo-manstrocity-race.png" } }
+      { name: "Manstrocity", images: { display: "assets/cars/armadillo-manstrocity-display.png", race: "assets/cars/armadillo-manstrocity-race.png", topdown: "assets/cars/armadillo-manstrocity-topdown.png" } }
     ]
   },
   {
@@ -1791,7 +1791,7 @@ const additionalVindexEntries = [
     "004",
     "Cruzdog",
     "GB Growler Line",
-    "assets/cars/pt-cruzdog-race.png"
+    "assets/cars/pt-cruzdog-display.png"
   ],
   [
     "005",

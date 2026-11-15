@@ -795,14 +795,6 @@
               <button type="button" data-garage-view="detailed">Detailed</button>
             </div>
             <div class="garage-status" id="garage-status" hidden></div>
-            <section class="garage-showcase" id="garage-showcase" aria-labelledby="garage-showcase-title">
-              <header class="garage-showcase-header">
-                <h2 id="garage-showcase-title">Showcase</h2>
-                <small>Your 8 under the lights. They come up first whenever you pick a car.</small>
-              </header>
-              <div class="garage-showcase-stage" id="garage-showcase-grid"></div>
-              <div class="garage-showcase-detail" id="garage-showcase-detail" hidden></div>
-            </section>
             <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
               <img class="forge-menu-card-bg" src="assets/forge/forge_bg.png" alt="" aria-hidden="true">
               <img class="forge-menu-card-vat" src="assets/forge/forge_vat.png" alt="" aria-hidden="true">
@@ -810,6 +802,14 @@
               <strong id="forge-card-title">The Forge</strong>
               <small id="forge-card-subtitle">Unlock GearBorn with your Medallions.</small>
             </button>
+            <section class="garage-showcase" id="garage-showcase" aria-labelledby="garage-showcase-title">
+              <header class="garage-showcase-header">
+                <h2 id="garage-showcase-title">Showcase</h2>
+                <small>Your 8 under the lights. These are the cars you race with everywhere.</small>
+              </header>
+              <div class="garage-showcase-stage" id="garage-showcase-grid"></div>
+              <div class="garage-showcase-detail" id="garage-showcase-detail" hidden></div>
+            </section>
             <h2 class="garage-lineup-heading" id="garage-lineup-heading">Full Lineup</h2>
             <div class="garage-grid" id="garage-grid"></div>
           </div>
@@ -1000,10 +1000,6 @@
                 <strong>Hub Map (Beta)</strong>
                 <span>Walk a tiny tile-map prototype.</span>
               </button>
-              <button class="beta-option-card" id="gearborn-studio-beta-start" type="button">
-                <strong>GearBorn Studio (Beta)</strong>
-                <span>Drop GearBorns into real photos. Pose, stack, save.</span>
-              </button>
               <div class="beta-option-grid" id="beta-options">
                 <button class="beta-option-card" data-beta-mode="time" type="button">
                   <strong>Solo Time Trial</strong>
@@ -1082,11 +1078,20 @@
             <div class="beta-race" id="beta-race" hidden>
               <div class="beta-hud-exit-row">
                 <button class="ghost" id="beta-debug" type="button">Debug: Off</button>
+                <button class="crashout-pause-button" id="beta-pause" type="button" aria-label="Pause" aria-pressed="false"><span aria-hidden="true">❚❚</span></button>
                 <button class="danger-button" id="beta-exit" type="button">Exit</button>
                 <span id="beta-checkpoint" style="display:none">0 / 4</span>
                 <span id="beta-speed" style="display:none">0 MPH</span>
               </div>
               <div class="beta-stage">
+                <div class="crashout-pause-overlay gp-pause-overlay" id="beta-pause-overlay" role="dialog" aria-modal="true" aria-labelledby="beta-pause-title" hidden>
+                  <div class="crashout-pause-card">
+                    <h2 id="beta-pause-title">Paused</h2>
+                    <button class="story-primary" id="beta-resume" type="button">Resume</button>
+                    <button class="ghost" id="beta-pause-quit" type="button">Exit race</button>
+                    <p>P / Esc to resume</p>
+                  </div>
+                </div>
                 <canvas id="beta-canvas" width="960" height="620" aria-label="Circuit race"></canvas>
                 <canvas id="beta-minimap" width="180" height="140" aria-label="Circuit mini-map"></canvas>
                 <div class="beta-canvas-hud" id="beta-canvas-hud" aria-label="Race HUD">
@@ -1284,22 +1289,6 @@
           </div>
         </section>
 
-        <section class="view" id="gearborn-studio-beta-view" aria-labelledby="gearborn-studio-beta-title">
-          <button class="back-link" id="gearborn-studio-beta-back" type="button">Back</button>
-          <div class="section-heading">
-            <p>Beta Mode</p>
-            <h1 id="gearborn-studio-beta-title">GearBorn Studio (Beta)</h1>
-          </div>
-          <div class="studio-beta-stage">
-            <video id="gearborn-studio-beta-video" playsinline muted autoplay hidden></video>
-            <canvas id="gearborn-studio-beta-canvas"></canvas>
-            <button id="gearborn-studio-beta-capture-fab" class="studio-beta-fab" type="button" hidden>Capture</button>
-            <button id="gearborn-studio-beta-add" class="studio-beta-add" type="button">+ GearBorn</button>
-          </div>
-          <div id="gearborn-studio-beta-layers"></div>
-          <div id="gearborn-studio-beta-controls"></div>
-        </section>
-
         <section class="view dev-test-view" id="dev-test-view" aria-labelledby="dev-test-title">
           <button class="back-link" data-view="menu" type="button">Back</button>
           <div class="section-heading">
@@ -1458,15 +1447,6 @@
         </section>
       </main>
 
-      <div id="gearborn-studio-beta-picker-modal" class="studio-beta-modal" hidden>
-        <div class="studio-beta-modal-card">
-          <div class="studio-beta-modal-head">
-            <strong>Pick a GearBorn</strong>
-            <button id="gearborn-studio-beta-picker-close" class="ghost" type="button">Close</button>
-          </div>
-          <div id="gearborn-studio-beta-picker"></div>
-        </div>
-      </div>
     </div>
 
     <div class="modal-overlay" id="boss-modal" aria-hidden="true">
