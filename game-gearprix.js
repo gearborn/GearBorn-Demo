@@ -525,11 +525,8 @@ function resizeBetaCanvas() {
   const availableHeight = Math.max(300, window.innerHeight - reservedHeight - 16);
   const aspect = 960 / 620;
   let cssWidth = availableWidth;
-  let cssHeight = cssWidth / aspect;
-  if (cssHeight > availableHeight) {
-    cssHeight = availableHeight;
-    cssWidth = cssHeight * aspect;
-  }
+  // 5C: always use the full stage width; on short screens the view gets wider, not narrower.
+  let cssHeight = Math.min(cssWidth / aspect, availableHeight);
   if (document.body.classList.contains("gb-racing") && typeof gbPhoneLayout === "function" && gbPhoneLayout()) {
     // 3J: on a phone the live race fills the screen; the chase cam works at any shape.
     // In portrait the controls sit under the canvas; in landscape they float over it.
@@ -833,7 +830,7 @@ function getRandomOpponentCars(count, playerCarId, difficulty = null) {
       evolution,
       level,
       ratings,
-      skill: betaDifficultySkill(difficulty, 1.04 + Math.random() * 0.07),
+      skill: betaDifficultySkill(difficulty, gpTrainingSkill()),
       aggression: betaDifficultyAggression(difficulty)
     };
   });
@@ -1165,6 +1162,7 @@ const betaTrackCityIcons = {
   space:    "assets/maps/cityicon-space.png",
 };
 
+// 5C: Training map select: every circuit drawn as its full road map, like the Crashout ring picker.
 function renderBetaTrackSelect() {
   if (!el.betaTrackList) return;
   const tracks = betaSelectableTracks(betaPendingMode);
@@ -1172,13 +1170,17 @@ function renderBetaTrackSelect() {
     const icon = betaTrackCityIcons[track.id] || "";
     const isActive = track.id === betaSelectedTrackId;
     return `
-      <button class="beta-city-tile ${isActive ? "active" : ""}" data-beta-track="${track.id}" type="button" aria-label="${track.name}">
-        ${icon ? `<img src="${icon}" alt="${track.name}" loading="lazy" onerror="this.style.display='none'">` : ""}
-        <span>${track.name}</span>
+      <button class="beta-city-tile beta-map-tile ${isActive ? "active" : ""}" data-beta-track="${track.id}" type="button" aria-label="${track.name}">
+        <canvas class="beta-map-tile-canvas" data-beta-map-canvas="${track.id}" aria-hidden="true"></canvas>
+        <span class="beta-map-tile-name">${icon ? `<img src="${icon}" alt="" loading="lazy" onerror="this.remove()">` : ""}<span>${track.name}</span></span>
       </button>
     `;
   }).join("");
-  drawBetaTrackPreview(betaTrackById(betaSelectedTrackId, betaPendingMode));
+  requestAnimationFrame(() => {
+    el.betaTrackList.querySelectorAll("[data-beta-map-canvas]").forEach((canvas) => {
+      drawBetaTrackPreviewTo(canvas, betaTrackById(canvas.dataset.betaMapCanvas, betaPendingMode));
+    });
+  });
 }
 
 function betaDriverPortraitMarkup(driver) {
@@ -1187,7 +1189,7 @@ function betaDriverPortraitMarkup(driver) {
   const initials = name.split(" ").map((part) => part[0]).join("").slice(0, 2);
   return `
     <span class="beta-racer-head ${image ? "" : "placeholder"}">
-      ${image ? `<img src="${image}" alt="${name}" loading="lazy" decoding="async" onerror="this.remove(); this.parentElement.classList.add('placeholder');">` : ""}
+      ${image ? `<img src="${image}" alt="${name}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('placeholder'); this.remove();">` : ""}
       <em>${initials}</em>
     </span>
   `;
@@ -1203,6 +1205,12 @@ function betaNpcDriversForMode(mode) {
 
 function betaDuelDrivers() {
   return [rivalTuner()].concat(bossChallengeBosses);
+}
+
+// 5C: Training Academy Gear Prix / Time Trial opponents (was 1.04-1.11 field, 0.98 duel).
+const GP_TRAINING_SKILL = { min: 0.93, max: 0.98, duel: 0.94 };
+function gpTrainingSkill() {
+  return GP_TRAINING_SKILL.min + Math.random() * (GP_TRAINING_SKILL.max - GP_TRAINING_SKILL.min);
 }
 
 function betaOpponentSetForMode(mode) {
@@ -1221,7 +1229,7 @@ function betaOpponentSetForMode(mode) {
       evolution: setup.evolution,
       level: setup.level,
       ratings: setup.stats || setup.ratings,
-      skill: 0.98
+      skill: GP_TRAINING_SKILL.duel
     }];
   }
   const drivers = betaNpcDriversForMode(mode);
@@ -1229,7 +1237,7 @@ function betaOpponentSetForMode(mode) {
   return randomOpponents.map((opponent, index) => {
     const driver = drivers[index] || otherNpcProfiles[index % otherNpcProfiles.length];
     return {
-      ...betaOpponentSetupForDriver(driver, betaCurrentCarId(), opponent, 1.04 + Math.random() * 0.07),
+      ...betaOpponentSetupForDriver(driver, betaCurrentCarId(), opponent, gpTrainingSkill()),
       driver
     };
   });
@@ -1323,14 +1331,18 @@ function showBetaScreen(screenId) {
 function openBetaTrackSelect(mode = "time") {
   betaPendingMode = mode;
   const modeLabels = { time: "Solo Time Trial", race4: "4-Car Race", race6: "6-Car Race", duel: "Head-to-Head" };
-  if (el.betaTrackSelectTitle) el.betaTrackSelectTitle.textContent = `${modeLabels[mode] || "Race"} — Choose a Track`;
+  if (el.betaTrackSelectTitle) el.betaTrackSelectTitle.textContent = `${modeLabels[mode] || "Race"} · Choose a Map`;
   showBetaScreen("beta-track-select-screen");
   renderBetaTrackSelect();
 }
 
 function closeBetaTrackSelect() {
-  // Back from track select → return to car select
-  showBetaScreen("beta-car-select-screen");
+  // 5C: Back from the map select → Time Trial returns to the Training Academy, races to the format choice.
+  if (betaPendingMode === "time") {
+    showView("solo");
+    return;
+  }
+  openBetaIntro();
 }
 
 function openBetaCarSelect(mode) {
@@ -1696,13 +1708,15 @@ function drawBetaDebug(ctx) {
 el.betaOptions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-mode]");
   if (!button) return;
-  openBetaPreview(button.dataset.betaMode);
+  if (betaRaceContext?.source === "training") openBetaTrackSelect(button.dataset.betaMode);
+  else openBetaPreview(button.dataset.betaMode);
 });
 
 el.betaTrackList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-beta-track]");
   if (!button) return;
-  selectBetaTrack(button.dataset.betaTrack);
+  betaSelectedTrackId = betaTrackById(button.dataset.betaTrack, betaPendingMode).id;
+  openBetaPreview(betaPendingMode);
 });
 
 el.betaTrackStart?.addEventListener("click", () => {
@@ -1714,7 +1728,8 @@ el.betaTrackBack?.addEventListener("click", () => {
 });
 
 el.betaPreviewBack?.addEventListener("click", () => {
-  showBetaScreen("beta-intro");
+  if (betaRaceContext?.source === "training") openBetaTrackSelect(betaPreviewMode || betaPendingMode);
+  else showBetaScreen("beta-intro");
 });
 
 el.betaPreviewStart?.addEventListener("click", () => {
@@ -1849,6 +1864,8 @@ function betaPlayerHazardJuice(racer) {
   raceJuiceHaptic([25, 20, 25]);
 }
 
+const GP_EMP_ENGINE_CUT_MS = 2000;
+
 function betaApplyHit(racer, effect = "slow", strength = 1, source = "hazard") {
   if (!racer || racer.finished || racer.ghost) return;
   const now = betaNowMs();
@@ -1869,6 +1886,10 @@ function betaApplyHit(racer, effect = "slow", strength = 1, source = "hazard") {
     racer.speed *= Math.max(0.35, 0.68 - strength * 0.08 * bodyReducer);
   } else if (effect === "burst") {
     racer.slowUntil = Math.max(racer.slowUntil || 0, now + (1000 + strength * 450) * bodyReducer);
+    if (source === "projectile") {
+      racer.engineCutUntil = Math.max(racer.engineCutUntil || 0, now + GP_EMP_ENGINE_CUT_MS + strength * 300 * bodyReducer);
+      if (racer.id === "player") betaNotify("EMP! Engine cut", GP_EMP_ENGINE_CUT_MS);
+    }
     racer.speed *= Math.max(0.42, 0.74 - strength * 0.09 * bodyReducer);
   } else {
     racer.slowUntil = Math.max(racer.slowUntil || 0, now + (850 + strength * 430) * bodyReducer);
@@ -3239,6 +3260,11 @@ function gpDriveRacer(racer, dt, controls = {}) {
     racer.angle += dt * 5.2;
     racer.speed *= Math.max(0, 1 - dt * 1.8);
     controls = {};
+  }
+  if (racer.engineCutUntil > now) {
+    // 5C: EMP engine cut: no throttle, the car coasts down, steering still works.
+    racer.speed *= Math.max(0, 1 - dt * 0.45);
+    controls = { ...controls, up: false };
   }
   gpUpdateLocation(racer, circuit);
   const boosted = racer.boostUntil > now;

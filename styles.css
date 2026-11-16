@@ -17229,3 +17229,106 @@ body {
   font: 800 0.72rem var(--font-ui);
   letter-spacing: 0.06em;
 }
+
+/* ─── 5B: drag fixes ─────────────────────────────────────────────────────── */
+.drag-restart { position: absolute; top: 44px; left: 12px; display: none; pointer-events: auto; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 8px; background: rgba(10, 14, 20, 0.72); color: #fff; font: 900 0.72rem var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.drag-restart:hover { border-color: var(--gold); color: var(--gold); }
+.drag-overlay.can-restart .drag-restart { display: block; }
+.drag-side-camera .drag-lane .car.faces-right .car-image { transform: scale(var(--display-scale, 1)); }
+.drag-progress-car.faces-right img { transform: none; }
+
+/* Wider car select with bigger cars (every mode that uses the car-select layout). */
+@media (min-width: 901px) {
+  .race-panel:has(.flow-step[data-step="car"].active),
+  .vertical-mode:has(.flow-step[data-step="car"].active) { grid-template-columns: minmax(0, 1fr); max-width: 1120px; }
+  .car-select-layout { grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr); gap: 20px; }
+  .compact-car-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); max-height: 560px; gap: 12px; }
+  .compact-car-grid .icon-card.compact { min-height: 150px; }
+  .compact-car-grid .icon-card.compact .selection-preview-art { height: 104px; }
+  .compact-car-grid .icon-card.compact .selection-preview-art .car { width: 150px; height: 100px; }
+  .car-select-preview { min-height: 560px; grid-template-rows: minmax(260px, 1fr) auto; }
+  .car-select-preview-art { min-height: 260px; }
+  .car-select-preview-art .car { width: min(380px, 100%); height: 280px; }
+}
+
+/* ─── 5C: Training map select ─────────────────────────────────────────────── */
+#beta-track-select-screen .beta-track-select { grid-template-columns: minmax(0, 1fr); }
+#beta-track-select-screen .beta-track-preview { display: none; }
+#beta-track-back { justify-self: start; width: auto; }
+#beta-track-select-screen .beta-track-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; max-height: none; overflow: visible; }
+.beta-map-tile { display: grid; grid-template-rows: auto auto; gap: 8px; padding: 10px; min-height: 0; }
+.beta-map-tile-canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 10px; background: #16251a; }
+.beta-map-tile-name { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.82rem; }
+.beta-map-tile-name img { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; }
+@media (max-width: 560px) {
+  #beta-track-select-screen .beta-track-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+
+/* ─── 5E: VINdex detail layout ───────────────────────────────────────────────
+   Plate centred above the car and big enough to read, car larger,
+   status pill + medallion mastery in one row under the car (nothing overlaps). */
+.vindex-stage .vindex-plate-wrap {
+  top: 15.5%;
+  bottom: auto;
+  z-index: 3;
+  width: min(56%, 520px);
+}
+.vindex-stage .vindex-license-plate { min-height: 0; }
+.vindex-stage .vindex-license-plate img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 2 / 1;
+}
+.vindex-stage .vindex-license-plate span { font-size: clamp(0.9rem, 3.4cqw, 2.4rem); }
+.vindex-stage .vindex-art {
+  top: 33.5%;
+  height: 56%;
+}
+.vindex-stage .vindex-art .car { width: min(100%, 680px); }
+.vindex-stage .vindex-art > .honk-button {
+  top: 0;
+  bottom: auto;
+  left: 0;
+}
+.vindex-stage .vindex-copy {
+  left: -6%;
+  right: -6%;
+  bottom: 0.6%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.9vw, 14px);
+}
+.vindex-stage .vindex-copy > strong,
+.vindex-stage #vindex-medallion-tracks { flex: none; }
+.vindex-stage .medallion-mastery-panel.compact {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.6vw, 10px);
+  width: auto;
+  margin: 0;
+  padding: clamp(3px, 0.4vw, 6px) clamp(6px, 0.7vw, 12px);
+}
+.vindex-stage .medallion-mastery-panel.compact .medallion-mastery-title { display: none; }
+.vindex-stage .medallion-mastery-panel.compact .medallion-rank-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.6vw, 10px);
+  white-space: nowrap;
+}
+.vindex-stage .medallion-mastery-panel.compact .medallion-rank-row,
+.vindex-stage .medallion-mastery-panel.compact .medallion-rank-row strong,
+.vindex-stage .medallion-mastery-panel.compact .medallion-tier-badge,
+.vindex-stage .medallion-mastery-panel.compact .medallion-rank-up { font-size: clamp(0.5rem, 0.75vw, 0.72rem); }
+.vindex-stage .medallion-mastery-panel.compact .medallion-rank-up { min-height: 0; padding: 3px 8px; }
+@container (max-width: 500px) {
+  .vindex-stage .medallion-mastery-panel.compact .medallion-rank-row strong { display: none; }
+}
+@container (max-width: 300px) {
+  .vindex-stage .medallion-mastery-panel.compact .medallion-tier-badge { display: none; }
+  .vindex-stage .medallion-mastery-panel.compact .medallion-tier-badge,
+  .vindex-stage .medallion-mastery-panel.compact .medallion-rank-up,
+  .vindex-stage .vindex-copy > strong { min-height: 0; padding: 2px 6px; font-size: 0.5rem; }
+}

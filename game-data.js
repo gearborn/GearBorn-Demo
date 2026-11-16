@@ -1,5 +1,5 @@
 const distances = [
-  { meters: 400, label: "400 m", xp: 80, difficulty: 0.9 },
+  { meters: 600, label: "600 m", xp: 80, difficulty: 0.9 },
   { meters: 800, label: "800 m", xp: 180, difficulty: 1.05 },
   { meters: 1600, label: "1600 m", xp: 420, difficulty: 1.22 }
 ];
@@ -1535,7 +1535,7 @@ const bosses = [
   { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/cars/german-baronessex-topdown.png", portrait: "assets/characters/karen.png", headshot: "assets/characters/headshots/headshot-karen.png" },
   { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/characters/samir.png", headshot: "assets/characters/headshots/headshot-samir.png" },
   { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/influencer-peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
-  { id: "jimmy-chin", name: "Jimmy Chin", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
+  { id: "jimmy-chin", name: "Jimmy", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
   { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
   { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/bok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
   { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/characters/pallavi.png", headshot: "assets/characters/headshots/headshot-pallavi.png" }
@@ -2276,8 +2276,8 @@ storyRewardLineDefs.forEach((line) => {
 });
 
 const tuners = [
-  { id: "mylo", name: "Mylo Ziggs", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshots/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
-  { id: "cha-cha", name: "Cha Cha Spindell", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshots/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
+  { id: "mylo", name: "Mylo", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshots/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
+  { id: "cha-cha", name: "Cha Cha", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshots/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
 ];
 const profileBios = {
   "rev-rend": "A preacher of speed and salvation, with a collection to match. Rev-rend built his empire on one promise: give him your GearBorn, and he will lead you to greatness. Behind the gospel is a man who has lost sight of what he ever believed in.",
@@ -2302,11 +2302,11 @@ const profileBios = {
   "eli-kaufman": "Most Tuners grew up dreaming about the spotlight. Eli Kaufman grew up carrying someone else's clubs through it. A longtime caddy for the city's elite racers, Eli learned the Tuner world one overheard conversation at a time - studying egos, rivalries, and strategy while staying invisible. After years of saving every tip he earned, Eli finally bought his way onto the track himself. Calm, patient, and impossible to rattle, he races the same way he worked: quietly, precisely, and always three steps ahead of the people underestimating him. He's also your best friend."
 };
 const otherNpcProfileSeeds = [
-  { id: "eli-kaufman", name: "Eli Kaufman", city: "The Starting Grid" },
-  { id: "portia-crosh", name: "Portia Crosh", city: "Good Tunes Studio" },
-  { id: "lynx-incarso", name: "Lynx Incarso", city: "Unknown" },
-  { id: "marlyn-adelaide", name: "Marlyn Adelaide", city: "Everywhere, Somehow Lost" },
-  { id: "crosby-nash", name: "Crosby Nash", city: "The Open Road" }
+  { id: "eli-kaufman", name: "Eli", city: "The Starting Grid" },
+  { id: "portia-crosh", name: "Portia", city: "Good Tunes Studio" },
+  { id: "lynx-incarso", name: "Lynx", city: "Unknown" },
+  { id: "marlyn-adelaide", name: "Marlyn", city: "Everywhere, Somehow Lost" },
+  { id: "crosby-nash", name: "Crosby", city: "The Open Road" }
 ];
 const npcSignatureLineIds = {
   "dr-tyree": "metal-snake",
@@ -2353,7 +2353,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   bio: profileBios["dr-tyree"]
 }, {
   id: "ashley",
-  name: "Ashley Racem",
+  name: "Ashley",
   image: "assets/characters/headshots/headshot-ashley.png",
   headshot: "assets/characters/headshots/headshot-ashley.png",
   character: "assets/characters/character-ashley.png",
@@ -2366,7 +2366,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   bio: profileBios.ashley
 }, {
   id: "roberto-yucca",
-  name: "Roberto Yucca",
+  name: "Roberto",
   title: "The Voice of Velocity",
   image: "assets/characters/headshots/headshot-roberto-yucca.png",
   headshot: "assets/characters/headshots/headshot-roberto-yucca.png",
@@ -2378,7 +2378,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   bio: "Roberto Yucca never became a professional Tuner, but you'd never know it from the way he calls a race. A former local radio host turned international commentator, Roberto built his reputation on pure personality: booming play-by-plays, impossible energy, and dramatic calls that can make even a qualifying lap sound legendary. Equal parts sports announcer, entertainer, and hype machine, he treats every race like the biggest moment in GearBorn history.\n\nWhile the elite racing world obsesses over rankings, sponsors, and medallions, Roberto cares about the people behind the wheel. He's become known for championing overlooked Tuners, underdog stories, and racers the system never expected to succeed. Beneath the nonstop charisma is someone who genuinely loves the culture surrounding GearBorn - not just the winners. To Roberto, racing is supposed to bring people together. The louder the engines get, the louder he gets too."
 }, {
   id: "orion-vincent",
-  name: "Orion Vincent",
+  name: "Orion",
   title: "Spindell Labs Mechanic",
   image: "assets/characters/headshots/headshot-orion-vincent.png",
   headshot: "assets/characters/headshots/headshot-orion-vincent.png",
@@ -2404,7 +2404,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   bio: profileBios.auntie
 }, {
   id: "mack-spindell",
-  name: "Mack Spindell",
+  name: "Mack",
   title: "Legendary Tuner",
   image: "assets/characters/headshots/headshot-mack-spindell.png",
   headshot: "assets/characters/headshots/headshot-mack-spindell.png",
@@ -2419,7 +2419,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   bio: profileBios["mack-spindell"]
 }, {
   id: "sloane-spindell",
-  name: "Sloane Spindell",
+  name: "Sloane",
   title: "Legendary Tuner",
   image: "assets/characters/headshots/headshot-sloane-spindell.png",
   headshot: "assets/characters/headshots/headshot-sloane-spindell.png",
@@ -2470,12 +2470,12 @@ const convoyFactionIcons = {
 };
 const convoyParticipantProfiles = {
   tyree: { sponsor: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" },
-  ashley: { sponsor: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" },
-  mack: { sponsor: "Mack Spindell", headshot: "assets/characters/headshots/headshot-mack-spindell.png" },
-  sloane: { sponsor: "Sloane Spindell", headshot: "assets/characters/headshots/headshot-sloane-spindell.png" },
-  eli: { sponsor: "Eli Kaufman", headshot: "assets/characters/headshots/headshot-eli.png" },
-  crosby: { sponsor: "Crosby Nash", headshot: "assets/characters/headshots/headshot-crosby.png" },
-  portia: { sponsor: "Portia Crosh", headshot: "assets/characters/headshots/headshot-portia.png" }
+  ashley: { sponsor: "Ashley", headshot: "assets/characters/headshots/headshot-ashley.png" },
+  mack: { sponsor: "Mack", headshot: "assets/characters/headshots/headshot-mack-spindell.png" },
+  sloane: { sponsor: "Sloane", headshot: "assets/characters/headshots/headshot-sloane-spindell.png" },
+  eli: { sponsor: "Eli", headshot: "assets/characters/headshots/headshot-eli.png" },
+  crosby: { sponsor: "Crosby", headshot: "assets/characters/headshots/headshot-crosby.png" },
+  portia: { sponsor: "Portia", headshot: "assets/characters/headshots/headshot-portia.png" }
 };
 const convoyParticipantStages = {
   tyree: [
@@ -2548,7 +2548,7 @@ const legacyConvoyDefinitions = {
   ashley: {
     id: "ashley",
     name: "Ashley's Convoy",
-    sponsor: "Ashley Racem",
+    sponsor: "Ashley",
     headshot: "assets/characters/headshots/headshot-ashley.png",
     icon: "assets/items/icon-medallion-gauntlet.png",
     stages: convoyParticipantStages.ashley,

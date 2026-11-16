@@ -2563,7 +2563,7 @@ function ensureCarPickerButton(select, target) {
     select.insertAdjacentElement("afterend", button);
   }
   let carId = pickerTargetCarId(target);
-  if (["story", "campaign", "drag", "time", "crashout"].includes(target)) {
+  if (["story", "campaign", "time", "crashout"].includes(target)) {
     const safe = showcaseSafeCarId(carId);
     if (safe && safe !== carId) {
       if (target === "crashout") state.crashoutSelectedCar = safe;
@@ -2956,8 +2956,8 @@ function cityStoryParticipantId(plan) {
 
 function cityStoryParticipantProfile(participantId) {
   const profiles = {
-    eli: { id: "eli-kaufman", name: "Eli Kaufman", headshot: "assets/characters/headshots/headshot-eli.png", signatureLineId: "tiger-cart" },
-    crosby: { id: "crosby-nash", name: "Crosby Nash", headshot: "assets/characters/headshots/headshot-crosby.png", signatureLineId: "muscle-man" },
+    eli: { id: "eli-kaufman", name: "Eli", headshot: "assets/characters/headshots/headshot-eli.png", signatureLineId: "tiger-cart" },
+    crosby: { id: "crosby-nash", name: "Crosby", headshot: "assets/characters/headshots/headshot-crosby.png", signatureLineId: "muscle-man" },
     lynx: { id: "lynx", name: "Lynx", headshot: "assets/characters/headshots/headshot-lynx.png", signatureLineId: "butcher-hog" }
   };
   if (participantId === "rival") return rivalTuner();
@@ -3783,7 +3783,7 @@ function computeTunerRankList() {
   const playerRank = rankState.playerRank || null;
   const rivalRank = playerRank ? playerRank + 1 : 9;
   if (state.tunerRank) state.tunerRank.rivalRank = playerRank ? rivalRank : null;
-  const rows = tunerRankBaseList.filter((entry) => entry.id !== "roberto-yucca" && entry.name !== "Roberto Yucca").map((entry) => ({
+  const rows = tunerRankBaseList.filter((entry) => entry.id !== "roberto-yucca" && entry.name !== "Roberto").map((entry) => ({
     ...entry,
     displayRank: entry.rank,
     name: entry.isRival ? rival.name : entry.name,
@@ -4574,7 +4574,7 @@ function renderStoryLoadout() {
 
 function campaignLevelMeta(level, locked) {
   if (locked) return level.final ? "Play through the story to unlock the final boss." : "Finish the previous level to unlock.";
-  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? "400 m" : "800 m"}`;
+  if (level.type === "drag") return `${level.drag.rankKey} Class · ${level === campaignLevels[0] ? `${DRAG_SHORT_METERS} m` : "800 m"}`;
   if (level.type === "pink-slip") return `${level.drag.rankKey} Class · ${level.drag.distance} m · Unlock ${level.drag.name}`;
   if (level.type === "trial") return `${level.track.city}, ${level.track.country}`;
   if (level.type === "circuit") return `${level.track.city}, ${level.track.country} · ${level.circuitMode === "race6" ? "Top 3" : "Top 2"}`;
@@ -5962,6 +5962,7 @@ function paintCars() {
 
 function setRacerImage(container, image, src, alt) {
   container.classList.remove("has-image");
+  container.classList.toggle("faces-right", dragRaceArtFacesRight(src));
   image.removeAttribute("src");
   image.alt = alt;
   image.onload = () => {
@@ -5997,6 +5998,7 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   el.playerRacer.classList.remove("nitro-active");
   el.rivalRacer.classList.remove("nitro-active");
   el.dragLaunchLights?.classList.remove("staging");
+  el.dragTrack?.querySelector(".drag-overlay")?.classList.remove("blocked", "shutdown", "can-restart");
   race = null;
   updateNitroHud();
   paintCars();
@@ -6273,7 +6275,7 @@ function startDragRace(campaignLevelIndex = null, dragStage = null) {
   const rank = dragStage
     ? { key: dragStage.rankKey, name: dragStage.name, xpBonus: dragStage.xp / 180, power: dragStage.power, color: "#f25f5c", images: { race: dragStage.image } }
     : ranks.find((item) => item.key === state.selectedRank);
-  const distance = dragStage?.tutorial ? tutorialDistance : distances.find((item) => item.meters === (dragStage?.distance || state.selectedDistance));
+  const distance = dragStage?.tutorial ? tutorialDistance : dragDistanceFor(dragStage?.distance || state.selectedDistance);
   const rankIndex = ranks.findIndex((item) => item.key === rank.key);
   const seeds = dragOpponentSeed(rank, distance, dragStage, rankIndex).slice(0, 3);
   race = {
@@ -7924,7 +7926,7 @@ function openForge() {
     el.forgeSubtitle.textContent = forgeMode === "fusion"
       ? "Combine two Gold-tier lines of different types into something new."
       : spindell
-      ? "Unlock medallions through precision key calibration. Guide: Orion Vincent."
+      ? "Unlock medallions through precision key calibration. Guide: Orion."
       : "Forge Unlock. The Forge answers. Guide: Auntie.";
   }
   const sceneBg = document.querySelector(".forge-bg-img");
@@ -9289,12 +9291,12 @@ function activeFactionLabel() {
 function activeFactionMentor() {
   return selectedTuner().id === "cha-cha"
     ? { id: "dr-tyree", name: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" }
-    : { id: "ashley", name: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" };
+    : { id: "ashley", name: "Ashley", headshot: "assets/characters/headshots/headshot-ashley.png" };
 }
 
 function rivalMentor() {
   return selectedTuner().id === "cha-cha"
-    ? { id: "ashley", name: "Ashley Racem", headshot: "assets/characters/headshots/headshot-ashley.png" }
+    ? { id: "ashley", name: "Ashley", headshot: "assets/characters/headshots/headshot-ashley.png" }
     : { id: "dr-tyree", name: "Dr. Tyree", headshot: "assets/characters/headshots/headshot-dr-tyree.png" };
 }
 
@@ -9327,7 +9329,7 @@ function activeConvoysForCity(cityId) {
 }
 
 function selectedTunerShortName() {
-  return selectedTuner().name.split(" ")[0];
+  return selectedTuner().name;
 }
 
 function tutorialActive() {
@@ -9723,7 +9725,7 @@ function showTutorialBattlePreview() {
 
 function setupTutorialDragMenu() {
   state.selectedCar = tutorialCarId;
-  state.selectedDistance = 400;
+  state.selectedDistance = DRAG_SHORT_METERS;
   state.selectedRank = "F";
   render();
 }
@@ -9817,14 +9819,14 @@ function tutorialSpeakerProfile(speaker) {
   if (speaker === "tutorque") return { name: "Tutorque", image: "assets/cars/tutorque-display.png" };
   if (speaker === "mamburn") return { name: "Mamburn", image: "assets/cars/snake-mamburn-display.png" };
   if (speaker === "snaytan") return { name: "Snaytan", image: "assets/cars/snake-snaytan-display.png" };
-  if (speaker === "ashley") return { name: "Ashley Racem", image: "assets/characters/headshots/headshot-ashley.png" };
+  if (speaker === "ashley") return { name: "Ashley", image: "assets/characters/headshots/headshot-ashley.png" };
   if (speaker === "auntie") return { name: "Auntie", image: "assets/characters/headshots/headshot-auntie.png" };
-  if (speaker === "orion") return { name: "Orion Vincent", image: "assets/characters/headshots/headshot-orion-vincent.png" };
+  if (speaker === "orion") return { name: "Orion", image: "assets/characters/headshots/headshot-orion-vincent.png" };
   if (speaker === "eli") return { name: "Eli", image: "assets/characters/headshots/headshot-eli.png" };
-  if (speaker === "crosby") return { name: "Crosby Nash", image: "assets/characters/headshots/headshot-crosby.png" };
-  if (speaker === "lynx") return { name: "Lynx Incarso", image: "assets/characters/headshots/headshot-lynx.png" };
+  if (speaker === "crosby") return { name: "Crosby", image: "assets/characters/headshots/headshot-crosby.png" };
+  if (speaker === "lynx") return { name: "Lynx", image: "assets/characters/headshots/headshot-lynx.png" };
   if (speaker === "revrend") return { name: "Rev-rend", image: bosses[0]?.headshot || bosses[0]?.portrait || "" };
-  if (speaker === "roberto") return { name: "Roberto Yucca", image: "assets/characters/headshots/headshot-roberto-yucca.png" };
+  if (speaker === "roberto") return { name: "Roberto", image: "assets/characters/headshots/headshot-roberto-yucca.png" };
   if (speaker === "mentor") {
     const mentor = activeFactionMentor();
     return { ...mentor, image: mentor.headshot || mentor.image || "" };
@@ -10656,7 +10658,7 @@ function startCampaignRace(index, level, gasPrepaid = false) {
   if (level.type === "drag") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
-    state.selectedDistance = index === 0 ? 400 : 800;
+    state.selectedDistance = index === 0 ? DRAG_SHORT_METERS : 800;
     saveState();
     render();
     prepareDragRace(index, level.drag);
@@ -11738,7 +11740,7 @@ function garageShowcaseFocusMarkup() {
 
 // 4D: mode pickers use the Showcase unless their own filter has no Showcase match.
 function showcasePickerFilterDefault(target) {
-  if (target === "showcase") return false;
+  if (target === "showcase" || target === "drag") return false;
   const ids = garageShowcaseIds();
   if (!ids.length) return false;
   return !carPickerState.customFilter || ids.some((carId) => carPickerState.customFilter(carId));
@@ -11898,7 +11900,9 @@ function ensureDragOverlay() {
       </div>
       <div class="drag-shift-callout" aria-live="polite"></div>
       <div class="drag-streak" hidden></div>
-      <div class="drag-dial"></div>`;
+      <div class="drag-dial"></div>
+      <button class="drag-restart" type="button" aria-label="Restart race">↻ Restart</button>`;
+    overlay.querySelector(".drag-restart")?.addEventListener("click", restartDragRace);
     el.dragTrack.appendChild(overlay);
   }
   return overlay;
@@ -11966,7 +11970,7 @@ function renderDragProgress(overlay) {
   ];
   if (holder.dataset.count !== String(racers.length)) {
     holder.dataset.count = String(racers.length);
-    holder.innerHTML = racers.map((r) => `<span class="drag-progress-car ${r.player ? "you" : ""}" data-drag-progress="${r.id}"><img alt="" src="${r.image}" onerror="this.style.visibility='hidden'"></span>`).join("");
+  holder.innerHTML = racers.map((r) => `<span class="drag-progress-car ${r.player ? "you" : ""} ${dragRaceArtFacesRight(r.image) ? "faces-right" : ""}" data-drag-progress="${r.id}"><img alt="" src="${r.image}" onerror="this.style.visibility='hidden'"></span>`).join("");
   }
   racers.forEach((r) => {
     const node = holder.querySelector(`[data-drag-progress="${r.id}"]`);
@@ -12036,7 +12040,7 @@ function showDragShiftCallout(label) {
 const dragRevTuning = { idle: 0.12, risePerSec: 0.5, fallPerSec: 0.42, yellowFrom: 0.42, greenFrom: 0.62, greenTo: 0.74, redFrom: 0.84,
   bogBonus: 0.86, cleanBonus: 1, greenBonus: 1.14, greenKick: 0.16, overheatBonus: 0.6, overheatMs: 800, overheatTemp: 0.2 };
 // 4A: slower acceleration so the shifting lasts the whole run; the perfect band shrinks every gear.
-const dragPaceTuning = { accel: 0.7, rpm: 0.55, opponentAccel: 0.7 };
+const dragPaceTuning = { accel: 0.56, rpm: 0.5, opponentAccel: 0.56 };
 const dragShiftWindowTuning = { goodShrinkPerGear: 0.06, perfectRatio: 0.38, perfectShrinkPerGear: 0.12, minPerfectScale: 0.5 };
 const dragStripTuning = {
   firstAt: 70, lastBefore: 40, minGap: 32,
@@ -12045,13 +12049,47 @@ const dragStripTuning = {
   gateBurst: 0.07, gateChainStep: 0.5, gateChainMax: 3, gateCapMs: 1400, gateCapBonus: 0.1,
   aiLookAhead: 48, aiAvoidChance: 0.75, aiGateChance: 0.45
 };
-const dragBlockTuning = { gap: 9, slack: 2, aiBlockRange: [2, 24], aiBlockChance: 0.35, aiThinkMs: 600, calloutCooldownMs: 3000 };
+const dragBlockTuning = { gap: 9, slack: 2, aiBlockRange: [6, 24], aiBlockChance: 0.25, aiThinkMs: 600, calloutCooldownMs: 3000, startGrace: 90, aiMaxBlocks: 2, aiBlockCooldownMs: 5000 };
 const dragTempTuning = { redPerSec: 0.32, nitroPerSec: 0.16, limiterHit: 0.25, late: 0.06, early: 0.02, coolPerSec: 0.05, hotFrom: 0.55, hotTo: 0.95, hotPull: 0.08 };
 const dragChuteTuning = { chuteDecel: 24, coastDecel: 2.5, sandDecel: 45, openMs: 250, boxLead: 18, boxBase: 32, boxPerMs: 0.25, sandGap: 30, stopMph: 2, bonusPer400: 25, settleMs: 700 };
 
 function dragRacerRand() { return Math.random(); }
 function dragIsTutorialRace(r = race) { return Boolean(r?.dragStage?.tutorial) || (typeof tutorialActive === "function" && tutorialActive()); }
 function dragChuteEnabled(r = race) { return !dragIsTutorialRace(r); }
+
+// 5B: the shortest drag is now 600 m. Old saves and stage data that still say 400 land here.
+const DRAG_SHORT_METERS = 600;
+function dragDistanceFor(meters) {
+  const wanted = Number(meters) === 400 ? DRAG_SHORT_METERS : Number(meters);
+  return distances.find((item) => item.meters === wanted) || distances[0];
+}
+
+// 5B: race art redrawn facing RIGHT goes in this list (file name only) so the drag strip stops mirroring it.
+const DRAG_RIGHT_FACING_RACE_ART = new Set([
+  // "sponsore-race.png",
+]);
+function dragRaceArtFacesRight(src) {
+  if (!src) return false;
+  const file = String(src).split("/").pop().split("?")[0];
+  return DRAG_RIGHT_FACING_RACE_ART.has(file);
+}
+
+// 5B: training drags can be restarted mid-race. Story, gauntlet, pink slip and tutorial races cannot.
+function dragRestartAllowed(r = race) {
+  if (!r || !r.active || r.finished || r.shutdown) return false;
+  if (dragIsTutorialRace(r) || r.dragStage || r.gauntlet) return false;
+  return r.campaignLevelIndex === null || r.campaignLevelIndex === undefined;
+}
+
+function restartDragRace() {
+  if (!dragRestartAllowed()) return;
+  const config = { campaignLevelIndex: race.campaignLevelIndex, dragStage: race.dragStage };
+  race.active = false;
+  race = null;
+  clearRaceResultPopups();
+  // Two frames so the old updateRace loop sees no active race and stops before the new one starts.
+  requestAnimationFrame(() => requestAnimationFrame(() => startDragRace(config.campaignLevelIndex, config.dragStage)));
+}
 
 function startDragStaging(r = race) {
   const thisRace = r;
@@ -12248,7 +12286,12 @@ function updateDragAiStrip(now) {
     }
     const lead = o.distance - race.playerDistance;
     const playerLane = Math.round(race.playerLane);
-    if (lead >= B.aiBlockRange[0] && lead <= B.aiBlockRange[1] && Math.abs(playerLane - lane) === 1 && !hazardIn(playerLane) && Math.random() < B.aiBlockChance) dragForceLane(o, playerLane, false);
+    const blockReady = race.playerDistance >= B.startGrace && (o.blocksTried || 0) < B.aiMaxBlocks && now >= (o.nextBlockAt || 0);
+    if (blockReady && lead >= B.aiBlockRange[0] && lead <= B.aiBlockRange[1] && Math.abs(playerLane - lane) === 1 && !hazardIn(playerLane) && Math.random() < B.aiBlockChance) {
+      o.blocksTried = (o.blocksTried || 0) + 1;
+      o.nextBlockAt = now + B.aiBlockCooldownMs;
+      dragForceLane(o, playerLane, false);
+    }
   });
 }
 
@@ -12259,6 +12302,7 @@ function updateDragBlocks(now) {
     .concat((race.opponents || []).map((o) => ({ unit: o, player: false, lane: Math.round(o.lane), d: o.distance, speed: o.speed })));
   race.playerBlocked = false;
   units.forEach((follower) => {
+    if (follower.d < B.startGrace) return;
     const leader = units.find((other) => other !== follower && other.lane === follower.lane && other.d > follower.d && other.d - follower.d < B.gap);
     if (!leader || follower.speed <= leader.speed + B.slack) return;
     const capped = leader.speed + B.slack;
@@ -12425,6 +12469,7 @@ function renderDragStrip(overlay) {
   }
   if (chute) chute.classList.toggle("open", Boolean(race.shutdown?.deployedAt || (race.finished && race.chuteResult)));
   overlay.classList.toggle("blocked", Boolean(race.playerBlocked) && !race.shutdown);
+  overlay.classList.toggle("can-restart", dragRestartAllowed());
   overlay.classList.toggle("shutdown", Boolean(race.shutdown));
   let prompt = overlay.querySelector(".drag-chute-prompt");
   if (!prompt) { prompt = document.createElement("div"); prompt.className = "drag-chute-prompt"; overlay.appendChild(prompt); }

@@ -52,25 +52,25 @@ const CRASHOUT_SPRITE_BODY_LENGTH = 58; // BASE car-body length in arena px; dra
 const CRASHOUT_CAR_SCALE = 1.5;
 const crashoutKeyMap = { W: "up", ArrowUp: "up", S: "down", ArrowDown: "down", A: "left", ArrowLeft: "left", D: "right", ArrowRight: "right", Shift: "charge" };
 const crashoutArena = {
-  width: 2400,
-  height: 2400,
-  cx: 1200,
-  cy: 1200,
-  radius: 900,
+  width: 3000,
+  height: 3000,
+  cx: 1500,
+  cy: 1500,
+  radius: 1150,
   viewWidth: 960,
   viewHeight: 620,
   zoom: 1,
   shape: "circle"
 };
 const crashoutCamera = {
-  x: 1200,
-  y: 1200,
+  x: 1500,
+  y: 1500,
   smoothing: 0.12
 };
 const crashoutSuddenDeath = {
   startMs: 180000,
   shrinkDurationMs: 90000,
-  minRadius: 520
+  minRadius: 660
 };
 const crashoutAiArchetypes = ["Aggro", "Tank", "Coward", "Trickster", "Speedster", "Opportunist", "Defender"];
 const crashoutFormats = {
@@ -1139,11 +1139,11 @@ function crashoutUpdateCar(car, dt, now) {
   const dodging = car.ram.dodgeUntil > now;
   const turnScale = charging
     ? crashoutRamTuning.chargeTurnBoost * turnPenalty
-    : Math.min(1, Math.max(0.35, speed / 190)) * turnPenalty * (dashing ? crashoutRamTuning.dashTurnScale : 1);
+    : Math.min(1, Math.max(car.player ? CRASHOUT_PLAYER_STEER.lowSpeedFloor : 0.35, speed / (car.player ? CRASHOUT_PLAYER_STEER.fullTurnSpeed : 190))) * turnPenalty * (dashing ? crashoutRamTuning.dashTurnScale : 1);
   const steerInput = Number.isFinite(controls.steer)
     ? crashoutClamp(controls.steer, -1, 1)
     : (controls.right ? 1 : 0) - (controls.left ? 1 : 0);
-  if (steerInput) car.angle += car.physics.turnRate * turnScale * (car.hang ? crashoutKnockTuning.voidTurnBoost : 1) * dt * steerInput;
+  if (steerInput) car.angle += car.physics.turnRate * turnScale * (car.player ? CRASHOUT_PLAYER_STEER.boost : 1) * (car.hang ? crashoutKnockTuning.voidTurnBoost : 1) * dt * steerInput;
   const throttle = Number.isFinite(controls.throttle) ? crashoutClamp(controls.throttle, 0, 1) : 1;
   const boostActive = car.boostUntil > now;
   const accelBoost = (boostActive ? 1.32 : 1) * (anchored ? 0.56 : overhauled ? 0.86 : 1);
@@ -1193,6 +1193,7 @@ function crashoutUpdateCar(car, dt, now) {
   car.prevY = car.y;
   car.x += car.vx * dt;
   car.y += car.vy * dt;
+  crashoutWallBounce(car, now);
   const boundary = crashoutShapeBoundary(car.x, car.y, now);
   if (boundary.edge > 0.96 && boundary.edge < 1.08 && Math.random() < 0.18) {
     const nx = boundary.nx || ((car.x - crashoutArena.cx) / (crashoutDistanceFromCenter(car) || 1));
@@ -1588,7 +1589,7 @@ function crashoutUpdateItems(dt, now) {
     if (!box.active) return;
     crashoutLiveCars().forEach((car) => {
       if (!box.active || car.respawnAt || car.item) return;
-      if (Math.hypot(car.x - box.x, car.y - box.y) > car.radius + 15) return;
+      if (Math.hypot(car.x - box.x, car.y - box.y) > car.radius + CRASHOUT_ITEM_BOX_SIZE * 0.42) return;
       car.item = box.placed ? box.item : crashoutRandomItem();
       if (!car.item) return;
       box.active = false;
@@ -1910,6 +1911,7 @@ function drawCrashoutArena(ctx) {
     drawCrashoutProceduralArena(ctx, shape, radius);
   }
   crashoutDrawArenaDecal(ctx, theme, shape, radius);
+  crashoutDrawWalls(ctx, theme, radius);
   crashoutRecordSkids();
   crashoutDrawSkids(ctx, shape, radius);
 }
@@ -2025,6 +2027,117 @@ function crashoutConcretePattern(ctx) {
   return ctx.createPattern(crashoutConcreteTile, "repeat");
 }
 
+// ─── 5D: sizes, steering, and partial edge walls ───────────────────────────
+const CRASHOUT_ITEM_BOX_SIZE = 64;
+const CRASHOUT_PLAYER_STEER = { boost: 1.3, lowSpeedFloor: 0.5, fullTurnSpeed: 150 };
+// A few stretches of the outer edge get a wall: cars bounce off instead of falling.
+// Most of the edge stays open. Walls drop when Sudden Death starts shrinking the ring.
+const crashoutWallTuning = { spans: 3, spanDeg: 30, samples: 360, bounce: 0.55, thickness: 30, sparkSpeed: 140 };
+let crashoutWallCache = null;
+
+function crashoutWallLayout() {
+  const shape = crashoutShape();
+  if (crashoutWallCache?.shape === shape && crashoutWallCache.radius === crashoutArena.radius) return crashoutWallCache;
+  const T = crashoutWallTuning;
+  const { cx, cy, radius } = crashoutArena;
+  const edge = [];
+  for (let i = 0; i < T.samples; i += 1) {
+    const angle = (i / T.samples) * Math.PI * 2;
+    let r = radius * 1.8;
+    // March in from outside until the first point that is on the platform.
+    while (r > 0 && !crashoutShapeBoundary(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, 0).safe) r -= 6;
+    edge.push(r / radius);
+  }
+  let seed = 0;
+  for (const ch of shape) seed = (seed * 31 + ch.charCodeAt(0)) % 997;
+  const offset = (seed / 997) * Math.PI * 2;
+  const half = (T.spanDeg * Math.PI / 180) / 2;
+  const spans = Array.from({ length: T.spans }, (_, i) => offset + (i / T.spans) * Math.PI * 2)
+    .map((mid) => ({ from: mid - half, to: mid + half }));
+  crashoutWallCache = { shape, radius, edge, spans };
+  return crashoutWallCache;
+}
+
+function crashoutAngleInSpan(angle, span) {
+  const full = Math.PI * 2;
+  const a = ((angle - span.from) % full + full) % full;
+  return a <= span.to - span.from;
+}
+
+function crashoutWallsActive() {
+  return Boolean(crashoutState && !crashoutState.suddenDeath && !crashoutIsEvoRush());
+}
+
+function crashoutWallBounce(car, now) {
+  if (!crashoutWallsActive() || car.respawnAt || car.eliminated) return;
+  const layout = crashoutWallLayout();
+  const dx = car.x - crashoutArena.cx;
+  const dy = car.y - crashoutArena.cy;
+  const dist = Math.hypot(dx, dy) || 1;
+  const angle = Math.atan2(dy, dx);
+  if (!layout.spans.some((span) => crashoutAngleInSpan(angle, span))) return;
+  const T = crashoutWallTuning;
+  const index = Math.round((((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * T.samples) % T.samples;
+  const edgePx = layout.edge[index] * crashoutArena.radius;
+  if (edgePx <= 0) return;
+  const limit = edgePx - car.radius * 0.6;
+  if (dist <= limit || dist > edgePx + 90) return;
+  const nx = dx / dist;
+  const ny = dy / dist;
+  car.x = crashoutArena.cx + nx * limit;
+  car.y = crashoutArena.cy + ny * limit;
+  const vn = car.vx * nx + car.vy * ny;
+  if (vn > 0) {
+    car.vx -= (1 + T.bounce) * vn * nx;
+    car.vy -= (1 + T.bounce) * vn * ny;
+  }
+  car.launchSpeed = 0;
+  car.hang = null;
+  if (vn > T.sparkSpeed) {
+    for (let i = 0; i < 4; i += 1) crashoutSpawnParticle("spark", car.x + nx * car.radius, car.y + ny * car.radius, Math.atan2(-ny, -nx) + (Math.random() - 0.5) * 1.2, 120 + Math.random() * 140, 260 + Math.random() * 160, 14 + Math.random() * 12, "#ffd27a");
+    if (car.player) crashoutState.shake = Math.max(crashoutState.shake || 0, 4);
+  }
+}
+
+function crashoutDrawWalls(ctx, theme, radius) {
+  if (!crashoutWallsActive()) return;
+  const layout = crashoutWallLayout();
+  const T = crashoutWallTuning;
+  const { cx, cy } = crashoutArena;
+  const scale = radius / crashoutArena.radius;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  layout.spans.forEach((span) => {
+    const steps = 24;
+    const path = new Path2D();
+    for (let k = 0; k <= steps; k += 1) {
+      const angle = span.from + (span.to - span.from) * (k / steps);
+      const index = Math.round((((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * T.samples) % T.samples;
+      const r = layout.edge[index] * crashoutArena.radius * scale - T.thickness / 2;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
+      if (k === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    }
+    // Steel barrier with yellow/black hazard stripes so it never reads as open edge.
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.lineWidth = T.thickness + 10;
+    ctx.stroke(path);
+    ctx.strokeStyle = "#2b2f36";
+    ctx.lineWidth = T.thickness;
+    ctx.stroke(path);
+    ctx.lineCap = "butt";
+    ctx.setLineDash([26, 26]);
+    ctx.strokeStyle = "#ffc21a";
+    ctx.lineWidth = T.thickness - 10;
+    ctx.stroke(path);
+    ctx.setLineDash([]);
+    ctx.lineCap = "round";
+  });
+  ctx.restore();
+}
+
 function crashoutRecordSkids() {
   if (!crashoutState || crashoutState.paused || crashoutState.finished) return;
   const T = crashoutLookTuning.skids;
@@ -2079,9 +2192,9 @@ function drawCrashoutObjects(ctx) {
   crashoutDrawPlacedPickups(ctx);
   crashoutState.itemBoxes.filter((box) => box.active && !box.placed).forEach((box) => {
     const itemBoxImage = crashoutImages.itemBox?.complete && crashoutImages.itemBox.naturalWidth ? crashoutImages.itemBox : betaTrackImages.itemBox;
-    betaDrawImageOrFallback(ctx, itemBoxImage, box.x, box.y, 42, 42, () => {
+    betaDrawImageOrFallback(ctx, itemBoxImage, box.x, box.y, CRASHOUT_ITEM_BOX_SIZE, CRASHOUT_ITEM_BOX_SIZE, () => {
       ctx.fillStyle = "#ffc857";
-      ctx.fillRect(box.x - 18, box.y - 18, 36, 36);
+      ctx.fillRect(box.x - CRASHOUT_ITEM_BOX_SIZE * 0.43, box.y - CRASHOUT_ITEM_BOX_SIZE * 0.43, CRASHOUT_ITEM_BOX_SIZE * 0.86, CRASHOUT_ITEM_BOX_SIZE * 0.86);
     });
   });
   crashoutState.hazards.forEach((hazard) => {
@@ -2799,7 +2912,7 @@ crashoutSetupControlsSelect?.addEventListener("change", () => crashoutSetControl
 crashoutApplyControlsLayout();
 
 // -- Crews and swap pads -----------------------------------------------------
-const crashoutCrewTuning = { padRadius: 34, triggerRadius: 48, swapCooldownMs: 6000, swapInvulnerableMs: 900, padDistance: { circle: 0.34, square: 0.34, donut: 0.45, bridge: 0.34 }, aiSwapDamage: 85, aiSwapMargin: 45 };
+const crashoutCrewTuning = { padRadius: 52, triggerRadius: 70, swapCooldownMs: 6000, swapInvulnerableMs: 900, padDistance: { circle: 0.34, square: 0.34, donut: 0.45, bridge: 0.34 }, aiSwapDamage: 85, aiSwapMargin: 45 };
 const crashoutCrewExcludedIds = ["rainbowlt", "hornula1"];
 
 function crashoutCrewSize() { return crashoutClamp(Number(crashoutCurrentSettings().lives || 3), 1, 5); }
@@ -3096,7 +3209,7 @@ const crashoutTierOdds = {
 const crashoutTierColors = { common: "#8fd3ff", rare: "#c084fc", chaos: "#ff5c8a" };
 const crashoutPlacedPickupTuning = {
   respawnMs: { low: 16000, normal: 12000, chaos: 7000 },
-  radius: 40
+  radius: 56
 };
 
 function crashoutItemTier(itemId) {
@@ -3165,7 +3278,7 @@ function crashoutDrawPlacedPickups(ctx) {
       ctx.stroke();
       ctx.shadowBlur = 0;
       const icon = box.item ? crashoutItemImages[box.item.id] : null;
-      if (icon?.complete && icon.naturalWidth) ctx.drawImage(icon, -22, -22, 44, 44);
+      if (icon?.complete && icon.naturalWidth) ctx.drawImage(icon, -31, -31, 62, 62);
       else if (box.item) {
         ctx.fillStyle = tint;
         ctx.font = "900 14px 'Space Grotesk', sans-serif";

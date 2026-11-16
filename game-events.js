@@ -59,7 +59,7 @@ document.querySelectorAll("[data-training-2d]").forEach((button) => {
     showView("beta");
     if (trainingMode === "time") {
       el.betaMode?.classList.remove("vs-only", "prototype-only");
-      openBetaPreview("time", false);
+      openBetaTrackSelect("time");
     } else {
       openBetaVsIntro();
     }
