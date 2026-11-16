@@ -4853,9 +4853,18 @@ const licensePlateOverrides = {
   tourquette: "assets/license/license-torquette.png"
 };
 
+// 4F: plate files are named from the car name with accents and apostrophes dropped.
+function licensePlateSlug(name) {
+  const plain = String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['\u2019]/g, "");
+  return slugify(plain);
+}
+
 function getLicensePlate(entry) {
   if (!entry) return "";
-  const slug = slugify(entry.name);
+  const slug = licensePlateSlug(entry.name);
   return licensePlateOverrides[slug] || `assets/license/license-${slug}.png`;
 }
 

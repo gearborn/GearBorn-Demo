@@ -1931,6 +1931,11 @@ function drawCrashoutProceduralArena(ctx, shape, radius) {
   ctx.clip(clip, fillRule);
   ctx.fillStyle = crashoutMixColor(theme.rim, T.floorBase, T.floorTint);
   ctx.fillRect(cx - radius * 1.4, cy - radius * 1.4, radius * 2.8, radius * 2.8);
+  const grain = crashoutConcretePattern(ctx);
+  if (grain) {
+    ctx.fillStyle = grain;
+    ctx.fillRect(cx - radius * 1.4, cy - radius * 1.4, radius * 2.8, radius * 2.8);
+  }
   ctx.strokeStyle = "rgba(40, 46, 56, 0.16)";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -1945,6 +1950,19 @@ function drawCrashoutProceduralArena(ctx, shape, radius) {
   ctx.setLineDash([50, 50]);
   ctx.strokeStyle = "rgba(20, 22, 28, 0.28)";
   crashoutStrokeOuterEdges(ctx, paths);
+  ctx.setLineDash([]);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = crashoutColorAlpha(theme.rim, 0.55);
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+  if (theme.name) {
+    ctx.font = `900 ${Math.round(radius * 0.16)}px 'Bowlby One', Impact, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = crashoutColorAlpha(theme.rim, 0.32);
+    ctx.fillText(theme.name.toUpperCase(), cx, cy + radius * 0.52);
+  }
   ctx.restore();
   ctx.save();
   ctx.lineJoin = "round";
@@ -1984,6 +2002,27 @@ function crashoutMixColor(hex, toward, t) {
 
 function crashoutColorAlpha(hex, alpha) {
   return `rgba(${crashoutParseHex(hex).join(",")},${alpha})`;
+}
+
+// 4E: fine concrete grain, a 256px tile built once and reused as a pattern.
+let crashoutConcreteTile = null;
+function crashoutConcretePattern(ctx) {
+  if (!crashoutConcreteTile) {
+    crashoutConcreteTile = document.createElement("canvas");
+    crashoutConcreteTile.width = crashoutConcreteTile.height = 256;
+    const tctx = crashoutConcreteTile.getContext("2d");
+    if (!tctx) return null;
+    const data = tctx.createImageData(256, 256);
+    let seed = 7;
+    for (let i = 0; i < data.data.length; i += 4) {
+      seed = (seed * 16807) % 2147483647;
+      const v = seed % 255 < 128 ? 0 : 255;
+      data.data[i] = data.data[i + 1] = data.data[i + 2] = v;
+      data.data[i + 3] = seed % 23 < 3 ? 28 : seed % 7 < 2 ? 10 : 0;
+    }
+    tctx.putImageData(data, 0, 0);
+  }
+  return ctx.createPattern(crashoutConcreteTile, "repeat");
 }
 
 function crashoutRecordSkids() {
