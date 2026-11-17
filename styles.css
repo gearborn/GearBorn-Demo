@@ -17282,8 +17282,8 @@ body {
 }
 .vindex-stage .vindex-license-plate span { font-size: clamp(0.9rem, 3.4cqw, 2.4rem); }
 .vindex-stage .vindex-art {
-  top: 33.5%;
-  height: 56%;
+  top: 31%;
+  height: 50%;
 }
 .vindex-stage .vindex-art .car { width: min(100%, 680px); }
 .vindex-stage .vindex-art > .honk-button {
@@ -17294,7 +17294,7 @@ body {
 .vindex-stage .vindex-copy {
   left: -6%;
   right: -6%;
-  bottom: 0.6%;
+  bottom: 18%;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
@@ -17331,4 +17331,100 @@ body {
   .vindex-stage .medallion-mastery-panel.compact .medallion-tier-badge,
   .vindex-stage .medallion-mastery-panel.compact .medallion-rank-up,
   .vindex-stage .vindex-copy > strong { min-height: 0; padding: 2px 6px; font-size: 0.5rem; }
+}
+
+/* ─── Garage + VINdex collector surfaces ───────────────────────────────── */
+.garage-command-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 18px; }
+.garage-primary-tabs { display: inline-flex; padding: 4px; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; background: rgba(5,10,16,.72); }
+.garage-primary-tabs button { min-height: 38px; padding: 7px 18px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: 900 .75rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.garage-primary-tabs button.active { background: #d6a950; color: #10151d; box-shadow: 0 4px 12px rgba(0,0,0,.28); }
+.garage-secondary-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.garage-secondary-actions .inventory-open-button, .garage-secondary-actions .ghost { min-height: 36px; padding: 6px 10px; font-size: .72rem; }
+.garage-showroom { min-height: 520px; }
+.garage-showroom-card { position: relative; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .9fr); min-height: 520px; overflow: hidden; border: 1px solid rgba(192,205,218,.2); border-radius: 8px; background: linear-gradient(115deg, #101923, #171d25 58%, #0b1118); box-shadow: 0 22px 46px rgba(0,0,0,.3); }
+.garage-showroom-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 112px, rgba(255,255,255,.025) 113px 114px); }
+.garage-showroom-art { position: relative; display: grid; min-height: 0; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 72%, rgba(214,169,80,.2), transparent 40%), linear-gradient(180deg, rgba(77,99,117,.18), rgba(7,12,18,.15)); }
+.garage-showroom-art::after { content: ""; position: absolute; z-index: 0; width: 76%; height: 18%; bottom: 9%; border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,.58), transparent 68%); filter: blur(8px); }
+.garage-showroom-spotlight { position: absolute; inset: 0 20% 38%; background: linear-gradient(110deg, transparent 8%, rgba(255,247,210,.08) 50%, transparent 92%); clip-path: polygon(28% 0,72% 0,100% 100%,0 100%); }
+.garage-showroom-art .car { position: relative; z-index: 1; width: min(88%, 680px); height: min(78%, 440px); }
+.garage-showroom-art .car-image { object-fit: contain; }
+.garage-showroom-art .honk-button { z-index: 3; top: 18px; left: 18px; }
+.garage-showroom-info { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: clamp(24px,3vw,42px); border-left: 1px solid rgba(255,255,255,.11); background: rgba(9,14,20,.58); }
+.garage-showroom-kicker { margin: 0 0 9px; color: #d8b76d; font: 900 .7rem var(--font-ui); letter-spacing: .1em; text-transform: uppercase; }
+.garage-showroom-info h2 { margin: 0; color: #fff7dd; font-size: clamp(2rem,4.2vw,4.4rem); line-height: .94; }
+.garage-showroom-badges { display: flex; align-items: center; gap: 12px; width: 100%; margin: 16px 0; }
+.garage-showroom-badges .garage-class-type-badges { justify-content: flex-start; }
+.garage-showroom-badges .garage-license-plate { width: min(42%, 190px); margin-left: auto; }
+.garage-showroom-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 15px; }
+.garage-showroom-meta span { padding: 5px 8px; border: 1px solid rgba(255,255,255,.12); border-radius: 4px; color: rgba(239,244,249,.8); font-size: .7rem; font-weight: 800; }
+.garage-showroom-info .garage-stat-grid { width: 100%; margin: auto 0 18px; }
+.garage-showroom-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.garage-showroom-actions button { flex: 1 1 120px; min-height: 40px; }
+.garage-showroom-actions .ghost.active { border-color: rgba(255,200,87,.8); color: var(--gold); }
+.garage-empty-state { display: grid; min-height: 260px; place-content: center; gap: 8px; padding: 24px; border: 1px dashed rgba(255,255,255,.2); border-radius: 8px; color: var(--muted); text-align: center; }
+.garage-empty-state strong { color: var(--ink); }
+.garage-collection { padding-top: 4px; }
+.garage-collection-toolbar { display: grid; grid-template-columns: minmax(180px,1.4fr) repeat(2,minmax(130px,.55fr)); gap: 10px; margin-bottom: 14px; }
+.garage-collection-toolbar label { display: grid; gap: 4px; color: var(--muted); font-size: .62rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.garage-collection-toolbar input, .garage-collection-toolbar select, .vindex-search { min-width: 0; min-height: 38px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.16); border-radius: 6px; background: rgba(7,12,18,.74); color: var(--ink); font: 800 .78rem var(--font-ui); }
+.garage-grid { grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 12px; }
+.garage-collection-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(180,197,214,.16); border-radius: 7px; background: linear-gradient(160deg, rgba(28,38,49,.98), rgba(10,16,23,.98)); transition: border-color .16s ease, transform .16s ease; }
+.garage-collection-card:hover, .garage-collection-card.selected { border-color: rgba(214,169,80,.78); transform: translateY(-2px); }
+.garage-collection-select { display: grid; width: 100%; gap: 5px; padding: 10px; border: 0; background: transparent; color: var(--ink); text-align: left; }
+.garage-collection-art { position: relative; display: grid; min-height: 126px; place-items: center; overflow: hidden; border-radius: 4px; background: radial-gradient(ellipse at 50% 100%, rgba(214,169,80,.17), transparent 58%), rgba(4,9,14,.46); }
+.garage-collection-art .car { width: 100%; height: 118px; }
+.garage-collection-art .car-image { object-fit: contain; }
+.garage-collection-vin { color: #d5b367; font-size: .6rem; font-weight: 950; letter-spacing: .08em; }
+.garage-collection-select strong { overflow: hidden; font-size: .86rem; text-overflow: ellipsis; white-space: nowrap; }
+.garage-collection-select small { color: var(--muted); font-size: .68rem; }
+.garage-collection-select em { color: #7de2a1; font-size: .62rem; font-style: normal; font-weight: 900; text-transform: uppercase; }
+.garage-favorite-button { position: absolute; top: 8px; right: 8px; z-index: 3; width: 30px; height: 30px; padding: 0; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: rgba(7,12,18,.72); color: rgba(255,255,255,.72); }
+.garage-favorite-button.active { border-color: rgba(255,200,87,.8); color: #ffd45e; }
+.garage-showcase { margin-top: 22px; padding: clamp(14px,2vw,24px); border: 1px solid rgba(214,169,80,.25); border-radius: 8px; background: #101821; }
+.garage-showcase-stage { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+
+/* VINdex: gallery at left, profile remains persistent at right. */
+.vindex-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.vindex-search { position: sticky; top: 0; z-index: 4; width: 100%; margin-bottom: 8px; }
+.vindex-stage .vindex-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.vindex-stage .vindex-gallery-card { position: relative; display: grid; grid-template-columns: 1fr; min-height: 112px; padding: 6px; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; background: rgba(9,15,22,.74); text-align: center; }
+.vindex-stage .vindex-gallery-card:hover, .vindex-stage .vindex-gallery-card.active { transform: none; border-color: rgba(82,199,255,.86); box-shadow: 0 0 0 2px rgba(82,199,255,.14); }
+.vindex-gallery-art { display: grid; min-height: 62px; place-items: center; overflow: hidden; }
+.vindex-gallery-art img { width: 100%; height: 68px; object-fit: contain; }
+.vindex-gallery-art i { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: rgba(255,255,255,.08); color: var(--muted); font-style: normal; font-size: 1.2rem; }
+.vindex-stage .vindex-gallery-card strong { max-width: 100%; font-size: .62rem; }
+.vindex-stage .vindex-gallery-card em { position: absolute; top: 5px; right: 5px; color: #89a5b8; font-size: .45rem; font-style: normal; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
+.vindex-gallery-card.status-owned em { color: #75e39f; }.vindex-gallery-card.status-seen em { color: #d5b0ff; }.vindex-gallery-card.status-locked em { color: #9aa6b2; }
+.vindex-profile-actions { position: absolute; z-index: 6; right: 4%; bottom: 6%; }.vindex-profile-actions button { min-height: 32px; padding: 5px 9px; font-size: .64rem; }
+.vindex-family { position: absolute; z-index: 5; left: 4%; right: 4%; bottom: 6%; display: grid; gap: 5px; }.vindex-profile-actions:not(:empty) + .vindex-family { right: 34%; }
+.vindex-family:empty { display: none; }
+.vindex-recent { margin-top: 12px; }.vindex-recent > strong { display: block; margin-bottom: 6px; color: var(--muted); font-size: .58rem; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }.vindex-recent > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }.vindex-recent button { display: grid; grid-template-columns: 34px minmax(0,1fr); align-items: center; gap: 4px; min-width: 0; padding: 3px; border: 1px solid rgba(255,255,255,.13); border-radius: 4px; background: rgba(8,13,19,.7); color: var(--ink); text-align: left; }.vindex-recent img { width: 34px; height: 24px; object-fit: contain; }.vindex-recent span { overflow: hidden; font-size: .52rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.vindex-family-head { display: flex; justify-content: space-between; color: var(--muted); font-size: .56rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }.vindex-family-head strong { color: #dfc276; }
+.vindex-family-nodes { display: flex; gap: 5px; }.vindex-family-node { display: grid; min-width: 0; flex: 1; place-items: center; gap: 2px; padding: 3px; border: 1px solid rgba(255,255,255,.16); border-radius: 4px; background: rgba(7,11,16,.55); color: var(--ink); }.vindex-family-node.active { border-color: #d8b769; }.vindex-family-node img { width: 100%; height: 38px; object-fit: contain; }.vindex-family-node i { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: rgba(255,255,255,.08); color: var(--muted); font-style: normal; }.vindex-family-node span { overflow: hidden; max-width: 100%; font-size: .5rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .garage-command-bar { align-items: stretch; flex-direction: column; }.garage-primary-tabs { width: 100%; }.garage-primary-tabs button { flex: 1; }.garage-secondary-actions { justify-content: stretch; }.garage-secondary-actions > * { flex: 1 1 30%; }
+  .garage-showroom { min-height: 0; }.garage-showroom-card { grid-template-columns: 1fr; min-height: 0; }.garage-showroom-art { min-height: 310px; }.garage-showroom-info { border-top: 1px solid rgba(255,255,255,.11); border-left: 0; }.garage-showroom-info h2 { font-size: clamp(2rem,11vw,3.6rem); }
+  .garage-collection-toolbar { grid-template-columns: 1fr 1fr; }.garage-collection-toolbar label:first-child { grid-column: 1 / -1; }.garage-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.garage-showcase-stage { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .vindex-stage .vindex-list { grid-template-columns: repeat(3,minmax(0,1fr)); }.vindex-stage .vindex-gallery-card { min-height: 86px; }.vindex-gallery-art { min-height: 44px; }.vindex-gallery-art img { height: 48px; }.vindex-profile-actions { right: 4%; bottom: 14%; }.vindex-family { bottom: 5%; }.vindex-profile-actions:not(:empty) + .vindex-family { right: 4%; bottom: 5%; padding-bottom: 37px; }
+}
+
+/* Collector-only art deliberately bypasses the absolute race sprite box. */
+.collectible-art { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; isolation: isolate; }
+.collectible-art-image { position: absolute; left: 50%; top: 3%; width: 94%; height: 94%; max-width: none; max-height: none; object-fit: contain; object-position: center; transform: translateX(-50%); filter: drop-shadow(0 13px 15px rgba(0,0,0,.42)); }
+.collectible-art.missing { display: grid; place-items: center; color: var(--muted); font: 900 2rem var(--font-display); }
+.garage-showroom-art > .collectible-art { z-index: 1; width: 100%; height: 100%; }
+.garage-showroom-art > .collectible-art .collectible-art-image { filter: drop-shadow(0 20px 19px rgba(0,0,0,.54)); }
+.garage-collection-art > .collectible-art { width: 100%; height: 126px; }
+.showcase-art { width: 100%; max-width: none; aspect-ratio: 1.18 / 1; }
+.showcase-art > .collectible-art { width: 100%; height: 100%; }
+.vindex-stage .vindex-art > .collectible-art { width: 100%; height: 100%; }
+.vindex-stage .vindex-art > .collectible-art .collectible-art-image { filter: drop-shadow(0 22px 20px rgba(0,0,0,.5)); }
+.vindex-gallery-art > .collectible-art { width: 100%; height: 68px; }
+.vindex-gallery-art > .collectible-art .collectible-art-image { filter: drop-shadow(0 5px 6px rgba(0,0,0,.38)); }
+
+@media (max-width: 720px) {
+  .garage-showroom-art > .collectible-art { min-height: 310px; }
+  .garage-collection-art > .collectible-art { height: 118px; }
+  .vindex-gallery-art > .collectible-art { height: 48px; }
 }

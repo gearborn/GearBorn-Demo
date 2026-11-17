@@ -475,6 +475,29 @@ el.vindexList?.addEventListener("click", (event) => {
   renderVindex();
 });
 
+el.vindexSearch?.addEventListener("input", () => {
+  state.vindexSearch = el.vindexSearch.value || "";
+  renderVindex();
+});
+el.vindexProfileActions?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex-open-garage]");
+  if (button) openGarageForVindexEntry(button.dataset.vindexOpenGarage);
+});
+el.vindexFamily?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex]");
+  if (!button || button.disabled) return;
+  state.selectedVindex = button.dataset.vindex;
+  saveState();
+  renderVindex();
+});
+el.vindexRecent?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex]");
+  if (!button) return;
+  state.selectedVindex = button.dataset.vindex;
+  saveState();
+  renderVindex();
+});
+
 el.vindexFilterButtons?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-vindex-filter]");
   if (!button) return;
@@ -514,6 +537,24 @@ document.addEventListener("click", (event) => {
 });
 
 el.garageGrid?.addEventListener("click", (event) => {
+  const showroomCar = event.target.closest("[data-garage-showroom-car]");
+  if (showroomCar) {
+    state.garageShowroomCar = showroomCar.dataset.garageShowroomCar;
+    state.garageTab = "showroom";
+    saveState();
+    renderGarage();
+    return;
+  }
+  const favorite = event.target.closest("[data-garage-favorite]");
+  if (favorite) {
+    const carId = favorite.dataset.garageFavorite;
+    state.favoriteCarIds = state.favoriteCarIds.includes(carId)
+      ? state.favoriteCarIds.filter((id) => id !== carId)
+      : state.favoriteCarIds.concat(carId);
+    saveState();
+    renderGarage();
+    return;
+  }
   const expandButton = event.target.closest("[data-expand-garage-card]");
   if (expandButton) {
     expandedGarageCardIds.add(expandButton.dataset.expandGarageCard);
@@ -540,6 +581,69 @@ el.garageGrid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-evolve-car]");
   if (!button) return;
   showPendingEvolution(button.dataset.evolveCar);
+});
+
+el.garageShowroom?.addEventListener("click", (event) => {
+  const favorite = event.target.closest("[data-garage-favorite]");
+  if (favorite) {
+    const carId = favorite.dataset.garageFavorite;
+    state.favoriteCarIds = state.favoriteCarIds.includes(carId)
+      ? state.favoriteCarIds.filter((id) => id !== carId)
+      : state.favoriteCarIds.concat(carId);
+    saveState();
+    renderGarage();
+    return;
+  }
+  const vindex = event.target.closest("[data-garage-open-vindex]");
+  if (vindex?.dataset.garageOpenVindex) {
+    state.selectedVindex = vindex.dataset.garageOpenVindex;
+    saveState();
+    showView("vindex");
+    renderVindex();
+    return;
+  }
+  const stepButton = event.target.closest("[data-evolution-step]");
+  if (stepButton) {
+    const [carId, direction] = stepButton.dataset.evolutionStep.split(":");
+    changeGarageEvolution(carId, direction);
+    return;
+  }
+  const upgradeButton = event.target.closest("[data-upgrade-car]");
+  if (upgradeButton) {
+    openUpgradeModal(upgradeButton.dataset.upgradeCar);
+    return;
+  }
+  const evolveButton = event.target.closest("[data-evolve-car]");
+  if (evolveButton) showPendingEvolution(evolveButton.dataset.evolveCar);
+});
+
+document.querySelector(".garage-primary-tabs")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-garage-tab]");
+  if (!button) return;
+  state.garageTab = button.dataset.garageTab === "collection" ? "collection" : "showroom";
+  saveState();
+  renderGarage();
+});
+
+el.garageCollectionSearch?.addEventListener("input", () => {
+  state.garageCollectionSearch = el.garageCollectionSearch.value || "";
+  renderGarage();
+});
+el.garageCollectionFilter?.addEventListener("change", () => {
+  state.garageCollectionFilter = el.garageCollectionFilter.value;
+  saveState();
+  renderGarage();
+});
+el.garageCollectionSort?.addEventListener("change", () => {
+  state.garageCollectionSort = el.garageCollectionSort.value;
+  saveState();
+  renderGarage();
+});
+el.garageShowcaseOpen?.addEventListener("click", () => {
+  garageShowcaseGalleryOpen = !garageShowcaseGalleryOpen;
+  state.garageTab = "collection";
+  renderGarage();
+  if (garageShowcaseGalleryOpen) requestAnimationFrame(() => document.getElementById("garage-showcase")?.scrollIntoView({ block: "start", behavior: reduceMotionEnabled() ? "auto" : "smooth" }));
 });
 
 document.querySelector("#garage-view-toggle")?.addEventListener("click", (event) => {

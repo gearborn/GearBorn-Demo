@@ -521,6 +521,8 @@
             <div class="vindex-stage">
               <button class="back-link vindex-back-link" data-view="menu" type="button">Back</button>
               <aside class="vindex-list-panel" aria-label="GearBorn list">
+                <label class="vindex-search-label" for="vindex-search">Search the VINdex</label>
+                <input class="vindex-search" id="vindex-search" type="search" placeholder="Search discovered GearBorn" autocomplete="off">
                 <div class="vindex-list" id="vindex-list"></div>
               </aside>
               <section class="vindex-detail" aria-label="Selected GearBorn">
@@ -537,6 +539,8 @@
                   <strong id="vindex-status"></strong>
                   <div id="vindex-medallion-tracks"></div>
                 </div>
+                <div class="vindex-profile-actions" id="vindex-profile-actions"></div>
+                <div class="vindex-family" id="vindex-family"></div>
               </section>
               <aside class="vindex-filter-panel" aria-label="VINdex filters">
                 <div class="vindex-filter-buttons" id="vindex-filter-buttons">
@@ -545,6 +549,7 @@
                   <button type="button" data-vindex-filter="seen" aria-label="Show seen GearBorn"><img src="assets/vindex/filter-seen.png" alt="Seen"></button>
                 </div>
                 <div class="vindex-progress" id="vindex-progress"></div>
+                <div class="vindex-recent" id="vindex-recent" hidden></div>
                 <button class="vindex-memories-button" id="vindex-memories-button" type="button">Memories</button>
                 <div class="vindex-memories-panel" id="vindex-memories-panel" hidden></div>
               </aside>
@@ -788,11 +793,16 @@
               <p>Garage</p>
               <h1 id="garage-title">Meet your machines.</h1>
             </div>
-            <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
-            <button class="inventory-open-button garage-loadouts-button" id="garage-loadouts-open" type="button">Loadouts</button>
-            <div class="garage-view-toggle segmented" id="garage-view-toggle" role="group" aria-label="Garage view">
-              <button type="button" data-garage-view="compact">Compact</button>
-              <button type="button" data-garage-view="detailed">Detailed</button>
+            <div class="garage-command-bar">
+              <div class="garage-primary-tabs" role="tablist" aria-label="Garage view">
+                <button type="button" data-garage-tab="showroom" role="tab">Showroom</button>
+                <button type="button" data-garage-tab="collection" role="tab">Collection</button>
+              </div>
+              <div class="garage-secondary-actions">
+                <button class="inventory-open-button" id="open-inventory" type="button">Inventory</button>
+                <button class="inventory-open-button garage-loadouts-button" id="garage-loadouts-open" type="button">Loadouts</button>
+                <button class="ghost" id="garage-showcase-open" type="button">My Showcase</button>
+              </div>
             </div>
             <div class="garage-status" id="garage-status" hidden></div>
             <button class="menu-card forge-menu-card" id="forge-card-btn" type="button">
@@ -802,7 +812,17 @@
               <strong id="forge-card-title">The Forge</strong>
               <small id="forge-card-subtitle">Unlock GearBorn with your Medallions.</small>
             </button>
-            <section class="garage-showcase" id="garage-showcase" aria-labelledby="garage-showcase-title">
+            <section class="garage-showroom" id="garage-showroom" aria-label="Selected GearBorn showroom"></section>
+            <section class="garage-collection" id="garage-collection" aria-labelledby="garage-collection-title">
+              <div class="garage-collection-toolbar">
+                <label><span>Search</span><input id="garage-collection-search" type="search" placeholder="Search your collection" autocomplete="off"></label>
+                <label><span>Filter</span><select id="garage-collection-filter"><option value="all">All owned</option><option value="favorites">Favorites</option><option value="recent">Recently used</option><option value="ready">Ready to evolve</option></select></label>
+                <label><span>Sort</span><select id="garage-collection-sort"><option value="vin">VIN number</option><option value="name">Name</option><option value="level">Level</option><option value="recent">Recent use</option></select></label>
+              </div>
+              <h2 class="garage-lineup-heading" id="garage-collection-title">Collection</h2>
+              <div class="garage-grid" id="garage-grid"></div>
+            </section>
+            <section class="garage-showcase" id="garage-showcase" aria-labelledby="garage-showcase-title" hidden>
               <header class="garage-showcase-header">
                 <h2 id="garage-showcase-title">Showcase</h2>
                 <small>Your 8 under the lights. These are the cars you race with everywhere.</small>
@@ -810,8 +830,6 @@
               <div class="garage-showcase-stage" id="garage-showcase-grid"></div>
               <div class="garage-showcase-detail" id="garage-showcase-detail" hidden></div>
             </section>
-            <h2 class="garage-lineup-heading" id="garage-lineup-heading">Full Lineup</h2>
-            <div class="garage-grid" id="garage-grid"></div>
           </div>
 
           <!-- FORGE PANEL (shown when forge is open, replaces garage content) -->

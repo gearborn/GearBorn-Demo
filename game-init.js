@@ -130,6 +130,19 @@ function sanitizeState() {
   state.settings.reducedMotion = state.settings.reducedMotion === true ? true : state.settings.reducedMotion === false ? false : null;
   state.unlockedCars = state.unlockedCars || {};
   state.bond = state.bond && typeof state.bond === "object" ? state.bond : {};
+  state.garageTab = state.garageTab === "collection" ? "collection" : "showroom";
+  state.garageShowroomCar = typeof state.garageShowroomCar === "string" ? state.garageShowroomCar : "";
+  state.garageCollectionSearch = typeof state.garageCollectionSearch === "string" ? state.garageCollectionSearch.slice(0, 80) : "";
+  state.garageCollectionFilter = ["all", "favorites", "recent", "ready"].includes(state.garageCollectionFilter) ? state.garageCollectionFilter : "all";
+  state.garageCollectionSort = ["vin", "name", "level", "recent"].includes(state.garageCollectionSort) ? state.garageCollectionSort : "vin";
+  state.vindexSearch = typeof state.vindexSearch === "string" ? state.vindexSearch.slice(0, 80) : "";
+  state.vindexPreferredSelectionInitialized = Boolean(state.vindexPreferredSelectionInitialized);
+  state.vindexDiscoveryBaselineReady = Boolean(state.vindexDiscoveryBaselineReady);
+  state.vindexDiscoveryBaseline = Array.isArray(state.vindexDiscoveryBaseline) ? state.vindexDiscoveryBaseline.filter((number, index, list) => vindexEntries.some((entry) => entry.number === number) && list.indexOf(number) === index) : [];
+  state.vindexRecentDiscoveries = Array.isArray(state.vindexRecentDiscoveries) ? state.vindexRecentDiscoveries
+    .filter((item) => item && vindexEntries.some((entry) => entry.number === item.number) && Number.isFinite(Number(item.timestamp)))
+    .slice(0, 12)
+    .map((item) => ({ number: item.number, timestamp: Math.floor(Number(item.timestamp)) })) : [];
   state.partsInventory = state.partsInventory && typeof state.partsInventory === "object" ? state.partsInventory : {};
   state.equippedParts = state.equippedParts && typeof state.equippedParts === "object" ? state.equippedParts : {};
   state.achievements = state.achievements && typeof state.achievements === "object" ? state.achievements : {};

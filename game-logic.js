@@ -35,6 +35,7 @@ let currentMusic = null;
 let currentMusicKey = null;
 let currentMusicFade = null;
 let lastViewBeforeTunerPage = "menu";
+let garageShowcaseGalleryOpen = false;
 
 // TODO: tune the launch economy after live pacing data is available.
 const GAS_MAX = 100;
@@ -4889,8 +4890,10 @@ function isVindexOwned(entry) {
 
 function vindexEntriesForFilter() {
   const filter = state.vindexFilter || "all";
+  const query = String(state.vindexSearch || "").trim().toLowerCase();
   return vindexEntries.filter((entry) => {
     const status = getStatus(entry);
+    if (query && (status === "locked" || !`${entry.name} ${entry.line} ${entry.number}`.toLowerCase().includes(query))) return false;
     if (filter === "owned") return status === "owned";
     if (filter === "seen") return status === "owned" || status === "seen";
     return true;
@@ -4905,6 +4908,36 @@ function vindexProgressCounts() {
   const fusionsTotal = fusionEntries.length;
   const fusionsOwned = fusionEntries.filter((entry) => getStatus(entry) === "owned").length;
   return { total, owned, seen, locked: Math.max(0, total - seen), fusionsOwned, fusionsTotal };
+}
+
+function syncVindexDiscoveryHistory() {
+  const discovered = vindexEntries.filter((entry) => isVindexDiscovered(entry)).map((entry) => entry.number);
+  if (!state.vindexDiscoveryBaselineReady) {
+    // Existing saves receive a quiet baseline instead of a burst of fake discovery events.
+    state.vindexDiscoveryBaseline = discovered;
+    state.vindexDiscoveryBaselineReady = true;
+    saveState();
+    return;
+  }
+  const known = new Set(state.vindexDiscoveryBaseline || []);
+  const newDiscoveries = discovered.filter((number) => !known.has(number));
+  if (newDiscoveries.length) {
+    const timestamp = Date.now();
+    state.vindexRecentDiscoveries = newDiscoveries.map((number) => ({ number, timestamp }))
+      .concat(state.vindexRecentDiscoveries || [])
+      .slice(0, 12);
+  }
+  state.vindexDiscoveryBaseline = discovered;
+  if (newDiscoveries.length) saveState();
+}
+
+function vindexRecentMarkup() {
+  const recent = (state.vindexRecentDiscoveries || [])
+    .map((item) => vindexEntries.find((entry) => entry.number === item.number))
+    .filter((entry) => entry && isVindexDiscovered(entry))
+    .slice(0, 4);
+  if (!recent.length) return "";
+  return `<strong>Recently discovered</strong><div>${recent.map((entry) => `<button type="button" data-vindex="${entry.number}"><img src="${entry.image}" alt="" loading="lazy" decoding="async"><span>${escapeHtml(entry.name)}</span></button>`).join("")}</div>`;
 }
 
 function vindexPlateMarkup(entry, discovered) {
@@ -4952,15 +4985,60 @@ function vindexListRowMarkup(entry) {
   const status = getStatus(entry);
   const discovered = status !== "locked";
   return `
-    <button class="vindex-button ${entry.number === state.selectedVindex ? "active" : ""} status-${status}" type="button" data-vindex="${entry.number}">
+    <button class="vindex-button vindex-gallery-card ${entry.number === state.selectedVindex ? "active" : ""} status-${status}" type="button" data-vindex="${entry.number}" aria-label="${discovered ? `${entry.name}, ${status}` : "Locked VINdex entry"}">
+      <span class="vindex-gallery-art">${discovered ? collectibleImageMarkup(entry.image, "", "thumbnail") : "<i aria-hidden=\"true\">?</i>"}</span>
       <span class="vindex-row-number">#${discovered ? entry.number : "???"}</span>
       <strong>${discovered ? entry.name : "???"}</strong>
+      <em>${status}</em>
     </button>
   `;
 }
 
+function vindexFamilyMarkup(entry, discovered) {
+  const playable = playableEntryMeta(entry);
+  if (!discovered || !playable?.car?.evolutions?.length) return "";
+  const forms = playable.car.evolutions;
+  const owned = forms.filter((form) => {
+    const formEntry = vindexEntries.find((item) => item.name === form.name);
+    return formEntry && getStatus(formEntry) === "owned";
+  }).length;
+  return `
+    <div class="vindex-family-head"><span>Evolution family</span><strong>${owned} / ${forms.length} registered</strong></div>
+    <div class="vindex-family-nodes">
+      ${forms.map((form, index) => {
+        const formEntry = vindexEntries.find((item) => item.name === form.name);
+        const formStatus = formEntry ? getStatus(formEntry) : "locked";
+        const visible = formStatus !== "locked";
+        return `<button class="vindex-family-node status-${formStatus} ${index === playable.index ? "active" : ""}" type="button" ${formEntry ? `data-vindex="${formEntry.number}"` : "disabled"} aria-label="${visible ? form.name : "Locked evolution"}">
+          ${visible ? `<img src="${formEntry.image}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true">` : "<i aria-hidden=\"true\">?</i>"}
+          <span>${visible ? escapeHtml(form.name) : "???"}</span>
+        </button>`;
+      }).join("")}
+    </div>`;
+}
+
+function openGarageForVindexEntry(entryNumber) {
+  const entry = vindexEntries.find((item) => item.number === entryNumber);
+  const playable = entry && playableEntryMeta(entry);
+  if (!entry || !playable || !isVindexOwned(entry)) return;
+  state.garageShowroomCar = playable.car.id;
+  state.garageTab = "showroom";
+  if (state.garage?.[playable.car.id]) state.garage[playable.car.id].evolution = playable.index;
+  saveState();
+  showView("garage");
+  renderGarage();
+}
+
 function renderVindex() {
+  syncVindexDiscoveryHistory();
   const entries = vindexEntriesForFilter();
+  if (el.vindexSearch && el.vindexSearch.value !== (state.vindexSearch || "")) el.vindexSearch.value = state.vindexSearch || "";
+  if (!state.vindexPreferredSelectionInitialized) {
+    const firstDiscovered = entries.find((entry) => getStatus(entry) !== "locked");
+    if (firstDiscovered) state.selectedVindex = firstDiscovered.number;
+    state.vindexPreferredSelectionInitialized = true;
+    saveState();
+  }
   if (!entries.some((entry) => entry.number === state.selectedVindex)) {
     state.selectedVindex = entries[0]?.number || vindexEntries[0].number;
   }
@@ -4977,13 +5055,18 @@ function renderVindex() {
       <p><span>Fusions</span><strong>${counts.fusionsOwned} / ${counts.fusionsTotal}</strong></p>
     `;
   }
+  if (el.vindexRecent) {
+    const recent = vindexRecentMarkup();
+    el.vindexRecent.hidden = !recent;
+    el.vindexRecent.innerHTML = recent;
+  }
   const entry = vindexEntries.find((item) => item.number === state.selectedVindex) || vindexEntries[0];
   const status = getStatus(entry);
   const discovered = status !== "locked";
   const classLetter = getVindexClass(entry);
   const typeLabels = getVindexTypes(entry);
   el.vindexArt.innerHTML = `
-    ${discovered ? displayMarkup(entry.image, entry.name, "#52c7ff") : silhouetteMarkup()}
+    ${discovered ? collectibleImageMarkup(entry.image, entry.name, "vindex") : silhouetteMarkup()}
     ${discovered ? honkButtonMarkup(`data-honk-vindex="${entry.number}"`) : ""}
   `;
   el.vindexNumber.textContent = discovered ? `#${entry.number}` : "#???";
@@ -5013,6 +5096,13 @@ function renderVindex() {
     const playable = playableEntryMeta(entry);
     el.vindexMedallionTracks.innerHTML = discovered && playable ? medallionMasteryMarkup(playable.car.id, { compact: true }) : "";
   }
+  if (el.vindexProfileActions) {
+    const playable = playableEntryMeta(entry);
+    el.vindexProfileActions.innerHTML = discovered && playable && isVindexOwned(entry)
+      ? `<button class="success-button" type="button" data-vindex-open-garage="${entry.number}">Open in Garage</button>`
+      : "";
+  }
+  if (el.vindexFamily) el.vindexFamily.innerHTML = vindexFamilyMarkup(entry, discovered);
   renderVindexMemories(entry, discovered);
 }
 
@@ -5419,30 +5509,128 @@ function garageCompactCardMarkup(car) {
   `;
 }
 
+function garageOwnedCollectionCars() {
+  return cars.filter((car) => isPlayerCollectionCar(car) && isCarUnlocked(car.id));
+}
+
+function garageShowroomCarId() {
+  const owned = garageOwnedCollectionCars();
+  const selected = state.garageShowroomCar;
+  if (owned.some((car) => car.id === selected)) return selected;
+  const recent = state.recentCarUses?.find((use) => owned.some((car) => car.id === use.carId))?.carId;
+  return recent || owned[0]?.id || "";
+}
+
+function garageCollectionCars() {
+  const query = String(state.garageCollectionSearch || "").trim().toLowerCase();
+  const filter = state.garageCollectionFilter || "all";
+  const recent = state.recentCarUses || [];
+  const recentIndex = (carId) => recent.findIndex((use) => use?.carId === carId);
+  const carsForCollection = garageOwnedCollectionCars().filter((car) => {
+    const form = currentEvolution(car.id);
+    if (query && !`${form.name} ${car.family} ${car.trait}`.toLowerCase().includes(query)) return false;
+    if (filter === "favorites") return state.favoriteCarIds?.includes(car.id);
+    if (filter === "recent") return recentIndex(car.id) >= 0;
+    if (filter === "ready") return Boolean(state.garage[car.id]?.pendingEvolution);
+    return true;
+  });
+  return carsForCollection.sort((a, b) => {
+    const formA = currentEvolution(a.id);
+    const formB = currentEvolution(b.id);
+    if (state.garageCollectionSort === "name") return formA.name.localeCompare(formB.name);
+    if (state.garageCollectionSort === "level") return (state.garage[b.id]?.level || 1) - (state.garage[a.id]?.level || 1) || formA.name.localeCompare(formB.name);
+    if (state.garageCollectionSort === "recent") return (recentIndex(a.id) < 0 ? Infinity : recentIndex(a.id)) - (recentIndex(b.id) < 0 ? Infinity : recentIndex(b.id));
+    const entryA = vindexEntries.find((entry) => entry.name === formA.name);
+    const entryB = vindexEntries.find((entry) => entry.name === formB.name);
+    return String(entryA?.number || "9999").localeCompare(String(entryB?.number || "9999"), undefined, { numeric: true });
+  });
+}
+
+function garageCollectionCardMarkup(car) {
+  const progress = state.garage[car.id] || { level: 1, evolution: 0 };
+  const form = currentEvolution(car.id);
+  const favorite = state.favoriteCarIds?.includes(car.id);
+  const entry = vindexEntries.find((item) => item.name === form.name);
+  return `
+    <article class="garage-collection-card ${car.id === state.garageShowroomCar ? "selected" : ""}">
+      <button type="button" class="garage-collection-select" data-garage-showroom-car="${car.id}" aria-label="Open ${escapeHtml(form.name)} in the Showroom">
+        <span class="garage-collection-art">${collectibleArtMarkupForEvolution(car.id, progress.evolution || 0, "collection")}</span>
+        <span class="garage-collection-vin">VIN ${entry?.number || "---"}</span>
+        <strong>${escapeHtml(form.name)}</strong>
+        <small>Lv ${progress.level || 1} · Form ${(progress.evolution || 0) + 1}</small>
+        ${progress.pendingEvolution ? "<em>Evolution ready</em>" : ""}
+      </button>
+      <button class="garage-favorite-button ${favorite ? "active" : ""}" type="button" data-garage-favorite="${car.id}" aria-pressed="${Boolean(favorite)}" aria-label="${favorite ? "Remove" : "Add"} ${escapeHtml(form.name)} ${favorite ? "from" : "to"} favorites">★</button>
+    </article>`;
+}
+
+function garageShowroomMarkup(carId) {
+  const car = cars.find((item) => item.id === carId);
+  if (!car) return `<div class="garage-empty-state"><strong>No GearBorn ready for the showroom.</strong><span>Unlock a medallion to begin building your collection.</span></div>`;
+  const progress = state.garage[car.id] || { level: 1, evolution: 0 };
+  const form = currentEvolution(car.id);
+  const stats = displayedGearbornStats(car.id);
+  const entry = vindexEntries.find((item) => item.name === form.name);
+  const favorite = state.favoriteCarIds?.includes(car.id);
+  return `
+    <article class="garage-showroom-card">
+      <div class="garage-showroom-art">
+        <span class="garage-showroom-spotlight" aria-hidden="true"></span>
+        ${collectibleArtMarkupForEvolution(car.id, progress.evolution || 0, "showroom")}
+        ${honkButtonMarkup(`data-honk-car="${car.id}"`)}
+        ${garageArtPartSlots(car.id)}
+      </div>
+      <div class="garage-showroom-info">
+        <p class="garage-showroom-kicker">VIN ${entry?.number || "---"} · ${escapeHtml(car.family)}</p>
+        <h2>${escapeHtml(form.name)}</h2>
+        <div class="garage-showroom-badges">${gearbornClassTypeBadgesForForm(form.name)}${licensePlateMarkupForName(form.name, entry?.number || "000")}</div>
+        <div class="garage-showroom-meta"><span>Level ${progress.level || 1}</span><span>Form ${(progress.evolution || 0) + 1} / ${unlockedEvolutionIndex(car.id) + 1}</span><span>${escapeHtml(gearbornStatProfiles[car.id]?.playstyle || car.trait || "Race ready")}</span></div>
+        ${garageEvolutionControls(car)}
+        ${garageStatsMarkup(stats, car.id)}
+        <div class="garage-showroom-actions">
+          <button class="success-button" type="button" data-upgrade-car="${car.id}">Tune</button>
+          ${progress.pendingEvolution ? `<button class="garage-evolve" type="button" data-evolve-car="${car.id}">Evolve</button>` : ""}
+          <button class="ghost" type="button" data-garage-open-vindex="${entry?.number || ""}" ${entry ? "" : "disabled"}>View in VINdex</button>
+          <button class="ghost ${favorite ? "active" : ""}" type="button" data-garage-favorite="${car.id}" aria-pressed="${Boolean(favorite)}">${favorite ? "★ Favorited" : "☆ Favorite"}</button>
+        </div>
+      </div>
+    </article>`;
+}
+
 function renderGarage() {
   renderGarageShowcase();
   if (tutorialActive() && ["garage", "upgrade", "evolve"].includes(currentTutorialScene().id)) {
+    if (el.garageShowroom) el.garageShowroom.hidden = true;
+    if (el.garageCollection) el.garageCollection.hidden = false;
     renderTutorialGarage();
     return;
   }
-  // TODO garage extension hooks: trophy shelf, medallion display, city stickers,
-  // boss memorabilia, NPC garage appearances, and Ashley/Dr. Tyree moments.
   const godModeActive = garageGodModeActive();
   el.garageStatus.hidden = !godModeActive;
-  el.garageStatus.textContent = godModeActive
-    ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox"
-    : "";
-  document.querySelectorAll("[data-garage-view]").forEach((button) => button.classList.toggle("active", button.dataset.garageView === state.garageViewMode));
+  el.garageStatus.textContent = godModeActive ? "God Mode Active: all GearBorn lines are unlocked and maxed with unlimited Sprox" : "";
   if (el.garageLoadoutsOpen) el.garageLoadoutsOpen.hidden = false;
   renderUnlockHubCard();
-  const showcaseIds = garageShowcaseIds();
-  const garageCars = orderedCarList(cars.filter((car) => isPlayerCollectionCar(car) && !showcaseIds.includes(car.id) && (isCarUnlocked(car.id) || ["rainbowlt", "narwhal-luxury"].includes(car.id))));
-  el.garageGrid.classList.toggle("garage-grid-compact", state.garageViewMode === "compact");
-  el.garageGrid.innerHTML = garageCars.map((car) => {
-    if (state.garageViewMode !== "compact") return isCarUnlocked(car.id) ? garageDetailedCardMarkup(car) : lockedGarageCard(car);
-    if (expandedGarageCardIds.has(car.id) && isCarUnlocked(car.id)) return garageDetailedCardMarkup(car, "garage-expanded-card");
-    return garageCompactCardMarkup(car);
-  }).join("");
+  const selectedId = garageShowroomCarId();
+  state.garageShowroomCar = selectedId;
+  const tab = state.garageTab === "collection" ? "collection" : "showroom";
+  document.querySelectorAll("[data-garage-tab]").forEach((button) => {
+    const active = button.dataset.garageTab === tab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  if (el.garageShowroom) {
+    el.garageShowroom.hidden = tab !== "showroom";
+    el.garageShowroom.innerHTML = garageShowroomMarkup(selectedId);
+  }
+  if (el.garageCollection) el.garageCollection.hidden = tab !== "collection";
+  if (el.garageCollectionSearch && el.garageCollectionSearch.value !== (state.garageCollectionSearch || "")) el.garageCollectionSearch.value = state.garageCollectionSearch || "";
+  if (el.garageCollectionFilter) el.garageCollectionFilter.value = state.garageCollectionFilter || "all";
+  if (el.garageCollectionSort) el.garageCollectionSort.value = state.garageCollectionSort || "vin";
+  const collectionCars = garageCollectionCars();
+  el.garageGrid.classList.remove("garage-grid-compact");
+  el.garageGrid.innerHTML = collectionCars.length ? collectionCars.map(garageCollectionCardMarkup).join("") : `<p class="garage-empty-state">No owned GearBorn match these collection filters.</p>`;
+  const showcase = document.getElementById("garage-showcase");
+  if (showcase) showcase.hidden = !garageShowcaseGalleryOpen;
 }
 
 function renderUnlockHubCard() {
@@ -8653,6 +8841,104 @@ function displayMarkup(image, alt, color) {
   `;
 }
 
+// Collection surfaces use the same display artwork as racing, but do not inherit the
+// race sprite box. Alpha bounds account for transparent padding without changing source art.
+const collectibleArtProfiles = {
+  showroom: { coverage: 0.8, baseline: 0.84 },
+  vindex: { coverage: 0.75, baseline: 0.8 },
+  collection: { coverage: 0.75, baseline: 0.81 },
+  showcase: { coverage: 0.88, baseline: 0.88 },
+  thumbnail: { coverage: 0.74, baseline: 0.8 }
+};
+const collectibleAlphaBoundsCache = new Map();
+let collectibleArtResizeObserver = null;
+
+function collectibleImageMarkup(image, alt, variant = "collection") {
+  if (!image) return `<span class="collectible-art collectible-art-${variant} missing" aria-hidden="true">?</span>`;
+  return `<span class="collectible-art collectible-art-${variant}" data-collectible-art="${variant}">
+    <img class="collectible-art-image" src="${image}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onload="normalizeCollectibleArt(this)" onerror="this.closest('.collectible-art')?.classList.add('missing');this.remove()">
+  </span>`;
+}
+
+function collectibleArtMarkupForEvolution(carId, evolutionIndex, variant = "collection") {
+  const form = evolutionByIndex(carId, evolutionIndex);
+  return collectibleImageMarkup(imageFor(form, "display"), form?.name || "GearBorn", variant);
+}
+
+function collectibleAlphaBounds(image) {
+  const key = image.currentSrc || image.src;
+  if (collectibleAlphaBoundsCache.has(key)) return collectibleAlphaBoundsCache.get(key);
+  const fallback = { left: 0, top: 0, right: 1, bottom: 1, width: 1, height: 1 };
+  try {
+    const longEdge = Math.max(image.naturalWidth, image.naturalHeight);
+    const ratio = longEdge > 512 ? 512 / longEdge : 1;
+    const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+    const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return fallback;
+    context.drawImage(image, 0, 0, width, height);
+    const pixels = context.getImageData(0, 0, width, height).data;
+    let left = width;
+    let top = height;
+    let right = -1;
+    let bottom = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (pixels[(y * width + x) * 4 + 3] < 16) continue;
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+    const bounds = right < left ? fallback : {
+      left: left / width,
+      top: top / height,
+      right: (right + 1) / width,
+      bottom: (bottom + 1) / height,
+      width: (right - left + 1) / width,
+      height: (bottom - top + 1) / height
+    };
+    collectibleAlphaBoundsCache.set(key, bounds);
+    return bounds;
+  } catch (error) {
+    console.warn("GearBorn collectible art normalization skipped:", error);
+    collectibleAlphaBoundsCache.set(key, fallback);
+    return fallback;
+  }
+}
+
+function normalizeCollectibleArt(image) {
+  const host = image.closest(".collectible-art");
+  if (!host || !image.naturalWidth || !image.naturalHeight) return;
+  const apply = () => {
+    const profile = collectibleArtProfiles[host.dataset.collectibleArt] || collectibleArtProfiles.collection;
+    const bounds = collectibleAlphaBounds(image);
+    const availableWidth = Math.max(1, host.clientWidth * profile.coverage);
+    const availableHeight = Math.max(1, host.clientHeight * profile.coverage);
+    const scale = Math.min(availableWidth / (image.naturalWidth * bounds.width), availableHeight / (image.naturalHeight * bounds.height));
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    image.style.width = `${width}px`;
+    image.style.height = `${height}px`;
+    image.style.top = `${host.clientHeight * profile.baseline - height * bounds.bottom}px`;
+  };
+  requestAnimationFrame(apply);
+  if (!host.dataset.collectibleObserved && typeof ResizeObserver !== "undefined") {
+    collectibleArtResizeObserver ||= new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const resizedImage = entry.target.querySelector(".collectible-art-image");
+        if (resizedImage) normalizeCollectibleArt(resizedImage);
+      });
+    });
+    collectibleArtResizeObserver.observe(host);
+    host.dataset.collectibleObserved = "true";
+  }
+}
+
 function carMarkupForEvolution(carId, evolutionIndex, role = "display") {
   const car = cars.find((item) => item.id === carId);
   const form = evolutionByIndex(carId, evolutionIndex);
@@ -11701,7 +11987,7 @@ function garageShowcaseSlotMarkup(carId, index) {
     <div class="showcase-slot ${focused ? "focused" : ""}">
       <button class="showcase-spot" type="button" data-showcase-focus="${carId}" aria-pressed="${focused}" aria-label="${escapeHtml(form.name)}: show details">
         <span class="showcase-light" aria-hidden="true"></span>
-        <span class="showcase-art">${carMarkupForEvolution(carId, progress.evolution || 0, "display")}</span>
+        <span class="showcase-art">${collectibleArtMarkupForEvolution(carId, progress.evolution || 0, "showcase")}</span>
         <strong>${escapeHtml(form.name)}</strong>
         <small>Lv ${progress.level || 1}</small>
         ${progress.pendingEvolution ? "<em>Ready</em>" : ""}
@@ -12066,7 +12352,18 @@ function dragDistanceFor(meters) {
 
 // 5B: race art redrawn facing RIGHT goes in this list (file name only) so the drag strip stops mirroring it.
 const DRAG_RIGHT_FACING_RACE_ART = new Set([
-  // "sponsore-race.png",
+  "birds-of-metal-bachelohde-race.png",
+  "funvee-braggadon-race.png",
+  "garbage-garbaggito-race.png",
+  "long-haul-camel-humpyear-race.png",
+  "minivan-iliadd-race.png",
+  "sorority-elephant-elepledge-race.png",
+  "sorority-elephant-plaidonna-race.png",
+  "sorority-elephant-sororitrunk-race.png",
+  "sports-car-ballparker-race.png",
+  "sports-car-grithouse-race.png",
+  "sports-car-hoopra-race.png",
+  "sticker-sponsore-race.png",
 ]);
 function dragRaceArtFacesRight(src) {
   if (!src) return false;
