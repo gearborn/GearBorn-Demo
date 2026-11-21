@@ -4994,9 +4994,66 @@ function vindexListRowMarkup(entry) {
   `;
 }
 
+function vindexLineRowsForFilter() {
+  const matchingEntries = vindexEntriesForFilter();
+  const matchingNumbers = new Set(matchingEntries.map((entry) => entry.number));
+  const groups = new Map();
+  vindexEntries.forEach((entry) => {
+    const playable = playableEntryMeta(entry);
+    const lineId = playable?.car?.id || `entry-${entry.number}`;
+    if (!groups.has(lineId)) groups.set(lineId, { lineId, entries: [], fusion: isFusionLine(lineId) });
+    groups.get(lineId).entries.push(entry);
+  });
+  return [...groups.values()]
+    .filter((group) => group.entries.some((entry) => matchingNumbers.has(entry.number)))
+    .map((group) => {
+      const ordered = group.entries.slice().sort((a, b) => (playableEntryMeta(a)?.index || 0) - (playableEntryMeta(b)?.index || 0));
+      const discovered = ordered.filter((entry) => getStatus(entry) !== "locked");
+      const selected = discovered[discovered.length - 1] || ordered[ordered.length - 1];
+      const registered = ordered.filter((entry) => getStatus(entry) === "owned").length;
+      return { ...group, ordered, selected, registered };
+    });
+}
+
+function vindexLineRowMarkup(row) {
+  const discovered = getStatus(row.selected) !== "locked";
+  const active = row.entries.some((entry) => entry.number === state.selectedVindex);
+  const label = discovered ? row.selected.name : "???";
+  return `
+    <button class="vindex-button vindex-gallery-card vindex-line-row ${active ? "active" : ""} ${row.fusion ? "fusion-line-row" : ""} status-${getStatus(row.selected)}" type="button" data-vindex="${row.selected.number}" aria-label="${discovered ? `${label}, ${row.registered} of ${row.ordered.length} registered` : "Locked VINdex line"}">
+      <span class="vindex-gallery-art">${discovered ? collectibleImageMarkup(row.selected.image, "", "thumbnail") : "<i aria-hidden=\"true\">?</i>"}</span>
+      <span class="vindex-line-copy"><strong>${escapeHtml(label)}</strong><em>${row.registered} / ${row.ordered.length} registered</em></span>
+    </button>
+  `;
+}
+
+function vindexFamilyNodeMarkup(entry, active = false) {
+  const status = entry ? getStatus(entry) : "locked";
+  const visible = status !== "locked";
+  return `<button class="vindex-family-node status-${status} ${active ? "active" : ""}" type="button" ${entry ? `data-vindex="${entry.number}"` : "disabled"} aria-label="${visible ? entry.name : "Locked evolution"}">
+    ${visible ? `<img src="${entry.image}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true">` : "<i aria-hidden=\"true\">?</i>"}
+    <span>${visible ? escapeHtml(entry.name) : "???"}</span>
+  </button>`;
+}
+
 function vindexFamilyMarkup(entry, discovered) {
   const playable = playableEntryMeta(entry);
   if (!discovered || !playable?.car?.evolutions?.length) return "";
+  const recipe = typeof fusionRecipes !== "undefined" && isFusionLine(playable.car.id)
+    ? fusionRecipes.find((item) => item.id === playable.car.id)
+    : null;
+  if (recipe) {
+    const parents = recipe.parents.map((name) => vindexEntries.find((item) => item.name === name) || null);
+    return `
+      <div class="vindex-family-head"><span>Fusion family</span><strong>2 parents + fusion</strong></div>
+      <div class="vindex-family-nodes vindex-fusion-family">
+        ${vindexFamilyNodeMarkup(parents[0])}
+        <b aria-hidden="true">+</b>
+        ${vindexFamilyNodeMarkup(parents[1])}
+        <b aria-hidden="true">=</b>
+        ${vindexFamilyNodeMarkup(entry, true)}
+      </div>`;
+  }
   const forms = playable.car.evolutions;
   const owned = forms.filter((form) => {
     const formEntry = vindexEntries.find((item) => item.name === form.name);
@@ -5009,10 +5066,7 @@ function vindexFamilyMarkup(entry, discovered) {
         const formEntry = vindexEntries.find((item) => item.name === form.name);
         const formStatus = formEntry ? getStatus(formEntry) : "locked";
         const visible = formStatus !== "locked";
-        return `<button class="vindex-family-node status-${formStatus} ${index === playable.index ? "active" : ""}" type="button" ${formEntry ? `data-vindex="${formEntry.number}"` : "disabled"} aria-label="${visible ? form.name : "Locked evolution"}">
-          ${visible ? `<img src="${formEntry.image}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true">` : "<i aria-hidden=\"true\">?</i>"}
-          <span>${visible ? escapeHtml(form.name) : "???"}</span>
-        </button>`;
+        return vindexFamilyNodeMarkup(formEntry, index === playable.index);
       }).join("")}
     </div>`;
 }
@@ -5032,6 +5086,8 @@ function openGarageForVindexEntry(entryNumber) {
 function renderVindex() {
   syncVindexDiscoveryHistory();
   const entries = vindexEntriesForFilter();
+  const lineRows = vindexLineRowsForFilter();
+  const viewMode = state.vindexViewMode === "line" ? "line" : "number";
   if (el.vindexSearch && el.vindexSearch.value !== (state.vindexSearch || "")) el.vindexSearch.value = state.vindexSearch || "";
   if (!state.vindexPreferredSelectionInitialized) {
     const firstDiscovered = entries.find((entry) => getStatus(entry) !== "locked");
@@ -5039,10 +5095,22 @@ function renderVindex() {
     state.vindexPreferredSelectionInitialized = true;
     saveState();
   }
-  if (!entries.some((entry) => entry.number === state.selectedVindex)) {
-    state.selectedVindex = entries[0]?.number || vindexEntries[0].number;
+  const visibleEntries = viewMode === "line"
+    ? lineRows.flatMap((row) => row.entries)
+    : entries;
+  if (!visibleEntries.some((entry) => entry.number === state.selectedVindex)) {
+    state.selectedVindex = viewMode === "line"
+      ? (lineRows[0]?.selected.number || vindexEntries[0].number)
+      : (entries[0]?.number || vindexEntries[0].number);
   }
-  el.vindexList.innerHTML = entries.length ? entries.map(vindexListRowMarkup).join("") : `<p class="empty-note">No GearBorn match this filter.</p>`;
+  el.vindexList.innerHTML = (viewMode === "line" ? lineRows : entries).length
+    ? (viewMode === "line" ? lineRows.map(vindexLineRowMarkup) : entries.map(vindexListRowMarkup)).join("")
+    : `<p class="empty-note">No GearBorn match this filter.</p>`;
+  document.querySelectorAll("[data-vindex-view]").forEach((button) => {
+    const active = button.dataset.vindexView === viewMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   el.vindexFilterButtons?.querySelectorAll("[data-vindex-filter]").forEach((button) => {
     button.classList.toggle("active", button.dataset.vindexFilter === (state.vindexFilter || "all"));
   });
@@ -5289,8 +5357,8 @@ function renderProfiles() {
     </button>
   `).join("");
   const profile = racerProfiles.find((item) => item.id === state.selectedProfile) || racerProfiles[0];
-  const displayProfile = profile.id === "racer-alpha" && state.racerAlphaProfileView !== "unmasked"
-    ? { ...profile, image: finalBoss.headshot || finalBoss.portrait }
+  const displayProfile = profile.id === "racer-alpha"
+    ? { ...profile, image: state.racerAlphaProfileView === "unmasked" ? (finalBoss.unmaskedHeadshot || finalBoss.unmaskedPortrait) : (finalBoss.headshot || finalBoss.portrait) }
     : { ...profile, image: profile.headshot || profile.image };
   el.profileArt.innerHTML = characterMarkup(displayProfile) + racerAlphaProfileToggle(profile);
   el.profileName.textContent = profile.name;
@@ -7804,6 +7872,7 @@ const forgeMedallionMap = {
   "bucking-bronco":     "assets/medallions/medallion-whinnibago.png",
   "rainbowlt":          "assets/medallions/medallion-rainbowlt.png",
   "training-car":       "assets/medallions/medallion-tutorque.png",
+  "knight-sloth":       "assets/medallions/medallion-slowbadon.png",
 };
 
 function forgeMedallionSrc(carId) {
@@ -8210,6 +8279,8 @@ function selectForgeMedallion(carId) {
   el.forgeUnlockBtn.textContent = activeUnlockHub() === "spindellLabs" ? `Sync ${form?.name || carId}` : `Unlock ${form?.name || carId}`;
 }
 
+const PIXEL_SPRITE_OVERRIDES = { "metal-snake": "venomoil" };
+
 async function runForgeAnimation(carId, options = {}) {
   if (forgeAnimating) return;
   const preview = Boolean(options.preview);
@@ -8245,10 +8316,10 @@ async function runForgeAnimation(carId, options = {}) {
 
     const lineRoot = (typeof evolutionLineRootForCar === "function" ? evolutionLineRootForCar(carId) : null) || carId;
     const firstForm = evolutionByIndex(carId, 0);
-    const firstFormSlug = (firstForm?.name || lineRoot).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const firstFormSlug = (firstForm?.name || lineRoot).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const pixelLineSlug = PIXEL_SPRITE_OVERRIDES[lineRoot] || lineRoot;
     const pixelCarSrc = `assets/spindell/pixel/pixel-${firstFormSlug}.png`;
-    const pixelLineFallback = `assets/spindell/pixel/pixel-${lineRoot}.png`;
-    const pixelCarFallback = "assets/spindell/pixel/pixel-car.png";
+    const pixelLineFallback = `assets/spindell/pixel/pixel-${pixelLineSlug}.png`;
     const carDisplaySrc = imageFor(firstForm, "display") || "";
 
     area.innerHTML = `
@@ -8263,7 +8334,7 @@ async function runForgeAnimation(carId, options = {}) {
       <div class="spindell-sync-layer spindell-sync-flash-layer"></div>
       <div class="spindell-sync-layer spindell-key-display">
         <img class="vinsync-complete-screen" src="assets/spindell/vinsync-complete-screen.png" alt="" onerror="this.classList.add('asset-missing')">
-        <img class="vinsync-pixel-car" src="${pixelCarSrc}" onerror="if(this.dataset.fallback==='line'){this.dataset.fallback='generic';this.src='${pixelCarFallback}'}else if(this.dataset.fallback==='generic'){this.hidden=true}else{this.dataset.fallback='line';this.src='${pixelLineFallback}'}" alt="">
+        ${isFusionLine(lineRoot) ? "" : `<img class="vinsync-pixel-car" src="${pixelCarSrc}" onerror="if(this.dataset.fallback==='line'){this.hidden=true}else{this.dataset.fallback='line';this.src='${pixelLineFallback}'}" alt="">`}
       </div>
     `;
     const getSync = (cls) => area.querySelector("." + cls);
@@ -8303,15 +8374,11 @@ async function runForgeAnimation(carId, options = {}) {
     add(tubeEl, "spindell-sync-new-tube-above");
     add(carWrapEl, "spindell-sync-new-tube-above");
     void tubeEl.offsetWidth;
-    remove(armEl, "spindell-sync-tube-lift");
-    remove(armEl, "spindell-sync-arm-descend");
-    add(armEl, "spindell-sync-arm-redescend");
     add(tubeEl, "spindell-sync-new-tube-descend");
     add(carWrapEl, "spindell-sync-new-tube-descend");
     await step(820);
 
     add(flashEl, "spindell-sync-flash");
-    remove(armEl, "spindell-sync-arm-redescend");
     add(armEl, "spindell-sync-arm-retract");
     await step(620);
 
@@ -10153,9 +10220,9 @@ function tutorialFullBodyForSpeaker(speakerKey) {
   if (speakerKey === "user") return selectedTuner().image;
   if (speakerKey === "rival") return rivalCharacter().image;
   if (speakerKey === "ashley") return "assets/characters/character-ashley.png";
-  if (speakerKey === "auntie") return "assets/characters/auntie.png";
-  if (speakerKey === "orion") return "assets/characters/orion-vincent.png";
-  if (speakerKey === "tyree") return "assets/characters/dr-tyree.png";
+  if (speakerKey === "auntie") return "assets/characters/character-auntie.png";
+  if (speakerKey === "orion") return "assets/characters/character-orion-vincent.png";
+  if (speakerKey === "tyree") return "assets/characters/character-dr-tyree.png";
   return "";
 }
 

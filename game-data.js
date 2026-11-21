@@ -1531,16 +1531,16 @@ const trackItems = {
   ]
 };
 const bosses = [
-  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/cars/pope-crusadome-topdown.png", portrait: "assets/characters/rev-rend.png", headshot: "assets/characters/headshots/headshot-rev-rend.png" },
-  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/cars/german-baronessex-topdown.png", portrait: "assets/characters/karen.png", headshot: "assets/characters/headshots/headshot-karen.png" },
-  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/characters/samir.png", headshot: "assets/characters/headshots/headshot-samir.png" },
-  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/influencer-peacock-inflewenze-topdown.png", portrait: "assets/characters/thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
-  { id: "jimmy-chin", name: "Jimmy", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
-  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
-  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/bok-kuumbusta-topdown.png", portrait: "assets/characters/jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
-  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/characters/pallavi.png", headshot: "assets/characters/headshots/headshot-pallavi.png" }
+  { id: "rev-rend", name: "Rev-rend", car: "Crusadome", track: storyTracks[0], difficulty: 0.55, xp: 260, carImage: "assets/cars/pope-crusadome-topdown.png", portrait: "assets/characters/character-rev-rend.png", headshot: "assets/characters/headshots/headshot-rev-rend.png" },
+  { id: "karen", name: "Karen", car: "Baronessex", track: storyTracks[1], difficulty: 1.02, xp: 340, carImage: "assets/cars/german-baronessex-topdown.png", portrait: "assets/characters/character-karen.png", headshot: "assets/characters/headshots/headshot-karen.png" },
+  { id: "samir", name: "Samir", car: "Shamacht", track: storyTracks[2], difficulty: 1.14, xp: 430, carImage: "assets/cars/whale-shamacht-topdown.png", portrait: "assets/characters/character-samir.png", headshot: "assets/characters/headshots/headshot-samir.png" },
+  { id: "thais", name: "Thais", car: "Inflewenze", track: storyTracks[3], difficulty: 1.28, xp: 540, carImage: "assets/cars/influencer-peacock-inflewenze-topdown.png", portrait: "assets/characters/character-thais.png", headshot: "assets/characters/headshots/headshot-thais.png" },
+  { id: "jimmy-chin", name: "Jimmy", car: "Hurrdaboutis", track: storyTracks[4], difficulty: 1.42, xp: 670, carImage: "assets/cars/talkshow-hurrdaboutis-topdown.png", portrait: "assets/characters/character-jimmy-chin.png", headshot: "assets/characters/headshots/headshot-jimmy-chin.png" },
+  { id: "rip-lee", name: "Rip Lee", car: "Matunnie", track: storyTracks[5], difficulty: 1.56, xp: 820, carImage: "assets/cars/rabbit-matunnie-topdown.png", portrait: "assets/characters/character-rip-lee.png", headshot: "assets/characters/headshots/headshot-rip-lee.png" },
+  { id: "jabu", name: "Jabu", car: "Kuumbusta", track: storyTracks[6], difficulty: 1.72, xp: 990, carImage: "assets/cars/bok-kuumbusta-topdown.png", portrait: "assets/characters/character-jabu.png", headshot: "assets/characters/headshots/headshot-jabu.png" },
+  { id: "pallavi", name: "Pallavi", car: "Kermajesty", track: storyTracks[7], difficulty: 1.9, xp: 1200, carImage: "assets/cars/frog-kermajesty-topdown.png", portrait: "assets/characters/character-pallavi.png", headshot: "assets/characters/headshots/headshot-pallavi.png" }
 ];
-const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/cars/unicorn-hornula1-topdown.png", portrait: "assets/characters/racer-alpha-helmet.png", unmaskedPortrait: "assets/characters/racer-alpha.png", headshot: "assets/characters/headshots/headshot-racer-alpha.png" };
+const finalBoss = { id: "racer-alpha", name: "Racer Alpha", car: "Hornula1", track: { id: "space", city: "Space", country: "Final Track", map: "assets/maps/map-space.png", cityMap: "assets/maps/citymap-space.png", cityIcon: "assets/maps/cityicon-space.png" }, difficulty: 2.25, xp: 1800, carImage: "assets/cars/unicorn-hornula1-topdown.png", portrait: "assets/characters/character-racer-alpha-helmet.png", unmaskedPortrait: "assets/characters/character-racer-alpha.png", headshot: "assets/characters/headshots/headshot-racer-alpha-helmet.png", unmaskedHeadshot: "assets/characters/headshots/headshot-racer-alpha.png" };
 const bossChallengeBosses = bosses.concat(finalBoss);
 const campaignDragStages = [
   { rankKey: "E", name: "Bananachi", xp: 100, power: 0.92, image: "assets/cars/monkey-bananachi-race.png", opponents: [{ name: "Bananachi", image: "assets/cars/monkey-bananachi-race.png", power: 0.92 }] },
@@ -2276,8 +2276,8 @@ storyRewardLineDefs.forEach((line) => {
 });
 
 const tuners = [
-  { id: "mylo", name: "Mylo", gender: "male", image: "assets/characters/mylo-ziggs.png", headshot: "assets/characters/headshots/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
-  { id: "cha-cha", name: "Cha Cha", gender: "female", image: "assets/characters/cha-cha-spindell.png", headshot: "assets/characters/headshots/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
+  { id: "mylo", name: "Mylo", gender: "male", image: "assets/characters/character-mylo.png", headshot: "assets/characters/headshots/headshot-mylo.png", bio: "A hopeful, self-made Tuner with big dreams and messy execution. Mylo did not grow up in the GearBorn world. He forced his way in. He is always a step behind, but what he lacks in polish, he makes up for in heart." },
+  { id: "cha-cha", name: "Cha Cha", gender: "female", image: "assets/characters/character-cha-cha.png", headshot: "assets/characters/headshots/headshot-cha-cha.png", bio: "The gold standard of a Tuner, and tired of being treated like a legacy. Daughter of legends Mack and Sloane Spindell, Cha Cha has spent her life at the top because she earned it." }
 ];
 const profileBios = {
   "rev-rend": "A preacher of speed and salvation, with a collection to match. Rev-rend built his empire on one promise: give him your GearBorn, and he will lead you to greatness. Behind the gospel is a man who has lost sight of what he ever believed in.",
@@ -2298,7 +2298,7 @@ const profileBios = {
   "lynx-incarso": "Nobody really knows where Lynx Incarso came from. What they do know is that if she's behind you on the starting grid, you should probably update your insurance. Loud, fearless, and completely unpredictable, Lynx races with the kind of reckless aggression that makes other Tuners question their own survival instincts. Some racers insist the chaos is calculated, that she's using intimidation to force mistakes. The terrifying part? It probably isn't. Lynx genuinely seems to enjoy the danger. To her, racing isn't about perfect lines or clean technique. It's about pressure, panic, and seeing who breaks first.",
   "portia-crosh": "The voice behind hit GearBorn podcast Good Tunes, Portia Crosh built her reputation covering the world's top Tuners before deciding she was tired of talking about greatness from the sidelines. Smart, sharp, and relentlessly ambitious, Portia approaches racing like she approaches journalism - by learning exactly where the pressure points are and pushing them. Critics say she's too polished for the track. Portia keeps beating them anyway. Somehow she always knows the story before everyone else, including the parts people wish she didn't.",
   "marlyn-adelaide": "Off the track, Marlyn Adelaide is a walking disaster. He spills drinks, trips over air, complains constantly, and somehow gets lost in places he's already been. Behind the wheel? Different person entirely. Marlyn drives with razor-sharp precision and impossible reflexes, treating every race like a moving puzzle only he can solve. He's picky, dramatic, and exhausting to be around for long periods of time - but even his rivals admit the guy's a genius once the engines start.",
-  "crosby-nash": "Crosby Nash looks terrifying right up until he opens his mouth. Gentle, encouraging, and relentlessly positive, Crosby treats every racer like they're already friends - whether they want him to or not. Most people enter races against him expecting intimidation tactics. Instead they get compliments, life advice, and heartfelt encouragement at red lights. Underneath the teddy bear energy is an incredibly capable driver who earned his reputation the hard way. Crosby doesn't race to crush people. He races because he genuinely wants to see how far everyone can go.",
+  "crosby-nash": "Crosby Nash looks intimidating right up until he opens his mouth. Gentle, encouraging, and relentlessly positive, Crosby treats every racer like they're already friends - whether they want him to or not. Most people enter races against him expecting intimidation tactics. Instead they get compliments, life advice, and heartfelt encouragement at red lights. Underneath the teddy bear energy is an incredibly capable driver who earned his reputation the hard way. Crosby doesn't race to crush people. He races because he genuinely wants to see how far everyone can go.",
   "eli-kaufman": "Most Tuners grew up dreaming about the spotlight. Eli Kaufman grew up carrying someone else's clubs through it. A longtime caddy for the city's elite racers, Eli learned the Tuner world one overheard conversation at a time - studying egos, rivalries, and strategy while staying invisible. After years of saving every tip he earned, Eli finally bought his way onto the track himself. Calm, patient, and impossible to rattle, he races the same way he worked: quietly, precisely, and always three steps ahead of the people underestimating him. He's also your best friend."
 };
 const otherNpcProfileSeeds = [
@@ -2370,7 +2370,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   title: "The Voice of Velocity",
   image: "assets/characters/headshots/headshot-roberto-yucca.png",
   headshot: "assets/characters/headshots/headshot-roberto-yucca.png",
-  character: "assets/characters/roberto-yucca.png",
+  character: "assets/characters/character-roberto-yucca.png",
   category: "Other",
   car: "Other",
   city: "Tuner Crashout Broadcast Booth",
@@ -2382,7 +2382,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   title: "Spindell Labs Mechanic",
   image: "assets/characters/headshots/headshot-orion-vincent.png",
   headshot: "assets/characters/headshots/headshot-orion-vincent.png",
-  character: "assets/characters/orion-vincent.png",
+  character: "assets/characters/character-orion-vincent.png",
   category: "Other",
   car: "Other",
   city: "Spindell Labs",
@@ -2395,7 +2395,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   title: "Forge Matriarch",
   image: "assets/characters/headshots/headshot-auntie.png",
   headshot: "assets/characters/headshots/headshot-auntie.png",
-  character: "assets/characters/auntie.png",
+  character: "assets/characters/character-auntie.png",
   category: "Other",
   car: "Other",
   city: "The Forge",
@@ -2408,7 +2408,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   title: "Legendary Tuner",
   image: "assets/characters/headshots/headshot-mack-spindell.png",
   headshot: "assets/characters/headshots/headshot-mack-spindell.png",
-  character: "assets/characters/mack-spindell.png",
+  character: "assets/characters/character-mack-spindell.png",
   category: "Other",
   car: "Manstrocity",
   signatureLineId: "armadaddio",
@@ -2423,7 +2423,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   title: "Legendary Tuner",
   image: "assets/characters/headshots/headshot-sloane-spindell.png",
   headshot: "assets/characters/headshots/headshot-sloane-spindell.png",
-  character: "assets/characters/sloane-spindell.png",
+  character: "assets/characters/character-sloane-spindell.png",
   category: "Other",
   car: "Chillmatic",
   signatureLineId: "chill-penguin",

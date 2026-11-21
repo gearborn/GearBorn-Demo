@@ -591,6 +591,7 @@ const defaultState = {
   selectedTimeTrack: storyTracks[0].id,
   selectedVindex: vindexEntries[0].number,
   vindexFilter: "all",
+  vindexViewMode: "number",
   selectedProfile: racerProfiles[0].id,
   racerAlphaUnmasked: false,
   racerAlphaProfileView: "masked",

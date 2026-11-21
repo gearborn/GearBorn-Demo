@@ -294,6 +294,7 @@ function sanitizeState() {
   state.storyTimeTrials = state.storyTimeTrials || {};
   state.betaTimeTrials = state.betaTimeTrials && typeof state.betaTimeTrials === "object" ? state.betaTimeTrials : {};
   if (!["all", "owned", "seen"].includes(state.vindexFilter)) state.vindexFilter = "all";
+  state.vindexViewMode = state.vindexViewMode === "line" ? "line" : "number";
   state.settings.verticalKeys = {
     ...defaultState.settings.verticalKeys,
     ...(state.settings.verticalKeys || {})
@@ -529,6 +530,14 @@ document.querySelector("#forge-unlock-btn")?.addEventListener("click", () => {
 
 document.querySelector("#forge-card-btn")?.addEventListener("click", () => {
   openForge();
+});
+
+document.querySelector("#vindex-view-mode")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-vindex-view]");
+  if (!button || !["number", "line"].includes(button.dataset.vindexView)) return;
+  state.vindexViewMode = button.dataset.vindexView;
+  saveState();
+  renderVindex();
 });
 
 el.confirmFusionGamble?.addEventListener("click", confirmFusionGamble);

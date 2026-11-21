@@ -6435,6 +6435,292 @@ small {
   overflow-wrap: break-word;
 }
 
+/* ── VINdex showroom layout: content-led panels over the bright redraw ──── */
+#vindex-view .vindex-shell {
+  padding: clamp(8px, 1vw, 18px);
+  overflow: visible;
+}
+
+#vindex-view .vindex-stage {
+  width: min(100%, 1500px, calc((100svh - 104px) * 1.7778));
+  min-height: min(720px, calc(100svh - 104px));
+  aspect-ratio: 16 / 9;
+  display: grid;
+  grid-template-columns: minmax(280px, 30fr) minmax(0, 48fr) minmax(188px, 22fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "back back back"
+    "list detail filters";
+  gap: clamp(12px, 1.25vw, 20px);
+  padding: clamp(14px, 1.4vw, 24px);
+  background-image: linear-gradient(135deg, rgba(235, 246, 255, 0.08), rgba(4, 11, 18, 0.18)), url("assets/vindex/vindex-bg.png");
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+}
+
+#vindex-view .vindex-back-link {
+  position: static;
+  grid-area: back;
+  justify-self: end;
+  align-self: start;
+}
+
+#vindex-view .vindex-list-panel,
+#vindex-view .vindex-stage .vindex-detail,
+#vindex-view .vindex-filter-panel {
+  position: static;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: clamp(10px, 1vw, 16px);
+  border: 1px solid rgba(7, 20, 33, 0.24);
+  border-radius: 12px;
+  background: rgba(6, 16, 26, 0.78);
+  box-shadow: 0 14px 32px rgba(2, 8, 14, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(7px);
+}
+
+#vindex-view .vindex-list-panel {
+  grid-area: list;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+.vindex-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#vindex-view .vindex-search-label {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  overflow: visible;
+  margin: 0;
+  color: #f4f8fc;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.vindex-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vindex-view-toggle button {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(238, 246, 252, 0.72);
+  font: 800 0.68rem var(--font-ui);
+}
+
+.vindex-view-toggle button.active {
+  background: rgba(82, 199, 255, 0.28);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(144, 225, 255, 0.42);
+}
+
+#vindex-view .vindex-search {
+  position: static;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+  background: rgba(1, 7, 13, 0.62);
+  color: #fff;
+}
+
+.vindex-list-disclosure {
+  display: grid;
+  min-height: 0;
+  height: 100%;
+}
+
+.vindex-list-disclosure > summary {
+  display: none;
+}
+
+#vindex-view .vindex-stage .vindex-list {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  height: 100%;
+  padding: 2px 8px 2px 2px;
+  overflow: auto;
+  scrollbar-color: rgba(82, 199, 255, 0.86) rgba(255, 255, 255, 0.12);
+  scrollbar-width: auto;
+}
+
+#vindex-view .vindex-list::-webkit-scrollbar { width: 10px; }
+#vindex-view .vindex-list::-webkit-scrollbar-thumb { border: 2px solid rgba(6, 16, 26, 0.78); border-radius: 99px; background: rgba(82, 199, 255, 0.8); }
+#vindex-view .vindex-list::-webkit-scrollbar-track { border-radius: 99px; background: rgba(255, 255, 255, 0.1); }
+
+#vindex-view .vindex-list .vindex-button {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: 9px;
+  min-height: 54px;
+  padding: 5px 8px;
+  border-radius: 9px;
+  text-align: left;
+}
+
+#vindex-view .vindex-list .vindex-gallery-art {
+  grid-row: 1 / span 3;
+  width: 54px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+#vindex-view .vindex-list .vindex-gallery-art > .collectible-art { height: 44px; }
+#vindex-view .vindex-list .vindex-row-number { grid-column: 2; align-self: end; color: var(--vindex-gold); font-size: 0.64rem; }
+#vindex-view .vindex-list .vindex-button strong { grid-column: 2; align-self: center; color: #fff; font-size: clamp(0.76rem, 1.05cqw, 0.94rem); }
+#vindex-view .vindex-list .vindex-button em { grid-column: 2; color: rgba(223, 237, 248, 0.65); font: 700 0.62rem var(--font-ui); text-transform: uppercase; }
+
+#vindex-view .vindex-list .vindex-line-row { grid-template-rows: 1fr; }
+#vindex-view .vindex-list .vindex-line-copy { display: grid; align-content: center; gap: 3px; min-width: 0; }
+#vindex-view .vindex-list .vindex-line-copy strong,
+#vindex-view .vindex-list .vindex-line-copy em { grid-column: auto; }
+
+.fusion-line-row {
+  border: 2px solid transparent !important;
+  background: linear-gradient(rgba(7, 16, 27, 0.91), rgba(7, 16, 27, 0.91)) padding-box, conic-gradient(from 0deg, #ff6289, #ffc857, #6ee7a8, #52c7ff, #a78bfa, #ff6289) border-box !important;
+  background-size: 100% 100%, 220% 220% !important;
+  animation: vindexFusionShimmer 7s linear infinite;
+}
+
+@keyframes vindexFusionShimmer { to { background-position: 0 0, 220% 0; } }
+
+#vindex-view .vindex-stage .vindex-detail {
+  grid-area: detail;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 18%);
+  grid-template-rows: auto minmax(180px, 1fr) auto auto auto auto;
+  grid-template-areas:
+    "head stamps"
+    "art stamps"
+    "plate stamps"
+    "copy stamps"
+    "actions stamps"
+    "family family";
+  gap: 12px;
+  overflow: hidden;
+}
+
+#vindex-view .vindex-preview-head { position: static; grid-area: head; width: auto; }
+#vindex-view .vindex-preview-head h2 { white-space: normal; color: #fff; font-size: clamp(1.25rem, 2.45cqw, 2.7rem); }
+#vindex-view .vindex-preview-head span { color: rgba(238, 247, 255, 0.76); font-size: 0.76rem; }
+
+#vindex-view .vindex-class-stamp,
+#vindex-view .vindex-type-stamp {
+  position: static;
+  width: min(100%, 118px);
+  height: auto;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.32));
+}
+
+#vindex-view .vindex-stamp-column {
+  grid-area: stamps;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  gap: 12px;
+  min-width: 0;
+}
+
+#vindex-view .vindex-class-stamp { flex: 0 0 auto; }
+#vindex-view .vindex-type-stamp { display: grid; justify-items: center; align-content: center; gap: 12px; }
+#vindex-view .vindex-type-stamp img { width: min(100%, 110px); height: auto; }
+
+#vindex-view .vindex-stage .vindex-art {
+  position: relative;
+  grid-area: art;
+  inset: auto;
+  width: auto;
+  height: auto;
+  min-height: 180px;
+  overflow: visible;
+}
+
+#vindex-view .vindex-plate-wrap { position: static; grid-area: plate; width: min(100%, 380px); justify-self: center; transform: none; }
+#vindex-view .vindex-stage .vindex-copy { position: static; grid-area: copy; align-items: flex-start; padding: 0; text-align: left; }
+#vindex-view .vindex-profile-actions { grid-area: actions; }
+#vindex-view .vindex-family { grid-area: family; min-width: 0; }
+
+#vindex-view .vindex-filter-panel {
+  grid-area: filters;
+  align-content: start;
+  height: auto;
+  overflow: auto;
+}
+
+#vindex-view .vindex-filter-buttons,
+#vindex-view .vindex-progress { transform: none; }
+
+#vindex-view .vindex-progress { color: #f4f8fc; }
+#vindex-view .vindex-progress p { background: rgba(255, 255, 255, 0.14); }
+#vindex-view .vindex-progress strong { color: #fff; }
+
+.vindex-fusion-family { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.vindex-fusion-family > b { color: var(--vindex-gold); font-size: 1.15rem; }
+
+@media (max-width: 720px) {
+  #vindex-view .vindex-shell { padding: 0; }
+  #vindex-view .vindex-stage {
+    width: 100%;
+    min-height: 100svh;
+    aspect-ratio: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: "back" "list" "detail" "filters";
+    gap: 10px;
+    padding: 12px;
+    background-image: linear-gradient(180deg, rgba(243, 250, 255, 0.14), rgba(6, 16, 26, 0.38)), url("assets/vindex/vindex-bg-phone.png"), url("assets/vindex/vindex-bg.png");
+    background-size: cover;
+  }
+
+  #vindex-view .vindex-list-panel { grid-template-rows: auto auto auto; }
+  .vindex-list-disclosure { height: auto; }
+  .vindex-list-disclosure > summary { display: block; padding: 8px 0; color: #fff; font: 900 0.78rem var(--font-ui); cursor: pointer; }
+  .vindex-list-disclosure:not([open]) .vindex-list { display: none; }
+  #vindex-view .vindex-stage .vindex-list { max-height: min(42svh, 360px); }
+  #vindex-view .vindex-stage .vindex-detail {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(220px, 44svh) auto auto auto auto auto;
+    grid-template-areas: "head" "art" "stamps" "plate" "copy" "actions" "family";
+  }
+  #vindex-view .vindex-stamp-column { grid-area: stamps; flex-direction: column; align-items: center; justify-content: center; }
+  #vindex-view .vindex-type-stamp { width: min(100%, 96px); }
+  #vindex-view .vindex-stage .vindex-copy { align-items: center; text-align: center; }
+  #vindex-view .vindex-filter-panel { grid-template-columns: 1fr 1fr; align-items: start; }
+  #vindex-view .vindex-filter-buttons { grid-column: 1; }
+  #vindex-view .vindex-progress { grid-column: 2; }
+  #vindex-view .vindex-recent,
+  #vindex-view .vindex-memories-button,
+  #vindex-view .vindex-memories-panel { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fusion-line-row { animation: none; background-position: 0 0, 0 0; }
+}
+
 .character-frame {
   display: grid;
   min-height: 320px;
@@ -9967,6 +10253,13 @@ small {
    THE FORGE — menu card, view, animation, medallion popups
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Animation audit: the old Forge scene positioned the vat, platform, cover and
+   magnet from unrelated viewport percentages, so layers could miss each other.
+   VINSync independently positioned its tube, arm, car and port slot; its card
+   hover also sent the tube to bottom:75%, outside the card. The variables and
+   beat states below give each stack a shared stage so every transition remains
+   visible, connected to the previous position, and tunable in one place. */
+
 /* ── Forge menu card (in Garage) ──────────────────────────────────────────── */
 .forge-menu-card {
   position: relative;
@@ -11075,7 +11368,7 @@ small {
 
 .spindell-labs-card:hover::after,
 .spindell-labs-card:focus-visible::after {
-  bottom: 75%;
+  bottom: calc(18% + 24px);
 }
 
 .spindell-labs-view .section-heading p {
@@ -11316,6 +11609,344 @@ small {
 
 .spindell-key-sync-animation {
   --unlock-glow: rgba(82, 199, 255, 0.45);
+}
+
+/* ── Forge and VINSync alignment pass ───────────────────────────────────── */
+.forge-fullscreen-overlay {
+  --forge-stage-x: 50%;
+  --forge-stage-y: clamp(43%, 50vh, 53%);
+  --forge-platform-w: clamp(250px, 31vw, 430px);
+  --forge-cover-w: clamp(325px, 39vw, 545px);
+  --forge-car-w: clamp(205px, 24vw, 338px);
+  --forge-magnet-w: clamp(122px, 14vw, 198px);
+  --forge-cover-y: calc(var(--forge-stage-y) - clamp(76px, 8vw, 122px));
+  --forge-magnet-y: calc(var(--forge-cover-y) - clamp(128px, 14vw, 208px));
+  --forge-rim-y: clamp(54%, 62vh, 66%);
+  --forge-travel-in: 78vh;
+  --forge-travel-out: -112vh;
+}
+
+.forge-fs-anim-area {
+  overflow: hidden;
+}
+
+.forge-fs-vat.forge-shake {
+  animation: forgeVatShake 0.22s ease-in-out infinite, forgeVatMoltenPulse 0.48s ease-in-out infinite alternate;
+}
+
+@keyframes forgeVatMoltenPulse {
+  from { filter: brightness(1) drop-shadow(0 0 0 rgba(255, 119, 35, 0)); }
+  to { filter: brightness(1.22) drop-shadow(0 0 28px rgba(255, 119, 35, 0.72)); }
+}
+
+.forge-anim-medallion {
+  left: var(--forge-stage-x);
+  top: calc(var(--forge-rim-y) - clamp(172px, 22vh, 250px));
+  z-index: 28;
+}
+
+.forge-anim-medallion.step-drop {
+  top: var(--forge-rim-y);
+  z-index: 14;
+}
+
+.forge-anim-platform {
+  width: var(--forge-platform-w);
+  left: var(--forge-stage-x);
+  top: var(--forge-stage-y);
+  transform: translate(-50%, var(--forge-travel-in));
+}
+
+.forge-anim-platform.step-rise {
+  transform: translate(-50%, 0);
+}
+
+.forge-anim-cover {
+  width: var(--forge-cover-w);
+  left: var(--forge-stage-x);
+  top: var(--forge-cover-y);
+  transform: translate(-50%, var(--forge-travel-in));
+}
+
+.forge-anim-cover.step-rise {
+  transform: translate(-50%, 0);
+}
+
+.forge-anim-cover.step-lift,
+.forge-anim-cover.step-gone {
+  transform: translate(-50%, var(--forge-travel-out));
+}
+
+.forge-anim-car-reveal {
+  width: var(--forge-car-w);
+  left: var(--forge-stage-x);
+  top: calc(var(--forge-stage-y) - clamp(28px, 3vw, 48px));
+  z-index: 16;
+}
+
+.forge-anim-car-reveal .car {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  height: clamp(148px, 17vw, 244px);
+  transform: none;
+}
+
+.forge-anim-car-reveal .car-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: none;
+}
+
+.forge-anim-magnet {
+  width: var(--forge-magnet-w);
+  left: var(--forge-stage-x);
+  top: var(--forge-magnet-y);
+  transform: translate(-50%, var(--forge-travel-out));
+}
+
+.forge-anim-magnet.step-magnet-drop {
+  transform: translate(-50%, 0);
+}
+
+.forge-anim-magnet.step-magnet-lift,
+.forge-anim-magnet.step-gone {
+  transform: translate(-50%, var(--forge-travel-out));
+}
+
+.forge-anim-smoke {
+  bottom: calc(100% - var(--forge-rim-y));
+  z-index: 26;
+}
+
+.forge-anim-smoke.step-smoke {
+  animation: forgeSmokeRise 0.9s ease-out 0s 2 forwards;
+}
+
+/* Every VINSync layer is anchored to the same port socket and tube dimensions. */
+.spindell-key-sync-animation .forge-fs-anim-area {
+  --sync-port-socket-bottom: clamp(126px, 25vh, 286px);
+  --sync-tube-w: clamp(190px, 26vw, 360px);
+  --sync-tube-h: clamp(276px, 37.7vw, 522px);
+  --sync-tube-top: calc(100% - var(--sync-port-socket-bottom) - var(--sync-tube-h));
+  --sync-arm-contact-top: calc(var(--sync-tube-top) - clamp(18px, 2.3vw, 34px));
+  --sync-travel: clamp(420px, 92vh, 980px);
+  --sync-slot-top: calc(100% - var(--sync-port-socket-bottom) + clamp(4px, 1.2vw, 14px));
+  --sync-car-bottom: clamp(60px, 8vw, 110px);
+}
+
+.spindell-sync-idle-tube,
+.spindell-sync-tube-anim {
+  left: 50%;
+  bottom: var(--sync-port-socket-bottom);
+  width: var(--sync-tube-w);
+  transform: translateX(-50%);
+}
+
+.spindell-sync-idle-tube.spindell-sync-tube-lift {
+  bottom: var(--sync-port-socket-bottom);
+  transform: translateX(-50%) translateY(calc(-1 * var(--sync-travel)));
+  transition: transform 0.82s cubic-bezier(0.44, 0, 1, 0.56);
+}
+
+.spindell-sync-medallion {
+  left: 50%;
+  top: calc(var(--sync-slot-top) - clamp(194px, 26vh, 310px));
+}
+
+.spindell-sync-medallion.spindell-sync-into-slot {
+  top: var(--sync-slot-top);
+}
+
+.spindell-sync-key {
+  left: 50%;
+  top: calc(var(--sync-slot-top) - clamp(180px, 24vh, 290px));
+}
+
+.spindell-sync-key.spindell-sync-key-active {
+  top: var(--sync-slot-top);
+}
+
+.spindell-sync-tube-anim.spindell-sync-new-tube-above {
+  bottom: var(--sync-port-socket-bottom);
+  transform: translateX(-50%) translateY(calc(-1 * var(--sync-travel)));
+}
+
+.spindell-sync-tube-anim.spindell-sync-new-tube-descend {
+  bottom: var(--sync-port-socket-bottom);
+  transform: translateX(-50%);
+  transition: transform 0.82s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spindell-sync-tube-car-wrap {
+  left: 50%;
+  bottom: calc(var(--sync-port-socket-bottom) + var(--sync-car-bottom));
+  width: clamp(120px, 16vw, 220px);
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+.spindell-sync-tube-car-wrap.spindell-sync-new-tube-above {
+  bottom: calc(var(--sync-port-socket-bottom) + var(--sync-car-bottom));
+  transform: translateX(-50%) translateY(calc(-1 * var(--sync-travel)));
+}
+
+.spindell-sync-tube-car-wrap.spindell-sync-new-tube-descend {
+  bottom: calc(var(--sync-port-socket-bottom) + var(--sync-car-bottom));
+  margin: 0;
+  transform: translateX(-50%);
+  transition: transform 0.82s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spindell-sync-arm {
+  left: 50%;
+  top: var(--sync-arm-contact-top);
+  width: clamp(170px, 23vw, 320px);
+  transform: translate(-50%, calc(-1 * var(--sync-travel)));
+}
+
+.spindell-sync-arm.spindell-sync-arm-descend,
+.spindell-sync-arm.spindell-sync-arm-redescend {
+  top: var(--sync-arm-contact-top);
+  transform: translate(-50%, 0);
+}
+
+.spindell-sync-arm.spindell-sync-tube-lift,
+.spindell-sync-arm.spindell-sync-arm-retract {
+  top: var(--sync-arm-contact-top);
+  transform: translate(-50%, calc(-1 * var(--sync-travel)));
+}
+
+.spindell-sync-arm.spindell-sync-arm-retract {
+  opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.44, 0, 1, 0.56), opacity 0.45s ease;
+}
+
+/* Garage-card motion is deliberately small and stays within each clipped card. */
+.forge-menu-card:not(.spindell-labs-card)::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 28%;
+  width: 48%;
+  height: 34%;
+  z-index: 1;
+  opacity: 0;
+  transform: translate(-50%, 10px) scale(0.72);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 185, 100, 0.28), rgba(255, 111, 39, 0.12) 42%, transparent 70%);
+  filter: blur(7px);
+  pointer-events: none;
+}
+
+.forge-menu-card:not(.spindell-labs-card):is(:hover, :focus-visible) {
+  transform: none;
+}
+
+.forge-menu-card:not(.spindell-labs-card):is(:hover, :focus-visible) .forge-menu-card-vat {
+  filter: brightness(1.28) drop-shadow(0 0 18px rgba(255, 128, 38, 0.72));
+}
+
+.forge-menu-card:not(.spindell-labs-card):is(:hover, :focus-visible)::before {
+  opacity: 1;
+  animation: forgeCardSteam 1.15s ease-out both;
+}
+
+@keyframes forgeCardSteam {
+  from { transform: translate(-50%, 12px) scale(0.72); opacity: 0; }
+  35% { opacity: 0.78; }
+  to { transform: translate(-50%, -18px) scale(1.1); opacity: 0; }
+}
+
+.spindell-labs-card:is(:hover, :focus-visible) {
+  transform: none;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.42), 0 0 24px rgba(82, 199, 255, 0.32);
+}
+
+.spindell-labs-card::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  width: min(46%, 220px);
+  height: 30%;
+  z-index: 1;
+  transform: translateX(-50%);
+  opacity: 0.18;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(126, 221, 255, 0.48), transparent 68%);
+  filter: blur(8px);
+  transition: opacity 0.28s ease, filter 0.28s ease;
+  pointer-events: none;
+}
+
+.spindell-labs-card:is(:hover, :focus-visible)::before {
+  opacity: 0.82;
+  filter: blur(11px) brightness(1.25);
+}
+
+.spindell-labs-card:hover::after,
+.spindell-labs-card:focus-visible::after {
+  bottom: calc(18% + 24px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-anim-platform,
+  .forge-anim-cover,
+  .forge-anim-magnet {
+    transform: translate(-50%, 0);
+  }
+
+  .forge-anim-platform.step-rise,
+  .forge-anim-cover.step-rise,
+  .forge-anim-cover.step-lift,
+  .forge-anim-cover.step-gone,
+  .forge-anim-magnet.step-magnet-drop,
+  .forge-anim-magnet.step-magnet-lift,
+  .forge-anim-magnet.step-gone,
+  .spindell-sync-idle-tube.spindell-sync-tube-lift,
+  .spindell-sync-tube-anim.spindell-sync-new-tube-above,
+  .spindell-sync-tube-car-wrap.spindell-sync-new-tube-above,
+  .spindell-sync-arm.spindell-sync-arm-descend,
+  .spindell-sync-arm.spindell-sync-arm-redescend,
+  .spindell-sync-arm.spindell-sync-tube-lift,
+  .spindell-sync-arm.spindell-sync-arm-retract {
+    transform: translate(-50%, 0);
+    transition: opacity 0.14s ease !important;
+  }
+
+  .spindell-sync-idle-tube.spindell-sync-tube-lift,
+  .spindell-sync-tube-anim.spindell-sync-new-tube-above,
+  .spindell-sync-tube-car-wrap.spindell-sync-new-tube-above {
+    transform: translateX(-50%);
+  }
+
+  .forge-anim-medallion.step-drop {
+    top: calc(var(--forge-rim-y) - clamp(172px, 22vh, 250px));
+    transition: opacity 0.14s ease !important;
+  }
+
+  .spindell-sync-medallion.spindell-sync-into-slot {
+    top: calc(var(--sync-slot-top) - clamp(194px, 26vh, 310px));
+    transition: opacity 0.14s ease !important;
+  }
+
+  .spindell-sync-key.spindell-sync-key-active {
+    top: calc(var(--sync-slot-top) - clamp(180px, 24vh, 290px));
+    transition: opacity 0.14s ease !important;
+  }
+
+  .forge-menu-card:not(.spindell-labs-card):is(:hover, :focus-visible)::before,
+  .spindell-labs-card:hover::after,
+  .spindell-labs-card:focus-visible::after {
+    animation: none;
+    transform: translate(-50%, 0);
+  }
 }
 
 /* Keep city-map overlays in separate lanes: reputation top-left, convoy bottom-right,

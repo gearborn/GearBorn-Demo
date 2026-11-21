@@ -521,9 +521,18 @@
             <div class="vindex-stage">
               <button class="back-link vindex-back-link" data-view="menu" type="button">Back</button>
               <aside class="vindex-list-panel" aria-label="GearBorn list">
-                <label class="vindex-search-label" for="vindex-search">Search the VINdex</label>
+                <div class="vindex-list-toolbar">
+                  <label class="vindex-search-label" for="vindex-search">Search the VINdex</label>
+                  <div class="vindex-view-toggle" id="vindex-view-mode" role="group" aria-label="VINdex list view">
+                    <button type="button" data-vindex-view="number">By number</button>
+                    <button type="button" data-vindex-view="line">By line</button>
+                  </div>
+                </div>
                 <input class="vindex-search" id="vindex-search" type="search" placeholder="Search discovered GearBorn" autocomplete="off">
-                <div class="vindex-list" id="vindex-list"></div>
+                <details class="vindex-list-disclosure" open>
+                  <summary>GearBorn list</summary>
+                  <div class="vindex-list" id="vindex-list"></div>
+                </details>
               </aside>
               <section class="vindex-detail" aria-label="Selected GearBorn">
                 <div class="vindex-preview-head">
@@ -531,8 +540,10 @@
                   <h2 id="vindex-name"></h2>
                   <span id="vindex-line"></span>
                 </div>
-                <img class="vindex-class-stamp" id="vindex-class-stamp" alt="" hidden>
-                <div class="vindex-type-stamp" id="vindex-type-stamp" hidden></div>
+                <div class="vindex-stamp-column">
+                  <img class="vindex-class-stamp" id="vindex-class-stamp" alt="" hidden>
+                  <div class="vindex-type-stamp" id="vindex-type-stamp" hidden></div>
+                </div>
                 <div class="vindex-art" id="vindex-art"></div>
                 <div class="vindex-plate-wrap" id="vindex-plate"></div>
                 <div class="vindex-copy">
