@@ -633,10 +633,9 @@ body.mode-active .main-menu-button {
 
 .spin-wallet strong { font-size: 0.82rem; font-weight: 950; }
 .spin-coin {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
-  filter: drop-shadow(0 0 5px rgba(155, 231, 255, 0.42));
 }
 .gas-tank {
   position: relative;
@@ -14967,6 +14966,11 @@ canvas,
     height: 28px;
   }
 
+  .spin-wallet .spin-coin {
+    width: 28px;
+    height: 28px;
+  }
+
   .settings-gear-button {
     width: 50px;
   }
@@ -17636,7 +17640,8 @@ body {
 
   .topbar-left .wallet-unit { display: none; }
   .topbar-left .wallet-amount { font: inherit; }
-  .topbar-left .spin-coin { width: 16px; height: 16px; }
+  .topbar-left .spin-coin { width: 22px; height: 22px; }
+  .topbar-left .sprox-coin { width: 22px; height: 22px; }
   .topbar-left .gas-icon { font-size: 0.8rem; }
   .topbar-left .gas-meter { display: none; }
   .topbar-left .gas-next { display: none; }

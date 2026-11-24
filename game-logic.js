@@ -7851,7 +7851,7 @@ const forgeMedallionMap = {
   "butcher-hog":        "assets/medallions/medallion-sauspin.png",
   "tiger-cart":         "assets/medallions/medallion-puttercat.png",
   "gb-growler":         "assets/medallions/medallion-cruzdog.png",
-  "armadaddio":         "assets/medallions/medallion-mansplore.png",
+  "armadaddio":         "assets/medallions/medallion-manscape.png",
   "electro-beetle":     "assets/medallions/medallion-bertie.png",
   "flavor-coast":       "assets/medallions/medallion-carmieri.png",
   "future-bok":         "assets/medallions/medallion-sprynza.png",
