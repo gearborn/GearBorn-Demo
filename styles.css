@@ -10410,59 +10410,6 @@ small {
   content: none;
 }
 
-/* Background image fills the full screen */
-.forge-fs-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  z-index: 0;
-}
-
-/* Vat sits at the bottom of the screen */
-.forge-fs-vat {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(760px, 94vw);
-  z-index: 24;
-  pointer-events: none;
-  transform-origin: center bottom;
-}
-
-.forge-fs-vat.forge-shake {
-  animation: forgeVatShake 0.22s ease-in-out infinite;
-}
-
-@keyframes forgeVatShake {
-  0%   { transform: translateX(calc(-50% - 5px)) rotate(-1.5deg); }
-  25%  { transform: translateX(calc(-50% + 5px)) rotate(1.5deg); }
-  50%  { transform: translateX(calc(-50% - 4px)) rotate(-1deg); }
-  75%  { transform: translateX(calc(-50% + 4px)) rotate(1deg); }
-  100% { transform: translateX(calc(-50% - 5px)) rotate(-1.5deg); }
-}
-
-/* Vat masking clip: hides everything below the lava line.
-   The vat image has lava roughly at 35% from the top.
-   Anything behind the vat that needs to come out from the lava uses z-index < 20
-   but is clipped so it appears to emerge from within. */
-.forge-fs-vat-mask {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(760px, 94vw);
-  /* height = vat's lava level — approx 62% of the vat image height from bottom */
-  height: 48%;
-  z-index: 15;
-  background: transparent;
-  pointer-events: none;
-  /* This acts as a "keep-behind" spacer — the vat (z:20) renders on top naturally */
-}
-
 /* ── Animation layers (all inside .forge-fs-anim-area) ──────────────────── */
 .forge-fs-anim-area {
   position: absolute;
@@ -11632,15 +11579,6 @@ small {
 
 .forge-fs-anim-area {
   overflow: hidden;
-}
-
-.forge-fs-vat.forge-shake {
-  animation: forgeVatShake 0.22s ease-in-out infinite, forgeVatMoltenPulse 0.48s ease-in-out infinite alternate;
-}
-
-@keyframes forgeVatMoltenPulse {
-  from { filter: brightness(1) drop-shadow(0 0 0 rgba(255, 119, 35, 0)); }
-  to { filter: brightness(1.22) drop-shadow(0 0 28px rgba(255, 119, 35, 0.72)); }
 }
 
 .forge-anim-medallion {
@@ -18268,3 +18206,286 @@ textarea:focus-visible {
 .reward-pop,
 .reward,
 .status-reward { color: var(--gb-gold); }
+
+/* Fullscreen Forge/VINSync animation stage: every scene layer shares 1920x1080 space. */
+.forge-fullscreen-overlay {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #14213D;
+}
+
+.forge-fullscreen-overlay.active { display: flex; }
+
+.forge-fs-anim-area {
+  position: relative;
+  width: min(100vw, 177.777svh);
+  height: min(100svh, 56.25vw);
+  max-width: 1920px;
+  max-height: 1080px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.forge-stage-layer,
+.forge-stage-rising,
+.spindell-stage-tube-group,
+.spindell-stage-flash,
+.forge-stage-burst,
+.forge-stage-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.forge-stage-layer { display: block; object-fit: contain; }
+.forge-stage-layer.asset-missing,
+.spindell-stage-medallion.asset-missing,
+.spindell-stage-key.asset-missing,
+.forge-stage-medallion.asset-missing,
+.forge-stage-car.asset-missing,
+.spindell-stage-car.asset-missing {
+  background: radial-gradient(circle, rgba(255,200,87,.55), rgba(82,199,255,.22) 48%, transparent 72%);
+}
+
+.forge-stage-bg,
+.spindell-stage-bg { z-index: 1; }
+.forge-stage-spring-back,
+.spindell-stage-port-back { z-index: 2; transition: filter .42s ease; }
+.forge-stage-rising,
+.spindell-stage-tube-group { z-index: 3; }
+.forge-stage-spring-front,
+.spindell-stage-port-front { z-index: 5; }
+.forge-stage-wisps { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.forge-stage-burst,
+.spindell-stage-flash { z-index: 8; opacity: 0; }
+.forge-stage-confetti { z-index: 12; }
+
+.forge-stage-rising {
+  z-index: 4;
+  clip-path: inset(0 0 31.02% 0);
+  transform: translateY(31.48%);
+  transition: transform .88s cubic-bezier(.2, 1.32, .35, 1);
+}
+
+.forge-stage-rising.is-risen { transform: translateY(0); }
+
+.forge-stage-car {
+  position: absolute;
+  z-index: 3;
+  left: 36.46%;
+  top: 23.15%;
+  width: 27.08%;
+  height: 30.56%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transform: scale(.92, 1.08);
+  transform-origin: 50% 100%;
+}
+
+.forge-stage-shell { z-index: 4; transform-origin: 50% 55.56%; }
+.forge-stage-shell.is-wobbling { animation: forgeStageShellWobble .7s ease-in-out both; }
+.forge-stage-shell-left.is-hatched { animation: forgeStageShellLeft .68s cubic-bezier(.16,.8,.28,1) forwards; }
+.forge-stage-shell-right.is-hatched { animation: forgeStageShellRight .68s cubic-bezier(.16,.8,.28,1) forwards; }
+
+.forge-stage-car.is-revealed { animation: forgeStageCarHop .68s cubic-bezier(.2,1.36,.34,1) both; }
+.forge-stage-spring-back.is-glowing { filter: brightness(1.35); }
+
+.forge-stage-medallion,
+.spindell-stage-medallion,
+.spindell-stage-key {
+  position: absolute;
+  z-index: 10;
+  object-fit: contain;
+  opacity: 0;
+  transform-origin: 50% 50%;
+}
+
+.forge-stage-medallion {
+  left: calc(50% - 3.91%);
+  top: calc(38.89% - 6.94%);
+  width: 7.82%;
+  height: 13.89%;
+  transform: scale(0) rotate(-180deg);
+}
+
+.forge-stage-medallion.is-in { animation: forgeStageMedallionIn .5s cubic-bezier(.2,1.5,.38,1) forwards; }
+.forge-stage-medallion.is-sinking { animation: forgeStageMedallionSink .52s cubic-bezier(.6,0,.9,.2) forwards; }
+
+.forge-stage-splash {
+  position: absolute;
+  left: 50%;
+  top: 66.67%;
+  z-index: 9;
+  width: 5%;
+  aspect-ratio: 1;
+  border: 8px solid rgba(255,200,87,.9);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.2);
+}
+.forge-stage-splash.is-active { animation: forgeStageSplash .55s ease-out both; }
+
+.forge-stage-wisps img {
+  position: absolute;
+  left: var(--wisp-x);
+  top: 61%;
+  width: 4.7%;
+  height: auto;
+  opacity: 0;
+  transform: translate(-50%, 0) scale(.6);
+}
+.forge-stage-wisps.is-active img { animation: forgeStageWisp 1.4s ease-out var(--wisp-delay) both; }
+
+.forge-stage-burst {
+  left: 50%;
+  top: 52%;
+  width: 24%;
+  height: 42%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.96), rgba(255,220,122,.72) 30%, transparent 70%);
+  transform: translate(-50%, -50%) scale(.25);
+}
+.forge-stage-burst.is-active { animation: forgeStageBurst .6s ease-out both; }
+
+.forge-stage-confetti i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--confetti);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.2);
+}
+.forge-stage-confetti.is-active i { animation: forgeStageConfetti .9s cubic-bezier(.15,.8,.3,1) var(--delay) both; }
+
+.forge-stage-name-sign {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  z-index: 13;
+  max-width: 74%;
+  padding: 12px 26px;
+  border: 2px solid #0B1426;
+  border-radius: 999px;
+  background: var(--gb-cream);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 5px 0 #0B1426;
+  color: #14213D;
+  font: 700 clamp(.85rem, 2vw, 1.8rem) var(--font-ui);
+  opacity: 0;
+  text-align: center;
+  transform: translate(-50%, -80px) scale(.8);
+}
+.forge-stage-name-sign.is-visible { animation: forgeStageSign .48s cubic-bezier(.2,1.4,.32,1) both; }
+
+/* VINSync uses the same stacked stage, with the tube and car moving as one group. */
+.spindell-stage-tube-group { z-index: 4; transition: transform .72s cubic-bezier(.18,1.2,.35,1); }
+.spindell-stage-tube-group.is-lifted { transform: translateY(-92.6%); }
+.spindell-stage-tube-group.is-returning { animation: spindellTubeReturn .78s cubic-bezier(.18,1.22,.35,1) both; }
+.spindell-stage-car {
+  position: absolute;
+  z-index: 3;
+  left: 43.23%;
+  top: 57.59%;
+  width: 13.54%;
+  height: 22.22%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.spindell-stage-car.is-visible { opacity: 1; }
+.spindell-stage-arm { z-index: 7; transform: translateY(-35.19%); transition: transform .62s cubic-bezier(.18,1.2,.35,1), filter .18s ease; }
+.spindell-stage-arm.is-down { transform: translateY(0); }
+.spindell-stage-arm.is-gripping { filter: brightness(1.2) drop-shadow(0 0 18px rgba(82,199,255,.85)); transform: scaleX(.94); }
+.spindell-stage-arm.is-lifted { transform: translateY(-92.6%) scaleX(.94); }
+.spindell-stage-arm.is-returning { animation: spindellArmReturn .78s cubic-bezier(.18,1.22,.35,1) both; }
+.spindell-stage-arm.is-retracting { transform: translateY(-92.6%); transition: transform .62s cubic-bezier(.45,0,.85,.25); }
+.spindell-stage-port-front.is-charged { animation: spindellPortPulse .48s ease-in-out infinite alternate; }
+.spindell-stage-port-front.is-flash { animation: spindellPortFlash .42s ease-out both; }
+
+.spindell-stage-medallion {
+  left: calc(50% - 3.13%);
+  top: calc(79.63% - 5.56%);
+  width: 6.25%;
+  height: 11.11%;
+  transform: translateY(-100px) scale(.9);
+}
+.spindell-stage-medallion.is-in { animation: spindellMedallionIn .35s ease-out forwards; }
+.spindell-stage-medallion.is-slotted { animation: spindellMedallionSlot .52s cubic-bezier(.6,0,.9,.2) forwards; }
+
+.spindell-stage-key {
+  left: calc(50% - 3.91%);
+  top: 70%;
+  width: 7.82%;
+  height: 20%;
+  object-position: center bottom;
+  transform: translateY(-260px) rotate(-7deg);
+}
+.spindell-stage-key.is-in { animation: spindellKeyDrop .62s cubic-bezier(.2,1.25,.35,1) forwards; }
+
+.spindell-stage-flash { background: radial-gradient(circle at 50% 70%, rgba(82,199,255,.75), transparent 42%); }
+.spindell-stage-flash.is-flashing { animation: spindellStageFlash .48s ease-out both; }
+.spindell-stage-complete {
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  z-index: 14;
+  width: 28%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.7);
+}
+.spindell-stage-complete.is-visible { animation: spindellCompleteIn .56s cubic-bezier(.2,1.32,.35,1) both; }
+.spindell-stage-complete .vinsync-complete-screen { display: block; width: 100%; height: auto; }
+.spindell-stage-complete .vinsync-pixel-car { position: absolute; left: 50%; top: 35%; width: 30%; transform: translate(-50%, -50%); image-rendering: pixelated; }
+
+.forge-fusion-animation .forge-fs-anim-area { background: #14213D url("assets/forge/forge_anim_bg.png") center / contain no-repeat; }
+
+@keyframes forgeStageMedallionIn { 0% { opacity: 0; transform: scale(0) rotate(-180deg); } 70% { opacity: 1; transform: scale(1.1) rotate(280deg); } 100% { opacity: 1; transform: scale(1) rotate(360deg); } }
+@keyframes forgeStageMedallionSink { to { opacity: 0; transform: translateY(300px) scale(1.16,.62); } }
+@keyframes forgeStageSplash { 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(5); } }
+@keyframes forgeStageWisp { 0% { opacity: 0; transform: translate(-50%, 0) scale(.6); } 18% { opacity: .9; } 100% { opacity: 0; transform: translate(calc(-50% + var(--wisp-drift)), var(--wisp-rise)) scale(1); } }
+@keyframes forgeStageShellWobble { 0%,100% { transform: rotate(0); } 18% { transform: rotate(2deg); } 36% { transform: rotate(-2deg); } 55% { transform: rotate(4deg); } 72% { transform: rotate(-4deg); } 87% { transform: rotate(6deg); } }
+@keyframes forgeStageShellLeft { to { opacity: 0; transform: translate(-220px,120px) rotate(-35deg); } }
+@keyframes forgeStageShellRight { to { opacity: 0; transform: translate(220px,120px) rotate(35deg); } }
+@keyframes forgeStageBurst { 22% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); } }
+@keyframes forgeStageCarHop { 0% { opacity: 0; transform: translateY(44px) scale(.82,1.18); } 55% { opacity: 1; transform: translateY(-34px) scale(1.14,.84); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes forgeStageConfetti { 20% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--r)); } }
+@keyframes forgeStageSign { to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes spindellMedallionIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes spindellMedallionSlot { to { opacity: 0; transform: translateY(104px) scale(.4); } }
+@keyframes spindellTubeReturn { 0% { transform: translateY(-92.6%); } 75% { transform: translateY(2%); } 100% { transform: translateY(0); } }
+@keyframes spindellArmReturn { 0% { transform: translateY(-92.6%) scaleX(.94); } 75% { transform: translateY(2%) scaleX(.94); } 100% { transform: translateY(0) scaleX(.94); } }
+@keyframes spindellPortPulse { to { filter: brightness(1.35) drop-shadow(0 0 16px rgba(82,199,255,.75)); } }
+@keyframes spindellPortFlash { 35% { filter: brightness(1.7) drop-shadow(0 0 30px rgba(82,199,255,.95)); } }
+@keyframes spindellKeyDrop { 75% { opacity: 1; transform: translateY(0) rotate(2deg); } 100% { opacity: 1; transform: translateY(8px) rotate(0); } }
+@keyframes spindellStageFlash { 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+@keyframes spindellCompleteIn { to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-stage-rising,
+  .spindell-stage-tube-group,
+  .spindell-stage-arm,
+  .forge-stage-layer,
+  .forge-stage-medallion,
+  .spindell-stage-medallion,
+  .spindell-stage-key,
+  .forge-stage-car,
+  .spindell-stage-car,
+  .forge-stage-name-sign,
+  .spindell-stage-complete { animation: none !important; transition-duration: .12s !important; }
+  .forge-stage-wisps,
+  .forge-stage-confetti { display: none; }
+  .forge-stage-shell.is-hatched { opacity: 0; }
+  .forge-stage-car.is-revealed,
+  .spindell-stage-car.is-visible,
+  .forge-stage-name-sign.is-visible,
+  .spindell-stage-complete.is-visible { opacity: 1; transform: none; }
+}

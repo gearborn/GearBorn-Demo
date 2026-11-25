@@ -8010,19 +8010,12 @@ function closeFusionGambleConfirm() {
 async function runFusionReveal(recipe, parentAId, parentBId) {
   const overlay = document.getElementById("forge-fullscreen");
   const area = document.getElementById("forge-fs-anim-area");
-  const fsVat = document.getElementById("forge-fs-vat");
   if (!overlay || !area || !effectsAllowed()) {
     showForgeUnlockedPopup(recipe.id);
     return;
   }
   const step = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(70, Math.round(ms))));
   try {
-    const fsBg = document.querySelector(".forge-fs-bg");
-    if (fsBg) fsBg.src = activeUnlockHub() === "spindellLabs" ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
-    if (fsVat) {
-      fsVat.src = activeUnlockHub() === "spindellLabs" ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
-      fsVat.alt = activeUnlockHub() === "spindellLabs" ? "Spindell sync port" : "The Forge vat";
-    }
     area.innerHTML = `
       <div class="forge-fusion-reveal-label">FUSION</div>
       <div class="forge-fusion-reveal-parent parent-a">${forgeMedallionMarkup(parentAId, fusionParentName(parentAId))}</div>
@@ -8126,9 +8119,7 @@ function openForge() {
       : "Forge Unlock. The Forge answers. Guide: Auntie.";
   }
   const sceneBg = document.querySelector(".forge-bg-img");
-  const fullBg = document.querySelector(".forge-fs-bg");
   if (sceneBg) sceneBg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
-  if (fullBg) fullBg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
   if (el.forgeVatImg) {
     el.forgeVatImg.src = spindell ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
     el.forgeVatImg.alt = spindell ? "Spindell sync port" : "The Forge vat";
@@ -8231,8 +8222,7 @@ async function runForgeAnimation(carId, options = {}) {
   if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = true;
 
   const overlay = document.getElementById("forge-fullscreen");
-  const area    = document.getElementById("forge-fs-anim-area");
-  const fsVat   = document.getElementById("forge-fs-vat");
+  const area = document.getElementById("forge-fs-anim-area");
   if (!overlay || !area) {
     forgeAnimating = false;
     if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = false;
@@ -8245,14 +8235,8 @@ async function runForgeAnimation(carId, options = {}) {
   const step = (ms) => new Promise((r) => setTimeout(r, Math.max(80, Math.round(ms * speed))));
   const add = (node, className) => node?.classList.add(className);
   const remove = (node, className) => node?.classList.remove(className);
+  const stageImage = (className, src, alt = "") => `<img class="${className}" src="${src}" alt="${alt}" onerror="this.classList.add('asset-missing')">`;
   const runSpindellKeySyncSequence = async () => {
-    const fsBg = document.querySelector(".forge-fs-bg");
-    if (fsBg) fsBg.src = "assets/spindell/spindell-bg.png";
-    if (fsVat) {
-      fsVat.src = "assets/spindell/spindell-sync-port.png";
-      fsVat.alt = "Spindell sync port";
-    }
-
     const lineRoot = (typeof evolutionLineRootForCar === "function" ? evolutionLineRootForCar(carId) : null) || carId;
     const firstForm = evolutionByIndex(carId, 0);
     const firstFormSlug = (firstForm?.name || lineRoot).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -8262,69 +8246,59 @@ async function runForgeAnimation(carId, options = {}) {
     const carDisplaySrc = imageFor(firstForm, "display") || "";
 
     area.innerHTML = `
-      <img class="spindell-sync-layer spindell-sync-idle-tube" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
-      <img class="spindell-sync-layer spindell-sync-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
-      <img class="spindell-sync-layer spindell-sync-arm" src="assets/spindell/spindell-magnetic-arm.png" alt="" onerror="this.classList.add('asset-missing')">
-      <img class="spindell-sync-layer spindell-sync-tube-anim" src="assets/spindell/spindell-sync-tube.png" alt="" onerror="this.classList.add('asset-missing')">
-      <div class="spindell-sync-layer spindell-sync-tube-car-wrap" aria-hidden="true">
-        <img class="spindell-sync-car" src="${carDisplaySrc}" alt="" onerror="this.classList.add('asset-missing')">
+      ${stageImage("forge-stage-layer spindell-stage-bg", "assets/spindell/spindell-anim-bg.png")}
+      ${stageImage("forge-stage-layer spindell-stage-port-back", "assets/spindell/spindell-sync-port-back.png")}
+      <div class="spindell-stage-tube-group">
+        ${stageImage("forge-stage-layer spindell-stage-tube-back", "assets/spindell/spindell-sync-tube-back.png")}
+        <img class="spindell-stage-car" src="${carDisplaySrc}" alt="" onerror="this.classList.add('asset-missing')">
+        ${stageImage("forge-stage-layer spindell-stage-tube-front", "assets/spindell/spindell-sync-tube-front.png")}
       </div>
-      <img class="spindell-sync-layer spindell-sync-key" src="assets/items/gearborn-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
-      <div class="spindell-sync-layer spindell-sync-flash-layer"></div>
-      <div class="spindell-sync-layer spindell-key-display">
+      ${stageImage("forge-stage-layer spindell-stage-port-front", "assets/spindell/spindell-sync-port-front.png")}
+      ${stageImage("forge-stage-layer spindell-stage-arm", "assets/spindell/spindell-magnetic-arm.png")}
+      <img class="spindell-stage-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+      <img class="spindell-stage-key" src="assets/spindell/spindell-anim-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
+      <div class="spindell-stage-flash"></div>
+      <div class="spindell-stage-complete">
         <img class="vinsync-complete-screen" src="assets/spindell/vinsync-complete-screen.png" alt="" onerror="this.classList.add('asset-missing')">
         ${isFusionLine(lineRoot) ? "" : `<img class="vinsync-pixel-car" src="${pixelCarSrc}" onerror="if(this.dataset.fallback==='line'){this.hidden=true}else{this.dataset.fallback='line';this.src='${pixelLineFallback}'}" alt="">`}
       </div>
     `;
-    const getSync = (cls) => area.querySelector("." + cls);
-    const idleTubeEl = getSync("spindell-sync-idle-tube");
-    const medallionEl = getSync("spindell-sync-medallion");
-    const armEl = getSync("spindell-sync-arm");
-    const tubeEl = getSync("spindell-sync-tube-anim");
-    const carWrapEl = getSync("spindell-sync-tube-car-wrap");
-    const keyEl = getSync("spindell-sync-key");
-    const flashEl = getSync("spindell-sync-flash-layer");
-    const displayEl = getSync("spindell-key-display");
+    const tube = area.querySelector(".spindell-stage-tube-group");
+    const car = area.querySelector(".spindell-stage-car");
+    const medallion = area.querySelector(".spindell-stage-medallion");
+    const arm = area.querySelector(".spindell-stage-arm");
+    const port = area.querySelector(".spindell-stage-port-front");
+    const key = area.querySelector(".spindell-stage-key");
+    const flash = area.querySelector(".spindell-stage-flash");
+    const complete = area.querySelector(".spindell-stage-complete");
 
-    await step(420);
-
-    add(medallionEl, "spindell-sync-active");
+    await step(260);
+    add(medallion, "is-in");
+    await step(520);
+    add(medallion, "is-slotted");
+    add(port, "is-charged");
+    await step(470);
+    add(arm, "is-down");
     await step(620);
-
-    add(medallionEl, "spindell-sync-into-slot");
-    add(fsVat, "spindell-sync-port-power");
-    await step(620);
-
-    await step(280);
-
-    add(armEl, "spindell-sync-arm-descend");
-    await step(700);
-
-    add(armEl, "spindell-sync-arm-clamp");
-    add(idleTubeEl, "spindell-sync-arm-clamp");
-    await step(280);
-
-    add(idleTubeEl, "spindell-sync-tube-lift");
-    add(armEl, "spindell-sync-tube-lift");
-    await step(820);
-
-    await step(280);
-
-    add(tubeEl, "spindell-sync-new-tube-above");
-    add(carWrapEl, "spindell-sync-new-tube-above");
-    void tubeEl.offsetWidth;
-    add(tubeEl, "spindell-sync-new-tube-descend");
-    add(carWrapEl, "spindell-sync-new-tube-descend");
-    await step(820);
-
-    add(flashEl, "spindell-sync-flash");
-    add(armEl, "spindell-sync-arm-retract");
-    await step(620);
-
-    add(keyEl, "spindell-sync-key-active");
+    add(arm, "is-gripping");
+    await step(180);
+    add(tube, "is-lifted");
+    add(arm, "is-lifted");
     await step(720);
-
-    add(displayEl, "spindell-sync-complete");
+    add(car, "is-visible");
+    remove(tube, "is-lifted");
+    remove(arm, "is-lifted");
+    add(tube, "is-returning");
+    add(arm, "is-returning");
+    await step(780);
+    add(flash, "is-flashing");
+    add(port, "is-flash");
+    add(arm, "is-retracting");
+    await step(620);
+    add(key, "is-in");
+    await step(700);
+    add(complete, "is-visible");
+    playGearbornHonk(carId, 0);
     await step(1600);
   };
 
@@ -8339,58 +8313,60 @@ async function runForgeAnimation(carId, options = {}) {
     if (animationType === "spindellKeySync") {
       await runSpindellKeySyncSequence();
     } else {
-      const fsBg = document.querySelector(".forge-fs-bg");
-      if (fsBg) fsBg.src = "assets/forge/forge_bg.png";
-      if (fsVat) {
-        fsVat.src = "assets/forge/forge_vat.png";
-        fsVat.alt = "The Forge vat";
-      }
       area.innerHTML = `
-      <img class="forge-anim-layer forge-anim-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
-      <img class="forge-anim-layer forge-anim-smoke"    src="assets/forge/forge_smoke.png" alt="" onerror="this.classList.add('asset-missing')">
-      <img class="forge-anim-layer forge-anim-platform" src="assets/forge/forge_platform_stage.png" alt="" onerror="this.classList.add('asset-missing')">
-      <div class="forge-anim-layer forge-anim-car-reveal">${carMarkupForEvolution(carId, 0, "display")}</div>
-      <img class="forge-anim-layer forge-anim-cover"    src="assets/forge/forge_cover_stage.png" alt="" onerror="this.classList.add('asset-missing')">
-      <img class="forge-anim-layer forge-anim-magnet"   src="assets/forge/forge_magnet_stage.png" alt="" onerror="this.classList.add('asset-missing')">
+      ${stageImage("forge-stage-layer forge-stage-bg", "assets/forge/forge_anim_bg.png")}
+      ${stageImage("forge-stage-layer forge-stage-spring-back", "assets/forge/forge_spring_back.png")}
+      <div class="forge-stage-rising">
+        ${stageImage("forge-stage-layer forge-stage-dais", "assets/forge/forge_dais.png")}
+        <img class="forge-stage-car" src="${imageFor(evolutionByIndex(carId, 0), "display") || ""}" alt="" onerror="this.classList.add('asset-missing')">
+        ${stageImage("forge-stage-layer forge-stage-shell forge-stage-shell-left", "assets/forge/forge_shell_left.png")}
+        ${stageImage("forge-stage-layer forge-stage-shell forge-stage-shell-right", "assets/forge/forge_shell_right.png")}
+      </div>
+      ${stageImage("forge-stage-layer forge-stage-spring-front", "assets/forge/forge_spring_front.png")}
+      <img class="forge-stage-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+      <div class="forge-stage-splash"></div>
+      <div class="forge-stage-wisps">${Array.from({ length: 6 }, (_, index) => `<img src="assets/forge/forge_wisp.png" style="--wisp-x:${40 + index * 4}%;--wisp-rise:${-300 - index * 38}px;--wisp-drift:${-50 + index * 20}px;--wisp-delay:${index * 85}ms" alt="" onerror="this.classList.add('asset-missing')">`).join("")}</div>
+      <div class="forge-stage-burst"></div>
+      <div class="forge-stage-confetti"></div>
+      <div class="forge-stage-name-sign">${escapeHtml(evolutionByIndex(carId, 0)?.name || carId)} is GearBorn!</div>
     `;
 
-    const get = (cls) => area.querySelector("." + cls);
-    const medallionEl = get("forge-anim-medallion");
-    const platformEl  = get("forge-anim-platform");
-    const coverEl     = get("forge-anim-cover");
-    const magnetEl    = get("forge-anim-magnet");
-    const carEl       = get("forge-anim-car-reveal");
-    const smokeEl     = get("forge-anim-smoke");
+    const medallion = area.querySelector(".forge-stage-medallion");
+    const springBack = area.querySelector(".forge-stage-spring-back");
+    const splash = area.querySelector(".forge-stage-splash");
+    const wisps = area.querySelector(".forge-stage-wisps");
+    const rising = area.querySelector(".forge-stage-rising");
+    const shells = area.querySelectorAll(".forge-stage-shell");
+    const burst = area.querySelector(".forge-stage-burst");
+    const car = area.querySelector(".forge-stage-car");
+    const confetti = area.querySelector(".forge-stage-confetti");
+    const sign = area.querySelector(".forge-stage-name-sign");
+    if (confetti) {
+      const colors = ["#1E9E6A", "#FFC857", "#FAF6EE", "#E46A5A"];
+      confetti.innerHTML = Array.from({ length: 28 }, (_, index) => `<i style="--x:${24 + (index * 29) % 54}%;--y:${42 + (index * 17) % 22}%;--dx:${-170 + (index * 43) % 340}px;--dy:${80 + (index * 37) % 260}px;--r:${-150 + (index * 61) % 300}deg;--delay:${(index % 7) * 28}ms;--confetti:${colors[index % colors.length]}"></i>`).join("");
+    }
 
-    await step(180);
-    add(medallionEl, "step-appear");
-    await step(760);
-    add(medallionEl, "step-drop");
-    await step(820);
-    add(medallionEl, "step-gone");
-
-    add(fsVat, "forge-shake");
-    add(smokeEl, "step-smoke");
-    await step(1800);
-    remove(fsVat, "forge-shake");
-
-    add(platformEl, "step-rise");
-    add(coverEl, "step-rise");
-    await step(1180);
-
-    add(magnetEl, "step-magnet-drop");
-    await step(760);
-    await step(260);
-
-    add(coverEl, "step-lift");
-    add(magnetEl, "step-magnet-lift");
-    await step(820);
-    add(coverEl, "step-gone");
-    add(magnetEl, "step-gone");
-
-    playAudioCue("evolutionReveal");
-    add(carEl, "step-reveal");
-    await step(2800);
+    await step(220);
+    add(medallion, "is-in");
+    await step(620);
+    add(medallion, "is-sinking");
+    add(splash, "is-active");
+    add(springBack, "is-glowing");
+    await step(520);
+    add(wisps, "is-active");
+    await step(620);
+    add(rising, "is-risen");
+    await step(880);
+    shells.forEach((shell) => add(shell, "is-wobbling"));
+    await step(700);
+    shells.forEach((shell) => add(shell, "is-hatched"));
+    add(burst, "is-active");
+    await step(500);
+    add(car, "is-revealed");
+    add(confetti, "is-active");
+    add(sign, "is-visible");
+    playGearbornHonk(carId, 0);
+    await step(1900);
     }
 
     if (preview) return;
@@ -8407,9 +8383,6 @@ async function runForgeAnimation(carId, options = {}) {
   } catch (error) {
     console.warn("Forge animation failed", error);
   } finally {
-    remove(fsVat, "forge-shake");
-    remove(fsVat, "spindell-sync-port-power");
-    if (fsVat) fsVat.src = animationType === "spindellKeySync" ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
     overlay.classList.remove("active");
     overlay.classList.remove("spindell-key-sync-animation", "forge-unlock-animation");
     overlay.setAttribute("aria-hidden", "true");
