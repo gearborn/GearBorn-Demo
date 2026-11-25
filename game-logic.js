@@ -1,34 +1,32 @@
 // ─── GAME LOGIC ─────────────────────────────────────────────────────────────
 
 const soundLibrary = {
-  // TODO audio assets: add these files when final SFX are approved.
-  "ui-click": "assets/audio/ui-click.mp3",
-  "ui-hover": "assets/audio/ui-hover.mp3",
-  "ui-back": "assets/audio/ui-back.mp3",
-  "engine-loop": "assets/audio/engine-loop.mp3",
-  "engine-shift": "assets/audio/engine-shift.mp3",
-  "engine-nitro": "assets/audio/engine-nitro.mp3",
-  "engine-launch": "assets/audio/engine-launch.mp3",
-  "race-countdown-beep": "assets/audio/countdown-beep.mp3",
-  "race-countdown-go": "assets/audio/countdown-go.mp3",
-  "battle-hit": "assets/audio/battle-hit.mp3",
-  "battle-special": "assets/audio/battle-special.mp3",
-  "battle-dodge": "assets/audio/battle-dodge.mp3",
-  "battle-stun": "assets/audio/battle-stun.mp3",
-  "win-jingle": "assets/audio/win-jingle.mp3",
-  "lose-jingle": "assets/audio/lose-jingle.mp3",
-  "bond-up": "assets/audio/bond-up.mp3",
-  "evolve-cue": "assets/audio/evolve-cue.mp3",
-  "rank-up": "assets/audio/rank-up.mp3"
+  "ui-click": null, // TODO new sound
+  "ui-hover": null, // TODO new sound
+  "ui-back": null, // TODO new sound
+  "engine-loop": null, // TODO new sound
+  "engine-shift": null, // TODO new sound
+  "engine-nitro": null, // TODO new sound
+  "engine-launch": null, // TODO new sound
+  "race-countdown-beep": null, // TODO new sound
+  "race-countdown-go": null, // TODO new sound
+  "battle-hit": null, // TODO new sound
+  "battle-special": null, // TODO new sound
+  "battle-dodge": null, // TODO new sound
+  "battle-stun": null, // TODO new sound
+  "win-jingle": null, // TODO new sound
+  "lose-jingle": null, // TODO new sound
+  "bond-up": null, // TODO new sound
+  "evolve-cue": null, // TODO new sound
+  "rank-up": null // TODO new sound
 };
 
 const musicLibrary = {
-  // TODO music assets: these paths fail silently until files exist.
-  "menu-theme": "assets/audio/music-menu.mp3",
-  "race-theme": "assets/audio/music-race.mp3",
-  "battle-theme": "assets/audio/music-battle.mp3",
-  "garage-theme": "assets/audio/music-garage.mp3",
-  "boss-theme": "assets/audio/music-boss.mp3"
+  "menu-theme": null, // TODO new sound
+  "race-theme": null, // TODO new sound
+  "battle-theme": null, // TODO new sound
+  "garage-theme": null, // TODO new sound
+  "boss-theme": null // TODO new sound
 };
 
 let currentMusic = null;
@@ -869,14 +867,8 @@ function evolutionByIndex(carId, evolutionIndex) {
 
 let honkAudioContext = null;
 let honkVisualTimer = null;
-// Per-GearBorn honk overrides. Missing files fall back to the procedural honk.
-// TODO: Fill in starters, Tutorque, bosses, and other forms once approved honks exist.
-const honkSoundOverrides = {
-  honky: "assets/audio/honks/honk-honky-angry.m4a",
-  whiffleton: "assets/audio/honks/honk-whiffleton-angry.m4a",
-  dookingham: "assets/audio/honks/honk-dookingham-angry.m4a",
-  pootin: "assets/audio/honks/honk-pootin-angry.m4a"
-};
+const honkFiles = ["honky", "whiffleton", "dookingham", "pootin"]; // add a slug here when a new honk file lands
+function honkFileFor(slug) { return honkFiles.includes(slug) ? `assets/audio/honks/honk-${slug}.m4a` : ""; }
 
 function hashHonkSignature(value) {
   return [...String(value || "GearBorn")].reduce((total, char) => total + char.charCodeAt(0), 0);
@@ -946,8 +938,8 @@ function playHonkAudioFile(src) {
 function playGearbornHonk(carId, evolutionIndex = state.garage?.[carId]?.evolution || 0) {
   if (!cars.some((car) => car.id === carId)) return;
   const form = evolutionByIndex(carId, evolutionIndex) || currentEvolution(carId);
-  const override = honkSoundOverrides[slugify(form?.name || "")];
-  if (override && playHonkAudioFile(override)) return;
+  const src = honkFileFor(slugify(form?.name || ""));
+  if (src && playHonkAudioFile(src)) return;
   playHonkSound(`${carId}:${form?.name || evolutionIndex}`);
 }
 
@@ -961,60 +953,6 @@ function honkCurrentRaceCar() {
     return true;
   }
   return false;
-}
-
-function getHonkSubtitle(lineRoot, emotion, bondLevel) {
-  return "[HONK SUBTITLE PLACEHOLDER]";
-}
-
-function honkKeyForCar(carId, evolutionIndex = state.garage?.[carId]?.evolution || 0) {
-  const form = cars.some((car) => car.id === carId) ? evolutionByIndex(carId, evolutionIndex) || currentEvolution(carId) : null;
-  return slugify(form?.name || carId || "gearborn");
-}
-
-function openHonkModalForKey(honkKey, bondLineRoot = selectedCarIdForMode("drag")) {
-  if (!el.honkModal || !el.honkOptions) {
-    playHonkEmotion(honkKey, "angry");
-    return;
-  }
-  const bondLevel = bondLevelForLine(bondLineRoot);
-  const emotions = [
-    { id: "happy", label: "Happy" },
-    { id: "angry", label: "Angry" }
-  ];
-  el.honkOptions.innerHTML = emotions.map((emotion) => `
-    <button class="honk-emotion-button" type="button" data-honk-emotion="${emotion.id}" data-honk-line="${honkKey}" data-honk-bond-line="${bondLineRoot}">
-      ${emotion.label}
-    </button>
-  `).join("");
-  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(bondLineRoot, "happy", bondLevel);
-  el.honkModal.classList.add("active");
-  el.honkModal.setAttribute("aria-hidden", "false");
-}
-
-function openHonkModal(carId = selectedCarIdForMode("drag"), evolutionIndex = state.garage?.[carId]?.evolution || 0) {
-  if (!cars.some((car) => car.id === carId)) {
-    openHonkModalForKey(slugify(carId || "gearborn"), selectedCarIdForMode("drag"));
-    return;
-  }
-  openHonkModalForKey(honkKeyForCar(carId, evolutionIndex), evolutionLineRootForCar(carId));
-}
-
-function closeHonkModal() {
-  if (!el.honkModal) return;
-  el.honkModal.classList.remove("active");
-  el.honkModal.setAttribute("aria-hidden", "true");
-}
-
-function playHonkEmotion(honkKey, emotion, bondLineRoot = honkKey) {
-  const bondLevel = bondLevelForLine(bondLineRoot);
-  if (el.honkSubtitle) el.honkSubtitle.textContent = getHonkSubtitle(bondLineRoot, emotion, bondLevel);
-  if (emotion === "angry" && honkSoundOverrides[honkKey] && playHonkAudioFile(honkSoundOverrides[honkKey])) {
-    window.setTimeout(closeHonkModal, 240);
-    return;
-  }
-  playHonkSound(`${honkKey}:${emotion}`);
-  window.setTimeout(closeHonkModal, 240);
 }
 
 const devTestState = {
@@ -1081,9 +1019,7 @@ function devTestHonkOptions() {
   return cars.flatMap((car) => car.evolutions.map((form, evolutionIndex) => ({
     carId: car.id,
     evolutionIndex,
-    label: `${form.name} (${car.family})`,
-    honkKey: honkKeyForCar(car.id, evolutionIndex),
-    override: honkSoundOverrides[slugify(form?.name || "")]
+    label: `${form.name} (${car.family})`
   })));
 }
 
@@ -1114,16 +1050,17 @@ function playDevTestSound() {
 
 function playDevTestHonk() {
   const option = devTestHonkOptions()[Number(el.devTestHonkSelect?.value) || 0];
-  const emotion = el.devTestHonkEmotion?.value || "happy";
   stopDevTestHonk();
   if (!option) return;
-  if (emotion === "angry" && option.override && typeof Audio !== "undefined") {
+  const form = evolutionByIndex(option.carId, option.evolutionIndex) || currentEvolution(option.carId);
+  const src = honkFileFor(slugify(form?.name || ""));
+  if (src && typeof Audio !== "undefined") {
     try {
-      devTestHonkAudio = new Audio(option.override);
+      devTestHonkAudio = new Audio(src);
       devTestHonkAudio.volume = audioMasterVolume(0.78);
       devTestHonkAudio.play().catch(() => {
         devTestHonkAudio = null;
-        playHonkSound(`${option.honkKey}:${emotion}`);
+        playGearbornHonk(option.carId, option.evolutionIndex);
       });
       flashHonkControls();
       return;
@@ -1131,7 +1068,7 @@ function playDevTestHonk() {
       devTestHonkAudio = null;
     }
   }
-  playHonkSound(`${option.honkKey}:${emotion}`);
+  playGearbornHonk(option.carId, option.evolutionIndex);
 }
 
 function renderDevTestAnimations() {
@@ -1827,7 +1764,7 @@ function renderTunerPage() {
   const tuner = selectedTuner();
   const portraitEl = document.getElementById("tuner-page-portrait");
   if (portraitEl) {
-    portraitEl.src = tuner.image || tuner.headshot || "";
+    portraitEl.src = tuner.headshot || tuner.image || "";
     portraitEl.alt = tuner.name || "";
   }
   const nameEl = document.getElementById("tuner-page-name");
@@ -3074,6 +3011,7 @@ function renderCityStructure(city) {
 function cityStructureBossNodeMarkup(city, progress) {
   const bossLevel = city.levels.find((level) => level.type === "boss");
   if (!bossLevel) return "";
+  const boss = bossLevel.final ? finalBoss : bosses[bossLevel.bossIndex];
   const storyComplete = cityStructureStoryComplete(city);
   const unlocked = allStoryUnlocked() || storyComplete;
   const complete = cityBossCompleted(city);
@@ -3082,6 +3020,7 @@ function cityStructureBossNodeMarkup(city, progress) {
     <button class="story-map-node city-boss-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-story-level="${bossLevel.campaignIndex}" style="left:${position.x}%; top:${position.y}%; --node-color:#52c7ff" ${unlocked ? "" : "disabled"}>
       <span class="story-node-icon layered type-boss">
         <img class="node-bg" src="${storyLevelVisuals.boss.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
+        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
       </span>
       <span class="story-node-label">${unlocked ? "Boss" : "Locked"}</span>
     </button>
@@ -5223,10 +5162,10 @@ function playVindexEntryHonk(entryNumber) {
   if (!entry || !isVindexDiscovered(entry)) return;
   const playable = playableEntryMeta(entry);
   if (playable) {
-    openHonkModal(playable.car.id, playable.index);
+    playGearbornHonk(playable.car.id, playable.index);
     return;
   }
-  openHonkModalForKey(slugify(entry.name || `vindex-${entryNumber}`), selectedCarIdForMode("drag"));
+  playHonkSound(slugify(entry.name || `vindex-${entryNumber}`));
 }
 
 const oneOffEvolutionMeta = {

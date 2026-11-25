@@ -196,7 +196,7 @@ document.addEventListener("click", (event) => {
   const garageHonk = event.target.closest("[data-honk-car]");
   if (garageHonk) {
     event.preventDefault();
-    openHonkModal(garageHonk.dataset.honkCar);
+    playGearbornHonk(garageHonk.dataset.honkCar);
     garageHonk.classList.add("playing");
     window.setTimeout(() => garageHonk.classList.remove("playing"), 180);
     return;
@@ -205,17 +205,6 @@ document.addEventListener("click", (event) => {
   if (raceHonk) {
     event.preventDefault();
     playGearbornHonk(race?.carId || selectedCarIdForMode("drag"));
-    return;
-  }
-  const honkEmotion = event.target.closest("[data-honk-emotion]");
-  if (honkEmotion) {
-    event.preventDefault();
-    playHonkEmotion(honkEmotion.dataset.honkLine, honkEmotion.dataset.honkEmotion, honkEmotion.dataset.honkBondLine || honkEmotion.dataset.honkLine);
-    return;
-  }
-  if (event.target === el.honkModal || event.target.closest("#honk-modal-close")) {
-    event.preventDefault();
-    closeHonkModal();
     return;
   }
   const vindexHonk = event.target.closest("[data-honk-vindex]");
@@ -231,7 +220,6 @@ el.devTestSoundSelect?.addEventListener("change", playDevTestSound);
 el.devTestSoundPlay?.addEventListener("click", playDevTestSound);
 el.devTestSoundStop?.addEventListener("click", stopDevTestSound);
 el.devTestHonkSelect?.addEventListener("change", playDevTestHonk);
-el.devTestHonkEmotion?.addEventListener("change", playDevTestHonk);
 el.devTestHonkPlay?.addEventListener("click", playDevTestHonk);
 el.devTestHonkStop?.addEventListener("click", stopDevTestHonk);
 el.devTestForgePlay?.addEventListener("click", () => playDevTestUnlockAnimation("forge"));

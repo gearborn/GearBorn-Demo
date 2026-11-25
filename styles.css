@@ -7,21 +7,26 @@
      desktop: 1024px+
   */
   /* GearBorn design tokens: keep future polish consistent without a broad rewrite. */
-  --gb-bg: #0e1117;
-  --gb-panel: #1a1f27;
-  --gb-panel-soft: #222936;
-  --gb-panel-quiet: rgba(18, 23, 31, 0.74);
-  --gb-ink: #f4f7fb;
-  --gb-muted: #99a5b7;
-  --gb-line: #323b49;
-  --gb-gold: #ffc857;
-  --gb-blue: #52c7ff;
-  --gb-green: #6ee7a8;
-  --gb-red: #f25f5c;
-  --gb-purple: #c084fc;
-  --font-display: "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --gb-bg: #14213D;
+  --gb-panel: #1C2C4F;
+  --gb-panel-soft: #233660;
+  --gb-panel-quiet: rgba(20, 33, 61, 0.78);
+  --gb-ink: #FAF6EE;
+  --gb-muted: #B9C2D6;
+  --gb-line: rgba(250, 246, 238, 0.16);
+  --gb-gold: #FFC857;
+  --gb-blue: #52C7FF;
+  --gb-green: #2FBF83;
+  --gb-red: #E0464E;
+  --gb-purple: #C084FC;
+  --gb-cherry: #C8323A;
+  --gb-cream: #FAF6EE;
+  --gb-royal: #1F4FB4;
+  --gb-emerald: #1E9E6A;
+  --gb-chrome: linear-gradient(180deg, #FFFFFF 0%, #D9DEE7 45%, #9AA4B5 55%, #E9EDF3 100%);
+  --font-display: "Bowlby One", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-ui: "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-ui: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
   --weight-title: 760;
   --weight-label: 720;
   --weight-body: 520;
@@ -46,12 +51,12 @@
   --duration-fast: 140ms;
   --duration-med: 220ms;
   --duration-slow: 420ms;
-  --bg: #111318;
-  --panel: #1a1f27;
-  --panel-soft: #222936;
-  --ink: #f4f7fb;
-  --muted: #99a5b7;
-  --line: #323b49;
+  --bg: #14213D;
+  --panel: #1C2C4F;
+  --panel-soft: #233660;
+  --ink: #FAF6EE;
+  --muted: #B9C2D6;
+  --line: rgba(250, 246, 238, 0.16);
   --steel: #8aa0b8;
   --gold: #ffc857;
   --red: #f25f5c;
@@ -12237,39 +12242,6 @@ small {
   color: var(--gb-ink);
 }
 
-.honk-modal-card {
-  width: min(420px, 92vw);
-  padding: 22px;
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: var(--radius-lg);
-  background: rgba(12, 18, 28, 0.96);
-  box-shadow: var(--shadow-pop);
-}
-
-.honk-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.honk-emotion-button {
-  min-height: 70px;
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.08);
-  color: var(--gb-ink);
-  font-family: var(--font-ui);
-  font-weight: var(--weight-label);
-}
-
-.honk-subtitle {
-  min-height: 1.4em;
-  margin: 12px 0 0;
-  color: var(--gb-muted);
-  text-align: center;
-}
-
 .hub-map-beta-shell {
   display: grid;
   justify-items: center;
@@ -18064,3 +18036,235 @@ body {
   .garage-collection-art > .collectible-art { height: 118px; }
   .vindex-gallery-art > .collectible-art { height: 48px; }
 }
+
+/* Top bar chips: Sprox, Spins and Gas are one matched set */
+.topbar-left .sprox-wallet,
+.topbar-left .spin-wallet,
+.topbar-left .gas-tank {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  gap: 8px;
+  border-radius: 999px;
+  border-width: 1.5px;
+  font-family: var(--font-ui);
+}
+
+.topbar-left .sprox-wallet strong,
+.topbar-left .spin-wallet strong,
+.topbar-left .gas-tank strong {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.topbar-left .sprox-coin,
+.topbar-left .spin-coin {
+  width: 28px;
+  height: 28px;
+}
+
+.topbar-left .gas-icon {
+  width: 28px;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .topbar-left .sprox-wallet,
+  .topbar-left .spin-wallet,
+  .topbar-left .gas-tank {
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .topbar-left .sprox-wallet strong,
+  .topbar-left .spin-wallet strong,
+  .topbar-left .gas-tank strong { font-size: 0.88rem; }
+
+  .topbar-left .sprox-coin,
+  .topbar-left .spin-coin { width: 24px; height: 24px; }
+
+  .topbar-left .gas-icon { width: 24px; font-size: 24px; }
+}
+
+@media (max-width: 560px) {
+  .topbar-left .sprox-wallet,
+  .topbar-left .spin-wallet,
+  .topbar-left .gas-tank {
+    height: 32px;
+    min-height: 32px;
+    padding: 0 8px;
+  }
+
+  .topbar-left .sprox-wallet strong,
+  .topbar-left .spin-wallet strong,
+  .topbar-left .gas-tank strong { font-size: 0.74rem; }
+
+  .topbar-left .sprox-coin,
+  .topbar-left .spin-coin { width: 20px; height: 20px; }
+
+  .topbar-left .gas-icon { width: 20px; font-size: 20px; }
+}
+
+@media (max-width: 380px) {
+  .topbar-left .sprox-wallet,
+  .topbar-left .spin-wallet,
+  .topbar-left .gas-tank { padding: 0 5px; }
+
+  .topbar-left .sprox-wallet strong,
+  .topbar-left .spin-wallet strong,
+  .topbar-left .gas-tank strong { font-size: 0.66rem; }
+
+  .topbar-left .sprox-coin,
+  .topbar-left .spin-coin { width: 18px; height: 18px; }
+
+  .topbar-left .gas-icon { width: 18px; font-size: 18px; }
+}
+
+/* Route 66 chrome-and-enamel skin: shared presentation only, no layout changes. */
+body:not(.gb-racing),
+body:not(.gb-racing) .app {
+  background-color: var(--gb-bg);
+  color: var(--gb-ink);
+}
+
+h1,
+h2,
+.section-heading h1,
+.section-heading h2,
+.modal-kicker + h2 {
+  color: var(--gb-cream);
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+button.success-button,
+button.primary,
+.main-menu-button,
+.menu-card-cta {
+  border: 2px solid #0B1426;
+  border-radius: 999px;
+  background: var(--gb-cherry);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 3px 0 #0B1426;
+  color: var(--gb-cream);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+button.success-button:hover,
+button.primary:hover,
+.main-menu-button:hover,
+.menu-card-cta:hover { filter: brightness(1.08); }
+
+button.success-button:active,
+button.primary:active,
+.main-menu-button:active,
+.menu-card-cta:active {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 1px 0 #0B1426;
+  transform: translateY(2px);
+}
+
+button.ghost,
+.back-link,
+.modal-close-bubble {
+  border: 2px solid #0B1426;
+  border-radius: 999px;
+  background: var(--gb-cream);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 3px 0 #0B1426;
+  color: var(--gb-bg);
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+
+button.ghost:hover,
+.back-link:hover,
+.modal-close-bubble:hover { filter: brightness(1.04); }
+
+button.ghost:active,
+.back-link:active,
+.modal-close-bubble:active {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 1px 0 #0B1426;
+  transform: translateY(2px);
+}
+
+.panel,
+.modal-card,
+.confirm-modal,
+.settings-card,
+.menu-card,
+.crankvault-card,
+.crankvault-inventory-card,
+.garage-showcase,
+.garage-showroom-card,
+.garage-collection-card,
+.showcase-slot,
+.vindex-stage,
+.vindex-gallery-card,
+.vindex-family-node,
+.profile-card,
+.achievement-card,
+.race-result-card {
+  border-color: var(--gb-line);
+  background-color: var(--gb-panel);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  border-radius: var(--radius-md);
+}
+
+.modal-overlay { background: rgba(11, 20, 38, 0.72); }
+
+.topbar {
+  border-bottom: 2px solid transparent;
+  border-image: var(--gb-chrome) 1;
+  background: #0F1A31;
+}
+
+.topbar-left .sprox-wallet,
+.topbar-left .spin-wallet,
+.topbar-left .gas-tank {
+  border-color: #0B1426;
+  background: var(--gb-cream);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 2px 0 rgba(11,20,38,.55);
+}
+
+.topbar-left .sprox-wallet strong,
+.topbar-left .spin-wallet strong,
+.topbar-left .gas-tank strong { color: var(--gb-bg); }
+
+.segmented button,
+.garage-primary-tabs button,
+.vindex-filter-button,
+.vindex-filter-buttons button {
+  background: transparent;
+  color: var(--gb-cream);
+}
+
+.segmented button.active,
+.garage-primary-tabs button.active,
+.vindex-filter-button.active,
+.vindex-filter-buttons button.active {
+  background: var(--gb-cream);
+  color: var(--gb-bg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 2px 0 rgba(11,20,38,.55);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--gb-blue);
+  outline-offset: 3px;
+}
+
+.win,
+.success-result,
+.status-owned { color: var(--gb-green); }
+
+.loss,
+.status-locked { color: var(--gb-red); }
+
+.reward-pop,
+.reward,
+.status-reward { color: var(--gb-gold); }

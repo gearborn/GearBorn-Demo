@@ -402,16 +402,16 @@ const gearbornIdleConfig = {};
 // Future asset TODOs: unique GearBorn honks, medal frame PNGs, garage trophy shelf,
 // medallion display, city stickers, boss memorabilia, VINdex state art, evolution FX overlays.
 const audioCueAssets = {
-  uiSelect: "",
-  uiConfirm: "",
-  raceCountdown: "",
-  raceStart: "",
-  medalReveal: "",
-  newVindexEntry: "",
-  evolutionBuild: "",
-  evolutionReveal: "",
-  gearbornIdle: "",
-  reputationGain: ""
+  uiSelect: null, // TODO new sound
+  uiConfirm: null, // TODO new sound
+  raceCountdown: null, // TODO new sound
+  raceStart: null, // TODO new sound
+  medalReveal: null, // TODO new sound
+  newVindexEntry: null, // TODO new sound
+  evolutionBuild: null, // TODO new sound
+  evolutionReveal: null, // TODO new sound
+  gearbornIdle: null, // TODO new sound
+  reputationGain: null // TODO new sound
 };
 
 const medalPriority = { none: 0, bronze: 1, silver: 2, gold: 3 };

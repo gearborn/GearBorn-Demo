@@ -2336,6 +2336,7 @@ const racerProfiles = tuners.concat(bossChallengeBosses.map((boss) => ({
   id: boss.id,
   name: boss.name,
   image: boss.headshot || boss.unmaskedPortrait || boss.portrait,
+  headshot: boss.headshot || boss.portrait,
   car: boss.car,
   city: boss.track.city,
   country: boss.track.country,
