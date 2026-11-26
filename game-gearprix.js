@@ -1054,49 +1054,17 @@ async function preloadBetaRaceAssets() {
   const images = [
     ...Object.values(betaTileImages),
     ...Object.values(betaTrackImages || {}),
+    ...Object.values(betaItemImages || {}),
     ...(betaState?.racers || []).map((racer) => racer.image)
   ].filter(Boolean);
-  await Promise.race([
-    Promise.all(images.map(betaImageReady)),
-    new Promise((resolve) => window.setTimeout(resolve, (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 120 : 2600))
-  ]);
+  await ensureAssets(images.map((image) => typeof image === "string" ? image : image.src), { label: "Loading the race…" });
 }
 
 function setBetaLoading(active) {
   if (!el.betaLoading) return;
-  if (active && !el.betaLoading.querySelector(".fuel-tank")) {
-    el.betaLoading.innerHTML = `
-      <div class="loading-card beta-loading-card">
-        <div class="loading-logo">
-          <img src="assets/logo/gearborn-logo.png" alt="GearBorn" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
-          <div class="loading-logo-text"><strong>GearBorn</strong><span>Engines Evolved</span></div>
-        </div>
-        <h1>Fueling Engines…</h1>
-        <div class="fuel-tank" aria-label="Loading progress">
-          <div class="fuel-fill beta-fuel-fill" id="beta-fuel-fill" style="width:12%"></div>
-          <span class="fuel-cap" aria-hidden="true"></span>
-        </div>
-        <p class="loading-tip">Warming up the track…</p>
-      </div>
-    `;
-    // Animate fill
-    let pct = 12;
-    const fill = el.betaLoading.querySelector(".beta-fuel-fill");
-    const fillTimer = setInterval(() => {
-      if (!el.betaLoading || el.betaLoading.hidden) { clearInterval(fillTimer); return; }
-      pct = Math.min(92, pct + 4 + Math.random() * 10);
-      if (fill) fill.style.width = pct + "%";
-    }, (typeof reduceMotionEnabled === "function" && reduceMotionEnabled()) ? 1000 : 180);
-    el.betaLoading._fillTimer = fillTimer;
-  }
-  if (!active && el.betaLoading._fillTimer) {
-    clearInterval(el.betaLoading._fillTimer);
-    el.betaLoading._fillTimer = null;
-    const fill = el.betaLoading.querySelector(".beta-fuel-fill");
-    if (fill) fill.style.width = "100%";
-  }
-  el.betaLoading.hidden = !active;
-  el.betaLoading.classList.toggle("active", active);
+  // Shared ensureAssets() owns transition progress so warm-cache races do not flash a loader.
+  el.betaLoading.hidden = true;
+  el.betaLoading.classList.remove("active");
 }
 
 function selectBetaTrack(trackId) {

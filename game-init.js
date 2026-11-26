@@ -13,6 +13,28 @@ function migrateSave(saved) {
   renameKey(saved, "lastGearCrew", "crashoutCrew");
   renameKey(saved.tunerStats, "lastGearMatchesWon", "crashoutMatchesWon");
   renameKey(saved.tunerStats, "lastGearMatchesLost", "crashoutMatchesLost");
+  // 5C: Bangalore convoy ids replaced the earlier city-name variant. Preserve an
+  // existing new-id entry when an imported save happens to contain both.
+  const legacyBangaloreIdPart = "ben" + "galuru";
+  const convoyIdRenames = {
+    [`mylo-${legacyBangaloreIdPart}-tyree`]: "mylo-bangalore-tyree",
+    [`chacha-${legacyBangaloreIdPart}-ashley`]: "chacha-bangalore-ashley"
+  };
+  const migrateConvoyIds = (value) => {
+    if (typeof value === "string") return convoyIdRenames[value] || value;
+    if (Array.isArray(value)) return value.map(migrateConvoyIds);
+    if (!value || typeof value !== "object") return value;
+    const migrated = {};
+    Object.entries(value).filter(([key]) => !convoyIdRenames[key]).forEach(([key, entry]) => {
+      migrated[key] = migrateConvoyIds(entry);
+    });
+    Object.entries(value).filter(([key]) => convoyIdRenames[key]).forEach(([key, entry]) => {
+      const nextKey = convoyIdRenames[key];
+      if (!(nextKey in migrated)) migrated[nextKey] = migrateConvoyIds(entry);
+    });
+    return migrated;
+  };
+  if (saved.convoy && typeof saved.convoy === "object") saved.convoy = migrateConvoyIds(saved.convoy);
   // v1 -> v2: no shape changes; version field introduced.
   // Future migrations go here, e.g.: if (version < 3) { ...transform... }
   saved.saveVersion = defaultState.saveVersion;
@@ -562,6 +584,15 @@ try {
   checkAchievements(true);
   saveState();
   render();
+  [
+    ['.solo-card[data-view="play"]', "drag"],
+    ['.solo-card[data-training-2d="time"]', "trial"],
+    ['.solo-card[data-training-2d="vs"]', "circuit"],
+    ['.solo-card[data-view="crashout"]', "lastgear"]
+  ].forEach(([selector, modeId]) => {
+    const icon = document.querySelector(selector)?.querySelector(".solo-card-icon");
+    if (icon && typeof modeIconSrc === "function") icon.style.backgroundImage = `url("${modeIconSrc(modeId)}")`;
+  });
   if (beta3dDevEnabled()) showView("beta");
   // Only show first-time modal if truly a new player: no tutorial complete flag,
   // no story progress, no sprox earned, and no unlocked cars beyond the defaults.
@@ -580,9 +611,15 @@ try {
   window.reportGearbornStartupError?.(error);
 }
 
-const finishInitialLoad = () => loadingExperience.complete();
-if (document.readyState === "complete") {
-  window.setTimeout(finishInitialLoad, 1200);
-} else {
-  window.addEventListener("load", () => window.setTimeout(finishInitialLoad, 1200), { once: true });
-}
+const finishInitialLoad = async () => {
+  loadingExperience.setLabel?.("Loading your garage…");
+  try {
+    await ensureAssets(bootAssetManifest(), { label: "Loading your garage…", timeoutMs: 20000 });
+    warmGameAssets();
+  } catch (error) {
+    console.warn("GearBorn boot asset preload failed:", error);
+  }
+  loadingExperience.complete();
+};
+if (document.readyState === "complete") finishInitialLoad();
+else window.addEventListener("load", finishInitialLoad, { once: true });

@@ -504,7 +504,7 @@ function toggleCrashoutSetupPanel(show = true) {
   el.crashoutSetupPanel.hidden = !show;
 }
 
-function startCrashoutBeta() {
+async function startCrashoutBeta() {
   if (!el.crashoutCanvas) return;
   // A story result card left on the arena never carries into a new match.
   document.querySelectorAll(".crashout-stage > .race-result-popup").forEach((node) => node.remove());
@@ -527,6 +527,10 @@ function startCrashoutBeta() {
   if (el.crashoutBetaBack) el.crashoutBetaBack.hidden = false;
   const roster = battleSpec ? crashoutBuildBattleRoster(battleSpec) : evoCarId ? crashoutBuildEvoRoster(evoCarId) : crashoutBuildRoster();
   const cars = roster.map((entry, index) => crashoutMakeCar(entry, index, roster.length));
+  await ensureAssets([
+    ...cars.map((car) => car.image?.src || car.displayImage),
+    ...assetUrlsInElement(document.querySelector("#crashout-arena-view"))
+  ], { label: "Loading Tuner Crashout…" });
   cars.forEach((car) => {
     if (!car.image) return;
     if (car.image.complete && car.image.naturalWidth) gearbornSpriteMetrics(car.image);
@@ -4073,7 +4077,7 @@ const crashoutArenaCities = {
   "los-angeles": { name: "Los Angeles", label: "Los Angeles Block", shape: "square", floor: "#1e192a", rim: "#ff5c8a", glow: "rgba(255, 92, 138, 0.45)", pattern: "grid", boards: ["LOS ANGELES", "TUNER CRASHOUT", "GEARBORN", "HOLLYWOOD"], art: null },
   seoul: { name: "Seoul", label: "Seoul Twin Rings", shape: "twin", floor: "#17172a", rim: "#c084fc", glow: "rgba(192, 132, 252, 0.5)", pattern: "rings", boards: ["SEOUL", "TUNER CRASHOUT", "GEARBORN", "NEON NIGHTS"], art: null },
   "cape-town": { name: "Cape Town", label: "Cape Town Narrow Cape", shape: "bridge", floor: "#182521", rim: "#8fd3ff", glow: "rgba(143, 211, 255, 0.45)", pattern: "stripes", boards: ["CAPE TOWN", "TUNER CRASHOUT", "GEARBORN", "TABLE TOP"], art: null },
-  bangalore: { name: "Bengaluru", label: "Bengaluru Crossroads", shape: "cross", floor: "#1b2819", rim: "#6ee7a8", glow: "rgba(110, 231, 168, 0.45)", pattern: "grid", boards: ["BENGALURU", "TUNER CRASHOUT", "GEARBORN", "GARDEN CITY"], art: null },
+  bangalore: { name: "Bangalore", label: "Bangalore Crossroads", shape: "cross", floor: "#1b2819", rim: "#6ee7a8", glow: "rgba(110, 231, 168, 0.45)", pattern: "grid", boards: ["BANGALORE", "TUNER CRASHOUT", "GEARBORN", "GARDEN CITY"], art: null },
   space: { name: "Space", label: "Space Diamond", shape: "diamond", floor: "#0c0f22", rim: "#b9a8ff", glow: "rgba(185, 168, 255, 0.55)", pattern: "stars", boards: ["SPACE", "TUNER CRASHOUT", "GEARBORN", "ZERO G"], art: null }
 };
 const crashoutArenaDefaultTheme = { name: "", label: "Arena", shape: "circle", floor: "rgba(23, 32, 46, 0.96)", rim: "rgba(255, 200, 87, 0.68)", glow: "rgba(82, 199, 255, 0.48)", pattern: "rings", boards: null, art: null };

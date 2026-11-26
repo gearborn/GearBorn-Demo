@@ -33,6 +33,13 @@
         <p class="loading-tip" id="loading-tip">Sprox power upgrades in the Garage.</p>
       </div>
     </div>
+    <div class="asset-loader-overlay" id="asset-loader-overlay" role="status" aria-live="polite" aria-label="Loading assets" hidden>
+      <div class="loading-card asset-loader-card">
+        <div class="loading-logo"><img src="assets/logo/gearborn-logo.png" alt="GearBorn"></div>
+        <div class="fuel-tank" aria-label="Loading progress"><div class="fuel-fill" id="asset-loader-fill"></div><span class="fuel-cap" aria-hidden="true"></span></div>
+        <p class="loading-tip" id="asset-loader-label">Loading…</p>
+      </div>
+    </div>
     <div class="app">
       <header class="topbar">
         <div class="topbar-left">
@@ -238,7 +245,7 @@
                   <option value="los-angeles">Los Angeles Block (Square)</option>
                   <option value="seoul">Seoul Twin Rings</option>
                   <option value="cape-town">Cape Town Narrow Cape (Bridge)</option>
-                  <option value="bangalore">Bengaluru Crossroads (Cross)</option>
+                  <option value="bangalore">Bangalore Crossroads (Cross)</option>
                   <option value="space">Space Diamond</option>
                 </select>
               </label>
@@ -313,7 +320,7 @@
                 <div class="convoy-buttons" id="convoy-buttons"></div>
               </div>
               <button class="story-faction-badge" id="story-faction-badge" type="button" aria-label="Faction hub">
-                <img id="story-faction-badge-img" src="assets/items/icon-badge-keyfree.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                <img id="story-faction-badge-img" src="assets/items/icon-badge-unlocked.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
               </button>
               <div class="boss-unlock-note" id="boss-unlock-note"></div>
               <div class="story-map-stage" id="story-map-stage"></div>
@@ -1864,6 +1871,7 @@
       });
     </script>
     <script src="gearborn-config.js"></script>
+    <script src="game-icons.js"></script>
     <script src="game-data.js"></script>
     <script src="game-state.js"></script>
     <script src="game-logic.js"></script>

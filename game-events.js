@@ -32,13 +32,14 @@ function bindActionButton(node, handler) {
 }
 
 document.querySelectorAll("[data-view]").forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     if (button.dataset.view === "beta") {
       betaRaceContext = { source: "prototype" };
       showView("beta");
       openBetaPrototypeIntro();
       return;
     }
+    await prepareCollectionViewAssets(button.dataset.view);
     showView(button.dataset.view);
   });
 });
@@ -1151,34 +1152,14 @@ function startLoadingExperience() {
     document.body.classList.remove("app-loading");
     return { complete() {} };
   }
-  const tips = [
-    "Say 'Unlock' to call your nearest GearBorn.",
-    "Not all GearBorn answer right away.",
-    "Medallions can evolve a GearBorn - but connection matters more.",
-    "Sprox power upgrades in the Garage.",
-    "Every GearBorn has its own driving personality."
-  ];
-  let progress = 10;
-  let tipIndex = 0;
   let done = false;
   const setProgress = (value) => {
-    progress = Math.max(progress, Math.min(100, value));
-    fill.style.width = `${progress}%`;
+    fill.style.width = `${Math.max(4, Math.min(100, value))}%`;
   };
-  const progressTimer = window.setInterval(() => {
-    if (done) return;
-    const ceiling = document.readyState === "complete" ? 95 : 88;
-    setProgress(Math.min(ceiling, progress + 2 + Math.random() * 7));
-  }, 180);
-  const tipTimer = window.setInterval(() => {
-    tipIndex = (tipIndex + 1) % tips.length;
-    if (tip) tip.textContent = tips[tipIndex];
-  }, 1500);
+  setProgress(4);
   const complete = () => {
     if (done) return;
     done = true;
-    window.clearInterval(progressTimer);
-    window.clearInterval(tipTimer);
     setProgress(100);
     window.setTimeout(() => {
       document.body.classList.remove("app-loading");
@@ -1186,8 +1167,7 @@ function startLoadingExperience() {
     }, 260);
     window.setTimeout(() => screen.remove(), 980);
   };
-  window.setTimeout(complete, 3600);
-  return { complete };
+  return { complete, setProgress, setLabel: (label) => { if (tip && label) tip.textContent = label; } };
 }
 
 // ─── Garage Showcase + Upgrade from results (3C) ─────────────────────────────

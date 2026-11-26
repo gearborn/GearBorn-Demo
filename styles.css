@@ -386,6 +386,22 @@ body.app-loading .app {
   pointer-events: none;
 }
 
+/* Transition asset loader: only revealed after a slow image request, never during warm-cache navigation. */
+.asset-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(11, 20, 38, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.asset-loader-overlay[hidden] { display: none; }
+.asset-loader-card { width: min(430px, 100%); }
+.asset-loader-card .loading-logo img { max-height: 90px; }
+
 .loading-card {
   display: grid;
   justify-items: center;
@@ -2109,17 +2125,9 @@ body:not(.mode-active) .nav {
   background: rgba(255, 200, 87, 0.13);
 }
 
-.solo-card:nth-child(1) .solo-card-icon {
-  background-image: url("assets/items/icon-drag-race.png");
-}
-
 .solo-card:nth-child(2) {
   border-color: rgba(110, 231, 168, 0.65);
   background: rgba(110, 231, 168, 0.13);
-}
-
-.solo-card:nth-child(2) .solo-card-icon {
-  background-image: url("assets/items/icon-time-trial.png");
 }
 
 .solo-card:nth-child(3) {
@@ -2127,17 +2135,9 @@ body:not(.mode-active) .nav {
   background: rgba(82, 199, 255, 0.13);
 }
 
-.solo-card:nth-child(3) .solo-card-icon {
-  background-image: url("assets/items/icon-boss-training.png");
-}
-
 .solo-card:nth-child(4) {
   border-color: rgba(242, 95, 92, 0.7);
   background: rgba(242, 95, 92, 0.15);
-}
-
-.solo-card:nth-child(4) .solo-card-icon {
-  background-image: url("assets/items/icon-battle.png");
 }
 
 .solo-card strong {
@@ -3200,6 +3200,26 @@ body:not(.mode-active) .nav {
   width: 56%;
   height: 56%;
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.5));
+}
+
+.story-node-icon.layered .mode-node-subject-round {
+  width: 64%;
+  height: 64%;
+  border: 2px solid var(--gb-cream, #faf6ee);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.story-node-icon.layered .mode-node-subject-contained {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.46));
+}
+
+.story-node-icon.type-gauntlet .mode-node-subject-contained {
+  width: 56%;
+  height: 56%;
 }
 
 .story-node-icon.type-rival {

@@ -1,5 +1,138 @@
 // ─── GAME LOGIC ─────────────────────────────────────────────────────────────
 
+// ─── ASSET READINESS ────────────────────────────────────────────────────────
+// Keep decoded image objects alive so view and race transitions never restart a fetch.
+const assetCache = new Map();
+const assetLoadWarnings = new Set();
+
+function loadAsset(src) {
+  const url = String(src || "").trim();
+  if (!url || url.startsWith("data:")) return Promise.resolve(null);
+  if (assetCache.has(url)) return assetCache.get(url);
+  const promise = new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    const finish = () => {
+      if (typeof image.decode !== "function") {
+        resolve(image);
+        return;
+      }
+      image.decode().catch(() => {}).finally(() => resolve(image));
+    };
+    image.addEventListener("load", finish, { once: true });
+    image.addEventListener("error", () => {
+      if (!assetLoadWarnings.has(url)) {
+        assetLoadWarnings.add(url);
+        console.warn("GearBorn asset failed to load:", url);
+      }
+      resolve(image);
+    }, { once: true });
+    image.src = url;
+  });
+  assetCache.set(url, promise);
+  return promise;
+}
+
+function cssImageUrls(rootEl) {
+  if (!rootEl || typeof getComputedStyle !== "function") return [];
+  const urls = new Set();
+  [rootEl, ...rootEl.querySelectorAll("*")].forEach((element) => {
+    const background = getComputedStyle(element).backgroundImage || "";
+    for (const match of background.matchAll(/url\((['"]?)(.*?)\1\)/g)) {
+      if (match[2] && match[2] !== "none") urls.add(match[2]);
+    }
+  });
+  return [...urls];
+}
+
+function assetUrlsInElement(rootEl) {
+  if (!rootEl) return [];
+  return [
+    ...[...rootEl.querySelectorAll("img[src]")].map((image) => image.getAttribute("src")),
+    ...cssImageUrls(rootEl)
+  ].filter(Boolean);
+}
+
+function setAssetLoaderUi(visible, label, loaded = 0, total = 0) {
+  const booting = document.body?.classList.contains("app-loading");
+  const overlay = document.querySelector("#asset-loader-overlay");
+  const host = booting ? document : overlay;
+  const fill = host?.querySelector(booting ? "#fuel-fill" : "#asset-loader-fill");
+  const copy = host?.querySelector(booting ? "#loading-tip" : "#asset-loader-label");
+  if (fill && total) fill.style.width = `${Math.max(4, Math.round((loaded / total) * 100))}%`;
+  if (copy && label) copy.textContent = label;
+  if (!booting && overlay) overlay.hidden = !visible;
+}
+
+async function ensureAssets(srcs, { label = "Loading…", minMs = 0, timeoutMs = 15000 } = {}) {
+  const sources = [...new Set((srcs || []).map((src) => String(src || "").trim()).filter((src) => src && !src.startsWith("data:")))];
+  if (!sources.length) return;
+  const startedAt = performance.now();
+  let loaded = 0;
+  let visible = false;
+  let complete = false;
+  const outstanding = new Set(sources);
+  const showTimer = window.setTimeout(() => {
+    if (!complete) {
+      visible = true;
+      setAssetLoaderUi(true, label, loaded, sources.length);
+    }
+  }, 120);
+  const all = Promise.all(sources.map((src) => loadAsset(src).finally(() => {
+    outstanding.delete(src);
+    loaded += 1;
+    if (visible || document.body?.classList.contains("app-loading")) setAssetLoaderUi(true, label, loaded, sources.length);
+  })));
+  const timeout = new Promise((resolve) => window.setTimeout(resolve, timeoutMs));
+  const finishedNaturally = await Promise.race([all.then(() => true), timeout.then(() => false)]);
+  if (!finishedNaturally && outstanding.size) console.warn("GearBorn asset load timed out:", [...outstanding]);
+  const remaining = Math.max(0, minMs - (performance.now() - startedAt));
+  if (remaining) await new Promise((resolve) => window.setTimeout(resolve, remaining));
+  complete = true;
+  window.clearTimeout(showTimer);
+  if (visible && !document.body?.classList.contains("app-loading")) {
+    setAssetLoaderUi(false);
+    visible = false;
+  }
+}
+
+function carArtAsset(carId, view = "display") {
+  const car = cars.find((item) => item.id === carId);
+  return car ? imageFor(currentEvolution(carId) || car.evolutions?.[0], view) : "";
+}
+
+function bootAssetManifest() {
+  const menu = document.querySelector("#menu-view");
+  const topbar = document.querySelector(".topbar");
+  const starterCars = (defaultUnlockedLines || []).map((carId) => carArtAsset(carId));
+  return [
+    ...assetUrlsInElement(menu),
+    ...assetUrlsInElement(topbar),
+    "assets/logo/gearborn-logo.png",
+    "assets/menu/master-bg.png",
+    "assets/items/icon-spins.png",
+    carArtAsset(state.selectedCar),
+    ...starterCars
+  ];
+}
+
+function warmGameAssets() {
+  const sources = [
+    ...cars.flatMap((car) => (car.evolutions || []).map((form) => imageFor(form, "display"))),
+    ...tuners.map((tuner) => tuner.headshot || tuner.image),
+    ...bosses.flatMap((boss) => [boss.headshot || boss.portrait, boss.map, boss.cityMap, boss.cityIcon]),
+    ...storyTracks.flatMap((track) => [track.map, track.cityMap, track.cityIcon])
+  ].filter(Boolean);
+  const queue = [...new Set(sources)];
+  const schedule = window.requestIdleCallback || ((callback) => window.setTimeout(callback, 120));
+  const warmNext = () => {
+    const batch = queue.splice(0, 4);
+    batch.forEach((src) => { loadAsset(src); });
+    if (queue.length) schedule(warmNext);
+  };
+  schedule(warmNext);
+}
+
 const soundLibrary = {
   "ui-click": null, // TODO new sound
   "ui-hover": null, // TODO new sound
@@ -2358,7 +2491,6 @@ function updateNextRaceThumbnail(thumbEl, city) {
     seoul: "assets/menu/next-city-thumb-seoul.png",
     "cape-town": "assets/menu/next-city-thumb-cape-town.png",
     bangalore: "assets/menu/next-city-thumb-bangalore.png",
-    bengaluru: "assets/menu/next-city-thumb-bangalore.png",
     space: "assets/menu/next-city-thumb-space.png"
   };
   const cityId = city?.id || storyCities[state.selectedStoryCity || 0]?.id || "indianapolis";
@@ -2839,7 +2971,7 @@ function renderCampaign() {
         <div class="rep-copy"><span>REPUTATION</span><strong>${bossProgressDone}/${bossProgressRequired}</strong></div>
         <div class="rep-track"><i></i></div>
         <div class="rep-boss">
-          <img class="rep-boss-bg" src="${storyLevelVisuals.boss.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          <img class="rep-boss-bg" src="${modeIconSrc("boss")}" alt="" aria-hidden="true" loading="lazy" decoding="async">
           <img class="rep-boss-face" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
         </div>
       </div>`
@@ -3018,10 +3150,7 @@ function cityStructureBossNodeMarkup(city, progress) {
   const position = { x: 50, y: 12 };
   return `
     <button class="story-map-node city-boss-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-story-level="${bossLevel.campaignIndex}" style="left:${position.x}%; top:${position.y}%; --node-color:#52c7ff" ${unlocked ? "" : "disabled"}>
-      <span class="story-node-icon layered type-boss">
-        <img class="node-bg" src="${storyLevelVisuals.boss.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
-        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
-      </span>
+      ${modeNodeIconMarkup("boss", { subjectSrc: boss.headshot || boss.portrait, round: true, alt: boss.name })}
       <span class="story-node-label">${unlocked ? "Boss" : "Locked"}</span>
     </button>
   `;
@@ -3114,11 +3243,17 @@ function renderCityPlaceholderPreview() {
           <div><span>Gold Bonus</span><strong>${cityProgressFor(city.id).vaultRewards[`ladder-${pending.modeId}`] ? "Claimed" : "Sprox CrankVault"}</strong></div>
         </div>`;
   // TODO: replace placeholder previews with final race copy/art once story content is defined.
-  el.storyPreviewIcon.innerHTML = isStory
-    ? `<span class="story-node-icon layered type-${storyPlan?.type || "story"}"><img class="node-bg" src="${storyVisual.icon}" alt="" aria-hidden="true"><span class="node-subject node-number">${pending.index + 1}</span></span>`
-    : isGauntlet
-      ? `<span class="story-node-icon layered type-gauntlet"><img class="node-bg" src="assets/items/icon-medallion-gauntlet.png" alt="" aria-hidden="true"><img class="node-subject gauntlet-medallion" src="${forgeMedallionSrc(gauntletConfig?.gearBornLineId)}" alt="" aria-hidden="true" onerror="this.remove()"></span>`
-      : `<span class="story-node-icon layered type-${pending.modeId}"><img class="node-bg" src="${cityLadderNodeVisual(pending.modeId).icon}" alt="" aria-hidden="true"><span class="node-subject node-tier">${tierLabel.slice(0, 1)}</span></span>`;
+  const previewMode = storyPlan?.type || pending.modeId || "gauntlet";
+  const previewSubject = isGauntlet
+    ? forgeMedallionSrc(gauntletConfig?.gearBornLineId)
+    : previewMode === "rival"
+      ? rivalTuner().headshot || rivalTuner().image
+      : "";
+  el.storyPreviewIcon.innerHTML = modeNodeIconMarkup(previewMode, {
+    subjectSrc: previewSubject,
+    round: previewMode === "rival",
+    alt: isGauntlet ? gauntletForm?.name || gauntletConfig?.displayName : previewMode === "rival" ? rivalTuner().name : storyVisual?.label || mode?.label || ""
+  });
   el.storyPreviewIcon.className = "story-level-icon story-preview-icon type-placeholder";
   el.storyPreviewIcon.style.background = "transparent";
   el.campaignType.textContent = typeCopy;
@@ -3185,10 +3320,11 @@ function cityStructureStoryNodeMarkup(city, progress) {
     const label = cityStoryRaceLabel(plan, index);
     return `
       <button class="story-map-node city-story-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-city-story-race="${city.id}:${index}" style="left:${position.x}%; top:${position.y}%; --node-color:${visual.color}" ${unlocked ? "" : "disabled"}>
-        <span class="story-node-icon layered type-${plan?.type || "story"}">
-          <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
-          <span class="node-subject node-number">${index + 1}</span>
-        </span>
+        ${modeNodeIconMarkup(plan?.type || "circuit", {
+          subjectSrc: plan?.type === "rival" ? rivalTuner().headshot || rivalTuner().image : "",
+          round: plan?.type === "rival",
+          alt: plan?.type === "rival" ? rivalTuner().name : visual.label
+        })}
         <span class="story-node-label">${label}</span>
       </button>
     `;
@@ -3229,10 +3365,7 @@ function cityStructureLadderNodeMarkup(city, progress) {
       const visual = cityLadderNodeVisual(mode.id);
       return `
         <button class="story-map-node city-ladder-node ${unlocked ? "" : "locked"} ${complete ? "completed" : ""}" type="button" data-city-ladder="${city.id}:${mode.id}:${tier}" style="left:${position.x}%; top:${position.y}%; --node-color:${cityLadderNodeColor(tier)}" ${unlocked ? "" : "disabled"}>
-          <span class="story-node-icon layered type-${mode.id}">
-            <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
-            <span class="node-subject node-tier">${tierLabel.slice(0, 1)}</span>
-          </span>
+          ${modeNodeIconMarkup(mode.id === "exhibition" ? "circuit" : mode.id, { alt: visual.label })}
           <span class="story-node-label">${label}</span>
         </button>
       `;
@@ -3372,10 +3505,7 @@ function gauntletNodeMarkup(gauntletKey, city, x, y) {
       : "Medallion Gauntlet";
   return `
     <button class="story-map-node gauntlet-node ${progress.completed ? "completed" : ""}" type="button" data-gauntlet-city="${gauntletKey}" style="left:${x}%; top:${y}%; --node-color:#f6c85f" ${progress.completed ? "disabled" : ""}>
-      <span class="story-node-icon layered type-gauntlet">
-        <img class="node-bg" src="assets/items/icon-medallion-gauntlet.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
-        <img class="node-subject gauntlet-medallion" src="${forgeMedallionSrc(config.gearBornLineId)}" alt="${form?.name || config.displayName}" loading="lazy" decoding="async">
-      </span>
+      ${modeNodeIconMarkup("gauntlet", { subjectSrc: forgeMedallionSrc(config.gearBornLineId), alt: form?.name || config.displayName })}
       <span class="story-node-label">${label}</span>
     </button>
   `;
@@ -3479,7 +3609,7 @@ function startMedallionGauntlet(cityId) {
   launch();
 }
 
-function startMedallionGauntletStage(cityId) {
+async function startMedallionGauntletStage(cityId) {
   const config = gauntletConfigByKey(cityId);
   const progress = gauntletProgress(cityId);
   saveGauntletProgress(cityId, { revealed: true, popupShown: true });
@@ -3487,6 +3617,11 @@ function startMedallionGauntletStage(cityId) {
   state.activeGauntlet = { cityId, stage: stageNumber, mode: config.stages[stageNumber - 1]?.mode || "drag" };
   saveState();
   const opponent = gauntletOpponentForStage(cityId, stageNumber);
+  await ensureAssets([
+    carArtAsset(state.selectedStoryCar, "race"),
+    imageFor(opponent.form, "race"),
+    ...(stageNumber === 1 ? dragAssetManifest(null, { trackId: gauntletAssignedCityId(cityId), image: imageFor(opponent.form, "race") }) : [])
+  ], { label: "Loading the gauntlet…" });
   if (stageNumber === 1) {
     betaRaceContext = null;
     state.selectedCar = state.selectedStoryCar;
@@ -3888,12 +4023,12 @@ function renderStoryFactionBadge() {
   el.storyFactionBadge.dataset.faction = faction;
   el.storyFactionBadgeImg.src = faction === "spindell"
     ? "assets/items/item-badge-spindell.png"
-    : "assets/items/icon-badge-keyfree.png";
+    : "assets/items/icon-badge-unlocked.png";
   el.storyFactionBadgeImg.alt = `${activeFactionLabel()} faction`;
 }
 
 function openFactionHubPlaceholder() {
-  const message = activeFactionId() === "spindell" ? "Spindell Hub coming soon." : "KeyFree Hub coming soon.";
+  const message = activeFactionId() === "spindell" ? "Spindell Hub coming soon." : "The Unlocked Hub coming soon.";
   const modal = document.createElement("div");
   modal.className = "modal-overlay active faction-hub-placeholder";
   modal.setAttribute("role", "dialog");
@@ -4108,10 +4243,10 @@ function renderConvoyLoadouts() {
 
 function convoyStageModeIconHtml(stageType, convoy) {
   if (stageType === "drag") {
-    return `<img class="convoy-mode-icon" src="assets/items/icon-drag-race.png" alt="Drag Race" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'DRAG'}))">`;
+    return `<img class="convoy-mode-icon" src="${modeIconSrc("drag")}" alt="Drag Race">`;
   }
   if (stageType === "battle") {
-    return `<img class="convoy-mode-icon" src="assets/items/icon-battle.png" alt="Crashout" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'convoy-mode-icon-fallback',textContent:'CRASHOUT'}))">`;
+    return `<img class="convoy-mode-icon" src="${modeIconSrc("battle")}" alt="Crashout">`;
   }
   if (stageType === "h2h") {
     return `<span class="convoy-mode-icon-stack">
@@ -4227,40 +4362,35 @@ function rivalCarSetup(playerCarId = state.selectedStoryCar) {
   return { carId: rivalCarId, car: rivalCar, form, evolution, level: playerProgress.level || 1, stats };
 }
 
+function modeNodeIconMarkup(type, { subjectSrc = "", round = false, alt = "" } = {}) {
+  const id = type || "circuit";
+  const picture = Boolean(subjectSrc) && typeof modeIconIsPicture === "function" && modeIconIsPicture(id);
+  const backgroundSrc = modeIconSrc(id, picture ? { bare: true } : {});
+  const fallbackSrc = modeIconSrc(id);
+  const subjectClass = round ? "mode-node-subject-round" : "mode-node-subject-contained";
+  return `<span class="story-node-icon${picture ? " layered" : ""} type-${id}">
+    <img class="node-bg" src="${backgroundSrc}" data-fallback="${fallbackSrc}" alt="${picture ? "" : escapeHtml(alt)}" ${picture ? 'aria-hidden="true"' : ""} loading="lazy" decoding="async">
+    ${picture ? `<img class="node-subject ${subjectClass}" src="${subjectSrc}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="this.previousElementSibling.src=this.previousElementSibling.dataset.fallback;this.remove()">` : ""}
+  </span>`;
+}
+
+function pinkSlipDisplaySrc(level) {
+  const car = cars.find((item) => item.id === level?.pinkSlipCarId)
+    || cars.find((item) => item.evolutions?.some((form) => form.name === level?.drag?.name));
+  return imageFor(car?.evolutions?.[0], "display") || level?.drag?.displayImage || level?.drag?.image || "";
+}
+
 function storyNodeIconMarkup(city, level, visual) {
   if (level.type === "boss") {
     const boss = level.final ? finalBoss : bosses[level.bossIndex];
-    return `
-      <span class="story-node-icon layered type-boss">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
-      </span>
-    `;
+    return modeNodeIconMarkup("boss", { subjectSrc: boss?.headshot || boss?.portrait, round: true, alt: boss?.name || visual.label });
   }
-  if (level.type === "pink-slip") {
-    const form = level.drag;
-    const medallion = forgeMedallionSrc(level.pinkSlipCarId);
-    return `
-      <span class="story-node-icon layered type-pink-slip">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject pink-medallion" src="${medallion || form.displayImage || form.image}" alt="${form.name}" loading="lazy" decoding="async">
-      </span>
-    `;
-  }
+  if (level.type === "pink-slip") return modeNodeIconMarkup("pink-slip", { subjectSrc: pinkSlipDisplaySrc(level), alt: level.drag?.name || visual.label });
   if (level.type === "rival") {
     const rival = rivalTuner();
-    return `
-      <span class="story-node-icon layered type-rival">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.remove()">
-        <img class="node-subject rival-headshot" src="${rival.headshot || rival.image}" alt="${rival.name}" loading="lazy" decoding="async">
-      </span>
-    `;
+    return modeNodeIconMarkup("rival", { subjectSrc: rival.headshot || rival.image, round: true, alt: rival.name });
   }
-  return `
-    <span class="story-node-icon type-${level.type}">
-      <img class="node-bg" src="${visual.icon}" alt="${visual.label}" loading="lazy" decoding="async">
-    </span>
-  `;
+  return modeNodeIconMarkup(level.type, { alt: visual.label });
 }
 
 function renderStoryCityGrid() {
@@ -5651,8 +5781,8 @@ function renderUnlockHubCard() {
       ? "Calibrate keys. Sync medallions. Unlock GearBorn."
       : "Unlock GearBorn with your Medallions.";
   }
-  if (bg) bg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
-  if (vat) vat.src = spindell ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
+  if (bg) bg.src = spindell ? "assets/spindell/spindell-anim-bg.png" : "assets/forge/forge_anim_bg.png";
+  if (vat) vat.src = spindell ? "assets/spindell/spindell-sync-port-front.png" : "assets/forge/forge_spring_front.png";
   card?.classList.toggle("spindell-labs-card", spindell);
 }
 
@@ -6200,11 +6330,11 @@ function prepareDragRace(campaignLevelIndex = null, dragStage = null) {
   updateGearshiftIndicator(false);
 }
 
-function startPendingDragRace() {
+async function startPendingDragRace() {
   const config = pendingDragRace || { campaignLevelIndex: null, dragStage: null };
-  const launch = () => {
+  const launch = async () => {
     el.dragMapStart.classList.remove("active");
-    startDragRace(config.campaignLevelIndex, config.dragStage);
+    await startDragRace(config.campaignLevelIndex, config.dragStage);
     pendingDragRace = null;
   };
   if (config.gasPrepaid) {
@@ -6217,9 +6347,30 @@ function startPendingDragRace() {
 function dragBackgroundFor(campaignLevelIndex, dragStage) {
   const level = campaignLevelIndex !== null && campaignLevelIndex !== undefined ? campaignLevels[campaignLevelIndex] : null;
   const rawId = dragStage?.trackId || level?.track?.id || storyCityForCampaignIndex(campaignLevelIndex)?.id || (dragStage?.tutorial ? "academy" : "academy");
-  const normalized = rawId === "bangalore" ? "bengaluru" : rawId;
-  const available = new Set(["academy", "indianapolis", "berlin", "dubai", "rio", "seoul", "cape-town", "bengaluru"]);
-  return `assets/race/dragbg-${available.has(normalized) ? normalized : "academy"}.png`;
+  const available = new Set(["academy", "indianapolis", "berlin", "dubai", "rio", "seoul", "cape-town", "bangalore"]);
+  return `assets/race/dragbg-${available.has(rawId) ? rawId : "academy"}.png`;
+}
+
+function dragAssetManifest(campaignLevelIndex, dragStage) {
+  const rank = dragStage ? null : ranks.find((item) => item.key === state.selectedRank);
+  const opponentImages = dragStage?.opponents?.map((opponent) => opponent.image)
+    || [dragStage?.image, rank ? imageFor(rank, "race") : ""];
+  return [
+    dragBackgroundFor(campaignLevelIndex, dragStage),
+    carArtAsset(state.selectedCar, "race"),
+    ...opponentImages,
+    ...Array.from({ length: 6 }, (_, index) => `assets/race/gearshift-${index + 1}.png`),
+    "assets/race/gearshift-p.png",
+    "assets/race/road-strip.png",
+    "assets/icons/wheel-neutral.png",
+    "assets/icons/wheel-horn.png",
+    "assets/icons/brakepedal-off.png",
+    "assets/icons/brakepedal-on.png",
+    "assets/icons/gaspedal-off.png",
+    "assets/icons/gaspedal-on.png",
+    "assets/items/token-nitrous.png",
+    ...assetUrlsInElement(document.querySelector("#play-view"))
+  ];
 }
 
 function dragOpponentSeed(rank, distance, dragStage, rankIndex) {
@@ -6461,7 +6612,8 @@ function dragVisibleLanes(opponentCount) {
   return [1, 2, 3, 4];
 }
 
-function startDragRace(campaignLevelIndex = null, dragStage = null) {
+async function startDragRace(campaignLevelIndex = null, dragStage = null) {
+  await ensureAssets(dragAssetManifest(campaignLevelIndex, dragStage), { label: "Loading the drag race…" });
   clearRaceResultPopups();
   el.dragMapStart.classList.remove("active");
   const levelForMusic = campaignLevelIndex !== null && campaignLevelIndex !== undefined ? campaignLevels[campaignLevelIndex] : null;
@@ -7616,6 +7768,7 @@ async function playEvolutionAnimation(carId, evolutionIndex, onReveal) {
   const nextForm = evolutionByIndex(carId, evolutionIndex);
   const currentImage = imageFor(currentForm, "display");
   const nextImage = imageFor(nextForm, "display");
+  await ensureAssets([currentImage, nextImage], { label: "Loading evolution…" });
   let revealed = false;
   const revealOnce = () => {
     if (revealed) return;
@@ -8119,16 +8272,16 @@ function openForge() {
       : "Forge Unlock. The Forge answers. Guide: Auntie.";
   }
   const sceneBg = document.querySelector(".forge-bg-img");
-  if (sceneBg) sceneBg.src = spindell ? "assets/spindell/spindell-bg.png" : "assets/forge/forge_bg.png";
+  if (sceneBg) sceneBg.src = spindell ? "assets/spindell/spindell-anim-bg.png" : "assets/forge/forge_anim_bg.png";
   if (el.forgeVatImg) {
-    el.forgeVatImg.src = spindell ? "assets/spindell/spindell-sync-port.png" : "assets/forge/forge_vat.png";
+    el.forgeVatImg.src = spindell ? "assets/spindell/spindell-sync-port-front.png" : "assets/forge/forge_spring_front.png";
     el.forgeVatImg.alt = spindell ? "Spindell sync port" : "The Forge vat";
   }
   if (el.forgeInventoryPanel) el.forgeInventoryPanel.setAttribute("hidden", "");
   if (el.forgeUnlockBtn) { el.forgeUnlockBtn.disabled = true; el.forgeUnlockBtn.textContent = forgeMode === "fusion" ? "Select Two Parents" : (spindell ? "Select a Key" : "Select a Medallion"); }
   if (el.forgeAnimationArea) {
     el.forgeAnimationArea.innerHTML = spindell
-      ? `<img class="spindell-idle-sync-tube" src="assets/spindell/spindell-sync-tube.png" alt="" aria-hidden="true" onerror="this.hidden=true;">`
+      ? `<img class="spindell-idle-sync-tube" src="assets/spindell/spindell-sync-tube-front.png" alt="" aria-hidden="true" onerror="this.hidden=true;">`
       : "";
     el.forgeAnimationArea.classList.remove("animating");
   }
@@ -8218,6 +8371,23 @@ async function runForgeAnimation(carId, options = {}) {
   if (!preview && !(state.medallionsOwned || []).includes(carId)) return;
   if (!preview && isCarUnlocked(carId)) return;
   const animationType = options.animationType || unlockAnimationType();
+  const firstForm = evolutionByIndex(carId, 0);
+  const lineRoot = (typeof evolutionLineRootForCar === "function" ? evolutionLineRootForCar(carId) : null) || carId;
+  const firstFormSlug = slugify(firstForm?.name || lineRoot);
+  const animationAssets = animationType === "spindellKeySync"
+    ? [
+      "assets/spindell/spindell-anim-bg.png", "assets/spindell/spindell-sync-port-back.png",
+      "assets/spindell/spindell-sync-tube-back.png", "assets/spindell/spindell-sync-tube-front.png",
+      "assets/spindell/spindell-sync-port-front.png", "assets/spindell/spindell-magnetic-arm.png",
+      "assets/spindell/spindell-anim-key.png", "assets/spindell/vinsync-complete-screen.png",
+      `assets/spindell/pixel/pixel-${firstFormSlug}.png`
+    ]
+    : [
+      "assets/forge/forge_anim_bg.png", "assets/forge/forge_spring_back.png", "assets/forge/forge_dais.png",
+      "assets/forge/forge_shell_left.png", "assets/forge/forge_shell_right.png", "assets/forge/forge_spring_front.png",
+      "assets/forge/forge_wisp.png"
+    ];
+  await ensureAssets([...animationAssets, imageFor(firstForm, "display"), forgeMedallionSrc(carId)], { label: animationType === "spindellKeySync" ? "Loading VINSync…" : "Loading Forge unlock…" });
   forgeAnimating = true;
   if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = true;
 
@@ -9430,6 +9600,18 @@ function deleteSelectedTrack() {
   if (viewIsActive("builder")) renderBuilder();
 }
 
+async function prepareCollectionViewAssets(view) {
+  const renderers = {
+    garage: renderGarage,
+    vindex: renderVindex,
+    profiles: renderProfiles,
+    achievements: renderAchievements
+  };
+  if (!renderers[view]) return;
+  renderers[view]();
+  await ensureAssets(assetUrlsInElement(document.querySelector(`#${view}-view`)), { label: `Loading ${view === "vindex" ? "VINdex" : view}…` });
+}
+
 function showView(view) {
   if (view !== "builder" && !builderAllowLeave && viewIsActive("builder") && !requestBuilderExit(view)) return;
   if (view !== "beta") stopBetaDemo(false);
@@ -9546,11 +9728,11 @@ function selectedTuner() {
 }
 
 function activeFactionId() {
-  return selectedTuner().id === "cha-cha" ? "spindell" : "keyfree";
+  return selectedTuner().id === "cha-cha" ? "spindell" : "unlocked";
 }
 
 function activeFactionLabel() {
-  return activeFactionId() === "spindell" ? "Spindell" : "KeyFree";
+  return activeFactionId() === "spindell" ? "Spindell" : "The Unlocked";
 }
 
 function activeFactionMentor() {
@@ -9601,7 +9783,7 @@ function tutorialActive() {
   return Boolean(state.tutorialActive);
 }
 
-function startTutorial(sceneId = "intro", options = {}) {
+async function startTutorial(sceneId = "intro", options = {}) {
   const resolvedSceneId = resolveTutorialSceneId(sceneId);
   const sceneIndex = tutorialSceneIndex(resolvedSceneId);
   if (!storyTunerReady()) {
@@ -9639,6 +9821,9 @@ function startTutorial(sceneId = "intro", options = {}) {
   state.tutorialSnapshotMedallions = [...(state.medallionsOwned || [])];
   state.tutorialSnapshotComplete = Boolean(state.tutorialComplete);
   state.tutorialChoiceResponse = null;
+  const scene = tutorialScenes[sceneIndex];
+  const speakerAssets = tutorialLinesForScene(scene).map((line) => tutorialSpeakerProfile(normalizeTutorialLine(line).speaker)?.image);
+  await ensureAssets([scene?.background, scene?.splash, ...speakerAssets], { label: "Loading the scene…" });
   setupTutorialScene();
   saveState();
   render();
@@ -9884,34 +10069,15 @@ function tutorialMapNodeMarkup(level) {
   const layout = level.type === "boss" ? { x: 50, y: 18 }
     : level.type === "pink-slip" ? { x: 50, y: 89 }
     : storyNodeLayouts.find((item) => item.key === level.type) || storyNodeLayouts[0];
-  let iconMarkup = `
-    <span class="story-node-icon">
-      <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-    </span>
-  `;
+  let iconMarkup = modeNodeIconMarkup(level.type, { alt: visual.label });
   if (level.type === "boss") {
     const boss = bosses[level.bossIndex || 0] || bosses[0];
-    iconMarkup = `
-      <span class="story-node-icon layered type-boss">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject boss-headshot" src="${boss.headshot || boss.portrait}" alt="${boss.name}" loading="lazy" decoding="async">
-      </span>
-    `;
+    iconMarkup = modeNodeIconMarkup("boss", { subjectSrc: boss.headshot || boss.portrait, round: true, alt: boss.name });
   } else if (level.type === "pink-slip") {
-    iconMarkup = `
-      <span class="story-node-icon layered type-pink-slip">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject pink-medallion" src="${level.medallion || "assets/medallions/medallion-tutorque.png"}" alt="${level.drag?.name || "Tutorque"}" loading="lazy" decoding="async">
-      </span>
-    `;
+    iconMarkup = modeNodeIconMarkup("pink-slip", { subjectSrc: pinkSlipDisplaySrc(level), alt: level.drag?.name || "Tutorque" });
   } else if (level.type === "rival") {
     const rival = rivalCharacter();
-    iconMarkup = `
-      <span class="story-node-icon layered type-rival">
-        <img class="node-bg" src="${visual.icon}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-        <img class="node-subject rival-headshot" src="${rival.headshot || rival.image}" alt="${rival.name}" loading="lazy" decoding="async">
-      </span>
-    `;
+    iconMarkup = modeNodeIconMarkup("rival", { subjectSrc: rival.headshot || rival.image, round: true, alt: rival.name });
   }
   return `
     <button class="story-map-node" type="button" data-tutorial-level="${level.tutorialLevel}"
@@ -10904,12 +11070,18 @@ function confirmPinkSlipRisk() {
   start?.();
 }
 
-function startCampaignRace(index, level, gasPrepaid = false) {
+async function startCampaignRace(index, level, gasPrepaid = false) {
   if (!gasPrepaid) {
     const city = storyCityForCampaignIndex(index) || storyCities[state.selectedStoryCity] || storyCities[0];
     requestRaceEntry({ kind: level?.type || "story", cityId: city.id, gasCostOverride: level?.gasCostOverride }, () => startCampaignRace(index, level, true));
     return;
   }
+  const storyOpponent = level?.opponentLineId ? cars.find((car) => car.id === level.opponentLineId) : null;
+  await ensureAssets([
+    carArtAsset(state.selectedStoryCar, "race"),
+    storyOpponent ? imageFor(storyOpponent.evolutions?.[0], "race") : "",
+    ...(level?.type === "drag" ? dragAssetManifest(index, level.drag) : [])
+  ], { label: "Loading the story race…" });
   closeStoryPreview();
   closeCitySelect();
   if (level.type === "rival") {
@@ -10998,8 +11170,13 @@ function rivalBossData(level) {
   };
 }
 
-function startRivalCampaignRace(index, level) {
+async function startRivalCampaignRace(index, level) {
   const rivalCar = rivalCarSetup();
+  await ensureAssets([
+    carArtAsset(state.selectedStoryCar, "race"),
+    imageFor(rivalCar.form, "race"),
+    ...(level?.mechanic === "drag" ? dragAssetManifest(index, rivalDragStage(level)) : [])
+  ], { label: "Loading the rival race…" });
   if (level.mechanic === "drag") {
     mountCampaignRace("play");
     state.selectedCar = state.selectedStoryCar;
@@ -11029,17 +11206,23 @@ function startRivalCampaignRace(index, level) {
   startStory2dRace(index, level, true);
 }
 
-function startStory2dRace(index, level, gasPrepaid = false) {
+async function startStory2dRace(index, level, gasPrepaid = false) {
   if (!gasPrepaid) {
     const city = storyCityForCampaignIndex(index) || storyCities[state.selectedStoryCity] || storyCities[0];
     requestRaceEntry({ kind: level?.type || "story", cityId: city.id, gasCostOverride: level?.gasCostOverride }, () => startStory2dRace(index, level, true));
     return;
   }
+  const mode = story2dModeForLevel(level);
+  const opponents = story2dOpponentsForLevel(level, mode, index);
+  await ensureAssets([
+    carArtAsset(state.selectedStoryCar, "race"),
+    ...opponents.map((opponent) => imageFor(opponent.form, "race"))
+  ], { label: "Loading the story race…" });
   betaRaceContext = { source: "story", campaignLevelIndex: index, level };
-  betaPendingMode = story2dModeForLevel(level);
+  betaPendingMode = mode;
   betaPreviewMode = betaPendingMode;
   betaSelectedTrackId = betaTrackIdForStoryTrack(level.track || (level.final ? finalBoss.track : bosses[level.bossIndex]?.track));
-  betaPreviewOpponents = story2dOpponentsForLevel(level, betaPendingMode, index);
+  betaPreviewOpponents = opponents;
   state.selectedBetaCar = state.selectedStoryCar;
   saveState();
   showView("beta");
@@ -11111,12 +11294,13 @@ function openRivalDialogue(level, phase, onContinue) {
   requestAnimationFrame(() => modal.classList.add("active"));
 }
 
-function openStoryPlaceholderScene(sceneKey, onContinue) {
+async function openStoryPlaceholderScene(sceneKey, onContinue) {
   const lines = storyDialogue[sceneKey] || [];
   if (!sceneKey || !lines.length) {
     onContinue?.();
     return;
   }
+  await ensureAssets(lines.map((line) => tutorialSpeakerProfile(line.speaker)?.image), { label: "Loading the scene…" });
   let lineIndex = 0;
   const modal = document.createElement("div");
   modal.className = "rival-dialog story-placeholder-dialog";
@@ -11158,7 +11342,7 @@ function finishRuntimeStoryWithPost(level, onContinue) {
   else onContinue?.();
 }
 
-function openStoryCutscene(level, startRaceCallback, phase = "pre") {
+async function openStoryCutscene(level, startRaceCallback, phase = "pre") {
   pendingCutsceneStart = startRaceCallback;
   const boss = level.type === "boss" ? (level.final ? finalBoss : bosses[level.bossIndex]) : null;
   activeCutsceneContext = { type: level.type, boss, phase };
@@ -11171,6 +11355,12 @@ function openStoryCutscene(level, startRaceCallback, phase = "pre") {
     if (startRaceCallback) startRaceCallback();
     return;
   }
+  const tuner = tuners.find((item) => item.id === state.selectedTuner) || tuners[0];
+  await ensureAssets([
+    tuner.headshot || tuner.image,
+    boss?.headshot || boss?.portrait,
+    finalBoss.unmaskedHeadshot || finalBoss.unmaskedPortrait
+  ], { label: "Loading the scene…" });
   el.cutsceneTitle.textContent = "Story Scene";
   el.cutsceneModal.classList.add("single-speaker");
   renderCutsceneLine();

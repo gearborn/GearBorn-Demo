@@ -77,7 +77,7 @@ const hubMapTILE_CONSOLE = 5;
 const hubMapTileWalkable = { 0: true, 1: false, 2: true, 3: true, 4: true, 5: false };
 let hubMapAnimClock = 0;
 const hubMapAnimInterval = 125;
-const hubMapPlayer = { spriteKey: "mylo", direction: 0, moving: false, animCol: 1 };
+const hubMapPlayer = { spriteKey: "mylo", direction: 0, moving: false, animCol: 1, walkStep: 0 };
 let hubMapShowLabels = false;
 let hubMapMovementLocked = false;
 const hubMapHeldKeys = {};
@@ -87,6 +87,8 @@ let hubMapBgImage = null;
 let hubMapPropsImage = null;
 let hubMapTilesetImage = null;
 const hubMapSprites = {};
+let hubMapSpriteScale = 0;
+const hubMapWalkCycle = [0, 1, 2, 1];
 const hubMapPortraits = {};
 const hubMapPropFrames = {
   vat: { x: 0, y: 0, w: 260, h: 220 },
@@ -132,38 +134,80 @@ function hubMapCreateImage(src) {
   return hubMapImage;
 }
 
-function hubMapLoadSprite(key, src, sheetCols, rows, usableCols = sheetCols) {
-  const hubMapImage = hubMapCreateImage(src);
-  const hubMapSprite = {
-    img: hubMapImage,
-    image: hubMapImage,
-    src,
-    frameW: 0,
-    frameH: 0,
-    cols: sheetCols,
-    usableCols,
-    rows,
-    sheetCols
-  };
-  hubMapImage.addEventListener("load", () => {
-    hubMapSprite.frameW = Math.floor(hubMapImage.naturalWidth / hubMapSprite.cols);
-    hubMapSprite.frameH = Math.floor(hubMapImage.naturalHeight / hubMapSprite.rows);
-    const hubMapCanvas = document.createElement("canvas");
-    hubMapCanvas.width = hubMapImage.naturalWidth;
-    hubMapCanvas.height = hubMapImage.naturalHeight;
-    const hubMapCtx = hubMapCanvas.getContext("2d");
-    hubMapCtx.drawImage(hubMapImage, 0, 0);
-    const hubMapPixels = hubMapCtx.getImageData(0, 0, hubMapCanvas.width, hubMapCanvas.height);
-    for (let hubMapIndex = 0; hubMapIndex < hubMapPixels.data.length; hubMapIndex += 4) {
-      const hubMapR = hubMapPixels.data[hubMapIndex];
-      const hubMapG = hubMapPixels.data[hubMapIndex + 1];
-      const hubMapB = hubMapPixels.data[hubMapIndex + 2];
-      if (hubMapR < 24 && hubMapG < 24 && hubMapB < 24) hubMapPixels.data[hubMapIndex + 3] = 0;
-    }
-    hubMapCtx.putImageData(hubMapPixels, 0, 0);
-    hubMapSprite.canvas = hubMapCanvas;
-  }, { once: true });
-  hubMapSprites[key] = hubMapSprite;
+const hubMapFrameFiles = {
+  mylo: {
+    folder: "assets/hub/sprites/", walk: true,
+    down: ["mylo_down_0.png", "mylo_down_1.png", "mylo_down_2.png"],
+    left: ["mylo_left_0.png", "mylo_left_1.png", "mylo_left_2.png"],
+    up: ["mylo_up_0.png", "mylo_up_1.png", "mylo_up_2.png"]
+  },
+  ashley: { folder: "assets/hub/sprites/", walk: false, down: ["ashley_down.png"], left: ["ashley_left.png"], up: ["ashley_up.png"] },
+  auntie: { folder: "assets/hub/sprites/", walk: false, down: ["auntie_down.png"], left: ["auntie_left.png"], up: ["auntie_up.png"] },
+  eli: { folder: "assets/hub/sprites/", walk: false, down: ["eli_down.png"], left: ["eli_left.png"], up: ["eli_up.png"] }
+};
+
+function hubMapLoadFrames(key) {
+  const definition = hubMapFrameFiles[key];
+  if (!definition) return;
+  const sprite = { walk: definition.walk, frames: { down: [], left: [], up: [] } };
+  hubMapSprites[key] = sprite;
+  ["down", "left", "up"].forEach((direction) => {
+    sprite.frames[direction] = (definition[direction] || []).map((fileName, index) => {
+      const frame = { ready: false, failed: false, canvas: null, w: 0, h: 0, offsetX: 0, srcW: 0, srcH: 0 };
+      const src = `${definition.folder}${fileName}`;
+      const image = hubMapCreateImage(src);
+      image.addEventListener("load", () => {
+        const scratch = document.createElement("canvas");
+        scratch.width = image.naturalWidth;
+        scratch.height = image.naturalHeight;
+        const scratchCtx = scratch.getContext("2d");
+        if (!scratchCtx) {
+          frame.failed = true;
+          console.warn("Hub Map sprite frame could not be prepared:", src);
+          return;
+        }
+        scratchCtx.drawImage(image, 0, 0);
+        const pixels = scratchCtx.getImageData(0, 0, scratch.width, scratch.height).data;
+        let left = scratch.width;
+        let top = scratch.height;
+        let right = -1;
+        let bottom = -1;
+        for (let y = 0; y < scratch.height; y += 1) {
+          for (let x = 0; x < scratch.width; x += 1) {
+            if (pixels[(y * scratch.width + x) * 4 + 3] <= 16) continue;
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x);
+            bottom = Math.max(bottom, y);
+          }
+        }
+        if (right < left || bottom < top) {
+          frame.failed = true;
+          console.warn("Hub Map sprite frame is empty:", src);
+          return;
+        }
+        const crop = document.createElement("canvas");
+        crop.width = right - left + 1;
+        crop.height = bottom - top + 1;
+        crop.getContext("2d")?.drawImage(scratch, left, top, crop.width, crop.height, 0, 0, crop.width, crop.height);
+        frame.canvas = crop;
+        frame.w = crop.width;
+        frame.h = crop.height;
+        frame.offsetX = left - image.naturalWidth / 2;
+        frame.srcW = image.naturalWidth;
+        frame.srcH = image.naturalHeight;
+        frame.ready = true;
+        if (key === "mylo" && direction === "down" && index === 1) {
+          hubMapSpriteScale = (2.6 * hubMapState.tileSize) / frame.h;
+        }
+      }, { once: true });
+      image.addEventListener("error", () => {
+        frame.failed = true;
+        console.warn("Hub Map sprite frame failed to load:", src);
+      }, { once: true });
+      return frame;
+    });
+  });
 }
 
 function hubMapLoadAssets() {
@@ -172,10 +216,10 @@ function hubMapLoadAssets() {
   hubMapBgImage = hubMapCreateImage("assets/hub/forge/bg_forge_room.png");
   hubMapPropsImage = hubMapCreateImage("assets/hub/forge/objects_forge.png");
   hubMapTilesetImage = hubMapCreateImage("assets/hub/forge/bg_forge_tileset.png");
-  hubMapLoadSprite("mylo", "assets/hub/sprites/player_mylo.png", 4, 4, 3);
-  hubMapLoadSprite("ashley", "assets/hub/sprites/npc_ashley.png", 3, 4);
-  hubMapLoadSprite("auntie", "assets/hub/sprites/npc_auntie.png", 3, 4);
-  hubMapLoadSprite("eli", "assets/hub/sprites/npc_eli.png", 3, 4);
+  hubMapLoadFrames("mylo");
+  hubMapLoadFrames("ashley");
+  hubMapLoadFrames("auntie");
+  hubMapLoadFrames("eli");
   hubMapPortraits.ashley = hubMapCreateImage("assets/hub/ui/portrait_ashley.png");
   hubMapPortraits.auntie = hubMapCreateImage("assets/hub/ui/portrait_auntie.png");
   hubMapPortraits.eli = hubMapCreateImage("assets/hub/ui/portrait_eli.png");
@@ -231,42 +275,45 @@ function hubMapDrawProp(ctx, propName, x, y, scale = 1) {
 }
 
 function hubMapDrawSprite(ctx, spriteKey, tileX, tileY, direction = 0, col = 1, heightTiles = 2.6) {
-  const hubMapSheet = hubMapSprites[spriteKey];
-  const hubMapImage = hubMapSheet?.img || hubMapSheet?.image;
-  if (!hubMapSheet || !hubMapImage?.complete || !hubMapImage.naturalWidth) {
-    const hubMapFallbackColors = {
-      mylo: "#7c3aed",
-      ashley: "#1d4ed8",
-      auntie: "#b45309",
-      eli: "#15803d"
-    };
-    ctx.fillStyle = hubMapFallbackColors[spriteKey] || "#ffc857";
-    ctx.fillRect(tileX * hubMapState.tileSize, tileY * hubMapState.tileSize - 16, 32, 48);
+  const sprite = hubMapSprites[spriteKey];
+  const directionKey = direction === 0 ? "down" : direction === 3 ? "up" : "left";
+  const frames = sprite?.frames?.[directionKey] || [];
+  const frameIndex = sprite?.walk ? Math.max(0, Math.min(2, col)) : 0;
+  const standingDown = sprite?.frames?.down?.[sprite?.walk ? 1 : 0];
+  const frame = [
+    frames[frameIndex],
+    sprite?.walk ? frames[1] : null,
+    ...frames,
+    standingDown,
+    ...(sprite?.frames?.down || [])
+  ].find((candidate) => candidate?.ready && candidate.canvas);
+  if (frame) {
+    const scale = hubMapSpriteScale || (2.6 * hubMapState.tileSize) / 1150;
+    const drawW = frame.w * scale;
+    const drawH = frame.h * scale;
+    const centerX = tileX * hubMapState.tileSize + hubMapState.tileSize / 2;
+    const drawY = tileY * hubMapState.tileSize + hubMapState.tileSize - drawH;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    if (direction === 2) {
+      ctx.translate(centerX, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(frame.canvas, frame.offsetX * scale, drawY, drawW, drawH);
+    } else {
+      ctx.drawImage(frame.canvas, centerX + frame.offsetX * scale, drawY, drawW, drawH);
+    }
+    ctx.restore();
     return;
   }
-  const hubMapFrameW = hubMapSheet.frameW || Math.floor(hubMapImage.naturalWidth / hubMapSheet.cols);
-  const hubMapFrameH = hubMapSheet.frameH || Math.floor(hubMapImage.naturalHeight / hubMapSheet.rows);
-  const hubMapUsableCols = hubMapSheet.usableCols || hubMapSheet.cols;
-  const hubMapCol = Math.max(0, Math.min(hubMapUsableCols - 1, col));
-  const hubMapRow = Math.max(0, Math.min(hubMapSheet.rows - 1, direction));
-  const hubMapSourceX = hubMapCol * hubMapFrameW;
-  const hubMapSourceY = hubMapRow * hubMapFrameH;
-  const hubMapDestH = hubMapState.tileSize * heightTiles;
-  const hubMapDestW = hubMapDestH * (hubMapFrameW / hubMapFrameH);
-  const hubMapDestX = tileX * hubMapState.tileSize + hubMapState.tileSize / 2 - hubMapDestW / 2;
-  const hubMapDestY = tileY * hubMapState.tileSize + hubMapState.tileSize - hubMapDestH;
-  const hubMapDrawSource = hubMapSheet.canvas || hubMapImage;
-  ctx.drawImage(
-    hubMapDrawSource,
-    hubMapSourceX,
-    hubMapSourceY,
-    hubMapFrameW,
-    hubMapFrameH,
-    hubMapDestX,
-    hubMapDestY,
-    hubMapDestW,
-    hubMapDestH
-  );
+  const hubMapFallbackColors = {
+    mylo: "#7c3aed",
+    ashley: "#1d4ed8",
+    auntie: "#b45309",
+    eli: "#15803d"
+  };
+  ctx.fillStyle = hubMapFallbackColors[spriteKey] || "#ffc857";
+  ctx.fillRect(tileX * hubMapState.tileSize, tileY * hubMapState.tileSize - 16, 32, 48);
 }
 
 function hubMapWrapText(text, maxChars) {
@@ -446,9 +493,13 @@ function hubMapDraw() {
   });
   if (hubMapPlayer.moving && now - hubMapAnimClock > hubMapAnimInterval) {
     hubMapAnimClock = now;
-    hubMapPlayer.animCol = (hubMapPlayer.animCol + 1) % 3;
+    hubMapPlayer.walkStep = (hubMapPlayer.walkStep + 1) % hubMapWalkCycle.length;
+    hubMapPlayer.animCol = hubMapWalkCycle[hubMapPlayer.walkStep];
   }
-  if (!hubMapPlayer.moving) hubMapPlayer.animCol = 1;
+  if (!hubMapPlayer.moving) {
+    hubMapPlayer.animCol = 1;
+    hubMapPlayer.walkStep = 0;
+  }
   hubMapDrawSprite(ctx, "mylo", drawX, drawY, hubMapPlayer.direction, hubMapPlayer.animCol);
   hubMapDrawDialogue(ctx, canvas.width, canvas.height);
   if (el.hubMapBetaCoords) el.hubMapBetaCoords.textContent = `${hubMapState.playerX}, ${hubMapState.playerY}`;
@@ -464,6 +515,7 @@ function hubMapOpen() {
   hubMapPlayer.direction = 0;
   hubMapPlayer.moving = false;
   hubMapPlayer.animCol = 1;
+  hubMapPlayer.walkStep = 0;
   Object.keys(hubMapHeldKeys).forEach((hubMapKey) => {
     hubMapHeldKeys[hubMapKey] = false;
   });
@@ -557,4 +609,3 @@ document.addEventListener("keyup", (event) => {
 });
 
 // TODO: NPCs, sprites, map transitions, interactions, and dialogue hooks.
-
