@@ -18227,6 +18227,75 @@ textarea:focus-visible {
 .reward,
 .status-reward { color: var(--gb-gold); }
 
+/* Dev Test-only Forge/VINSync playback controls. */
+.dev-test-animation-help {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.dev-anim-controller {
+  position: fixed;
+  z-index: 1210;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(760px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  padding: 10px;
+  border: 1px solid rgba(250, 246, 238, 0.28);
+  border-radius: 10px;
+  background: rgba(11, 20, 38, 0.92);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+  color: var(--gb-cream);
+}
+
+.dev-anim-controller[hidden] { display: none; }
+
+.dev-anim-controller-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dev-anim-controller-actions button,
+.dev-anim-controller-actions select {
+  min-height: 30px;
+  font-size: 0.72rem;
+}
+
+.dev-anim-controller-scrubber { position: relative; margin: 10px 0 6px; }
+.dev-anim-controller-scrubber input { width: 100%; }
+.dev-anim-controller-ticks { position: absolute; inset: 3px 8px auto; height: 8px; pointer-events: none; }
+.dev-anim-controller-ticks i { position: absolute; width: 1px; height: 7px; background: var(--gb-gold); }
+.dev-anim-controller output,
+.dev-anim-controller small { display: block; color: var(--muted); font-size: 0.76rem; }
+.dev-anim-controller-copy { width: 100%; margin-top: 8px; }
+
+.dev-anim-controller-hint {
+  position: fixed;
+  z-index: 1211;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(11, 20, 38, 0.84);
+  color: var(--gb-cream);
+  font-size: 0.74rem;
+  pointer-events: none;
+}
+
+.dev-anim-controller-hint[hidden] { display: none; }
+.dev-anim-instant *,
+.dev-anim-instant *::before,
+.dev-anim-instant *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+}
+
 /* Fullscreen Forge/VINSync animation stage: every scene layer shares 1920x1080 space. */
 .forge-fullscreen-overlay {
   display: none;

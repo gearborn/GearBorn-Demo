@@ -8364,6 +8364,302 @@ function selectForgeMedallion(carId) {
 
 const PIXEL_SPRITE_OVERRIDES = { "metal-snake": "venomoil" };
 
+function forgeAnimationStageImage(className, src, alt = "") {
+  return `<img class="${className}" src="${src}" alt="${alt}" onerror="this.classList.add('asset-missing')">`;
+}
+
+function forgeUnlockTimeline(area, carId) {
+  const stageImage = forgeAnimationStageImage;
+  area.innerHTML = `
+    ${stageImage("forge-stage-layer forge-stage-bg", "assets/forge/forge_anim_bg.png")}
+    ${stageImage("forge-stage-layer forge-stage-spring-back", "assets/forge/forge_spring_back.png")}
+    <div class="forge-stage-rising">
+      ${stageImage("forge-stage-layer forge-stage-dais", "assets/forge/forge_dais.png")}
+      <img class="forge-stage-car" src="${imageFor(evolutionByIndex(carId, 0), "display") || ""}" alt="" onerror="this.classList.add('asset-missing')">
+      ${stageImage("forge-stage-layer forge-stage-shell forge-stage-shell-left", "assets/forge/forge_shell_left.png")}
+      ${stageImage("forge-stage-layer forge-stage-shell forge-stage-shell-right", "assets/forge/forge_shell_right.png")}
+    </div>
+    ${stageImage("forge-stage-layer forge-stage-spring-front", "assets/forge/forge_spring_front.png")}
+    <img class="forge-stage-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+    <div class="forge-stage-splash"></div>
+    <div class="forge-stage-wisps">${Array.from({ length: 6 }, (_, index) => `<img src="assets/forge/forge_wisp.png" style="--wisp-x:${40 + index * 4}%;--wisp-rise:${-300 - index * 38}px;--wisp-drift:${-50 + index * 20}px;--wisp-delay:${index * 85}ms" alt="" onerror="this.classList.add('asset-missing')">`).join("")}</div>
+    <div class="forge-stage-burst"></div>
+    <div class="forge-stage-confetti"></div>
+    <div class="forge-stage-name-sign">${escapeHtml(evolutionByIndex(carId, 0)?.name || carId)} is GearBorn!</div>
+  `;
+  const medallion = area.querySelector(".forge-stage-medallion");
+  const springBack = area.querySelector(".forge-stage-spring-back");
+  const splash = area.querySelector(".forge-stage-splash");
+  const wisps = area.querySelector(".forge-stage-wisps");
+  const rising = area.querySelector(".forge-stage-rising");
+  const shells = area.querySelectorAll(".forge-stage-shell");
+  const burst = area.querySelector(".forge-stage-burst");
+  const car = area.querySelector(".forge-stage-car");
+  const confetti = area.querySelector(".forge-stage-confetti");
+  const sign = area.querySelector(".forge-stage-name-sign");
+  if (confetti) {
+    const colors = ["#1E9E6A", "#FFC857", "#FAF6EE", "#E46A5A"];
+    confetti.innerHTML = Array.from({ length: 28 }, (_, index) => `<i style="--x:${24 + (index * 29) % 54}%;--y:${42 + (index * 17) % 22}%;--dx:${-170 + (index * 43) % 340}px;--dy:${80 + (index * 37) % 260}px;--r:${-150 + (index * 61) % 300}deg;--delay:${(index % 7) * 28}ms;--confetti:${colors[index % colors.length]}"></i>`).join("");
+  }
+  const add = (node, className) => node?.classList.add(className);
+  return [
+    { wait: 220, label: "Medallion in", run: () => add(medallion, "is-in") },
+    { wait: 620, label: "Medallion sinks, splash, spring glows", run: () => { add(medallion, "is-sinking"); add(splash, "is-active"); add(springBack, "is-glowing"); } },
+    { wait: 520, label: "Wisps rise", run: () => add(wisps, "is-active") },
+    { wait: 620, label: "Dais rises", run: () => add(rising, "is-risen") },
+    { wait: 880, label: "Shells wobble", run: () => shells.forEach((shell) => add(shell, "is-wobbling")) },
+    { wait: 700, label: "Shells hatch, burst", run: () => { shells.forEach((shell) => add(shell, "is-hatched")); add(burst, "is-active"); } },
+    { wait: 500, label: "Car revealed, confetti, sign", honk: true, run: () => { add(car, "is-revealed"); add(confetti, "is-active"); add(sign, "is-visible"); } },
+    { wait: 1900, label: "Hold" }
+  ];
+}
+
+function spindellKeySyncTimeline(area, carId) {
+  const lineRoot = (typeof evolutionLineRootForCar === "function" ? evolutionLineRootForCar(carId) : null) || carId;
+  const firstForm = evolutionByIndex(carId, 0);
+  const firstFormSlug = (firstForm?.name || lineRoot).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const pixelLineSlug = PIXEL_SPRITE_OVERRIDES[lineRoot] || lineRoot;
+  const pixelCarSrc = `assets/spindell/pixel/pixel-${firstFormSlug}.png`;
+  const pixelLineFallback = `assets/spindell/pixel/pixel-${pixelLineSlug}.png`;
+  const carDisplaySrc = imageFor(firstForm, "display") || "";
+  const stageImage = forgeAnimationStageImage;
+  area.innerHTML = `
+    ${stageImage("forge-stage-layer spindell-stage-bg", "assets/spindell/spindell-anim-bg.png")}
+    ${stageImage("forge-stage-layer spindell-stage-port-back", "assets/spindell/spindell-sync-port-back.png")}
+    <div class="spindell-stage-tube-group">
+      ${stageImage("forge-stage-layer spindell-stage-tube-back", "assets/spindell/spindell-sync-tube-back.png")}
+      <img class="spindell-stage-car" src="${carDisplaySrc}" alt="" onerror="this.classList.add('asset-missing')">
+      ${stageImage("forge-stage-layer spindell-stage-tube-front", "assets/spindell/spindell-sync-tube-front.png")}
+    </div>
+    ${stageImage("forge-stage-layer spindell-stage-port-front", "assets/spindell/spindell-sync-port-front.png")}
+    ${stageImage("forge-stage-layer spindell-stage-arm", "assets/spindell/spindell-magnetic-arm.png")}
+    <img class="spindell-stage-medallion" src="${forgeMedallionSrc(carId)}" alt="Medallion" onerror="this.classList.add('asset-missing')">
+    <img class="spindell-stage-key" src="assets/spindell/spindell-anim-key.png" alt="GearBorn Key" onerror="this.classList.add('asset-missing')">
+    <div class="spindell-stage-flash"></div>
+    <div class="spindell-stage-complete">
+      <img class="vinsync-complete-screen" src="assets/spindell/vinsync-complete-screen.png" alt="" onerror="this.classList.add('asset-missing')">
+      ${isFusionLine(lineRoot) ? "" : `<img class="vinsync-pixel-car" src="${pixelCarSrc}" onerror="if(this.dataset.fallback==='line'){this.hidden=true}else{this.dataset.fallback='line';this.src='${pixelLineFallback}'}" alt="">`}
+    </div>
+  `;
+  const tube = area.querySelector(".spindell-stage-tube-group");
+  const car = area.querySelector(".spindell-stage-car");
+  const medallion = area.querySelector(".spindell-stage-medallion");
+  const arm = area.querySelector(".spindell-stage-arm");
+  const port = area.querySelector(".spindell-stage-port-front");
+  const key = area.querySelector(".spindell-stage-key");
+  const flash = area.querySelector(".spindell-stage-flash");
+  const complete = area.querySelector(".spindell-stage-complete");
+  const add = (node, className) => node?.classList.add(className);
+  const remove = (node, className) => node?.classList.remove(className);
+  return [
+    { wait: 260, label: "Medallion in", run: () => add(medallion, "is-in") },
+    { wait: 520, label: "Medallion slots, port charges", run: () => { add(medallion, "is-slotted"); add(port, "is-charged"); } },
+    { wait: 470, label: "Arm down", run: () => add(arm, "is-down") },
+    { wait: 620, label: "Arm grips", run: () => add(arm, "is-gripping") },
+    { wait: 180, label: "Tube + arm lift", run: () => { add(tube, "is-lifted"); add(arm, "is-lifted"); } },
+    { wait: 720, label: "Car revealed, tube + arm return", run: () => { add(car, "is-visible"); remove(tube, "is-lifted"); remove(arm, "is-lifted"); add(tube, "is-returning"); add(arm, "is-returning"); } },
+    { wait: 780, label: "Flash, arm retracts", run: () => { add(flash, "is-flashing"); add(port, "is-flash"); add(arm, "is-retracting"); } },
+    { wait: 620, label: "Key drops in", run: () => add(key, "is-in") },
+    { wait: 700, label: "VINSync complete", honk: true, run: () => add(complete, "is-visible") },
+    { wait: 1600, label: "Hold" }
+  ];
+}
+
+const devAnimController = {
+  open: false,
+  state: null,
+  start({ overlay, area, rebuild, title, carLabel, carId }) {
+    this.close();
+    const supportsScrub = typeof area.getAnimations === "function";
+    const bar = document.createElement("div");
+    const hint = document.createElement("div");
+    bar.className = "dev-anim-controller";
+    hint.className = "dev-anim-controller-hint";
+    hint.textContent = "H to show controls";
+    overlay.append(bar, hint);
+    const firstBeats = rebuild();
+    const starts = [];
+    let total = 0;
+    firstBeats.forEach((beat) => { total += beat.wait; starts.push(total); });
+    bar.innerHTML = `
+      <div class="dev-anim-controller-actions">
+        <button class="ghost" type="button" data-dev-anim="restart" title="Restart">⏮ Restart</button>
+        <button class="ghost" type="button" data-dev-anim="previous" title="Previous beat">◀ Beat</button>
+        <button class="success-button" type="button" data-dev-anim="play">Play</button>
+        <button class="ghost" type="button" data-dev-anim="next" title="Next beat">Beat ▶</button>
+        <select data-dev-anim="rate" aria-label="Playback speed"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select>
+        <button class="ghost" type="button" data-dev-anim="hide">Hide UI</button>
+        <button class="ghost" type="button" data-dev-anim="copy">Copy note</button>
+        <button class="ghost" type="button" data-dev-anim="close" title="Close">✕ Close</button>
+      </div>
+      <div class="dev-anim-controller-scrubber"><div class="dev-anim-controller-ticks">${starts.map((start, index) => `<i style="left:${(start / total) * 100}%" title="Beat ${index + 1}: ${escapeHtml(firstBeats[index].label)}"></i>`).join("")}</div><input type="range" min="0" max="${total}" step="1" value="0" data-dev-anim="range"></div>
+      <output data-dev-anim="readout"></output>
+      <input class="dev-anim-controller-copy" data-dev-anim="copy-input" readonly hidden>
+      ${supportsScrub ? "" : "<small>Frame scrubbing unavailable</small>"}
+    `;
+    const state = {
+      overlay, area, rebuild, title, carLabel, carId, beats: firstBeats, starts, total, t: 0,
+      playing: false, rate: 1, raf: 0, lastNow: 0, supportsScrub, animations: [], bar, hint,
+      resolve: null, keyHandler: null, hideTimer: 0
+    };
+    this.open = true;
+    this.state = state;
+    const action = (name) => bar.querySelector(`[data-dev-anim="${name}"]`);
+    state.range = action("range");
+    state.readout = action("readout");
+    state.playButton = action("play");
+    state.copyInput = action("copy-input");
+    const bind = (name, fn) => action(name)?.addEventListener("click", fn);
+    bind("restart", () => this.seek(0));
+    bind("previous", () => this.jumpBeat(-1));
+    bind("play", () => this.toggle());
+    bind("next", () => this.jumpBeat(1));
+    bind("hide", () => this.toggleUi(false));
+    bind("copy", () => this.copyNote());
+    bind("close", () => this.close());
+    action("rate")?.addEventListener("change", (event) => { state.rate = Number(event.target.value) || 1; this.syncAnimationRate(); });
+    state.range?.addEventListener("input", (event) => { this.pause(); this.seek(Number(event.target.value)); });
+    state.keyHandler = (event) => {
+      if (!this.open || !state.overlay.classList.contains("active")) return;
+      const key = event.key;
+      const handled = key === " " || key === "ArrowLeft" || key === "ArrowRight" || key === "Home" || key === "End" || key === "h" || key === "H" || key === "c" || key === "C" || key === "Escape" || /^[1-4]$/.test(key);
+      if (!handled) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (key === " ") this.toggle();
+      else if (key === "ArrowLeft") event.shiftKey ? this.jumpBeat(-1) : this.seek(state.t - 1000 / 30);
+      else if (key === "ArrowRight") event.shiftKey ? this.jumpBeat(1) : this.seek(state.t + 1000 / 30);
+      else if (key === "Home") this.seek(0);
+      else if (key === "End") this.seek(state.total);
+      else if (key === "h" || key === "H") this.toggleUi(state.bar.hidden);
+      else if (key === "c" || key === "C") this.copyNote();
+      else if (key === "Escape") this.close();
+      else { state.rate = [0.1, 0.25, 0.5, 1][Number(key) - 1]; action("rate").value = String(state.rate); this.syncAnimationRate(); }
+    };
+    document.addEventListener("keydown", state.keyHandler, true);
+    this.seek(0);
+    this.play();
+    return new Promise((resolve) => { state.resolve = resolve; });
+  },
+  captureAnimations(startedAt) {
+    const state = this.state;
+    if (!state?.supportsScrub) return;
+    state.area.getAnimations({ subtree: true }).forEach((animation) => {
+      if (!state.animations.some((entry) => entry.animation === animation)) state.animations.push({ animation, startedAt });
+    });
+  },
+  seek(value) {
+    const state = this.state;
+    if (!state) return;
+    this.pause();
+    state.t = Math.max(0, Math.min(state.total, Number(value) || 0));
+    state.area.classList.remove("dev-anim-instant");
+    state.beats = state.rebuild();
+    state.animations = [];
+    if (!state.supportsScrub) state.area.classList.add("dev-anim-instant");
+    state.beats.forEach((beat, index) => {
+      if (state.starts[index] > state.t) return;
+      beat.run?.();
+      void state.area.offsetWidth;
+      this.captureAnimations(state.starts[index]);
+    });
+    state.animations.forEach(({ animation, startedAt }) => {
+      const end = animation.effect?.getComputedTiming?.().endTime;
+      animation.pause();
+      animation.currentTime = Number.isFinite(end) ? Math.min(Math.max(0, state.t - startedAt), end) : Math.max(0, state.t - startedAt);
+    });
+    this.updateUi();
+  },
+  updateUi() {
+    const state = this.state;
+    if (!state) return;
+    const index = state.starts.reduce((current, start, next) => start <= state.t ? next : current, -1);
+    const beat = state.beats[index];
+    const time = (state.t / 1000).toFixed(2);
+    const total = (state.total / 1000).toFixed(2);
+    state.range.value = String(Math.round(state.t));
+    state.readout.textContent = `${time}s / ${total}s · ${beat ? `Beat ${index + 1} — ${beat.label}` : "Ready"}`;
+    state.playButton.textContent = state.playing ? "Pause" : "Play";
+  },
+  syncAnimationRate() {
+    const state = this.state;
+    state?.area.getAnimations?.({ subtree: true }).forEach((animation) => { animation.playbackRate = state.rate; });
+  },
+  toggle() { if (this.state?.playing) this.pause(); else this.play(); },
+  play() {
+    const state = this.state;
+    if (!state || state.t >= state.total) this.seek(0);
+    const active = this.state;
+    active.playing = true;
+    active.lastNow = performance.now();
+    this.syncAnimationRate();
+    active.area.getAnimations?.({ subtree: true }).forEach((animation) => animation.play());
+    const tick = (now) => {
+      if (!active.playing) return;
+      const previous = active.t;
+      active.t = Math.min(active.total, active.t + (now - active.lastNow) * active.rate);
+      active.lastNow = now;
+      active.beats.forEach((beat, index) => {
+        if (active.starts[index] > previous && active.starts[index] <= active.t) {
+          beat.run?.();
+          if (beat.honk && active.rate === 1) playGearbornHonk(active.carId, 0);
+        }
+      });
+      this.updateUi();
+      if (active.t >= active.total) this.pause();
+      else active.raf = requestAnimationFrame(tick);
+    };
+    active.raf = requestAnimationFrame(tick);
+    this.updateUi();
+  },
+  pause() {
+    const state = this.state;
+    if (!state) return;
+    state.playing = false;
+    if (state.raf) cancelAnimationFrame(state.raf);
+    state.raf = 0;
+    state.area.getAnimations?.({ subtree: true }).forEach((animation) => animation.pause());
+    this.updateUi();
+  },
+  jumpBeat(direction) {
+    const state = this.state;
+    if (!state) return;
+    const targets = direction < 0 ? state.starts.filter((start) => start < state.t - 1) : state.starts.filter((start) => start > state.t + 1);
+    this.seek(direction < 0 ? (targets.at(-1) ?? 0) : (targets[0] ?? state.total));
+  },
+  toggleUi(show) {
+    const state = this.state;
+    if (!state) return;
+    state.bar.hidden = !show;
+    state.hint.hidden = show;
+    if (!show) {
+      window.clearTimeout(state.hideTimer);
+      state.hideTimer = window.setTimeout(() => { if (this.state === state) state.hint.hidden = true; }, 1500);
+    }
+  },
+  copyNote() {
+    const state = this.state;
+    if (!state) return;
+    const index = state.starts.reduce((current, start, next) => start <= state.t ? next : current, -1);
+    const beat = state.beats[index];
+    const note = `${state.title} · ${state.carLabel} · ${(state.t / 1000).toFixed(2)}s · ${beat ? `Beat ${index + 1} (${beat.label})` : "Ready"}`;
+    navigator.clipboard?.writeText(note).catch(() => { state.copyInput.hidden = false; state.copyInput.value = note; state.copyInput.select(); });
+    if (!navigator.clipboard?.writeText) { state.copyInput.hidden = false; state.copyInput.value = note; state.copyInput.select(); }
+  },
+  close() {
+    const state = this.state;
+    if (!state) return;
+    this.pause();
+    document.removeEventListener("keydown", state.keyHandler, true);
+    window.clearTimeout(state.hideTimer);
+    state.bar.remove();
+    state.hint.remove();
+    this.state = null;
+    this.open = false;
+    state.resolve?.();
+  }
+};
+
 async function runForgeAnimation(carId, options = {}) {
   if (forgeAnimating) return;
   const preview = Boolean(options.preview);
@@ -8396,6 +8692,39 @@ async function runForgeAnimation(carId, options = {}) {
   if (!overlay || !area) {
     forgeAnimating = false;
     if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = false;
+    return;
+  }
+
+  if (preview && typeof devAnimController === "object") {
+    const rebuild = () => animationType === "spindellKeySync"
+      ? spindellKeySyncTimeline(area, carId)
+      : forgeUnlockTimeline(area, carId);
+    try {
+      area.innerHTML = "";
+      overlay.classList.add("active");
+      overlay.classList.toggle("spindell-key-sync-animation", animationType === "spindellKeySync");
+      overlay.classList.toggle("forge-unlock-animation", animationType === "forgeUnlock");
+      overlay.setAttribute("aria-hidden", "false");
+      playAudioCue("evolutionBuild");
+      await devAnimController.start({
+        overlay,
+        area,
+        rebuild,
+        title: animationType === "spindellKeySync" ? "Spindell unlock" : "Forge unlock",
+        carLabel: firstForm?.name || carId,
+        carId
+      });
+      return;
+    } catch (error) {
+      console.warn("Dev animation controller failed", error);
+    } finally {
+      overlay.classList.remove("active");
+      overlay.classList.remove("spindell-key-sync-animation", "forge-unlock-animation");
+      overlay.setAttribute("aria-hidden", "true");
+      area.innerHTML = "";
+      forgeAnimating = false;
+      if (el.forgeUnlockBtn) el.forgeUnlockBtn.disabled = !forgeSelectedCarId || isCarUnlocked(forgeSelectedCarId);
+    }
     return;
   }
 
@@ -8480,7 +8809,16 @@ async function runForgeAnimation(carId, options = {}) {
     overlay.setAttribute("aria-hidden", "false");
     playAudioCue("evolutionBuild");
 
-    if (animationType === "spindellKeySync") {
+    if (!preview) {
+      const beats = animationType === "spindellKeySync"
+        ? spindellKeySyncTimeline(area, carId)
+        : forgeUnlockTimeline(area, carId);
+      for (const beat of beats) {
+        await step(beat.wait);
+        beat.run?.();
+        if (beat.honk) playGearbornHonk(carId, 0);
+      }
+    } else if (animationType === "spindellKeySync") {
       await runSpindellKeySyncSequence();
     } else {
       area.innerHTML = `

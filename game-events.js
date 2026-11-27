@@ -1057,6 +1057,11 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     return;
   }
+  if (event.key === "Escape" && typeof devAnimController === "object" && devAnimController.open) {
+    event.preventDefault();
+    devAnimController.close();
+    return;
+  }
   if (event.key === "Escape" && el.resetModal.classList.contains("active")) {
     closeResetModal();
     return;
